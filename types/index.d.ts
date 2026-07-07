@@ -1,0 +1,31 @@
+declare const _exports: {
+    ActionRow: typeof import("./src/components/ActionRow");
+    Button: typeof import("./src/components/Button");
+    Checkbox: typeof import("./src/components/Checkbox");
+    CheckboxGroup: typeof import("./src/components/CheckboxGroup");
+    Container: typeof import("./src/components/Container");
+    File: typeof import("./src/components/File");
+    FileUpload: typeof import("./src/components/FileUpload");
+    Gallery: typeof import("./src/components/Gallery");
+    Label: typeof import("./src/components/Label");
+    Modal: typeof import("./src/components/Modal");
+    Section: typeof import("./src/components/Section");
+    SelectMenu: typeof import("./src/components/SelectMenu");
+    Separator: typeof import("./src/components/Separator");
+    TextDisplay: typeof import("./src/components/TextDisplay");
+    TextInput: typeof import("./src/components/TextInput");
+    Thumbnail: typeof import("./src/components/Thumbnail");
+    Attachment: typeof builds.Attachment;
+    Embed: typeof builds.Embed;
+    Interaction: typeof builds.Interaction;
+    MessageContextCommand: typeof builds.MessageContextCommand;
+    Poll: typeof builds.Poll;
+    SlashCommand: typeof builds.SlashCommand;
+    Unixify: (timestamp?: number | Date, format?: DiscordTimestampFormatName) => string;
+    UserContextCommand: typeof builds.UserContextCommand;
+    DJSBot: typeof DJSBot;
+};
+export = _exports;
+import builds = require("./src/builds/$");
+import DJSBot = require("./src/DJSBot");
+//# sourceMappingURL=index.d.ts.map
