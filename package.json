@@ -1,0 +1,35 @@
+{
+  "name": "@ix-xs/djs-bot",
+  "version": "0.1.0",
+  "description": "Lightweight Discord bot toolkit built on discord.js for creating and composing Discord API components in CommonJS projects.",
+  "main": "index.js",
+  "types": "types/index.d.ts",
+  "keywords": [
+    "discord",
+    "discord.js",
+    "discord-bot",
+    "discord-api",
+    "bot-framework",
+    "components",
+    "commonjs",
+    "javascript"
+  ],
+  "author": "ix-xs",
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ix-xs/djs-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ix-xs/djs-bot/issues"
+  },
+  "homepage": "https://github.com/ix-xs/djs-bot#readme",
+  "dependencies": {
+    "@ix-xs/node-comfort": "^1.1.31",
+    "discord.js": "^14.26.4"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "typescript": "^6.0.3"
+  }
+}
