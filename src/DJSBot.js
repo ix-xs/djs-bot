@@ -457,64 +457,43 @@ module.exports = class DJSBot {
       if (interaction.isChatInputCommand()) {
         const command = this.#commands.slash.get(interaction.commandName);
         if (command) await command.handler(interaction);
-      }
-      else if (interaction.isMessageContextMenuCommand()) {
+      } else if (interaction.isMessageContextMenuCommand()) {
         const command = this.#commands.context_message.get(interaction.commandName);
         if (command) await command.handler(interaction);
-      }
-      else if (interaction.isUserContextMenuCommand()) {
+      } else if (interaction.isUserContextMenuCommand()) {
         const command = this.#commands.context_user.get(interaction.commandName);
         if (command) await command.handler(interaction);
-      }
-      else if (interaction.isButton()) {
+      } else if (interaction.isButton()) {
         let button = this.#interactions.buttons.get(interaction.customId);
-
         if (!button) {
           const parts = interaction.customId.split(":");
-
           if (parts.length > 1) {
             const prefix = this.#wildcardInteractions.get(parts[0]);
-            if (prefix) {
-              button = prefix.get(`buttons:${parts[0]}:*`);
-            }
+            if (prefix) button = prefix.get(`buttons:${parts[0]}:*`);
           }
         }
-
         if (button) await button.handler(interaction);
-      }
-      else if (interaction.isAnySelectMenu()) {
+      } else if (interaction.isAnySelectMenu()) {
         let selectmenu = this.#interactions.selectmenus.get(interaction.customId);
-
         if (!selectmenu) {
           const parts = interaction.customId.split(":");
-
           if (parts.length > 1) {
             const prefix = this.#wildcardInteractions.get(parts[0]);
-            if (prefix) {
-              selectmenu = prefix.get(`selectmenus:${parts[0]}:*`);
-            }
+            if (prefix) selectmenu = prefix.get(`selectmenus:${parts[0]}:*`);
           }
         }
-
         if (selectmenu) await selectmenu.handler(interaction);
-      }
-      else if (interaction.isModalSubmit()) {
+      } else if (interaction.isModalSubmit()) {
         let modal = this.#interactions.modals.get(interaction.customId);
-
         if (!modal) {
           const parts = interaction.customId.split(":");
-
           if (parts.length > 1) {
             const prefix = this.#wildcardInteractions.get(parts[0]);
-            if (prefix) {
-              modal = prefix.get(`modals:${parts[0]}:*`);
-            }
+            if (prefix) modal = prefix.get(`modals:${parts[0]}:*`);
           }
         }
-
         if (modal) await modal.handler(interaction);
-      }
-      else if (interaction.isAutocomplete()) {
+      } else if (interaction.isAutocomplete()) {
         const command = this.#commands.slash.get(interaction.commandName);
         if (command?.autocomplete) await command.autocomplete(interaction);
       }
@@ -522,25 +501,12 @@ module.exports = class DJSBot {
 
     if (this.#config.events_folder) {
       for (const file of nodeComfort.getFilesIn(this.#config.events_folder ?? "*") ?? []) {
-        const event = /** @type {DJSBotFileEvent} */ (require(file));
-
-        if (
-          !event
-          || typeof event !== "object"
-          || typeof event.eventName !== "string"
-          || typeof event.handler !== "function"
-        ) {
-          throw new Error("Event must match the shape: { eventName: string, handler: function }");
-        }
-
-        this.client.on(event.eventName, async (...args) => {
-          await event.handler(...args);
-        });
+        await require(file);
       }
     }
 
     for (const eventName of this.#events.eventNames()) {
-      this.client.on(eventName, async (...args) => {
+      this.client.on(eventName, (...args) => {
         this.#events.emit(eventName, ...args);
       });
     }
@@ -597,28 +563,26 @@ module.exports = class DJSBot {
     }
 
     const globalCommands = allCommands
-      .filter((command) => !command.guild_id)
-      .map((command) => command.command);
+  .filter((command) => !command.guild_id)
+  .map((command) => command.command);
 
-    if (globalCommands.length > 0) {
-      const global =
-        /** @type {{ id: string, name: string, type?: string|number }[]} */
-        (await this.#rest.put(
-          Routes.applicationCommands(this.#config.id),
-          { body: globalCommands },
-        ));
+    const global =
+  /** @type {{ id: string, name: string, type?: string|number }[]} */
+  (await this.#rest.put(
+    Routes.applicationCommands(this.#config.id),
+    { body: globalCommands },
+  ));
 
-      for (const cmd of global) {
-        const key = this.#commandKey({
-          scope: "global",
-          type: cmd.type ?? 1,
-          name: cmd.name,
-        });
+    for (const cmd of global) {
+      const key = this.#commandKey({
+        scope: "global",
+        type: cmd.type ?? 1,
+        name: cmd.name,
+      });
 
-        const command = commandMap.get(key);
-        if (command) {
-          command.id = cmd.id;
-        }
+      const command = commandMap.get(key);
+      if (command) {
+        command.id = cmd.id;
       }
     }
 
