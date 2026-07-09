@@ -1,6 +1,6 @@
 {
   "name": "@ix-xs/djs-bot",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "Lightweight Discord bot toolkit built on discord.js for creating and composing Discord API components in CommonJS projects.",
   "main": "index.js",
   "types": "types/index.d.ts",
