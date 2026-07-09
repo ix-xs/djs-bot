@@ -1,5 +1,21 @@
 # @ix-xs/djs-bot
 
+<div align="center">
+
+
+![Node.js](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
+![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
+![NPM](https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white)
+![Github](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)
+
+
+[![npm version](https://badge.fury.io/js/%40ix-xs%2Fdjs-bot.svg)](https://www.npmjs.com/package/@ix-xs/djs-bot)
+[![Downloads](https://img.shields.io/npm/dm/@ix-xs/djs-bot.svg)](https://www.npmjs.com/package/@ix-xs/djs-bot)
+
+
+</div>
+
+
 Small CommonJS toolkit for building Discord bots on top of `discord.js`, with a straightforward API for commands, interactions, Components v2 and common message payloads.
 
 `@ix-xs/djs-bot` bundles:
