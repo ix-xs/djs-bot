@@ -94,6 +94,8 @@
     "attw": "attw --pack .",
     "check": "npm run typecheck && npm run test:types && npm run build && npm test",
     "bench": "tsx benchmarks/run.ts",
+    "docs": "npm --prefix docs install && npm --prefix docs run dev",
+    "docs:build": "npm --prefix docs install && npm --prefix docs run build",
     "lint": "tsc --noEmit",
     "example": "tsx examples/minimal/bot.ts",
     "prepublishOnly": "npm run build"

@@ -90,7 +90,9 @@ docs too. See [examples/](./examples) for a runnable bot in each language.
 >
 > Also in this repo: official plugins ([`@ix-xs/djs-bot/plugins`](./src/plugins)),
 > [VS Code snippets](./editors/vscode), and an [Astro docs site](./docs)
-> generated from `USAGE.md`.
+> generated from `USAGE.md`. Hacking on the framework? See
+> [CONTRIBUTING.md](./CONTRIBUTING.md) — every task runs from the repo root
+> (`npm run check`, `npm run docs`, `npm run bench`, …).
 
 ## Table of contents
 
