@@ -43,29 +43,12 @@ export default defineBot({
 | --- | --- |
 | `customId` strings you `split("_")` and pray | **Typed customId router** — declare params, `Button.build({ ... })` is type-checked, `ctx.params` is decoded and typed |
 | "My event never fires" (forgot an intent) | **Intent autopilot** — `intents: "auto"` derives intents & partials from your events, and warns about privileged ones |
-| Copy-pasted `deploy-commands.js`, ghost commands, 429s | **Diff deployer** — pushes only what changed, per-guild or global, with `--dry-run` |
+| Copy-pasted `deploy-commands.js`, ghost commands, 429s | **Diff deployer** — declarative: adds/updates/**removes** to match your code; mix **global + per-server** commands (`guilds: [...]`), with `--dry-run` |
 | "This application did not respond" | **Error boundaries** — every interaction is wrapped; failures are logged with a correlation id and answered |
 | Decorator magic you can't debug | **No side-effect loading** — files export `define*()` objects; nothing registers by importing. `djs-bot explain` shows it all |
 | Bots are impossible to unit-test | **Test harness** — invoke handlers with no token, no network |
 | "Frameworks are slow" | **~1.4 µs** per-interaction routing overhead — see [benchmarks](./benchmarks) |
 | Rebuilding the same helpers every project | **Batteries included** — subcommands, context menus, autocomplete, native selects, user-install, i18n (`ctx.t`), key-value stores, audit trail, per-guild feature flags, health checks & metrics, rate limiters & circuit breakers, message triggers, sharding, `paginate()`/`confirm()`, presence rotation, `assets`/`voice`, `ui` Components-V2 builders, and a smart TTL cache |
-
-## Official plugins
-
-First-party plugins live at the `@ix-xs/djs-bot/plugins` subpath:
-
-```ts
-import { defineBot } from "@ix-xs/djs-bot";
-import { antiSpam, commandLogger, errorReporter, maintenance } from "@ix-xs/djs-bot/plugins";
-
-export default defineBot({
-  token: env("DISCORD_TOKEN"),
-  plugins: [antiSpam({ max: 5, window: "10s" }), commandLogger(), errorReporter({ report: sendToSentry })],
-});
-```
-
-`antiSpam` · `commandLogger` · `errorReporter` · `maintenance` — all small,
-readable examples of the plugin API.
 
 ## Install
 
@@ -93,6 +76,23 @@ docs too. See [examples/](./examples) for a runnable bot in each language.
 > generated from `USAGE.md`. Hacking on the framework? See
 > [CONTRIBUTING.md](./CONTRIBUTING.md) — every task runs from the repo root
 > (`npm run check`, `npm run docs`, `npm run bench`, …).
+
+## Official plugins
+
+First-party plugins live at the `@ix-xs/djs-bot/plugins` subpath:
+
+```ts
+import { defineBot } from "@ix-xs/djs-bot";
+import { antiSpam, commandLogger, errorReporter, maintenance } from "@ix-xs/djs-bot/plugins";
+
+export default defineBot({
+  token: env("DISCORD_TOKEN"),
+  plugins: [antiSpam({ max: 5, window: "10s" }), commandLogger(), errorReporter({ report: sendToSentry })],
+});
+```
+
+`antiSpam` · `commandLogger` · `errorReporter` · `maintenance` — all small,
+readable examples of the plugin API.
 
 ## Table of contents
 
@@ -397,10 +397,12 @@ export default defineFeature({
 
 ## Configuration
 
-```ts
-import { defineConfig, env } from "@ix-xs/djs-bot";
+Everything is configured in the object you pass to `defineBot` — fully typed:
 
-export default defineConfig({
+```ts
+import { defineBot, env } from "@ix-xs/djs-bot";
+
+export default defineBot({
   token: env("DISCORD_TOKEN"),
   clientId: env.optional("DISCORD_CLIENT_ID"),
   features: "./src/features",
@@ -422,10 +424,11 @@ a clear error when a required variable is missing. `env.optional(name)` returns
 ```
 djs-bot dev [entry]            Start with watch + instant guild deploy
 djs-bot start [entry]          Start in production mode
-djs-bot deploy [entry]         Diff & deploy commands  (--global --dry-run --guild <id>)
+djs-bot deploy [entry]         Diff & deploy commands (adds/updates/removes)  (--dry-run, --guild <id>)
+djs-bot clear [entry]          Remove all commands from a scope  (--global | --guild <id>)
 djs-bot doctor [entry]         Diagnose config, intents & permissions
-djs-bot explain [entry]        Print what's loaded and why
-djs-bot generate <type> <name> Scaffold a command/event/button/modal/select/service/job/feature
+djs-bot explain [entry]        Print what's loaded and why (incl. deployment plan)
+djs-bot generate <type> <name> Scaffold a command/event/button/modal/select/service/job/feature/trigger
 djs-bot init                   Scaffold a minimal starter
 ```
 

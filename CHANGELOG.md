@@ -85,7 +85,7 @@ production-ready bot framework. **Breaking:** the entire API is new.
   an abort signal on shutdown.
 - **Plugins** (`definePlugin`) and **features** (`defineFeature`) with a
   validated capability graph (`requires` / `provides` / `conflicts`).
-- **Structured logger**, typed **config** (`defineConfig`, `env`), and coded
+- **Structured logger**, typed **config** (`env`, `.env` loading), and coded
   errors (`BotError`, `DJSBOT_Exxx`).
 - **CLI** `djs-bot`: `dev`, `start`, `deploy`, `doctor`, `explain`, `generate`,
   `init`.
