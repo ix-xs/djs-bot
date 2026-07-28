@@ -1,0 +1,46 @@
+---
+title: djs-bot
+description: A TypeScript-first, production-ready framework for Discord bots built on discord.js.
+template: splash
+hero:
+  tagline: Write features, not plumbing. Your bot is production-ready on day one — and you can always read what the framework does.
+  actions:
+    - text: Get started
+      link: /djs-bot/getting-started/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/ix-xs/djs-bot
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Why djs-bot
+
+<CardGrid stagger>
+  <Card title="Type-safe end to end" icon="approve-check">
+    Typed slash options, typed `customId` params, typed services and config. `required: true` makes an option non-optional.
+  </Card>
+  <Card title="No magic" icon="setting">
+    Files export `define*()` objects; nothing registers by importing. `djs-bot explain` shows exactly what's loaded and why.
+  </Card>
+  <Card title="Production-ready" icon="rocket">
+    Error boundaries, graceful shutdown, structured logs, sharding, health checks, i18n, persistence and rate limiting — built in.
+  </Card>
+  <Card title="Batteries included" icon="puzzle">
+    Subcommands, context menus, autocomplete, native selects, triggers, pagination, `confirm()`, presence, assets, voice — and official plugins.
+  </Card>
+</CardGrid>
+
+```ts
+import { defineBot, defineCommand, s, env } from "@ix-xs/djs-bot";
+
+export default defineBot({ token: env("DISCORD_TOKEN"), features: "./src/features" })
+  .use(defineCommand({
+    name: "ping",
+    description: "Check the bot is alive",
+    options: { user: s.user({ required: true }) }, // ctx.options.user is a User
+    run: (ctx) => ctx.reply.success(`Pong, ${ctx.options.user}! 🏓`),
+  }));
+```

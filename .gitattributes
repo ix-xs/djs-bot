@@ -1,0 +1,20 @@
+# Normalise line endings to LF in the repo (avoids CRLF noise on Windows).
+* text=auto eol=lf
+
+# Keep shell scripts and YAML as LF.
+*.sh   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# Treat these as binary (no diff / no EOL conversion).
+*.png  binary
+*.jpg  binary
+*.gif  binary
+*.ico  binary
+*.woff binary
+*.woff2 binary
+
+# Don't ship dev-only files in the npm tarball or GitHub language stats noise.
+docs/**            linguist-documentation
+examples/**        linguist-documentation
+benchmarks/**      linguist-vendored

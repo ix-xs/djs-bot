@@ -1,0 +1,231 @@
+{
+  "djs-bot: slash command": {
+    "scope": "typescript,javascript",
+    "prefix": "dcommand",
+    "description": "A djs-bot slash command",
+    "body": [
+      "import { defineCommand, s } from \"@ix-xs/djs-bot\";",
+      "",
+      "export default defineCommand({",
+      "\tname: \"${1:name}\",",
+      "\tdescription: \"${2:description}\",",
+      "\toptions: {",
+      "\t\t${3:text}: s.string({ description: \"${4:text}\", required: true }),",
+      "\t},",
+      "\trun: async (ctx) => {",
+      "\t\tawait ctx.reply.success(\"${5:Done!}\");$0",
+      "\t},",
+      "});"
+    ]
+  },
+  "djs-bot: command with subcommands": {
+    "scope": "typescript,javascript",
+    "prefix": "dsub",
+    "description": "A djs-bot command with subcommands",
+    "body": [
+      "import { defineCommand, subcommand, s } from \"@ix-xs/djs-bot\";",
+      "",
+      "export default defineCommand({",
+      "\tname: \"${1:group}\",",
+      "\tdescription: \"${2:description}\",",
+      "\tsubcommands: {",
+      "\t\t${3:view}: subcommand({",
+      "\t\t\tdescription: \"${4:View}\",",
+      "\t\t\trun: (ctx) => ctx.reply.info(\"${5:...}\"),",
+      "\t\t}),",
+      "\t},",
+      "});$0"
+    ]
+  },
+  "djs-bot: event": {
+    "scope": "typescript,javascript",
+    "prefix": "devent",
+    "description": "A djs-bot gateway event listener",
+    "body": [
+      "import { defineEvent } from \"@ix-xs/djs-bot\";",
+      "",
+      "export default defineEvent(\"${1:guildMemberAdd}\", async (${2:member}, ctx) => {",
+      "\tctx.logger.info({}, \"${3:event fired}\");$0",
+      "});"
+    ]
+  },
+  "djs-bot: button": {
+    "scope": "typescript,javascript",
+    "prefix": "dbutton",
+    "description": "A djs-bot button with typed customId params",
+    "body": [
+      "import { defineButton, p, ButtonStyle } from \"@ix-xs/djs-bot\";",
+      "",
+      "export const ${1:MyButton} = defineButton({",
+      "\tid: \"${2:feature:action}\",",
+      "\tparams: { ${3:id}: p.string },",
+      "\tlabel: \"${4:Click}\",",
+      "\tstyle: ButtonStyle.Primary,",
+      "\trun: async (ctx) => {",
+      "\t\tawait ctx.reply.success(`${5:Clicked} ${ctx.params.${3:id}}`);$0",
+      "\t},",
+      "});"
+    ]
+  },
+  "djs-bot: select menu": {
+    "scope": "typescript,javascript",
+    "prefix": "dselect",
+    "description": "A djs-bot string select menu",
+    "body": [
+      "import { defineSelectMenu } from \"@ix-xs/djs-bot\";",
+      "",
+      "export const ${1:MySelect} = defineSelectMenu({",
+      "\tid: \"${2:feature:pick}\",",
+      "\trun: async (ctx) => {",
+      "\t\tawait ctx.reply.success(`Picked: ${ctx.values.join(\", \")}`);$0",
+      "\t},",
+      "});"
+    ]
+  },
+  "djs-bot: modal": {
+    "scope": "typescript,javascript",
+    "prefix": "dmodal",
+    "description": "A djs-bot modal with typed fields",
+    "body": [
+      "import { defineModal, field } from \"@ix-xs/djs-bot\";",
+      "",
+      "export const ${1:MyModal} = defineModal({",
+      "\tid: \"${2:feature:submit}\",",
+      "\ttitle: \"${3:Title}\",",
+      "\tfields: {",
+      "\t\t${4:body}: field.paragraph({ label: \"${5:Details}\", required: true }),",
+      "\t},",
+      "\trun: async (ctx) => {",
+      "\t\tawait ctx.reply.success(`Received: ${ctx.fields.${4:body}}`);$0",
+      "\t},",
+      "});"
+    ]
+  },
+  "djs-bot: user context menu": {
+    "scope": "typescript,javascript",
+    "prefix": "duser",
+    "description": "A djs-bot user context-menu command",
+    "body": [
+      "import { defineUserCommand } from \"@ix-xs/djs-bot\";",
+      "",
+      "export default defineUserCommand({",
+      "\tname: \"${1:User info}\",",
+      "\trun: async (ctx) => {",
+      "\t\tawait ctx.reply.info(`${ctx.targetUser.tag}`, { ephemeral: true });$0",
+      "\t},",
+      "});"
+    ]
+  },
+  "djs-bot: message context menu": {
+    "scope": "typescript,javascript",
+    "prefix": "dmessage",
+    "description": "A djs-bot message context-menu command",
+    "body": [
+      "import { defineMessageCommand } from \"@ix-xs/djs-bot\";",
+      "",
+      "export default defineMessageCommand({",
+      "\tname: \"${1:Report message}\",",
+      "\trun: async (ctx) => {",
+      "\t\tawait ctx.reply.success(`${ctx.targetMessage.id}`, { ephemeral: true });$0",
+      "\t},",
+      "});"
+    ]
+  },
+  "djs-bot: trigger": {
+    "scope": "typescript,javascript",
+    "prefix": "dtrigger",
+    "description": "A djs-bot message auto-responder",
+    "body": [
+      "import { defineTrigger } from \"@ix-xs/djs-bot\";",
+      "",
+      "export default defineTrigger({",
+      "\tname: \"${1:name}\",",
+      "\tpattern: \"${2:keyword}\",",
+      "\trun: async (ctx) => {",
+      "\t\tawait ctx.reply(\"${3:Triggered!}\");$0",
+      "\t},",
+      "});"
+    ]
+  },
+  "djs-bot: job": {
+    "scope": "typescript,javascript",
+    "prefix": "djob",
+    "description": "A djs-bot scheduled job",
+    "body": [
+      "import { defineJob } from \"@ix-xs/djs-bot\";",
+      "",
+      "export default defineJob({",
+      "\tname: \"${1:name}\",",
+      "\tschedule: \"${2:0 3 * * *}\",",
+      "\trun: async (ctx) => {",
+      "\t\tctx.logger.info({}, \"${3:job ran}\");$0",
+      "\t},",
+      "});"
+    ]
+  },
+  "djs-bot: service": {
+    "scope": "typescript,javascript",
+    "prefix": "dservice",
+    "description": "A djs-bot injectable service",
+    "body": [
+      "import { defineService } from \"@ix-xs/djs-bot\";",
+      "",
+      "export const ${1:MyService} = defineService(\"${2:token}\", {",
+      "\tdeps: [${3}],",
+      "\tfactory: (${4:deps}) => ({",
+      "\t\t${5:hello}: () => \"world\",$0",
+      "\t}),",
+      "});"
+    ]
+  },
+  "djs-bot: plugin": {
+    "scope": "typescript,javascript",
+    "prefix": "dplugin",
+    "description": "A djs-bot plugin",
+    "body": [
+      "import { definePlugin } from \"@ix-xs/djs-bot\";",
+      "",
+      "export const ${1:myPlugin} = definePlugin({",
+      "\tname: \"${2:my-plugin}\",",
+      "\tversion: \"1.0.0\",",
+      "\tsetup(app) {",
+      "\t\tapp.hooks.beforeInteraction(async (ctx, next) => {",
+      "\t\t\tawait next();$0",
+      "\t\t});",
+      "\t},",
+      "});"
+    ]
+  },
+  "djs-bot: feature": {
+    "scope": "typescript,javascript",
+    "prefix": "dfeature",
+    "description": "A djs-bot feature pack",
+    "body": [
+      "import { defineFeature } from \"@ix-xs/djs-bot\";",
+      "",
+      "export default defineFeature({",
+      "\tname: \"${1:name}\",",
+      "\trequires: [${2}],",
+      "\tcommands: [${3}],$0",
+      "});"
+    ]
+  },
+  "djs-bot: bot entry": {
+    "scope": "typescript,javascript",
+    "prefix": "dbot",
+    "description": "A djs-bot entry file",
+    "body": [
+      "import { defineBot, env } from \"@ix-xs/djs-bot\";",
+      "",
+      "const bot = defineBot({",
+      "\ttoken: env(\"DISCORD_TOKEN\"),",
+      "\tfeatures: \"${1:./src/features}\",",
+      "\tintents: \"auto\",",
+      "});",
+      "",
+      "export default bot;",
+      "",
+      "if (!process.env.DJSBOT_CLI) void bot.start();$0"
+    ]
+  }
+}

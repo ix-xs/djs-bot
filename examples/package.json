@@ -1,0 +1,4 @@
+{
+  "//": "Marks the examples as ESM so Node's type-stripping runs them directly (node --experimental-strip-types / Node 22.6+).",
+  "type": "module"
+}
