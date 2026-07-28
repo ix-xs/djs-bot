@@ -1245,16 +1245,17 @@ Methods: `h.command`, `h.button`, `h.select`, `h.modal`. Options: `userId`,
 ```
 djs-bot dev [entry]              # watch + instant guild deploy (uses tsx if present)
 djs-bot start [entry]            # production mode
-djs-bot deploy [entry]           # diff & deploy   (--global | --dry-run | --guild <id>)
+djs-bot deploy [entry]           # diff & deploy: adds/updates/removes  (--dry-run, --guild <id>)
+djs-bot clear [entry]            # remove all commands from a scope     (--global | --guild <id>)
 djs-bot doctor [entry]           # diagnose config, intents, permissions
-djs-bot explain [entry]          # print the capability graph (what's loaded and why)
+djs-bot explain [entry]          # print what's loaded, incl. the deployment plan
 djs-bot generate <type> <name>   # scaffold (command|user|message|event|trigger|button|modal|select|service|job|feature)
 djs-bot init                     # minimal starter
 djs-bot help | version
 ```
 
 `dev`/`start` run your entry (with `tsx` if installed, so raw `.ts` works).
-`deploy`/`doctor`/`explain` import your entry in introspection mode
+`deploy`/`clear`/`doctor`/`explain` import your entry in introspection mode
 (`DJSBOT_CLI=introspect`) and **never connect** to the gateway.
 
 ```bash

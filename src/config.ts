@@ -72,17 +72,6 @@ export interface BotConfig {
   health?: number | HealthOptions;
   /** Global error handler for interactions. Return a value to mark it handled. */
   onError?: (error: unknown, ctx?: BaseContext) => unknown | Promise<unknown>;
-  /** Entry file, used by the CLI when it cannot infer it. */
-  entry?: string;
-}
-
-/**
- * Identity helper that gives you full type-checking and autocompletion on a
- * `djs-bot.config.ts` file.
- * @example export default defineConfig({ token: env("DISCORD_TOKEN"), features: "./features" });
- */
-export function defineConfig(config: BotConfig): BotConfig {
-  return config;
 }
 
 /**

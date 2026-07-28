@@ -11,7 +11,7 @@
 
 // Core entry points
 export { Bot, defineBot, isBot, type BotDescription, type DeployCallOptions } from "./bot.js";
-export { defineConfig, env, loadEnvFile, type BotConfig, type DeployConfig, type FeatureSource } from "./config.js";
+export { env, loadEnvFile, type BotConfig, type DeployConfig, type FeatureSource } from "./config.js";
 
 // Definitions (the authoring surface)
 export {
