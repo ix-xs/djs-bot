@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output (rebuilt on publish via prepublishOnly)
+dist/
+docs/dist/
+docs/.astro/
+
+# Generated docs guide (produced from USAGE.md by docs/scripts/generate.mjs)
+docs/src/content/docs/guide/
+
+# djs-bot deploy state (tracks deployed guilds for auto-prune)
+.djs-bot/
+
+# Tests / coverage / TS build info
+coverage/
+*.tsbuildinfo
+
+# Packaged artifacts
+*.tgz
+*.vsix
+
+# Secrets & local environment — the template .env.example IS committed
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# OS & editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

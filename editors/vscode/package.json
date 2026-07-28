@@ -1,0 +1,38 @@
+{
+  "name": "djs-bot-snippets",
+  "displayName": "djs-bot Snippets",
+  "description": "Code snippets for @ix-xs/djs-bot — commands, events, buttons, modals, selects, triggers, jobs, services, plugins and more.",
+  "version": "1.0.0",
+  "publisher": "ix-xs",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Snippets"
+  ],
+  "keywords": [
+    "discord",
+    "discord.js",
+    "djs-bot",
+    "snippets",
+    "bot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ix-xs/djs-bot.git",
+    "directory": "editors/vscode"
+  },
+  "contributes": {
+    "snippets": [
+      {
+        "language": "typescript",
+        "path": "./snippets/djs-bot.code-snippets"
+      },
+      {
+        "language": "javascript",
+        "path": "./snippets/djs-bot.code-snippets"
+      }
+    ]
+  }
+}

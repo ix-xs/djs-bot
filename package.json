@@ -1,0 +1,120 @@
+{
+  "name": "@ix-xs/djs-bot",
+  "version": "1.0.0",
+  "description": "A TypeScript-first, production-ready framework for building Discord bots on top of discord.js. Typed slash commands, typed customId routing, auto intents, error boundaries, DI, plugins, jobs and a batteries-included CLI — with zero plumbing.",
+  "keywords": [
+    "discord",
+    "discord.js",
+    "discord-bot",
+    "discord-api",
+    "bot-framework",
+    "framework",
+    "slash-commands",
+    "interactions",
+    "typescript",
+    "esm"
+  ],
+  "author": "ix-xs.dev <contact@ix-xs.dev>",
+  "license": "MIT",
+  "homepage": "https://github.com/ix-xs/djs-bot#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ix-xs/djs-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ix-xs/djs-bot/issues"
+  },
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "djs-bot": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./testing": {
+      "import": {
+        "types": "./dist/testing.d.mts",
+        "default": "./dist/testing.mjs"
+      },
+      "require": {
+        "types": "./dist/testing.d.ts",
+        "default": "./dist/testing.js"
+      }
+    },
+    "./plugins": {
+      "import": {
+        "types": "./dist/plugins.d.mts",
+        "default": "./dist/plugins.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins.d.ts",
+        "default": "./dist/plugins.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "./dist/testing.d.ts"
+      ],
+      "plugins": [
+        "./dist/plugins.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "USAGE.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:types": "tsc -p tsconfig.test.json",
+    "attw": "attw --pack .",
+    "check": "npm run typecheck && npm run test:types && npm run build && npm test",
+    "bench": "tsx benchmarks/run.ts",
+    "lint": "tsc --noEmit",
+    "example": "tsx examples/minimal/bot.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@ix-xs/node-comfort": "^1.2.0"
+  },
+  "peerDependencies": {
+    "discord.js": "^14.16.0"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.0",
+    "@types/node": "^22.10.0",
+    "discord.js": "^14.16.0",
+    "tinybench": "^3.1.0",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
