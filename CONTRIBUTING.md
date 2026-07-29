@@ -17,7 +17,7 @@ So end users interact with just three things: the **CLI** (`npx djs-bot …`), t
 
 ## Prerequisites
 
-- Node.js ≥ 20
+- Node.js ≥ 22 (a dependency uses the built-in `node:sqlite`)
 - `npm install` (installs dev deps: TypeScript, tsup, vitest, tsx, …)
 
 ## Everyday commands (all from the repo root)
