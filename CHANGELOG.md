@@ -3,6 +3,23 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## 1.0.0-beta.2
+
+> ⚠️ **Beta / real-world testing.** Published under the `beta` npm tag
+> (`npm i @ix-xs/djs-bot@beta`).
+
+### Fixed
+
+- **`ui.container(...)` typing.** It accepted only `AnyComponentBuilder` (action-row
+  children) even though it builds a Components V2 container from display builders.
+  `ui.container(ui.text(...), ui.section(...), ...)` now type-checks. Added a
+  `ContainerChild` export for the accepted union.
+- **Feature/plugin `requires` now recognises config-provided services.** A feature
+  declaring `requires: ["store"]` (or `"audit"` / `"flags"`) failed contract
+  validation with `DJSBOT_E040` even though the bot provided them, because the
+  check only inspected `registry.services` and not container-registered values.
+  It now also consults the DI container.
+
 ## 1.0.0-beta.1
 
 > ⚠️ **Beta / real-world testing.** Published under the `beta` npm tag
