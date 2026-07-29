@@ -3,6 +3,35 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## 1.0.0-beta.1
+
+> ⚠️ **Beta / real-world testing.** Published under the `beta` npm tag
+> (`npm i @ix-xs/djs-bot@beta`).
+
+### Fixed
+
+- **Loader now runs the `init` starter (and any project) under `tsx`.** When the
+  framework resolved to its CommonJS build (which is what `tsx` / `node --import
+  tsx` does), `await import()` of a feature file double-wrapped the definition as
+  `{ default: { __esModule: true, default: <def> } }`. The loader only unwrapped
+  one level, so every discovered file looked empty and threw
+  `DJSBOT_E060 - matched a convention suffix but exports no define*() result`.
+  `collectDefinitions` now descends through the interop wrapper (and nested
+  arrays). Fixes a hard crash on `npx djs-bot dev` right after `npx djs-bot init`.
+- **`explain` / `deploy` / `doctor` / `clear`** hit the same interop wrapper on
+  the entry file and failed with *"must default-export a bot from defineBot()"*.
+  A shared `interopDefault` helper now unwraps the entry the same way.
+- **`init` starter** no longer emits the removed `deploy.mode` field; it scaffolds
+  `deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") }`.
+- **`doctor`** now checks for Node >= 22 (matching `engines`), not >= 20.
+
+### Changed
+
+- **Requires Node >= 22.** A dependency (`@ix-xs/node-comfort`) loads the built-in
+  `node:sqlite`, which does not exist on Node 20. `engines`, the CI matrix and the
+  docs were updated. (This also corrects the `beta.0` tarball, which wrongly
+  advertised `>= 20`.)
+
 ## 1.0.0-beta.0
 
 > ⚠️ **Beta / real-world testing.** Published under the `beta` npm tag
