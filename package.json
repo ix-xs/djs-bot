@@ -1,6 +1,6 @@
 {
   "name": "@ix-xs/djs-bot",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.3",
   "description": "A TypeScript-first, production-ready framework for building Discord bots on top of discord.js. Typed slash commands, typed customId routing, auto intents, error boundaries, DI, plugins, jobs and a batteries-included CLI - with zero plumbing.",
   "keywords": [
     "discord",

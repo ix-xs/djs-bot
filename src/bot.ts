@@ -818,7 +818,10 @@ export class Bot {
     const key = customIdKey(interaction.customId);
     const button = this.registry.buttons.get(key);
     if (!button) {
-      await base.reply.error("This button is no longer available.");
+      // Not one of our registered buttons - it may belong to a self-managed
+      // collector (paginate/confirm/awaitMessageComponent). Leave it untouched
+      // so that collector can respond; acknowledging it here would break them.
+      base.logger.debug({ customId: interaction.customId }, "unrouted button left for any active collector");
       return;
     }
     const { params } = decodeCustomId(interaction.customId, button.params);
@@ -835,7 +838,8 @@ export class Bot {
     const key = customIdKey(interaction.customId);
     const menu = this.registry.selectMenus.get(key);
     if (!menu) {
-      await base.reply.error("This menu is no longer available.");
+      // May belong to a self-managed collector - leave it for that collector.
+      base.logger.debug({ customId: interaction.customId }, "unrouted select left for any active collector");
       return;
     }
     const { params } = decodeCustomId(interaction.customId, menu.params);
@@ -869,7 +873,8 @@ export class Bot {
     const key = customIdKey(interaction.customId);
     const modal = this.registry.modals.get(key);
     if (!modal) {
-      await base.reply.error("This form is no longer available.");
+      // May belong to a self-managed awaitModalSubmit - leave it for that waiter.
+      base.logger.debug({ customId: interaction.customId }, "unrouted modal left for any active collector");
       return;
     }
     const { params } = decodeCustomId(interaction.customId, modal.params);

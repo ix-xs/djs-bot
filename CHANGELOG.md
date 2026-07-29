@@ -3,6 +3,22 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## 1.0.0-beta.3
+
+> ⚠️ **Beta / real-world testing.** Published under the `beta` npm tag
+> (`npm i @ix-xs/djs-bot@beta`).
+
+### Fixed
+
+- **`paginate` / `confirm` / any component collector now work.** The interaction
+  router replied "This button/menu/form is no longer available." to any component
+  whose customId didn't match a registered handler - which *acknowledged* the
+  interaction and stole it from self-managed collectors (`paginate`, `confirm`,
+  `awaitMessageComponent`, `awaitModalSubmit`), so their `interaction.update()`
+  failed with `10062 Unknown interaction`. Unmatched components/modals are now
+  left untouched (a debug log) so the owning collector can respond. A genuinely
+  orphaned component simply falls through to Discord's default, as elsewhere.
+
 ## 1.0.0-beta.2
 
 > ⚠️ **Beta / real-world testing.** Published under the `beta` npm tag
