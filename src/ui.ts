@@ -22,9 +22,20 @@ import {
   SeparatorSpacingSize,
   TextDisplayBuilder,
   ThumbnailBuilder,
-  type AnyComponentBuilder,
   type MessageActionRowComponentBuilder,
 } from "discord.js";
+
+/**
+ * A display component that can live inside a {@link ui.container}: a text block,
+ * separator, section, media gallery, file, or an action row of buttons/selects.
+ */
+export type ContainerChild =
+  | TextDisplayBuilder
+  | SeparatorBuilder
+  | SectionBuilder
+  | MediaGalleryBuilder
+  | FileBuilder
+  | ActionRowBuilder<MessageActionRowComponentBuilder>;
 
 /** Terse component factories. All return real discord.js builders. */
 export const ui = {
@@ -46,7 +57,7 @@ export const ui = {
   /* ----------------------------- Components V2 ---------------------------- */
 
   /** A V2 container that groups display components, with an optional accent colour. */
-  container(...components: AnyComponentBuilder[]): ContainerBuilder {
+  container(...components: ContainerChild[]): ContainerBuilder {
     const c = new ContainerBuilder();
     for (const component of components) addToContainer(c, component);
     return c;
@@ -101,7 +112,7 @@ export const ui = {
   },
 };
 
-function addToContainer(container: ContainerBuilder, component: AnyComponentBuilder): void {
+function addToContainer(container: ContainerBuilder, component: ContainerChild): void {
   if (component instanceof TextDisplayBuilder) container.addTextDisplayComponents(component);
   else if (component instanceof SeparatorBuilder) container.addSeparatorComponents(component);
   else if (component instanceof SectionBuilder) container.addSectionComponents(component);

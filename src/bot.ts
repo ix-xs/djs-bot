@@ -208,17 +208,21 @@ export class Bot {
     for (const service of this.registry.services) provided.add(service.name);
     for (const plugin of this.registry.plugins) plugin.provides.forEach((c) => provided.add(c));
     for (const feature of this.registry.features) feature.provides.forEach((c) => provided.add(c));
+    // Config-provided services (store/audit/flags) and any value a plugin
+    // registered are real capabilities too - they live in the container, not in
+    // `registry.services`, so consult it as well.
+    const isProvided = (need: string): boolean => provided.has(need) || this.container.has(need);
 
     for (const feature of this.registry.features) {
       for (const need of feature.requires) {
-        if (!provided.has(need)) {
+        if (!isProvided(need)) {
           throw new BotError("DJSBOT_E040", { detail: `feature "${feature.name}" requires "${need}"` });
         }
       }
     }
     for (const plugin of this.registry.plugins) {
       for (const need of plugin.requires) {
-        if (!provided.has(need)) {
+        if (!isProvided(need)) {
           throw new BotError("DJSBOT_E040", { detail: `plugin "${plugin.name}" requires "${need}"` });
         }
       }
