@@ -8,7 +8,7 @@ _Write features, not plumbing._
 
 [![npm version](https://img.shields.io/npm/v/@ix-xs/djs-bot/beta.svg)](https://www.npmjs.com/package/@ix-xs/djs-bot)
 [![status](https://img.shields.io/badge/status-beta-orange)](#)
-[![node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
+[![node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](https://nodejs.org)
 [![types](https://img.shields.io/badge/types-included-blue)](#)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
@@ -60,6 +60,8 @@ export default defineBot({
 | Rebuilding the same helpers every project | **Batteries included** - subcommands, context menus, autocomplete, native selects, user-install, i18n (`ctx.t`), key-value stores, audit trail, per-guild feature flags, health checks & metrics, rate limiters & circuit breakers, message triggers, sharding, `paginate()`/`confirm()`, presence rotation, `assets`/`voice`, `ui` Components-V2 builders, and a smart TTL cache |
 
 ## Install
+
+Requires **Node 22 or newer** (a dependency uses the built-in `node:sqlite`).
 
 ```bash
 npm install @ix-xs/djs-bot discord.js
