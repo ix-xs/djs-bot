@@ -4,7 +4,7 @@
  * Forgetting an intent is the classic "my event never fires" bug. When
  * `intents: "auto"`, the framework derives the exact gateway intents (and the
  * partials needed to receive uncached objects) from the events you actually
- * registered — and warns you when a privileged intent is required.
+ * registered - and warns you when a privileged intent is required.
  *
  * @module intents
  */

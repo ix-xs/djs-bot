@@ -1,13 +1,13 @@
 /**
  * Typed schema builders shared across the framework.
  *
- * - `s` — slash-command option builders (`s.string`, `s.user`, …). The option
+ * - `s` - slash-command option builders (`s.string`, `s.user`, …). The option
  *   map you pass to {@link defineCommand} is turned into a fully-typed
  *   `ctx.options` object, so `ctx.options.user` is a `GuildMember`, not `any`.
- * - `p` — customId parameter codecs (`p.string`, `p.number`, …) used by
+ * - `p` - customId parameter codecs (`p.string`, `p.number`, …) used by
  *   {@link defineButton}/{@link defineSelectMenu} to encode typed params into a
  *   component's customId and decode them back with the right types.
- * - `field` — modal text-input builders.
+ * - `field` - modal text-input builders.
  *
  * @module schema
  */
@@ -169,7 +169,7 @@ function makeAttachment(config: CommonOpt = {}): OptionDef<"attachment", boolean
 
 /**
  * Slash-command option builders. Pass the result to {@link defineCommand}'s
- * `options` map; the handler's `ctx.options` is typed from it — `required: true`
+ * `options` map; the handler's `ctx.options` is typed from it - `required: true`
  * makes the value non-optional.
  *
  * @example
@@ -189,17 +189,17 @@ export const s = {
   number: makeNumber,
   /** A boolean (true/false) option. */
   boolean: makeBoolean,
-  /** A user option — resolves to a {@link User}. */
+  /** A user option - resolves to a {@link User}. */
   user: makeUser,
-  /** A member option — resolves to a {@link GuildMember} (guild-only). */
+  /** A member option - resolves to a {@link GuildMember} (guild-only). */
   member: makeMember,
-  /** A channel option — resolves to a guild channel. */
+  /** A channel option - resolves to a guild channel. */
   channel: makeChannel,
-  /** A role option — resolves to a {@link Role}. */
+  /** A role option - resolves to a {@link Role}. */
   role: makeRole,
-  /** A mentionable option — user, member or role. */
+  /** A mentionable option - user, member or role. */
   mentionable: makeMentionable,
-  /** An attachment option — resolves to an {@link Attachment}. */
+  /** An attachment option - resolves to an {@link Attachment}. */
   attachment: makeAttachment,
 };
 

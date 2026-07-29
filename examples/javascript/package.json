@@ -1,4 +1,4 @@
 {
-  "//": "A plain CommonJS example — no build step, no TypeScript. Run with: node bot.js (or npx djs-bot dev bot.js).",
+  "//": "A plain CommonJS example - no build step, no TypeScript. Run with: node bot.js (or npx djs-bot dev bot.js).",
   "type": "commonjs"
 }

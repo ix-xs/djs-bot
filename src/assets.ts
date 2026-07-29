@@ -1,6 +1,6 @@
 /**
  * Asset URL helpers: avatars, banners, guild icons/banners/splashes, and emoji
- * images — with size/format options. Banners aren't cached by discord.js, so
+ * images - with size/format options. Banners aren't cached by discord.js, so
  * {@link assets.banner} fetches the user first.
  *
  * @module assets

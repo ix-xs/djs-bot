@@ -3,7 +3,7 @@
  *
  * Everything the framework knows about lives here: commands, components, events,
  * jobs, services, plugins and features. It is the single source of truth for
- * routing, deployment and `djs-bot explain`. Registration is explicit — nothing
+ * routing, deployment and `djs-bot explain`. Registration is explicit - nothing
  * is added by import side effects.
  *
  * @module registry

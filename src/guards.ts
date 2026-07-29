@@ -1,5 +1,5 @@
 /**
- * Guards — composable, typed preconditions that run before a handler.
+ * Guards - composable, typed preconditions that run before a handler.
  *
  * A guard either passes or fails with a user-facing reason. Failing short-
  * circuits the pipeline and replies with the reason, so handlers only ever run

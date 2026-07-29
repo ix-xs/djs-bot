@@ -1,6 +1,6 @@
 import { defineModal, field } from "../../../../src/index.js";
 
-/** A modal with typed fields — `ctx.fields` is `{ subject: string; body: string }`. */
+/** A modal with typed fields - `ctx.fields` is `{ subject: string; body: string }`. */
 export const FeedbackModal = defineModal({
   id: "feedback:submit",
   title: "Send feedback",

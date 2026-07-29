@@ -3,7 +3,7 @@
  *
  * Instead of blindly PUTting commands on every start (and eating rate limits),
  * this builds the desired command tree from the registry, fetches what Discord
- * currently has, and only pushes when they differ — reporting exactly what was
+ * currently has, and only pushes when they differ  reporting exactly what was
  * added, removed or changed. Supports `--dry-run` and guild vs global targets.
  *
  * @module deploy
@@ -332,7 +332,7 @@ async function reconcileTarget(
     return result;
   }
   if (dryRun) {
-    logger?.info({ scope, guildId, added, changed, removed }, "Dry run — no changes pushed");
+    logger?.info({ scope, guildId, added, changed, removed }, "Dry run  no changes pushed");
     return result;
   }
   await rest.put(route, { body: desired });

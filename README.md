@@ -2,7 +2,7 @@
 
 # @ix-xs/djs-bot
 
-**A TypeScript-first, production-ready framework for Discord bots — built on [discord.js](https://discord.js.org).**
+**A TypeScript-first, production-ready framework for Discord bots - built on [discord.js](https://discord.js.org).**
 
 _Write features, not plumbing._
 
@@ -15,9 +15,9 @@ _Write features, not plumbing._
 
 ---
 
-`djs-bot` turns the 15 things you rewire in every Discord bot — command loading,
+`djs-bot` turns the 15 things you rewire in every Discord bot - command loading,
 interaction routing, `customId` parsing, intent calculation, command deployment,
-error handling, cooldowns, permissions, config, logging, graceful shutdown — into
+error handling, cooldowns, permissions, config, logging, graceful shutdown - into
 a small, explicit, fully-typed framework. It never hides discord.js, and every
 automatic behaviour is inspectable with `djs-bot explain`.
 
@@ -41,14 +41,14 @@ export default defineBot({
 
 | Pain | djs-bot |
 | --- | --- |
-| `customId` strings you `split("_")` and pray | **Typed customId router** — declare params, `Button.build({ ... })` is type-checked, `ctx.params` is decoded and typed |
-| "My event never fires" (forgot an intent) | **Intent autopilot** — `intents: "auto"` derives intents & partials from your events, and warns about privileged ones |
-| Copy-pasted `deploy-commands.js`, ghost commands, 429s | **Diff deployer** — declarative: adds/updates/**removes** to match your code; mix **global + per-server** commands (`guilds: [...]`), with `--dry-run` |
-| "This application did not respond" | **Error boundaries** — every interaction is wrapped; failures are logged with a correlation id and answered |
-| Decorator magic you can't debug | **No side-effect loading** — files export `define*()` objects; nothing registers by importing. `djs-bot explain` shows it all |
-| Bots are impossible to unit-test | **Test harness** — invoke handlers with no token, no network |
-| "Frameworks are slow" | **~1.4 µs** per-interaction routing overhead — see [benchmarks](./benchmarks) |
-| Rebuilding the same helpers every project | **Batteries included** — subcommands, context menus, autocomplete, native selects, user-install, i18n (`ctx.t`), key-value stores, audit trail, per-guild feature flags, health checks & metrics, rate limiters & circuit breakers, message triggers, sharding, `paginate()`/`confirm()`, presence rotation, `assets`/`voice`, `ui` Components-V2 builders, and a smart TTL cache |
+| `customId` strings you `split("_")` and pray | **Typed customId router** - declare params, `Button.build({ ... })` is type-checked, `ctx.params` is decoded and typed |
+| "My event never fires" (forgot an intent) | **Intent autopilot** - `intents: "auto"` derives intents & partials from your events, and warns about privileged ones |
+| Copy-pasted `deploy-commands.js`, ghost commands, 429s | **Diff deployer** - declarative: adds/updates/**removes** to match your code; mix **global + per-server** commands (`guilds: [...]`), with `--dry-run` |
+| "This application did not respond" | **Error boundaries** - every interaction is wrapped; failures are logged with a correlation id and answered |
+| Decorator magic you can't debug | **No side-effect loading** - files export `define*()` objects; nothing registers by importing. `djs-bot explain` shows it all |
+| Bots are impossible to unit-test | **Test harness** - invoke handlers with no token, no network |
+| "Frameworks are slow" | **~1.4 µs** per-interaction routing overhead - see [benchmarks](./benchmarks) |
+| Rebuilding the same helpers every project | **Batteries included** - subcommands, context menus, autocomplete, native selects, user-install, i18n (`ctx.t`), key-value stores, audit trail, per-guild feature flags, health checks & metrics, rate limiters & circuit breakers, message triggers, sharding, `paginate()`/`confirm()`, presence rotation, `assets`/`voice`, `ui` Components-V2 builders, and a smart TTL cache |
 
 ## Install
 
@@ -64,17 +64,17 @@ Scaffold a starter in seconds:
 npx djs-bot init
 ```
 
-Works the same in **TypeScript** and **plain JavaScript** (CommonJS or ESM) — the
+Works the same in **TypeScript** and **plain JavaScript** (CommonJS or ESM) - the
 package ships full `.d.ts` declarations, so JS editors get autocomplete and inline
 docs too. See [examples/](./examples) for a runnable bot in each language.
 
-> 📖 **Full walkthrough:** see [USAGE.md](./USAGE.md) — events, embeds, Components V2,
+> 📖 **Full walkthrough:** see [USAGE.md](./USAGE.md) - events, embeds, Components V2,
 > attachments, subcommands, context menus, guild vs global deploy, and more.
 >
 > Also in this repo: official plugins ([`@ix-xs/djs-bot/plugins`](./src/plugins)),
 > [VS Code snippets](./editors/vscode), and an [Astro docs site](./docs)
 > generated from `USAGE.md`. Hacking on the framework? See
-> [CONTRIBUTING.md](./CONTRIBUTING.md) — every task runs from the repo root
+> [CONTRIBUTING.md](./CONTRIBUTING.md) - every task runs from the repo root
 > (`npm run check`, `npm run docs`, `npm run bench`, …).
 
 ## Official plugins
@@ -91,7 +91,7 @@ export default defineBot({
 });
 ```
 
-`antiSpam` · `commandLogger` · `errorReporter` · `maintenance` — all small,
+`antiSpam` · `commandLogger` · `errorReporter` · `maintenance` - all small,
 readable examples of the plugin API.
 
 ## Table of contents
@@ -157,7 +157,7 @@ npx djs-bot doctor     # diagnose config, intents, permissions
 
 Everything is a plain object created by a `define*()` factory, tagged with a
 `kind`. Files are **discovered** by name convention (`*.command.ts`,
-`*.button.ts`, …) but **routed** by `kind` — so importing a file never has a
+`*.button.ts`, …) but **routed** by `kind` - so importing a file never has a
 side effect.
 
 | Factory | Creates | Discovered from |
@@ -233,7 +233,7 @@ export const CloseTicket = defineButton({
 });
 ```
 
-Building one somewhere else is type-checked — you can't forget a param:
+Building one somewhere else is type-checked - you can't forget a param:
 
 ```ts
 import { ActionRowBuilder, type ButtonBuilder } from "discord.js";
@@ -287,7 +287,7 @@ export default defineEvent("guildMemberAdd", async (member, ctx) => {
 ```
 
 With `intents: "auto"`, djs-bot inspects your registered events and enables
-exactly the gateway intents and partials they need — and warns you when a
+exactly the gateway intents and partials they need - and warns you when a
 **privileged** intent (GuildMembers, MessageContent, GuildPresences) must be
 toggled in the Developer Portal. Prefer explicit control? Pass an array instead.
 
@@ -311,7 +311,7 @@ Built-ins: `inGuild`, `dmOnly`, `hasPermission`, `botHasPermission`, `inChannel`
 
 ## Services & dependency injection
 
-A tiny, explicit container — no decorators, no `reflect-metadata`. Declare deps
+A tiny, explicit container - no decorators, no `reflect-metadata`. Declare deps
 as tokens; they're resolved in order at boot and available as `ctx.services`.
 
 ```ts
@@ -353,7 +353,7 @@ export default defineJob({
 ## Plugins
 
 Cross-cutting extensions register middleware and hooks through a restricted
-`app` façade — they never patch the core.
+`app` façade - they never patch the core.
 
 ```ts
 import { definePlugin } from "@ix-xs/djs-bot";
@@ -397,7 +397,7 @@ export default defineFeature({
 
 ## Configuration
 
-Everything is configured in the object you pass to `defineBot` — fully typed:
+Everything is configured in the object you pass to `defineBot` - fully typed:
 
 ```ts
 import { defineBot, env } from "@ix-xs/djs-bot";
@@ -411,7 +411,7 @@ export default defineBot({
   deploy: { mode: "guild", devGuildId: env.optional("DISCORD_DEV_GUILD"), autoDeploy: true },
   logger: { level: "info", pretty: process.env.NODE_ENV !== "production" },
   presence: { activities: [{ name: "/help" }] },
-  onError: (err, ctx) => ctx?.reply.error("Something broke — we're on it."),
+  onError: (err, ctx) => ctx?.reply.error("Something broke - we're on it."),
 });
 ```
 
@@ -434,7 +434,7 @@ djs-bot init                   Scaffold a minimal starter
 
 `dev`/`start` run your entry (using `tsx` automatically if installed, so raw
 `.ts` works). `deploy`/`doctor`/`explain` import your entry in introspection
-mode (`DJSBOT_CLI=introspect`) — they never connect to the gateway.
+mode (`DJSBOT_CLI=introspect`) - they never connect to the gateway.
 
 ## Testing
 
@@ -465,15 +465,15 @@ test("only the owner can close", async () => {
 
 Prod-readiness is built in, not an afterthought:
 
-- **Structured logging** — JSON in production, pretty in dev, with a
+- **Structured logging** - JSON in production, pretty in dev, with a
   `correlationId` on every interaction.
-- **Error boundaries** — a handler that throws is logged and answered; the
+- **Error boundaries** - a handler that throws is logged and answered; the
   process stays alive (via `node-comfort`'s `dontCrash`).
-- **Graceful shutdown** — `SIGTERM`/`SIGINT` stop the scheduler, run
+- **Graceful shutdown** - `SIGTERM`/`SIGINT` stop the scheduler, run
   `onShutdown` hooks, tear down plugins and destroy the client.
-- **Diff deploys** — commands are only pushed when they actually change.
-- **Cooldowns & permissions** — first-class guards.
-- **Retries & timeouts** — reach for `node-comfort`'s `func.retry` / `func.timeout`
+- **Diff deploys** - commands are only pushed when they actually change.
+- **Cooldowns & permissions** - first-class guards.
+- **Retries & timeouts** - reach for `node-comfort`'s `func.retry` / `func.timeout`
   in your services.
 
 ## Error codes

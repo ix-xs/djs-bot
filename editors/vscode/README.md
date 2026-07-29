@@ -23,7 +23,7 @@ block, in TypeScript **or** JavaScript.
 ## Use it without installing (per-project)
 
 Copy [`snippets/djs-bot.code-snippets`](./snippets/djs-bot.code-snippets) into
-your project's `.vscode/` folder. That's it — the prefixes are available in that
+your project's `.vscode/` folder. That's it - the prefixes are available in that
 workspace.
 
 ## Install as an extension

@@ -1,7 +1,7 @@
 {
   "name": "djs-bot-snippets",
   "displayName": "djs-bot Snippets",
-  "description": "Code snippets for @ix-xs/djs-bot — commands, events, buttons, modals, selects, triggers, jobs, services, plugins and more.",
+  "description": "Code snippets for @ix-xs/djs-bot - commands, events, buttons, modals, selects, triggers, jobs, services, plugins and more.",
   "version": "1.0.0",
   "publisher": "ix-xs",
   "license": "MIT",

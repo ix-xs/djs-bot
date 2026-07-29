@@ -17,7 +17,7 @@ export const ERROR_CATALOGUE = {
   },
   DJSBOT_E002: {
     title: "Missing application client id",
-    hint: "Set `clientId` in config or the DISCORD_CLIENT_ID env var — required to deploy commands.",
+    hint: "Set `clientId` in config or the DISCORD_CLIENT_ID env var - required to deploy commands.",
   },
   DJSBOT_E010: {
     title: "Duplicate command name",

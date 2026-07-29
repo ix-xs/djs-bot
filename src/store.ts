@@ -1,5 +1,5 @@
 /**
- * Persistence — a small async key-value abstraction with pluggable adapters.
+ * Persistence - a small async key-value abstraction with pluggable adapters.
  *
  * The framework core never imposes a database: it speaks {@link KVStore}. Use
  * {@link memoryStore} for zero-setup/ephemeral data, {@link sqliteStore} for
@@ -32,7 +32,7 @@ export interface KVStore<V = unknown> {
   keys(): Promise<string[]>;
   /** Removes every key in this (namespaced) store. */
   clear(): Promise<void>;
-  /** A view scoped under `prefix:` — isolates keys without a separate backend. */
+  /** A view scoped under `prefix:` - isolates keys without a separate backend. */
   namespace<T = V>(prefix: string): KVStore<T>;
   /**
    * Reads a key or computes+stores it on a miss (single-flight per process).

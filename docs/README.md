@@ -3,7 +3,7 @@
 An [Astro Starlight](https://starlight.astro.build) site for `@ix-xs/djs-bot`.
 
 The **Guide** pages are generated from the repo's [`USAGE.md`](../USAGE.md) by
-[`scripts/generate.mjs`](./scripts/generate.mjs) — edit `USAGE.md`, not the
+[`scripts/generate.mjs`](./scripts/generate.mjs) - edit `USAGE.md`, not the
 generated files (they live in `src/content/docs/guide/` and are gitignored).
 
 ## Develop

@@ -1,5 +1,5 @@
 /**
- * `@ix-xs/djs-bot` — a TypeScript-first, production-ready framework for Discord
+ * `@ix-xs/djs-bot` - a TypeScript-first, production-ready framework for Discord
  * bots built on discord.js.
  *
  * Write features, not plumbing: typed slash commands, typed customId routing,

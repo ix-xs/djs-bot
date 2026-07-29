@@ -80,7 +80,7 @@ export interface UpdateFn {
 export interface BaseContext<I extends RepliableInteraction = RepliableInteraction> {
   /** The underlying discord.js client. */
   readonly client: Client<true>;
-  /** The raw discord.js interaction — always available, never wrapped away. */
+  /** The raw discord.js interaction - always available, never wrapped away. */
   readonly interaction: I;
   /** The user who triggered the interaction. */
   readonly user: User;

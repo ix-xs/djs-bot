@@ -29,7 +29,7 @@ export function parseSchedule(schedule: string): ParsedSchedule {
   }
   const ms = comfort.time.parseDuration(trimmed);
   if (ms && ms > 0) return { type: "interval", ms };
-  throw new Error(`Invalid schedule "${schedule}" — use a duration like "30s" or a cron like "0 3 * * *".`);
+  throw new Error(`Invalid schedule "${schedule}" - use a duration like "30s" or a cron like "0 3 * * *".`);
 }
 
 const CRON_RANGES: Array<[number, number]> = [

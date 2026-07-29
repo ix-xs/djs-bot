@@ -1,5 +1,5 @@
 /**
- * Feature flags — turn features/commands on or off globally or per guild, at
+ * Feature flags - turn features/commands on or off globally or per guild, at
  * runtime, backed by a {@link KVStore} (so toggles survive restarts).
  *
  * Resolution order for `isEnabled(name, { guildId })`:

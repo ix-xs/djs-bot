@@ -4,7 +4,7 @@
  * Discord bots are notoriously hard to unit-test because everything runs behind
  * a gateway. `createHarness` invokes your command/component/modal handlers with
  * a synthesized context and captures every reply, so you can assert on handler
- * behaviour with a normal test runner — no token, no network, no mocks to wire.
+ * behaviour with a normal test runner - no token, no network, no mocks to wire.
  *
  * @example
  * import { createHarness } from "@ix-xs/djs-bot/testing";
@@ -53,7 +53,7 @@ export interface HarnessResult {
 interface BaseInput {
   /** Override the invoking user id (default `"test-user"`). */
   userId?: string;
-  /** Provide a fake guild id (default none — DM context). */
+  /** Provide a fake guild id (default none - DM context). */
   guildId?: string;
   /** Services available as `ctx.services` (overrides the bot's, if any). */
   services?: Partial<ServiceMap>;

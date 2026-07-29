@@ -95,7 +95,7 @@ export interface BotDescription {
  * A cross-realm brand. Because the CLI is CJS and user code is usually ESM, the
  * two load different copies of this module, so `instanceof Bot` is unreliable.
  * A registered symbol is shared across realms and survives the dual-package
- * boundary — see {@link isBot}.
+ * boundary - see {@link isBot}.
  */
 const BOT_BRAND: unique symbol = Symbol.for("djsbot.bot") as never;
 
@@ -140,7 +140,7 @@ export class Bot {
 
   /** The connected discord.js client. Throws if the bot has not started. */
   public get client(): Client<true> {
-    if (!this._client) throw new Error("Bot has not started yet — call bot.start() first.");
+    if (!this._client) throw new Error("Bot has not started yet - call bot.start() first.");
     return this._client;
   }
 
@@ -273,7 +273,7 @@ export class Bot {
     if (computed.privileged.length > 0) {
       this.logger.warn(
         { privileged: computed.privileged },
-        "Auto-enabled privileged intents — enable them in the Developer Portal",
+        "Auto-enabled privileged intents - enable them in the Developer Portal",
       );
     }
     return computed;
@@ -293,14 +293,14 @@ export class Bot {
     await this.load();
 
     if (process.env.DJSBOT_CLI === "introspect") {
-      this.logger.debug({}, "CLI introspection — not connecting");
+      this.logger.debug({}, "CLI introspection - not connecting");
       return;
     }
 
     const token = this.config.token ?? env("DISCORD_TOKEN");
 
     // If sharding is enabled and we're the manager process (not a spawned
-    // shard), launch the ShardingManager and stop — children run the bot.
+    // shard), launch the ShardingManager and stop - children run the bot.
     if (this.config.sharding && !isShardChild()) {
       this.sharded = true;
       await launchShardManager(process.argv[1] ?? "", token, normalizeSharding(this.config.sharding), this.logger);
@@ -506,7 +506,7 @@ export class Bot {
     comfort.utils
       .dontCrash()
       .on("sig", async () => {
-        this.logger.info({}, "Signal received — shutting down");
+        this.logger.info({}, "Signal received - shutting down");
         await this.shutdown();
         process.exit(0);
       })
@@ -1030,7 +1030,7 @@ export function defineBot(config: BotConfig): Bot {
 }
 
 /**
- * Robust, cross-realm check that a value is a {@link Bot} — use this instead of
+ * Robust, cross-realm check that a value is a {@link Bot} - use this instead of
  * `instanceof`, which breaks across the CJS/ESM dual-package boundary.
  */
 export function isBot(value: unknown): value is Bot {

@@ -56,7 +56,7 @@ export default defineCommand({
           pages.push(
             new EmbedBuilder()
               .setTitle("🏆 Leaderboard")
-              .setDescription(slice.map((r, j) => `**${i + j + 1}.** <@${r.id}> — ${r.n}`).join("\n") || "No data yet"),
+              .setDescription(slice.map((r, j) => `**${i + j + 1}.** <@${r.id}> - ${r.n}`).join("\n") || "No data yet"),
           );
         }
         await paginate(ctx, { pages, timeout: "3m" });

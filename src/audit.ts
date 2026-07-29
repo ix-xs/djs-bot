@@ -1,5 +1,5 @@
 /**
- * Audit trail — a structured, queryable record of who did what.
+ * Audit trail - a structured, queryable record of who did what.
  *
  * Write audit entries to one or more **sinks** (in-memory, a {@link KVStore}, or
  * the logger). When configured on the bot, `ctx.audit(action, details)` is
