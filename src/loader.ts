@@ -36,6 +36,32 @@ export interface LoadedItem {
   readonly file: string;
 }
 
+/**
+ * Resolves the "real" default export of a dynamically imported module,
+ * unwrapping the ESM/CJS interop layers a TypeScript loader (tsx, ts-node, …)
+ * can add. When such a loader compiles the entry to CommonJS, `await import()`
+ * yields `{ default: { __esModule: true, default: <value> } }`, so a naive
+ * `mod.default` is the wrapper, not the value. We follow the `default` chain
+ * (bounded) through any `__esModule` wrappers, then fall back to a named
+ * `bot`/`default` export.
+ */
+export function interopDefault(mod: Record<string, unknown>): unknown {
+  let value: unknown = "default" in mod ? mod.default : (mod as Record<string, unknown>)["module.exports"];
+  for (let i = 0; i < 5; i++) {
+    if (
+      value !== null &&
+      typeof value === "object" &&
+      (value as { __esModule?: unknown }).__esModule === true &&
+      "default" in (value as object)
+    ) {
+      value = (value as { default: unknown }).default;
+    } else {
+      break;
+    }
+  }
+  return value ?? mod.bot ?? mod.default;
+}
+
 function isRegistrable(value: unknown): value is Registrable {
   return (
     typeof value === "object" &&
@@ -86,20 +112,31 @@ export async function loadFromDirectory(dir: string): Promise<LoadedItem[]> {
   return loaded;
 }
 
-function collectDefinitions(mod: Record<string, unknown>): Registrable[] {
+export function collectDefinitions(mod: Record<string, unknown>): Registrable[] {
   const found: Registrable[] = [];
-  // Dedupe by reference: importing a CommonJS module exposes `module.exports`
-  // under both `default` and `module.exports`, so the same object appears twice.
+  // Dedupe by reference. The same definition can surface under several keys:
+  // a CommonJS module exposes `module.exports` under both `default` and
+  // `module.exports`, and when a loader like tsx compiles the feature file to
+  // CommonJS, `await import()` double-wraps it as
+  // `{ default: { __esModule: true, default: <def> } }` - so the real
+  // definition sits two levels deep. We descend (bounded) through arrays and
+  // interop wrappers, stopping as soon as we reach a registrable object.
   const seen = new Set<unknown>();
-  const add = (value: unknown) => {
-    if (isRegistrable(value) && !seen.has(value)) {
+  const visit = (value: unknown, depth: number): void => {
+    if (value === null || value === undefined || seen.has(value)) return;
+    if (isRegistrable(value)) {
       seen.add(value);
       found.push(value);
+      return;
     }
+    if (depth <= 0 || typeof value !== "object") return;
+    seen.add(value);
+    if (Array.isArray(value)) {
+      for (const entry of value) visit(entry, depth - 1);
+      return;
+    }
+    for (const nested of Object.values(value)) visit(nested, depth - 1);
   };
-  for (const value of Object.values(mod)) {
-    if (Array.isArray(value)) value.forEach(add);
-    else add(value);
-  }
+  for (const value of Object.values(mod)) visit(value, 5);
   return found;
 }

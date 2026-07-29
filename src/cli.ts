@@ -19,6 +19,7 @@ import { createRequire } from "node:module";
 import comfort from "@ix-xs/node-comfort";
 import { loadEnvFile } from "./config.js";
 import { isBot, type Bot } from "./bot.js";
+import { interopDefault } from "./loader.js";
 import { VERSION } from "./constants.js";
 
 const C = {
@@ -100,7 +101,7 @@ async function loadBot(explicit?: string): Promise<Bot> {
   }
   await ensureTsLoader(entry);
   const mod = (await import(pathToFileURL(entry).href)) as Record<string, unknown>;
-  const bot = mod.default ?? mod.bot;
+  const bot = interopDefault(mod);
   if (!isBot(bot)) {
     bad(`Entry "${path.relative(process.cwd(), entry)}" must default-export a bot from defineBot().`);
     process.exit(1);
@@ -217,8 +218,8 @@ async function cmdExplain(entryArg?: string): Promise<void> {
 async function cmdDoctor(entryArg?: string): Promise<void> {
   print(`${C.bold}djs-bot doctor${C.reset}\n`);
   const [major] = process.versions.node.split(".").map(Number);
-  if ((major ?? 0) >= 20) ok(`Node ${process.versions.node}`);
-  else bad(`Node ${process.versions.node} - djs-bot needs >= 20`);
+  if ((major ?? 0) >= 22) ok(`Node ${process.versions.node}`);
+  else bad(`Node ${process.versions.node} - djs-bot needs >= 22`);
 
   loadEnvFile();
   if (process.env.DISCORD_TOKEN) ok("DISCORD_TOKEN is set");
@@ -510,7 +511,7 @@ const bot = defineBot({
   token: env("DISCORD_TOKEN"),
   features: "./src/features",
   intents: "auto",
-  deploy: { mode: "guild", devGuildId: env.optional("DISCORD_DEV_GUILD") },
+  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
 });
 
 export default bot;
