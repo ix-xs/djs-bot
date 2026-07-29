@@ -21,11 +21,15 @@ export type FeatureSource = string | Registrable | Registrable[];
 
 /** Deployment configuration. */
 export interface DeployConfig {
-  /** Deploy commands per-guild (instant) or globally (propagates in up to ~1h). */
-  mode?: "guild" | "global";
-  /** Guild used for instant deploys in development. */
+  /**
+   * A guild to mirror **all** commands to during development, so they appear
+   * instantly (global commands otherwise take up to ~1h to propagate). In
+   * production the real plan is used instead (global commands go global, and
+   * commands with a `guilds` field go to those guilds). Falls back to the
+   * `DISCORD_DEV_GUILD` env var.
+   */
   devGuildId?: string;
-  /** Automatically deploy on startup in development. Default `true` in dev. */
+  /** Automatically deploy commands on startup. Defaults to `true` in development. */
   autoDeploy?: boolean;
 }
 

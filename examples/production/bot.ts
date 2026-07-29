@@ -44,7 +44,7 @@ const bot = defineBot({
     ],
   },
 
-  deploy: { mode: env.optional("NODE_ENV") === "production" ? "global" : "guild", devGuildId: env.optional("DISCORD_DEV_GUILD") },
+  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
   onError: (err, ctx) => {
     logger.error({ err }, "unhandled interaction error");
     return ctx?.reply.error("Something went wrong - we're on it.");

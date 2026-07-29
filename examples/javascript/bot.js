@@ -8,7 +8,7 @@ const bot = defineBot({
   token: env("DISCORD_TOKEN"),
   features: `${__dirname}/features`, // CommonJS __dirname
   intents: "auto",
-  deploy: { mode: "guild", devGuildId: env.optional("DISCORD_DEV_GUILD") },
+  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
 });
 
 module.exports = bot;

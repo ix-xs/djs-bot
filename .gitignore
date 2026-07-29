@@ -20,7 +20,7 @@ coverage/
 *.tgz
 *.vsix
 
-# Secrets & local environment — the template .env.example IS committed
+# Secrets & local environment - the template .env.example IS committed
 .env
 .env.*
 !.env.example
