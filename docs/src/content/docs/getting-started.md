@@ -40,7 +40,7 @@ const bot = defineBot({
   token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
   intents: "auto",
-  deploy: { mode: "guild", devGuildId: env.optional("DISCORD_DEV_GUILD") },
+  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
 });
 
 export default bot;

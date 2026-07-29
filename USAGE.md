@@ -4,6 +4,10 @@ Everything you need to build and run a real Discord bot end to end. The framewor
 never hides discord.js - `ctx.interaction` and `ctx.client` are always right
 there - so anything not shown here still works the plain discord.js way.
 
+> ⚠️ **Beta software.** This package is in real-world testing. It works, but you
+> may hit bugs or breaking changes between beta releases. Pin an exact version
+> (`@ix-xs/djs-bot@1.0.0-beta.0`) and report issues.
+
 > All examples are TypeScript and compile against **discord.js v14**.
 
 ## Table of contents
@@ -102,7 +106,7 @@ const bot = defineBot({
   features: `${import.meta.dirname}/features`,    // auto-discovered folder
   intents: "auto",                               // derived from your events/triggers
   plugins: [requestLogger],
-  deploy: { mode: "guild", devGuildId: env.optional("DISCORD_DEV_GUILD") },
+  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
   logger: { level: "info", pretty: process.env.NODE_ENV !== "production" },
   presence: { activities: [{ name: "/help" }] },
   onError: (err, ctx) => ctx?.reply.error("Something went wrong."),
@@ -1155,7 +1159,7 @@ The bot **auto-deploys instantly to your dev guild** on startup (when
 immediately - regardless of their `guilds`:
 
 ```ts
-deploy: { mode: "guild", devGuildId: env.optional("DISCORD_DEV_GUILD") },
+deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
 ```
 
 ### In production

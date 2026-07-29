@@ -490,10 +490,10 @@ export class Bot {
     const token = this.config.token ?? env.optional("DISCORD_TOKEN");
     if (!token) return;
     const clientId = this.config.clientId ?? env.optional("DISCORD_CLIENT_ID") ?? client.application.id;
-    const guildId =
-      this.config.deploy?.mode === "global"
-        ? undefined
-        : (this.config.deploy?.devGuildId ?? env.optional("DISCORD_DEV_GUILD"));
+    const devGuildId = this.config.deploy?.devGuildId ?? env.optional("DISCORD_DEV_GUILD");
+    // In development with a dev guild, mirror everything there for instant
+    // testing; otherwise reconcile the real plan (global + per-command guilds).
+    const guildId = dev && devGuildId ? devGuildId : undefined;
 
     try {
       await deployCommands(this.registry, { token, clientId, guildId, logger: this.logger });

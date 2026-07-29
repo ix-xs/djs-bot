@@ -3,10 +3,15 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
-## 1.0.0
+## 1.0.0-beta.0
+
+> ⚠️ **Beta / real-world testing.** Published under the `beta` npm tag
+> (`npm i @ix-xs/djs-bot@beta`). The API is close to stable but may still change,
+> and bugs are expected. Pin an exact version and report issues.
 
 Complete rewrite - from a component-composition toolkit into a full,
-production-ready bot framework. **Breaking:** the entire API is new.
+production-minded bot framework. **Breaking:** the entire API is new (previous
+published line was `0.1.4`).
 
 ### Added
 

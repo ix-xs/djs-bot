@@ -12,7 +12,7 @@ const bot = defineBot({
   features: `${import.meta.dirname}/features`,
   intents: "auto",
   plugins: [requestLogger],
-  deploy: { mode: "guild", devGuildId: env.optional("DISCORD_DEV_GUILD") },
+  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
   logger: { level: "debug" },
 });
 

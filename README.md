@@ -6,12 +6,21 @@
 
 _Write features, not plumbing._
 
-[![npm version](https://img.shields.io/npm/v/@ix-xs/djs-bot.svg)](https://www.npmjs.com/package/@ix-xs/djs-bot)
+[![npm version](https://img.shields.io/npm/v/@ix-xs/djs-bot/beta.svg)](https://www.npmjs.com/package/@ix-xs/djs-bot)
+[![status](https://img.shields.io/badge/status-beta-orange)](#)
 [![node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
 [![types](https://img.shields.io/badge/types-included-blue)](#)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
 </div>
+
+> ⚠️ **Beta.** `@ix-xs/djs-bot` is in real-world testing. The API is close to
+> stable, but **things may break, and you can hit bugs**. Pin an exact version and
+> read the [CHANGELOG](./CHANGELOG.md) before upgrading. Please report anything odd
+> - that's what this phase is for. Install with:
+> ```bash
+> npm install @ix-xs/djs-bot@beta discord.js
+> ```
 
 ---
 
@@ -69,7 +78,7 @@ package ships full `.d.ts` declarations, so JS editors get autocomplete and inli
 docs too. See [examples/](./examples) for a runnable bot in each language.
 
 > 📖 **Full walkthrough:** see [USAGE.md](./USAGE.md) - events, embeds, Components V2,
-> attachments, subcommands, context menus, guild vs global deploy, and more.
+> attachments, subcommands, context menus, global + per-server deploy, and more.
 >
 > Also in this repo: official plugins ([`@ix-xs/djs-bot/plugins`](./src/plugins)),
 > [VS Code snippets](./editors/vscode), and an [Astro docs site](./docs)
@@ -136,7 +145,7 @@ const bot = defineBot({
   token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
   intents: "auto",
-  deploy: { mode: "guild", devGuildId: env.optional("DISCORD_DEV_GUILD") },
+  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
 });
 
 export default bot;
@@ -408,7 +417,7 @@ export default defineBot({
   features: "./src/features",
   intents: "auto",
   plugins: [],
-  deploy: { mode: "guild", devGuildId: env.optional("DISCORD_DEV_GUILD"), autoDeploy: true },
+  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD"), autoDeploy: true },
   logger: { level: "info", pretty: process.env.NODE_ENV !== "production" },
   presence: { activities: [{ name: "/help" }] },
   onError: (err, ctx) => ctx?.reply.error("Something broke - we're on it."),
