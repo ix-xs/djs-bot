@@ -1,5 +1,5 @@
 /**
- * `ui` — terse factories for discord.js message components, including the
+ * `ui` - terse factories for discord.js message components, including the
  * Components V2 display components (containers, sections, text, separators,
  * galleries, thumbnails, files). These are thin wrappers: every function returns
  * a real discord.js builder, so you keep full access to its methods.
@@ -36,7 +36,7 @@ export const ui = {
     return new ActionRowBuilder<T>().addComponents(...components);
   },
 
-  /** A link button (no handler — opens a URL). */
+  /** A link button (no handler - opens a URL). */
   linkButton(label: string, url: string, emoji?: string): ButtonBuilder {
     const b = new ButtonBuilder().setStyle(ButtonStyle.Link).setLabel(label).setURL(url);
     if (emoji) b.setEmoji(emoji);

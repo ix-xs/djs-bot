@@ -1,5 +1,5 @@
 /**
- * Lightweight voice-state helpers — inspect and move members between voice
+ * Lightweight voice-state helpers - inspect and move members between voice
  * channels using the gateway/REST only. This does **not** pull in
  * `@discordjs/voice`; it's for moderation/utility, not audio playback.
  *

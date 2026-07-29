@@ -1,5 +1,5 @@
 /**
- * The `define*` factories — the entire authoring surface of the framework.
+ * The `define*` factories - the entire authoring surface of the framework.
  *
  * Every building block is a plain object with a `kind` discriminant. Files are
  * *discovered* by name convention but *routed* by `kind`, so importing a file
@@ -452,9 +452,9 @@ export interface TriggerInput {
 }
 
 /**
- * Defines a message trigger — an auto-responder that fires on `messageCreate`.
+ * Defines a message trigger - an auto-responder that fires on `messageCreate`.
  * Registering any trigger auto-enables the `GuildMessages` + `MessageContent`
- * intents (MessageContent is privileged — enable it in the Developer Portal).
+ * intents (MessageContent is privileged - enable it in the Developer Portal).
  *
  * @example
  * export default defineTrigger({

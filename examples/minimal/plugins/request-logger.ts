@@ -2,7 +2,7 @@ import { definePlugin } from "../../../src/index.js";
 
 /**
  * A cross-cutting plugin: times every interaction and logs it. Plugins register
- * middleware and hooks through the `app` façade — they never patch the core.
+ * middleware and hooks through the `app` façade - they never patch the core.
  *
  * Wire it up in defineBot({ plugins: [requestLogger] }).
  */

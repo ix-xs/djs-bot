@@ -1,8 +1,8 @@
-# Complete usage guide — `@ix-xs/djs-bot`
+# Complete usage guide - `@ix-xs/djs-bot`
 
 Everything you need to build and run a real Discord bot end to end. The framework
-never hides discord.js — `ctx.interaction` and `ctx.client` are always right
-there — so anything not shown here still works the plain discord.js way.
+never hides discord.js - `ctx.interaction` and `ctx.client` are always right
+there - so anything not shown here still works the plain discord.js way.
 
 > All examples are TypeScript and compile against **discord.js v14**.
 
@@ -33,7 +33,7 @@ there — so anything not shown here still works the plain discord.js way.
 23. [Scheduled jobs](#23-scheduled-jobs)
 24. [Plugins, middleware & hooks](#24-plugins-middleware--hooks)
 25. [Features (reusable packs)](#25-features-reusable-packs)
-26. [Deploying: guild vs global](#26-deploying-guild-vs-global)
+26. [Deploying: global + specific guilds](#26-deploying-global--specific-guilds)
 27. [Error handling & codes](#27-error-handling--codes)
 28. [Testing without Discord](#28-testing-without-discord)
 29. [CLI reference](#29-cli-reference)
@@ -137,10 +137,10 @@ configure → discover (loader) → validate (requires/provides contracts)
 → [running] → SIGTERM → drain → shutdown
 ```
 
-- **validate** — every `feature.requires` / `plugin.requires` must be provided,
+- **validate** - every `feature.requires` / `plugin.requires` must be provided,
   or the bot fails loudly (`DJSBOT_E040`) *before* connecting.
-- **ready** — starts scheduled jobs and auto-deploys commands in development.
-- **shutdown** (Ctrl+C / SIGTERM) — stops jobs, runs `onShutdown` hooks, tears
+- **ready** - starts scheduled jobs and auto-deploys commands in development.
+- **shutdown** (Ctrl+C / SIGTERM) - stops jobs, runs `onShutdown` hooks, tears
   down plugins, destroys the client. No crash, no orphaned work.
 
 Inspect everything without connecting:
@@ -187,7 +187,7 @@ await ctx.reply.editReply("updated");
 ```
 
 `reply` is state-aware: if the interaction was deferred it edits; if already
-replied it follows up; otherwise it replies — you don't track that yourself.
+replied it follows up; otherwise it replies - you don't track that yourself.
 
 On **components** (buttons/selects) you also get `ctx.update` to edit the source
 message:
@@ -260,7 +260,7 @@ options: {
 
 ### Autocomplete
 
-Pass an async handler to an option's `autocomplete` — it returns up to 25
+Pass an async handler to an option's `autocomplete` - it returns up to 25
 suggestions as the user types. Works on `s.string`, `s.integer`, `s.number`, and
 inside subcommands.
 
@@ -286,7 +286,7 @@ export default defineCommand({
 ```
 
 The handler `ctx` also gives you `interaction`, `client`, `user`, `guild`,
-`services`, and `logger` — so suggestions can be data-driven. Errors are caught
+`services`, and `logger` - so suggestions can be data-driven. Errors are caught
 and an empty list is returned, so a slow/failing lookup never breaks the command.
 
 ---
@@ -341,7 +341,7 @@ export default defineCommand({
 ```
 
 - The **command's** guards run before the **subcommand's** guards.
-- Routing to the right subcommand and option resolution are automatic — no
+- Routing to the right subcommand and option resolution are automatic - no
   `switch (getSubcommand())`.
 - A command with `subcommands`/`groups` doesn't need a top-level `run`.
 
@@ -349,7 +349,7 @@ export default defineCommand({
 
 ## 8. Context menus (user & message)
 
-The right-click → **Apps** commands. No description, no options — they get a target.
+The right-click → **Apps** commands. No description, no options - they get a target.
 
 ```ts
 // features/moderation/userinfo.user.ts
@@ -504,14 +504,14 @@ export default defineTrigger({
   run: (ctx) => ctx.reply("pong 🏓"),
 });
 
-// RegExp — capture groups are available on ctx.match
+// RegExp - capture groups are available on ctx.match
 export const greet = defineTrigger({
   name: "greet",
   pattern: /\bgood (morning|night)\b/i,
   run: (ctx) => ctx.reply(ctx.match?.[1] === "morning" ? "☀️ Morning!" : "🌙 Night!"),
 });
 
-// Custom predicate — full control
+// Custom predicate - full control
 export const longMsg = defineTrigger({
   name: "wall-of-text",
   pattern: (message) => message.content.length > 500,
@@ -531,7 +531,7 @@ defaults to `true`; `ignoreBots` defaults to `true`.
 
 A component's customId is the only state Discord round-trips, and it's capped at
 100 chars. Instead of hand-building `"close_" + id` and parsing it, declare typed
-**params** — the framework encodes them into the customId and decodes them back.
+**params** - the framework encodes them into the customId and decodes them back.
 
 ```ts
 // features/tickets/close.button.ts
@@ -550,7 +550,7 @@ export const CloseTicket = defineButton({
 });
 ```
 
-Building the button anywhere else is type-checked — you can't forget a param:
+Building the button anywhere else is type-checked - you can't forget a param:
 
 ```ts
 import { ui } from "@ix-xs/djs-bot";
@@ -565,7 +565,7 @@ await ctx.reply({ content: "🎫 Ticket opened", components: [ui.row(button)] })
 
 - Param codecs: `p.string`, `p.number`, `p.boolean`.
 - If the encoded customId would exceed 100 chars you get a coded error
-  (`DJSBOT_E020`) instead of a silent bug — store big state elsewhere (a DB) and
+  (`DJSBOT_E020`) instead of a silent bug - store big state elsewhere (a DB) and
   keep a short key.
 - Link buttons use `ui.linkButton("Docs", url)` (no handler).
 
@@ -573,7 +573,7 @@ await ctx.reply({ content: "🎫 Ticket opened", components: [ui.row(button)] })
 
 ## 13. Select menus
 
-**String select** — your own list of options:
+**String select** - your own list of options:
 
 ```ts
 import { defineSelectMenu, p, ui } from "@ix-xs/djs-bot";
@@ -602,7 +602,7 @@ const menu = RolePicker.build(
 await ctx.reply({ content: "Select:", components: [ui.row(menu)] });
 ```
 
-**Native selects** — `defineUserSelect`, `defineRoleSelect`, `defineChannelSelect`,
+**Native selects** - `defineUserSelect`, `defineRoleSelect`, `defineChannelSelect`,
 `defineMentionableSelect`. Discord resolves the picks for you; the context exposes
 `ctx.users`, `ctx.members`, `ctx.roles`, `ctx.channels` depending on the type:
 
@@ -665,7 +665,7 @@ export const FeedbackModal = defineModal({
 `field.short()` is a single-line input, `field.paragraph()` a multi-line one;
 both accept `{ label, required, placeholder, minLength, maxLength, value }`.
 
-Open a modal from a command or button (never after a `reply`/`defer` — Discord
+Open a modal from a command or button (never after a `reply`/`defer` - Discord
 requires the modal to be the first response):
 
 ```ts
@@ -794,7 +794,7 @@ export default defineCommand({
   options: { file: s.attachment({ description: "File to scan", required: true }) },
   run: async (ctx) => {
     const a = ctx.options.file;   // Attachment
-    await ctx.reply.info(`Got **${a.name}** — ${a.contentType ?? "?"} — ${a.size} bytes\n${a.url}`);
+    await ctx.reply.info(`Got **${a.name}** - ${a.contentType ?? "?"} - ${a.size} bytes\n${a.url}`);
   },
 });
 ```
@@ -832,7 +832,7 @@ await ctx.reply(`${mention.user(ctx.user.id)} joined ${timestamp(Date.now(), Tim
 
 ## 19. Allowed mentions (safe pings)
 
-Control who a message may actually ping — essential when echoing user input:
+Control who a message may actually ping - essential when echoing user input:
 
 ```ts
 import { allowedMentions, mention } from "@ix-xs/djs-bot";
@@ -851,7 +851,7 @@ await ctx.reply({ content: "reply", allowedMentions: allowedMentions.repliedUser
 
 ## 20. Smart cache & entity resolution
 
-### `resolve` — cache-first fetching
+### `resolve` - cache-first fetching
 
 Read from discord.js's cache and only hit the API on a miss:
 
@@ -867,10 +867,10 @@ const message = await resolve.message(ctx.channel!, messageId);
 const fresh = await resolve.member(ctx.guild!, userId, /* force */ true); // always fetch
 ```
 
-### `TTLCache` — your own smart cache
+### `TTLCache` - your own smart cache
 
 An in-memory cache with per-entry TTL, LRU bound, single-flight fetching, and
-optional stale-while-revalidate — great for wrapping slow external calls:
+optional stale-while-revalidate - great for wrapping slow external calls:
 
 ```ts
 import { createCache } from "@ix-xs/djs-bot";
@@ -928,7 +928,7 @@ export default defineCommand({
 });
 ```
 
-Cooldown scope: `cooldown("1m", { scope: "guild" })` — `"user"` (default),
+Cooldown scope: `cooldown("1m", { scope: "guild" })` - `"user"` (default),
 `"guild"`, `"channel"`, or `"global"`. Built-ins: `inGuild`, `dmOnly`,
 `hasPermission`, `botHasPermission`, `inChannel(...ids)`, `ownerOnly(...ids)`,
 `cooldown`.
@@ -937,7 +937,7 @@ Cooldown scope: `cooldown("1m", { scope: "guild" })` — `"user"` (default),
 
 ## 22. Services & dependency injection
 
-An explicit container — no decorators, no `reflect-metadata`. Dependencies are
+An explicit container - no decorators, no `reflect-metadata`. Dependencies are
 tokens resolved in order at boot, exposed as `ctx.services`.
 
 ```ts
@@ -968,7 +968,7 @@ declare module "@ix-xs/djs-bot" {
 ## 23. Scheduled jobs
 
 Cron **and** durations. Each job gets an `AbortSignal` (fired on shutdown) and a
-concurrency limit (1 by default — no overlap).
+concurrency limit (1 by default - no overlap).
 
 ```ts
 import { defineJob } from "@ix-xs/djs-bot";
@@ -992,7 +992,7 @@ export default defineJob({
 ## 24. Plugins, middleware & hooks
 
 A plugin adds cross-cutting behaviour (middleware, hooks) through an `app` façade
-— it never patches the core.
+- it never patches the core.
 
 ```ts
 import { definePlugin } from "@ix-xs/djs-bot";
@@ -1065,14 +1065,14 @@ Discord has two command scopes:
 ### Per-command scoping (mix global + specific servers)
 
 By default a command is **global**. Add `guilds` to a command to deploy it only
-to those servers — perfect for admin/dev commands, or per-community features. You
+to those servers - perfect for admin/dev commands, or per-community features. You
 can mix freely, and target multiple guilds:
 
 ```ts
-// A global command — available everywhere.
+// A global command - available everywhere.
 export const help = defineCommand({ name: "help", description: "Help", run: … });
 
-// A dev-only command — only on your support/dev server.
+// A dev-only command - only on your support/dev server.
 export const evalCmd = defineCommand({
   name: "eval",
   description: "Run code",
@@ -1122,7 +1122,7 @@ Output (one block per target):
 
 ### Updates & deletions are automatic
 
-Deployment is **declarative** — your code is the source of truth. Each `deploy`
+Deployment is **declarative** - your code is the source of truth. Each `deploy`
 reconciles Discord to match it:
 
 - a **new** command → added,
@@ -1135,9 +1135,9 @@ You never delete commands by hand. Just remove (or edit) the code and run
 
 If you stop targeting a **whole guild** (remove the last command scoped to it),
 djs-bot remembers the guilds it deployed to (in a small `.djs-bot/deploy-state.json`
-file — gitignored) and **auto-prunes** that guild's commands on the next deploy.
+file - gitignored) and **auto-prunes** that guild's commands on the next deploy.
 
-To wipe a scope entirely — e.g. resetting, or a guild you no longer serve:
+To wipe a scope entirely - e.g. resetting, or a guild you no longer serve:
 
 ```bash
 npx djs-bot clear --guild 123…   # remove all this app's commands from that guild
@@ -1152,7 +1152,7 @@ await bot.clear({ guildId: "123…" });   // or bot.clear() for global
 
 The bot **auto-deploys instantly to your dev guild** on startup (when
 `NODE_ENV !== "production"`), mirroring *all* commands there so you can test
-immediately — regardless of their `guilds`:
+immediately - regardless of their `guilds`:
 
 ```ts
 deploy: { mode: "guild", devGuildId: env.optional("DISCORD_DEV_GUILD") },
@@ -1161,7 +1161,7 @@ deploy: { mode: "guild", devGuildId: env.optional("DISCORD_DEV_GUILD") },
 ### In production
 
 Set `NODE_ENV=production` (disables the dev mirror) and run `djs-bot deploy` once
-per release — global commands go global, scoped commands go to their guilds. You
+per release - global commands go global, scoped commands go to their guilds. You
 need `DISCORD_CLIENT_ID`. Or do it programmatically:
 
 ```ts
@@ -1176,7 +1176,7 @@ for (const t of result.targets) {
 ## 27. Error handling & codes
 
 - **Every interaction is wrapped.** A throwing handler is logged (with a
-  `correlationId`) and the user gets an error message — never "This application
+  `correlationId`) and the user gets an error message - never "This application
   did not respond".
 - Customise via the global `onError` (config) or `app.hooks.onError` (plugin).
 - The process **stays alive** on an interaction error.
@@ -1269,7 +1269,7 @@ npx djs-bot explain                       # understand what's loaded
 
 ## 30. Pagination & confirmation dialogs
 
-`paginate` and `confirm` manage their own buttons and collectors — no global
+`paginate` and `confirm` manage their own buttons and collectors - no global
 handler, no registered components.
 
 ```ts
@@ -1282,7 +1282,7 @@ export default defineCommand({
   description: "Top players",
   run: async (ctx) => {
     const pages = chunk(players, 10).map((group, i) =>
-      new EmbedBuilder().setTitle(`Leaderboard — page ${i + 1}`).setDescription(group.join("\n")),
+      new EmbedBuilder().setTitle(`Leaderboard - page ${i + 1}`).setDescription(group.join("\n")),
     );
     await paginate(ctx, { pages, timeout: "5m", showFirstLast: true });
   },
@@ -1343,18 +1343,18 @@ import { assets } from "@ix-xs/djs-bot";
 
 assets.avatar(ctx.user, { size: 256 });          // best avatar (server avatar for members)
 assets.avatar(ctx.member!, { extension: "png" }); // a member's server-specific avatar
-await assets.banner(ctx.user, { size: 1024 });   // user banner (fetches — banners aren't cached) | null
+await assets.banner(ctx.user, { size: 1024 });   // user banner (fetches - banners aren't cached) | null
 assets.guildIcon(ctx.guild!, { size: 512 });     // string | null
 assets.guildBanner(ctx.guild!);
 assets.guildSplash(ctx.guild!);
 assets.emoji("1234567890", { animated: true, size: 128 }); // custom emoji image URL
 ```
 
-Size is a power of two (16–4096); extension is `"webp" | "png" | "jpg" | "gif"`.
+Size is a power of two (16-4096); extension is `"webp" | "png" | "jpg" | "gif"`.
 
 ## 33. Voice-state helpers
 
-Inspect and move members between voice channels (moderation/utility — no audio,
+Inspect and move members between voice channels (moderation/utility - no audio,
 so no `@discordjs/voice` dependency).
 
 ```ts
@@ -1381,7 +1381,7 @@ export default defineEvent("voiceStateUpdate", (oldState, newState, ctx) => {
 
 For large bots (2,500+ guilds, or just to scale), enable sharding. The process
 you launch becomes a **manager** that spawns one child per shard, each running
-your bot normally — your code is identical sharded or not.
+your bot normally - your code is identical sharded or not.
 
 ```ts
 const bot = defineBot({
@@ -1456,7 +1456,7 @@ run: async (ctx) => {
 
 ## 36. Persistence (key-value stores)
 
-The core never imposes a database — it speaks the async {@link KVStore}
+The core never imposes a database - it speaks the async {@link KVStore}
 interface. Ship with two adapters (and write your own over Redis/Postgres):
 
 ```ts
@@ -1464,7 +1464,7 @@ import { defineBot, memoryStore, sqliteStore } from "@ix-xs/djs-bot";
 
 const bot = defineBot({
   token: env("DISCORD_TOKEN"),
-  store: sqliteStore("data/bot.sqlite"),   // durable, via node:sqlite — or memoryStore()
+  store: sqliteStore("data/bot.sqlite"),   // durable, via node:sqlite - or memoryStore()
 });
 ```
 
@@ -1535,7 +1535,7 @@ try {
   const data = await breaker.execute(() => fetchFromFlakyApi());
 } catch (err) {
   if (err instanceof CircuitOpenError) {
-    // fail fast — the API is currently down
+    // fail fast - the API is currently down
   }
 }
 ```
@@ -1603,7 +1603,7 @@ const recentBans = await audit.query({ action: "member.ban", guildId: ctx.guildI
 
 Filters: `action`, `actorId`, `guildId`, `since`, `limit` (results newest-first).
 Sinks: `memoryAuditSink(max)`, `storeAuditSink(store, { namespace, ttl })`,
-`loggerAuditSink(logger)` — or implement `AuditSink` yourself.
+`loggerAuditSink(logger)` - or implement `AuditSink` yourself.
 
 ## 39. Feature flags per guild
 
@@ -1644,7 +1644,7 @@ Use `createFeatureFlags()` standalone anywhere you don't want it on the bot.
 
 ## 40. Health checks & metrics
 
-Expose an HTTP health server for Docker/Kubernetes — zero dependencies.
+Expose an HTTP health server for Docker/Kubernetes - zero dependencies.
 
 ```ts
 const bot = defineBot({
@@ -1685,5 +1685,5 @@ Need the server standalone? `startHealthServer(() => status, { port })`.
 Need something not shown here (Redis persistence, audio playback via
 `@discordjs/voice`, custom REST calls)? Persistence is a `KVStore` you can
 implement over anything, audit/flags accept any backing store, and everything
-else builds on discord.js directly through `ctx.interaction` / `ctx.client` —
+else builds on discord.js directly through `ctx.interaction` / `ctx.client` -
 the framework never locks you in.

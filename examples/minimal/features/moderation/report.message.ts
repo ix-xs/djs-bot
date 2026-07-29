@@ -10,7 +10,7 @@ export default defineMessageCommand({
       "message reported",
     );
     await ctx.reply.success(
-      `Reported ${msg.author}'s message. Thanks — a moderator will review it.`,
+      `Reported ${msg.author}'s message. Thanks - a moderator will review it.`,
       { ephemeral: true },
     );
   },

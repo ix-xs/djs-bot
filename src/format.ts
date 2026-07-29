@@ -17,20 +17,20 @@ import {
   type TimestampStylesString,
 } from "discord.js";
 
-/** Mention builders — return the exact markup Discord renders as a mention. */
+/** Mention builders - return the exact markup Discord renders as a mention. */
 export const mention = {
-  /** `<@id>` — mentions a user. */
+  /** `<@id>` - mentions a user. */
   user: (id: string): string => userMention(id),
-  /** `<#id>` — mentions a channel. */
+  /** `<#id>` - mentions a channel. */
   channel: (id: string): string => channelMention(id),
-  /** `<@&id>` — mentions a role. */
+  /** `<@&id>` - mentions a role. */
   role: (id: string): string => roleMention(id),
   /** `@everyone`. */
   everyone: "@everyone" as const,
   /** `@here`. */
   here: "@here" as const,
   /**
-   * `</name:id>` — a clickable slash-command mention (optionally with a
+   * `</name:id>` - a clickable slash-command mention (optionally with a
    * subcommand, e.g. `mention.command("config", id, "set")`).
    */
   command: (name: string, id: string, subcommand?: string): string =>

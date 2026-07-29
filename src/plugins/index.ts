@@ -3,7 +3,7 @@
  *
  * Import from the `@ix-xs/djs-bot/plugins` subpath and pass them to
  * `defineBot({ plugins: [...] })`. Each is a small, production-minded example of
- * the plugin API (hooks + middleware) — and useful on its own.
+ * the plugin API (hooks + middleware) - and useful on its own.
  *
  * @example
  * import { defineBot } from "@ix-xs/djs-bot";
@@ -31,12 +31,12 @@ export interface AntiSpamOptions {
 }
 
 /**
- * Rejects interactions from users who exceed a per-window rate limit — a simple
+ * Rejects interactions from users who exceed a per-window rate limit - a simple
  * guard against interaction spam, applied globally to every interaction.
  */
 export function antiSpam(options: AntiSpamOptions = {}): PluginDefinition {
   const limiter = createRateLimiter({ limit: options.max ?? 5, window: options.window ?? "10s" });
-  const message = options.message ?? "You're doing that too fast — please slow down.";
+  const message = options.message ?? "You're doing that too fast - please slow down.";
   return definePlugin({
     name: "anti-spam",
     version: "1.0.0",
@@ -88,7 +88,7 @@ export interface ErrorReporterOptions {
 
 /**
  * Forwards every unhandled interaction error to your reporter (e.g. Sentry).
- * Runs alongside the framework's own error boundary — the user still gets a
+ * Runs alongside the framework's own error boundary - the user still gets a
  * friendly reply.
  */
 export function errorReporter(options: ErrorReporterOptions): PluginDefinition {
@@ -125,7 +125,7 @@ export interface MaintenanceOptions {
  */
 export function maintenance(options: MaintenanceOptions = {}): PluginDefinition {
   const allow = new Set(options.allow ?? []);
-  const message = options.message ?? "🔧 The bot is under maintenance — please try again soon.";
+  const message = options.message ?? "🔧 The bot is under maintenance - please try again soon.";
   const isEnabled = () => (typeof options.enabled === "function" ? options.enabled() : (options.enabled ?? true));
   return definePlugin({
     name: "maintenance",

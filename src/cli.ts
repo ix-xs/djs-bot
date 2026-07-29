@@ -89,7 +89,7 @@ async function ensureTsLoader(entry: string): Promise<void> {
   }
 }
 
-/** Imports the entry in-process (introspection only — never connects). */
+/** Imports the entry in-process (introspection only - never connects). */
 async function loadBot(explicit?: string): Promise<Bot> {
   loadEnvFile();
   process.env.DJSBOT_CLI = "introspect";
@@ -218,13 +218,13 @@ async function cmdDoctor(entryArg?: string): Promise<void> {
   print(`${C.bold}djs-bot doctor${C.reset}\n`);
   const [major] = process.versions.node.split(".").map(Number);
   if ((major ?? 0) >= 20) ok(`Node ${process.versions.node}`);
-  else bad(`Node ${process.versions.node} — djs-bot needs >= 20`);
+  else bad(`Node ${process.versions.node} - djs-bot needs >= 20`);
 
   loadEnvFile();
   if (process.env.DISCORD_TOKEN) ok("DISCORD_TOKEN is set");
   else bad("DISCORD_TOKEN is missing (env or .env)");
   if (process.env.DISCORD_CLIENT_ID) ok("DISCORD_CLIENT_ID is set");
-  else warn("DISCORD_CLIENT_ID is missing — needed to deploy commands");
+  else warn("DISCORD_CLIENT_ID is missing - needed to deploy commands");
 
   try {
     const bot = await loadBot(entryArg);
@@ -235,7 +235,7 @@ async function cmdDoctor(entryArg?: string): Promise<void> {
     } else {
       ok("No privileged intents required");
     }
-    if (d.commands.length === 0) warn("No commands registered — did you point `features` at the right folder?");
+    if (d.commands.length === 0) warn("No commands registered - did you point `features` at the right folder?");
     print();
     ok("Doctor finished");
   } catch (error) {
@@ -276,7 +276,7 @@ async function cmdInit(): Promise<void> {
   const write = (rel: string, content: string) => {
     const target = path.resolve(rel);
     if (comfort.fs.exists(target)) {
-      warn(`${rel} exists — skipped`);
+      warn(`${rel} exists - skipped`);
       return;
     }
     comfort.fs.createFile(target, true, content);
@@ -294,7 +294,7 @@ async function cmdInit(): Promise<void> {
 }
 
 function help(): void {
-  print(`${C.bold}djs-bot${C.reset} — a TypeScript-first Discord bot framework
+  print(`${C.bold}djs-bot${C.reset} - a TypeScript-first Discord bot framework
 
 ${C.bold}Usage${C.reset}
   djs-bot <command> [options]

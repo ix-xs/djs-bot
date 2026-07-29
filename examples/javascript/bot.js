@@ -1,4 +1,4 @@
-// A complete bot in plain CommonJS JavaScript — no build step, no TypeScript.
+// A complete bot in plain CommonJS JavaScript - no build step, no TypeScript.
 // You still get full editor autocomplete & type hints from the shipped types.
 //
 //   node bot.js            (or)  npx djs-bot dev bot.js

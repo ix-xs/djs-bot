@@ -4,7 +4,7 @@ import { CloseTicket } from "./close.button.js";
 
 /**
  * Opens a ticket and posts a "Close" button whose customId encodes the ticket
- * id and owner — no manual string juggling, no global `switch`.
+ * id and owner - no manual string juggling, no global `switch`.
  */
 export default defineCommand({
   name: "open-ticket",

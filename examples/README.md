@@ -42,7 +42,7 @@ export default defineBot({ token: env("DISCORD_TOKEN"), features: "./src/feature
   }));
 ```
 
-Everything is fully typed — `ctx.options`, `ctx.params`, `ctx.fields`,
+Everything is fully typed - `ctx.options`, `ctx.params`, `ctx.fields`,
 `ctx.services`. `required: true` makes an option non-optional.
 
 ### JavaScript (CommonJS)
@@ -57,6 +57,6 @@ if (!process.env.DJSBOT_CLI) bot.start();
 ```
 
 The package ships `.d.ts` declarations, so JS editors still give you full
-autocomplete and inline docs — no TypeScript required.
+autocomplete and inline docs - no TypeScript required.
 
 See [`../USAGE.md`](../USAGE.md) for the complete guide.

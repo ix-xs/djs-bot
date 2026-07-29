@@ -1,9 +1,9 @@
 /**
  * Smart caching & resolution.
  *
- * - {@link TTLCache} — an in-memory cache with per-entry TTL, a max-size LRU
+ * - {@link TTLCache} - an in-memory cache with per-entry TTL, a max-size LRU
  *   bound, single-flight `getOrFetch`, and optional stale-while-revalidate.
- * - {@link resolve} — cache-first fetch helpers for Discord entities, so you
+ * - {@link resolve} - cache-first fetch helpers for Discord entities, so you
  *   read from discord.js's cache when possible and only hit the API on a miss.
  *
  * @module cache

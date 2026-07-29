@@ -123,7 +123,7 @@ export interface CircuitBreakerOptions {
 /** Error thrown when calls are rejected because the circuit is open. */
 export class CircuitOpenError extends Error {
   public constructor() {
-    super("Circuit is open — call rejected.");
+    super("Circuit is open - call rejected.");
     this.name = "CircuitOpenError";
   }
 }

@@ -4,12 +4,12 @@
  *   npm run bench
  *
  * Measured:
- *  - customId codec (encode/decode) — runs on every component interaction
- *  - registry registration — boot-time cost
- *  - routing hot path — key parse + registry lookup + param decode + guard pipeline
- *  - intent autopilot — computeIntents over many events
- *  - infra primitives — i18n, rate limiter, TTL cache
- *  - loader — file discovery + a cold load of N features
+ *  - customId codec (encode/decode) - runs on every component interaction
+ *  - registry registration - boot-time cost
+ *  - routing hot path - key parse + registry lookup + param decode + guard pipeline
+ *  - intent autopilot - computeIntents over many events
+ *  - infra primitives - i18n, rate limiter, TTL cache
+ *  - loader - file discovery + a cold load of N features
  */
 import { Bench } from "tinybench";
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
@@ -214,7 +214,7 @@ async function benchLoader(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  console.log(`\x1b[1mdjs-bot benchmarks\x1b[0m — Node ${process.version}, ${process.platform}/${process.arch}`);
+  console.log(`\x1b[1mdjs-bot benchmarks\x1b[0m - Node ${process.version}, ${process.platform}/${process.arch}`);
   await benchCustomId();
   await benchRouting();
   await benchRegistry();

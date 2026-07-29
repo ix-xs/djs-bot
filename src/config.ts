@@ -35,7 +35,7 @@ export interface BotConfig {
   token?: string;
   /** Application (client) id. Falls back to `DISCORD_CLIENT_ID`. Needed to deploy. */
   clientId?: string;
-  /** Feature sources — a directory path and/or explicit definitions. */
+  /** Feature sources - a directory path and/or explicit definitions. */
   features?: FeatureSource | FeatureSource[];
   /** `"auto"` to derive intents from your events, or an explicit list. */
   intents?: "auto" | GatewayIntentBits[];

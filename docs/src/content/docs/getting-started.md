@@ -19,7 +19,7 @@ Scaffold a starter:
 npx djs-bot init
 ```
 
-Works the same in **TypeScript** and **plain JavaScript** (CommonJS or ESM) — the
+Works the same in **TypeScript** and **plain JavaScript** (CommonJS or ESM) - the
 package ships full `.d.ts` declarations, so JS editors get autocomplete too.
 
 ## Your first bot
@@ -68,4 +68,4 @@ npx djs-bot doctor     # diagnose config, intents, permissions
 ```
 
 Continue with the [Guide](/djs-bot/guide/install-project-layout/) for the full
-tour — commands, components, events, deployment, and production features.
+tour - commands, components, events, deployment, and production features.

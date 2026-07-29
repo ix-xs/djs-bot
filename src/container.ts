@@ -1,7 +1,7 @@
 /**
  * A deliberately small dependency-injection container.
  *
- * No decorators, no `reflect-metadata`, no import-order magic — dependencies are
+ * No decorators, no `reflect-metadata`, no import-order magic - dependencies are
  * declared explicitly as string tokens and resolved in topological order at
  * boot. What you register is exactly what you get, and `djs-bot explain` can
  * print the whole graph.

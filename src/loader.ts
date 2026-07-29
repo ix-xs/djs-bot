@@ -3,7 +3,7 @@
  *
  * Files are *discovered* by their suffix (`*.command.ts`, `*.button.ts`, …) but
  * *routed* by the `kind` of each exported definition. Importing a file only ever
- * collects objects — it never registers anything by itself — so load order can
+ * collects objects - it never registers anything by itself - so load order can
  * never silently change behaviour.
  *
  * @module loader

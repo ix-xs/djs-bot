@@ -1,5 +1,5 @@
 /**
- * Type-level tests. These have no runtime assertions — they fail the build
+ * Type-level tests. These have no runtime assertions - they fail the build
  * (via `npm run test:types`) if the framework's type contracts regress.
  * Notably, they lock the `required` → non-optional inference that a subtle
  * generics bug once broke.

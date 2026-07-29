@@ -17,7 +17,7 @@ export const CUSTOM_ID_MAX_LENGTH = 100;
 
 /**
  * Recognised file suffixes for convention-based discovery.
- * The suffix is only a *hint* for which files to import — the actual routing
+ * The suffix is only a *hint* for which files to import - the actual routing
  * is driven by each definition's `kind`, never by the filename. This keeps the
  * loader free of import side effects.
  */

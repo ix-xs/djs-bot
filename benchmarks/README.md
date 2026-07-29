@@ -14,12 +14,12 @@ npm run bench
 | **routing hot path** | the per-interaction work the framework does before your handler: key parse → registry lookup → param decode → guard pipeline |
 | **registry registration** | boot-time cost of registering definitions |
 | **intent autopilot** | `computeIntents` over your events (boot-time) |
-| **infra primitives** | `i18n.t`, `rateLimiter.consume`, `TTLCache` — used in hot handlers |
+| **infra primitives** | `i18n.t`, `rateLimiter.consume`, `TTLCache` - used in hot handlers |
 | **loader** | file discovery (repeatable) and a one-time cold load of N features |
 
 ## Representative results
 
-Node 24, Windows x64 (your numbers will vary — these are indicative):
+Node 24, Windows x64 (your numbers will vary - these are indicative):
 
 ### Routing (per interaction)
 
@@ -30,7 +30,7 @@ Node 24, Windows x64 (your numbers will vary — these are indicative):
 | guard pipeline (3 guards) | ~2,200,000 | 0.49 µs |
 | **full route** (key + lookup + decode + guards) | **~750,000** | **1.4 µs** |
 
-The framework's per-interaction overhead is **~1.4 microseconds** — utterly
+The framework's per-interaction overhead is **~1.4 microseconds** - utterly
 negligible next to Discord's network round-trip (milliseconds). You are never
 bottlenecked by the router.
 
