@@ -13,7 +13,7 @@ import {
   s,
   Registry,
 } from "../src/index.js";
-import { buildCommandTree, commandToJSON, planDeployment } from "../src/deploy.js";
+import { buildCommandTree, commandToJSON, planDeployment, canonical } from "../src/deploy.js";
 
 describe("subcommands", () => {
   const Config = defineCommand({
@@ -132,6 +132,37 @@ describe("autocomplete & localizations", () => {
     expect(json.name_localizations).toEqual({ fr: "recherche" });
     expect(json.options[0]!.autocomplete).toBe(true);
     expect(json.options[0]!.name_localizations).toEqual({ fr: "requête" });
+  });
+});
+
+describe("deploy diff (canonical)", () => {
+  const withSub = (subDesc: string, extraOpt = false) =>
+    commandToJSON(
+      defineCommand({
+        name: "cfg",
+        description: "configure",
+        subcommands: {
+          set: subcommand({
+            description: subDesc,
+            options: extraOpt
+              ? { key: s.string({ description: "k", required: true }), value: s.string({ description: "v" }) }
+              : { key: s.string({ description: "k", required: true }) },
+            run: () => {},
+          }),
+        },
+      }),
+    );
+
+  it("detects a changed subcommand description (nested)", () => {
+    expect(canonical(withSub("old"))).not.toBe(canonical(withSub("new")));
+  });
+
+  it("detects an added subcommand option (nested)", () => {
+    expect(canonical(withSub("same"))).not.toBe(canonical(withSub("same", true)));
+  });
+
+  it("is stable for identical commands", () => {
+    expect(canonical(withSub("same"))).toBe(canonical(withSub("same")));
   });
 });
 

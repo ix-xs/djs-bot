@@ -7,17 +7,17 @@
  *
  * @module errors
  */
-import { DOCS_BASE_URL } from "./constants.js";
+import { CUSTOM_ID_MAX_LENGTH, DOCS_BASE_URL } from "./constants.js";
 
 /** Catalogue of framework error codes and their default messages/hints. */
 export const ERROR_CATALOGUE = {
   DJSBOT_E001: {
     title: "Missing bot token",
-    hint: "Provide `token` in defineBot()/forge.config or set the DISCORD_TOKEN env var.",
+    hint: "Provide `token` in defineBot() or set the DISCORD_TOKEN env var.",
   },
   DJSBOT_E002: {
     title: "Missing application client id",
-    hint: "Set `clientId` in config or the DISCORD_CLIENT_ID env var - required to deploy commands.",
+    hint: "Set `clientId` in defineBot() or the DISCORD_CLIENT_ID env var - required to deploy commands.",
   },
   DJSBOT_E010: {
     title: "Duplicate command name",
@@ -28,12 +28,16 @@ export const ERROR_CATALOGUE = {
     hint: "Two components share the same id. Button/select/modal ids must be unique per type.",
   },
   DJSBOT_E012: {
-    title: "Unknown component interaction",
-    hint: "Received an interaction whose customId key is not registered. Did you forget to load the feature?",
+    title: "Invalid command or option name",
+    hint: "Slash command, subcommand, group and option names must be 1-32 chars, lowercase, and use only letters, numbers, - or _ (no spaces).",
+  },
+  DJSBOT_E013: {
+    title: "Invalid component id",
+    hint: "Button/select/modal ids must be non-empty and must not contain '$' (reserved as the customId separator). Use ':' or '-' to namespace.",
   },
   DJSBOT_E020: {
     title: "customId too long",
-    hint: `Encoded customId exceeds Discord's ${100}-char limit. Store the payload out-of-band and keep only a short key.`,
+    hint: `Encoded customId exceeds Discord's ${CUSTOM_ID_MAX_LENGTH}-char limit. Store the payload out-of-band and keep only a short key.`,
   },
   DJSBOT_E021: {
     title: "Invalid customId payload",

@@ -100,6 +100,8 @@ export interface BaseContext<I extends RepliableInteraction = RepliableInteracti
   readonly correlationId: string;
   /** The user's Discord client locale (e.g. `"fr"`, `"en-US"`). */
   readonly locale: string;
+  /** Bot owner ids from `defineBot({ owners })` - used by `ownerOnly()` when given no ids. */
+  readonly owners: readonly string[];
   /** Translates a key for this user's locale (no-op returning the key if i18n is unconfigured). */
   t(key: string, vars?: Record<string, unknown>): string;
   /**

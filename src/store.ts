@@ -140,6 +140,14 @@ class SQLiteStore<V> implements KVStore<V> {
     return this.prefix + key;
   }
 
+  /**
+   * The prefix as a LIKE pattern, with `%`, `_` and `\` escaped so a namespace
+   * containing those characters matches literally (they are LIKE wildcards).
+   */
+  private likePattern(): string {
+    return `${this.prefix.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+  }
+
   async get(key: string): Promise<V | undefined> {
     await this.ready;
     const row = unwrap(
@@ -174,13 +182,13 @@ class SQLiteStore<V> implements KVStore<V> {
   async keys(): Promise<string[]> {
     await this.ready;
     const rows = unwrap(
-      await this.db.queryAll("SELECT key FROM djsbot_kv WHERE key LIKE ?", [`${this.prefix}%`]),
+      await this.db.queryAll("SELECT key FROM djsbot_kv WHERE key LIKE ? ESCAPE '\\'", [this.likePattern()]),
     ) as Array<{ key: string }>;
     return rows.map((r) => r.key.slice(this.prefix.length));
   }
   async clear(): Promise<void> {
     await this.ready;
-    unwrap(await this.db.exec("DELETE FROM djsbot_kv WHERE key LIKE ?", [`${this.prefix}%`]));
+    unwrap(await this.db.exec("DELETE FROM djsbot_kv WHERE key LIKE ? ESCAPE '\\'", [this.likePattern()]));
   }
   namespace<T = V>(prefix: string): KVStore<T> {
     return new SQLiteStore<T>(this.db, `${this.prefix}${prefix}:`, this.ready);

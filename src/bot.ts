@@ -308,7 +308,8 @@ export class Bot {
       return;
     }
 
-    const token = this.config.token ?? env("DISCORD_TOKEN");
+    const token = this.config.token ?? env.optional("DISCORD_TOKEN");
+    if (!token) throw new BotError("DJSBOT_E001");
 
     // If sharding is enabled and we're the manager process (not a spawned
     // shard), launch the ShardingManager and stop - children run the bot.
@@ -425,7 +426,8 @@ export class Bot {
 
   private startHealth(client: Client<true>): void {
     if (this.config.health === undefined) return;
-    const options = typeof this.config.health === "number" ? { port: this.config.health } : this.config.health;
+    const base = typeof this.config.health === "number" ? { port: this.config.health } : this.config.health;
+    const options = { ...base, onError: (error: Error) => this.logger.error({ err: error }, "Health server failed to start") };
     this.healthServer = startHealthServer(
       () => ({
         ready: client.isReady(),
@@ -546,8 +548,7 @@ export class Bot {
    */
   public async deploy(options: DeployCallOptions = {}): Promise<DeployResult> {
     await this.load();
-    const token = this.config.token ?? env("DISCORD_TOKEN");
-    const clientId = this.config.clientId ?? env("DISCORD_CLIENT_ID");
+    const { token, clientId } = this.deployCredentials();
 
     // Track which guilds we've deployed to, so guilds you stop targeting get
     // their commands auto-pruned on the next deploy.
@@ -571,9 +572,17 @@ export class Bot {
    */
   public async clear(options: { guildId?: string; dryRun?: boolean } = {}): Promise<DeployTargetResult> {
     await this.load();
-    const token = this.config.token ?? env("DISCORD_TOKEN");
-    const clientId = this.config.clientId ?? env("DISCORD_CLIENT_ID");
+    const { token, clientId } = this.deployCredentials();
     return clearScope({ token, clientId, guildId: options.guildId, dryRun: options.dryRun, logger: this.logger });
+  }
+
+  /** Resolves the token + client id needed to deploy, with clear coded errors. */
+  private deployCredentials(): { token: string; clientId: string } {
+    const token = this.config.token ?? env.optional("DISCORD_TOKEN");
+    if (!token) throw new BotError("DJSBOT_E001");
+    const clientId = this.config.clientId ?? env.optional("DISCORD_CLIENT_ID");
+    if (!clientId) throw new BotError("DJSBOT_E002");
+    return { token, clientId };
   }
 
   private readonly deployStatePath = ".djs-bot/deploy-state.json";
@@ -689,6 +698,7 @@ export class Bot {
       logger: this.logger.child({ correlationId, userId: interaction.user.id }),
       correlationId,
       locale,
+      owners: this.config.owners ?? [],
       t: (key, vars) => (i18n ? i18n.t(locale, key, vars) : key),
       audit: async (action, details) => {
         if (!this.auditLog) return;

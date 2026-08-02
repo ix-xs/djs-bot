@@ -27,12 +27,42 @@ community bot).
 
 ### Fixed
 
+- **Deploy diff now sees nested subcommands.** The change-detector only
+  canonicalised top-level options, so editing a **subcommand's** option (adding
+  one, changing its description) was invisible and **never deployed**. It now
+  recurses through subcommands and groups.
+- **SQLite store namespaces are isolated even with `_`/`%` in the name.** `keys()`
+  and `clear()` used `LIKE '<prefix>%'` without escaping SQL wildcards, so a
+  namespace like `store.namespace("a_b")` could read/clear another namespace's
+  keys. Wildcards are now escaped.
+- **Errors are no longer lost in logs.** `logger.error({ err }, …)` serialised the
+  nested `Error` as `{}` (message and stack gone) in both JSON and pretty output.
+  Errors anywhere in the log fields are now serialised properly (incl. `BotError`'s
+  `code`/`hint`).
+- **The health server can't crash the bot.** A port conflict (`EADDRINUSE`) emitted
+  an unhandled `error` that took the whole process down; it's now reported and
+  non-fatal.
+- **A failing audit sink can't break a command.** `ctx.audit(...)` used
+  `Promise.all`, so one throwing sink propagated into the handler; it's now
+  best-effort (`allSettled`).
 - **`djs-bot deploy` / `clear` exit cleanly on Windows.** They no longer throw a
   libuv assertion (`!(handle->flags & UV_HANDLE_CLOSING)`) on exit: the HTTP
   connection pool is closed and REST timers stopped before the process exits.
 - **`deploy` warns about the dev-mirror duplicate footgun.** When a dev guild is
   configured, a global deploy now reminds you those commands are also mirrored in
   the dev guild (from `djs-bot dev`) and shows how to clear them.
+
+### Added (validation & DX)
+
+- **Definition-time validation.** `defineCommand`/`subcommand` reject invalid
+  slash/option/subcommand/group names (`DJSBOT_E012`); component builders reject
+  empty ids or ids containing the reserved `$` separator (`DJSBOT_E013`) - instead
+  of a cryptic Discord 400 or a component that silently never routes.
+- **`ownerOnly()` uses `defineBot({ owners })`.** Called with no arguments it now
+  falls back to the configured owner ids (previously the `owners` config was
+  unused). `ctx.owners` is exposed too.
+- **Coded errors for missing credentials.** Starting without a token throws
+  `DJSBOT_E001`; deploying without a client id throws `DJSBOT_E002`.
 
 ## 1.0.0-beta.3
 

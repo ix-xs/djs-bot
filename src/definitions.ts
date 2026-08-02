@@ -54,6 +54,7 @@ import {
   type ParamMap,
 } from "./schema.js";
 import { encodeCustomId } from "./customId.js";
+import { assertChatName, assertComponentId, assertMenuName } from "./validate.js";
 
 /* -------------------------------------------------------------------------- */
 /*  Shared app-facing types                                                   */
@@ -225,6 +226,11 @@ export interface CommandInput<M extends OptionMap> {
   run?: (ctx: CommandContext<InferOptions<M>>) => unknown | Promise<unknown>;
 }
 
+/** Validates every option name in an options map against Discord's rules. */
+function validateOptionNames(options: OptionMap | undefined): void {
+  for (const name of Object.keys(options ?? {})) assertChatName("option name", name);
+}
+
 /**
  * Defines a slash command with typed options, or with subcommands/groups.
  * @example
@@ -238,6 +244,19 @@ export interface CommandInput<M extends OptionMap> {
 export function defineCommand<M extends OptionMap = Record<string, never>>(
   input: CommandInput<M>,
 ): CommandDefinition<M> {
+  assertChatName("command name", input.name);
+  validateOptionNames(input.options);
+  for (const [subName, sub] of Object.entries(input.subcommands ?? {})) {
+    assertChatName("subcommand name", subName);
+    validateOptionNames(sub.options);
+  }
+  for (const [groupName, group] of Object.entries(input.groups ?? {})) {
+    assertChatName("group name", groupName);
+    for (const [subName, sub] of Object.entries(group.subcommands ?? {})) {
+      assertChatName("subcommand name", subName);
+      validateOptionNames(sub.options);
+    }
+  }
   return {
     kind: "command",
     name: input.name,
@@ -329,6 +348,7 @@ export interface MessageCommandInput extends ContextCommandCommon {
  * });
  */
 export function defineUserCommand(input: UserCommandInput): UserCommandDefinition {
+  assertMenuName(input.name);
   return {
     kind: "userCommand",
     name: input.name,
@@ -352,6 +372,7 @@ export function defineUserCommand(input: UserCommandInput): UserCommandDefinitio
  * });
  */
 export function defineMessageCommand(input: MessageCommandInput): MessageCommandDefinition {
+  assertMenuName(input.name);
   return {
     kind: "messageCommand",
     name: input.name,
@@ -535,6 +556,7 @@ export interface ButtonInput<P extends ParamMap> {
 export function defineButton<P extends ParamMap = Record<string, never>>(
   input: ButtonInput<P>,
 ): ButtonDefinition<P> {
+  assertComponentId("button", input.id);
   const params = (input.params ?? {}) as P;
   return {
     kind: "button",
@@ -650,6 +672,7 @@ function applyNativeVisual(
 export function defineSelectMenu<P extends ParamMap = Record<string, never>>(
   input: SelectMenuInput<P>,
 ): SelectMenuDefinition<P> {
+  assertComponentId("select menu", input.id);
   const params = (input.params ?? {}) as P;
   return {
     kind: "select",
@@ -675,6 +698,7 @@ export function defineSelectMenu<P extends ParamMap = Record<string, never>>(
 export function defineUserSelect<P extends ParamMap = Record<string, never>>(
   input: SelectMenuInput<P>,
 ): UserSelectDefinition<P> {
+  assertComponentId("user select", input.id);
   const params = (input.params ?? {}) as P;
   return {
     kind: "select",
@@ -698,6 +722,7 @@ export function defineUserSelect<P extends ParamMap = Record<string, never>>(
 export function defineRoleSelect<P extends ParamMap = Record<string, never>>(
   input: SelectMenuInput<P>,
 ): RoleSelectDefinition<P> {
+  assertComponentId("role select", input.id);
   const params = (input.params ?? {}) as P;
   return {
     kind: "select",
@@ -721,6 +746,7 @@ export function defineRoleSelect<P extends ParamMap = Record<string, never>>(
 export function defineChannelSelect<P extends ParamMap = Record<string, never>>(
   input: SelectMenuInput<P>,
 ): ChannelSelectDefinition<P> {
+  assertComponentId("channel select", input.id);
   const params = (input.params ?? {}) as P;
   return {
     kind: "select",
@@ -745,6 +771,7 @@ export function defineChannelSelect<P extends ParamMap = Record<string, never>>(
 export function defineMentionableSelect<P extends ParamMap = Record<string, never>>(
   input: SelectMenuInput<P>,
 ): MentionableSelectDefinition<P> {
+  assertComponentId("mentionable select", input.id);
   const params = (input.params ?? {}) as P;
   return {
     kind: "select",
@@ -804,6 +831,7 @@ export interface ModalInput<F extends FieldMap, P extends ParamMap> {
 export function defineModal<F extends FieldMap, P extends ParamMap = Record<string, never>>(
   input: ModalInput<F, P>,
 ): ModalDefinition<F, P> {
+  assertComponentId("modal", input.id);
   const params = (input.params ?? {}) as P;
   return {
     kind: "modal",

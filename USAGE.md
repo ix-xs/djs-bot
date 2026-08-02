@@ -1186,12 +1186,18 @@ All framework errors carry a stable `DJSBOT_Exxx` code and an actionable hint:
 | Code | Meaning |
 | --- | --- |
 | `DJSBOT_E001` | missing token |
+| `DJSBOT_E002` | missing application client id |
 | `DJSBOT_E010` | duplicate command name |
 | `DJSBOT_E011` | duplicate component id |
+| `DJSBOT_E012` | invalid command/option name (not lowercase, spaces, too long…) |
+| `DJSBOT_E013` | invalid component id (empty or contains `$`) |
 | `DJSBOT_E020` | customId over 100 chars |
+| `DJSBOT_E021` | invalid customId payload |
 | `DJSBOT_E030` | service dependency cycle |
+| `DJSBOT_E031` | unknown service |
 | `DJSBOT_E040` | unmet feature/plugin contract |
 | `DJSBOT_E041` | capability conflict |
+| `DJSBOT_E060` | loader error |
 | `DJSBOT_E070` | privileged intent required |
 
 ```ts
