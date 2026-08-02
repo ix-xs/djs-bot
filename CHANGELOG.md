@@ -3,6 +3,37 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## 1.0.0
+
+First **stable** release. The API is now considered stable and follows semver.
+Consolidates the beta line and adds the improvements below, all shaped by building
+two real bots on top of the framework (a full showcase bot and a production
+community bot).
+
+### Added
+
+- **`paginate` supports full payload pages, including Components V2.** A page can
+  be an `EmbedBuilder` **or** a `{ content?, embeds?, components?, files?, flags? }`
+  payload - so you can paginate `ui.container(...)` / `MessageFlags.IsComponentsV2`
+  messages, not just embeds. The nav row is appended for you. Exports `Page` /
+  `PagePayload`, and `ContainerChild` (the accepted `ui.container` child type).
+
+### Changed
+
+- **`flags` reuses the bot's `store` by default.** `defineBot({ store, flags: {
+  defaults } })` now shares the store automatically - no need to pass it twice.
+- **`loggerAuditSink()` takes no required argument** - it defaults to a logger,
+  so `audit: { sinks: [loggerAuditSink()] }` just works.
+
+### Fixed
+
+- **`djs-bot deploy` / `clear` exit cleanly on Windows.** They no longer throw a
+  libuv assertion (`!(handle->flags & UV_HANDLE_CLOSING)`) on exit: the HTTP
+  connection pool is closed and REST timers stopped before the process exits.
+- **`deploy` warns about the dev-mirror duplicate footgun.** When a dev guild is
+  configured, a global deploy now reminds you those commands are also mirrored in
+  the dev guild (from `djs-bot dev`) and shows how to clear them.
+
 ## 1.0.0-beta.3
 
 > ⚠️ **Beta / real-world testing.** Published under the `beta` npm tag

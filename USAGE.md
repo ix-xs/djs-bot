@@ -4,10 +4,6 @@ Everything you need to build and run a real Discord bot end to end. The framewor
 never hides discord.js - `ctx.interaction` and `ctx.client` are always right
 there - so anything not shown here still works the plain discord.js way.
 
-> ⚠️ **Beta software.** This package is in real-world testing. It works, but you
-> may hit bugs or breaking changes between beta releases. Pin an exact version
-> (`@ix-xs/djs-bot@1.0.0-beta.0`) and report issues.
-
 > All examples are TypeScript and compile against **discord.js v14**.
 
 ## Table of contents
@@ -1313,7 +1309,25 @@ export const wipe = defineCommand({
 await paginate(ctx, { count: 100, pages: (i) => renderPageEmbed(i), timeout: "2m" });
 ```
 
-By default only the invoking user can use the controls (`allowedUsers` to widen).
+Pages aren't limited to embeds - a page can be a **full payload**, including
+**Components V2**. Return `{ components, flags }` and the nav row is appended for
+you:
+
+```ts
+import { ui, MessageFlags } from "@ix-xs/djs-bot";
+
+await paginate(ctx, {
+  pages: cards.map((card) => ({
+    flags: MessageFlags.IsComponentsV2,
+    components: [ui.container(ui.text(`# ${card.title}`), ui.gallery(card.image))],
+  })),
+  timeout: "5m",
+});
+```
+
+A page is either an `EmbedBuilder` or a `{ content?, embeds?, components?, files?,
+flags? }` payload. By default only the invoking user can use the controls
+(`allowedUsers` to widen).
 
 ## 31. Presence & activities
 
@@ -1580,7 +1594,7 @@ const store = memoryStore();
 const bot = defineBot({
   token: env("DISCORD_TOKEN"),
   audit: {
-    sinks: [loggerAuditSink(/* logger */ undefined as never), storeAuditSink(store)],
+    sinks: [loggerAuditSink(), storeAuditSink(store)],
     autoRecordCommands: true,   // logs every command as "command:<name>"
   },
 });
@@ -1607,7 +1621,7 @@ const recentBans = await audit.query({ action: "member.ban", guildId: ctx.guildI
 
 Filters: `action`, `actorId`, `guildId`, `since`, `limit` (results newest-first).
 Sinks: `memoryAuditSink(max)`, `storeAuditSink(store, { namespace, ttl })`,
-`loggerAuditSink(logger)` - or implement `AuditSink` yourself.
+`loggerAuditSink(logger?)` - or implement `AuditSink` yourself.
 
 ## 39. Feature flags per guild
 
@@ -1618,7 +1632,7 @@ in a `KVStore`. Resolution: guild override → global override → declared defa
 const bot = defineBot({
   token: env("DISCORD_TOKEN"),
   store: sqliteStore("data/bot.sqlite"),
-  flags: { store: /* reuse the store */ undefined, defaults: { economy: true, beta: false } },
+  flags: { defaults: { economy: true, beta: false } }, // reuses the bot's `store` automatically
 });
 ```
 

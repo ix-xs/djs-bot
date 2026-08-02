@@ -8,7 +8,7 @@
  * @module audit
  */
 import comfort from "@ix-xs/node-comfort";
-import type { Logger } from "./logger.js";
+import { createLogger, type Logger } from "./logger.js";
 import type { KVStore } from "./store.js";
 
 /** A single audit record. */
@@ -94,8 +94,11 @@ export function storeAuditSink(store: KVStore, options: { namespace?: string; tt
   };
 }
 
-/** A sink that writes each entry to the structured logger. */
-export function loggerAuditSink(logger: Logger): AuditSink {
+/**
+ * A sink that writes each entry to the structured logger. Pass your own logger,
+ * or omit it to use a default one - so `loggerAuditSink()` just works in config.
+ */
+export function loggerAuditSink(logger: Logger = createLogger()): AuditSink {
   return {
     record(entry) {
       logger.info({ audit: entry }, `audit: ${entry.action}`);

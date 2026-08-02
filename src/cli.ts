@@ -20,6 +20,7 @@ import comfort from "@ix-xs/node-comfort";
 import { loadEnvFile } from "./config.js";
 import { isBot, type Bot } from "./bot.js";
 import { interopDefault } from "./loader.js";
+import { closeRestConnections } from "./deploy.js";
 import { VERSION } from "./constants.js";
 
 const C = {
@@ -159,6 +160,24 @@ async function cmdDeploy(args: string[]): Promise<void> {
       print(`  ${C.gray}no changes${C.reset}`);
     }
   }
+
+  // Duplicate-command footgun: `djs-bot dev` mirrors every command to the dev
+  // guild as GUILD commands. Deploying the same commands GLOBALLY makes both
+  // appear side by side in that guild. Warn and show how to clear the mirror.
+  if (!guildId && bot.devGuildId) {
+    const globalTarget = result.targets.find((t) => t.scope === "global");
+    const hasGlobal = globalTarget && globalTarget.added.length + globalTarget.changed.length + globalTarget.unchanged.length > 0;
+    if (hasGlobal) {
+      print();
+      warn(
+        `Your dev guild (${bot.devGuildId}) still holds the command mirror from \`djs-bot dev\`. ` +
+          `These global commands will appear as DUPLICATES there until you clear it:`,
+      );
+      print(`  ${C.gray}djs-bot clear --guild ${bot.devGuildId}${C.reset}`);
+    }
+  }
+
+  await closeRestConnections(); // close undici before exit so Windows doesn't assert
   process.exit(0);
 }
 
@@ -180,6 +199,7 @@ async function cmdClear(args: string[]): Promise<void> {
   } else {
     ok(`Nothing to clear in ${label}`);
   }
+  await closeRestConnections(); // close undici before exit so Windows doesn't assert
   process.exit(0);
 }
 

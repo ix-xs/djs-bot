@@ -362,28 +362,32 @@ export async function deployCommands(registry: Registry, options: DeployOptions)
   const targets: DeployTargetResult[] = [];
   let deployedGuilds: string[] = [];
 
-  if (options.guildId) {
-    // Force everything onto one guild (dev), ignoring per-command scoping.
-    const desired = buildCommandTree(registry);
-    targets.push(await reconcileTarget(rest, options.clientId, options.guildId, desired, dryRun, options.logger));
-    deployedGuilds = [options.guildId];
-  } else {
-    const plan = planDeployment(registry);
-    targets.push(await reconcileTarget(rest, options.clientId, undefined, plan.global, dryRun, options.logger));
-    for (const [guildId, commands] of plan.guilds) {
-      targets.push(await reconcileTarget(rest, options.clientId, guildId, commands, dryRun, options.logger));
-    }
-    deployedGuilds = [...plan.guilds.keys()];
+  try {
+    if (options.guildId) {
+      // Force everything onto one guild (dev), ignoring per-command scoping.
+      const desired = buildCommandTree(registry);
+      targets.push(await reconcileTarget(rest, options.clientId, options.guildId, desired, dryRun, options.logger));
+      deployedGuilds = [options.guildId];
+    } else {
+      const plan = planDeployment(registry);
+      targets.push(await reconcileTarget(rest, options.clientId, undefined, plan.global, dryRun, options.logger));
+      for (const [guildId, commands] of plan.guilds) {
+        targets.push(await reconcileTarget(rest, options.clientId, guildId, commands, dryRun, options.logger));
+      }
+      deployedGuilds = [...plan.guilds.keys()];
 
-    // Auto-prune: clear commands in guilds we deployed to before but no longer target.
-    const stale = (options.knownGuilds ?? []).filter((g) => !plan.guilds.has(g));
-    for (const guildId of stale) {
-      options.logger?.info({ guildId }, "Pruning commands from no-longer-targeted guild");
-      targets.push(await reconcileTarget(rest, options.clientId, guildId, [], dryRun, options.logger));
+      // Auto-prune: clear commands in guilds we deployed to before but no longer target.
+      const stale = (options.knownGuilds ?? []).filter((g) => !plan.guilds.has(g));
+      for (const guildId of stale) {
+        options.logger?.info({ guildId }, "Pruning commands from no-longer-targeted guild");
+        targets.push(await reconcileTarget(rest, options.clientId, guildId, [], dryRun, options.logger));
+      }
     }
+
+    return { targets, applied: targets.some((t) => t.applied), deployedGuilds };
+  } finally {
+    stopRest(rest);
   }
-
-  return { targets, applied: targets.some((t) => t.applied), deployedGuilds };
 }
 
 /** Options for {@link clearCommands}. */
@@ -402,5 +406,34 @@ export interface ClearOptions {
  */
 export async function clearCommands(options: ClearOptions): Promise<DeployTargetResult> {
   const rest = new REST().setToken(options.token);
-  return reconcileTarget(rest, options.clientId, options.guildId, [], options.dryRun ?? false, options.logger);
+  try {
+    return await reconcileTarget(rest, options.clientId, options.guildId, [], options.dryRun ?? false, options.logger);
+  } finally {
+    stopRest(rest);
+  }
+}
+
+/**
+ * Stops `@discordjs/rest`'s internal sweeper intervals so they don't keep a
+ * one-shot CLI process alive after a deploy/clear.
+ */
+function stopRest(rest: REST): void {
+  rest.clearHashSweeper();
+  rest.clearHandlerSweeper();
+}
+
+/**
+ * Gracefully closes the shared HTTP connection pool (undici) used for REST calls.
+ * A one-shot CLI can call this before exiting so `process.exit()` never races a
+ * socket that is mid-close (which throws a libuv assertion on Windows).
+ * Best-effort: if undici isn't resolvable, it quietly does nothing.
+ */
+export async function closeRestConnections(): Promise<void> {
+  try {
+    const undiciName = "undici";
+    const mod = (await import(undiciName)) as { getGlobalDispatcher(): { close(): Promise<void> } };
+    await mod.getGlobalDispatcher().close();
+  } catch {
+    /* undici not resolvable, or nothing to close */
+  }
 }

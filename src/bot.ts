@@ -144,6 +144,11 @@ export class Bot {
     return this._client;
   }
 
+  /** The configured dev guild (from `deploy.devGuildId` or `DISCORD_DEV_GUILD`), if any. */
+  public get devGuildId(): string | undefined {
+    return this.config.deploy?.devGuildId ?? env.optional("DISCORD_DEV_GUILD");
+  }
+
   /** Registers additional definitions explicitly (in addition to `config.features`). */
   public use(...items: Registrable[]): this {
     this.pending.push(...items);
@@ -171,7 +176,9 @@ export class Bot {
       this.container.registerValue("audit", this.auditLog);
     }
     if (this.config.flags) {
-      this.container.registerValue("flags", createFeatureFlags(this.config.flags));
+      // Reuse the bot's configured store by default, so you don't pass it twice.
+      const flagsOptions = { ...this.config.flags, store: this.config.flags.store ?? this.config.store };
+      this.container.registerValue("flags", createFeatureFlags(flagsOptions));
     }
 
     this.validateContracts();

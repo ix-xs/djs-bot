@@ -1,7 +1,11 @@
 /**
- * Interactive helpers built on top of an interaction: paginated embeds, a
+ * Interactive helpers built on top of an interaction: paginated messages, a
  * yes/no confirmation dialog, and a low-level component waiter. Each one manages
  * its own buttons and collector, so you never wire a global handler for them.
+ *
+ * Pages can be plain embeds *or* full payloads - including Components V2
+ * (`ui.container(...)` with `MessageFlags.IsComponentsV2`) - so a paginated
+ * message looks exactly like any other message you build.
  *
  * @module pagination
  */
@@ -10,10 +14,13 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
+  EmbedBuilder,
   MessageFlags,
+  type BaseMessageOptions,
   type ButtonInteraction,
-  type EmbedBuilder,
+  type InteractionEditReplyOptions,
   type InteractionReplyOptions,
+  type InteractionUpdateOptions,
 } from "discord.js";
 import comfort from "@ix-xs/node-comfort";
 import type { BaseContext } from "./context.js";
@@ -24,10 +31,24 @@ function ms(duration: string | number | undefined, fallback: number): number {
   return fallback;
 }
 
+/**
+ * A single page. Either an {@link EmbedBuilder} (rendered as `embeds: [page]`), or
+ * a full message payload - `content`, `embeds`, `components` (action rows *or*
+ * Components V2 builders), `files`, and `flags` (e.g. `MessageFlags.IsComponentsV2`).
+ * The navigation row is appended to `components` for you.
+ */
+export type Page = EmbedBuilder | PagePayload;
+
+/** A full-payload page (see {@link Page}). */
+export type PagePayload = Pick<BaseMessageOptions, "content" | "embeds" | "components" | "files"> & {
+  /** Message flags, e.g. `MessageFlags.IsComponentsV2` for a Components V2 page. */
+  flags?: number;
+};
+
 /** Options for {@link paginate}. */
 export interface PaginateOptions {
-  /** The pages: an array of embeds, or a builder called with the page index. */
-  pages: EmbedBuilder[] | ((index: number) => EmbedBuilder | Promise<EmbedBuilder>);
+  /** The pages: an array, or a builder called with the page index. */
+  pages: Page[] | ((index: number) => Page | Promise<Page>);
   /** Total page count (required when `pages` is a function). */
   count?: number;
   /** Page to start on (default `0`). */
@@ -45,8 +66,8 @@ export interface PaginateOptions {
 }
 
 function navRow(nonce: string, page: number, total: number, opts: PaginateOptions): ActionRowBuilder<ButtonBuilder> {
-  const btn = (suffix: string, emoji: string, disabled: boolean, style = ButtonStyle.Secondary) =>
-    new ButtonBuilder().setCustomId(`${nonce}:${suffix}`).setEmoji(emoji).setStyle(style).setDisabled(disabled);
+  const btn = (suffix: string, emoji: string, disabled: boolean) =>
+    new ButtonBuilder().setCustomId(`${nonce}:${suffix}`).setEmoji(emoji).setStyle(ButtonStyle.Secondary).setDisabled(disabled);
 
   const row = new ActionRowBuilder<ButtonBuilder>();
   if (opts.showFirstLast !== false) row.addComponents(btn("first", "⏮️", page === 0));
@@ -62,28 +83,46 @@ function navRow(nonce: string, page: number, total: number, opts: PaginateOption
 }
 
 /**
- * Sends a paginated embed message with prev/next (and first/last) controls,
- * updating in place as the user navigates and disabling the controls on timeout.
+ * Merges a page with the nav row into a payload usable for both reply and update.
+ * Exported for testing.
+ */
+export function toPayload(page: Page, nav: ActionRowBuilder<ButtonBuilder> | null, extraFlags: number): InteractionReplyOptions {
+  const payload: InteractionReplyOptions =
+    page instanceof EmbedBuilder ? { embeds: [page] } : { ...(page as PagePayload) };
+
+  const existing = (payload.components ?? []) as unknown[];
+  payload.components = (nav ? [...existing, nav] : existing) as InteractionReplyOptions["components"];
+
+  const pageFlags = (page instanceof EmbedBuilder ? 0 : (page.flags ?? 0)) | extraFlags;
+  if (pageFlags) payload.flags = pageFlags as InteractionReplyOptions["flags"];
+  return payload;
+}
+
+/**
+ * Sends a paginated message with prev/next (and first/last) controls, updating in
+ * place as the user navigates and disabling the controls on timeout.
  *
  * @example
+ * // Embeds
  * await paginate(ctx, { pages: [embed1, embed2, embed3], timeout: "5m" });
+ * @example
+ * // Components V2
+ * await paginate(ctx, {
+ *   pages: cards.map((c) => ({ flags: MessageFlags.IsComponentsV2, components: [c] })),
+ * });
  */
 export async function paginate(ctx: BaseContext, options: PaginateOptions): Promise<void> {
   const total = Array.isArray(options.pages) ? options.pages.length : (options.count ?? 0);
   if (total === 0) throw new Error("paginate() needs at least one page.");
 
-  const getPage = async (i: number): Promise<EmbedBuilder> =>
+  const getPage = async (i: number): Promise<Page> =>
     Array.isArray(options.pages) ? options.pages[i]! : options.pages(i);
 
   const nonce = comfort.id.nano(8);
   let page = Math.min(Math.max(options.startPage ?? 0, 0), total - 1);
+  const extraFlags = options.ephemeral ? MessageFlags.Ephemeral : 0;
 
-  const payload: InteractionReplyOptions = {
-    embeds: [await getPage(page)],
-    components: total > 1 ? [navRow(nonce, page, total, options)] : [],
-  };
-  if (options.ephemeral) payload.flags = MessageFlags.Ephemeral;
-  await ctx.reply(payload);
+  await ctx.reply(toPayload(await getPage(page), total > 1 ? navRow(nonce, page, total, options) : null, extraFlags));
   if (total <= 1) return;
 
   const message = await ctx.interaction.fetchReply();
@@ -101,13 +140,15 @@ export async function paginate(ctx: BaseContext, options: PaginateOptions): Prom
     else if (action === "prev") page = Math.max(0, page - 1);
     else if (action === "next") page = Math.min(total - 1, page + 1);
     else if (action === "last") page = total - 1;
-    await i.update({ embeds: [await getPage(page)], components: [navRow(nonce, page, total, options)] });
+    // No ephemeral flag on update - the message's flags are already established.
+    await i.update(toPayload(await getPage(page), navRow(nonce, page, total, options), 0) as InteractionUpdateOptions);
   });
 
-  collector.on("end", () => {
+  collector.on("end", async () => {
     const disabled = navRow(nonce, page, total, options);
     for (const b of disabled.components) b.setDisabled(true);
-    void ctx.interaction.editReply({ components: [disabled] }).catch(() => undefined);
+    const payload = toPayload(await getPage(page), disabled, 0) as InteractionEditReplyOptions;
+    await ctx.interaction.editReply(payload).catch(() => undefined);
   });
 }
 
