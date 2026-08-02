@@ -172,13 +172,15 @@ export { VERSION, FRAMEWORK_NAME, CUSTOM_ID_MAX_LENGTH } from "./constants.js";
 export { mention, emoji, timestamp, allowedMentions, TimestampStyles } from "./format.js";
 
 // Component builders (rows + Components V2) and smart caching/resolution
-export { ui } from "./ui.js";
+export { ui, type ContainerChild } from "./ui.js";
 export { TTLCache, createCache, resolve, type TTLCacheOptions } from "./cache.js";
 
 // Interactive helpers
 export {
   paginate,
   confirm,
+  type Page,
+  type PagePayload,
   type PaginateOptions,
   type ConfirmOptions,
 } from "./pagination.js";

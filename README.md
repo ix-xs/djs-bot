@@ -6,21 +6,18 @@
 
 _Write features, not plumbing._
 
-[![npm version](https://img.shields.io/npm/v/@ix-xs/djs-bot/beta.svg)](https://www.npmjs.com/package/@ix-xs/djs-bot)
-[![status](https://img.shields.io/badge/status-beta-orange)](#)
+[![npm version](https://img.shields.io/npm/v/@ix-xs/djs-bot.svg)](https://www.npmjs.com/package/@ix-xs/djs-bot)
 [![node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](https://nodejs.org)
 [![types](https://img.shields.io/badge/types-included-blue)](#)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
 </div>
 
-> ⚠️ **Beta.** `@ix-xs/djs-bot` is in real-world testing. The API is close to
-> stable, but **things may break, and you can hit bugs**. Pin an exact version and
-> read the [CHANGELOG](./CHANGELOG.md) before upgrading. Please report anything odd
-> - that's what this phase is for. Install with:
-> ```bash
-> npm install @ix-xs/djs-bot@beta discord.js
-> ```
+```bash
+npm install @ix-xs/djs-bot discord.js
+```
+
+Requires **Node 22+** (a dependency uses the built-in `node:sqlite`).
 
 ---
 
