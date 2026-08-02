@@ -6,9 +6,12 @@
 
 _Write features, not plumbing._
 
-[![npm version](https://img.shields.io/npm/v/@ix-xs/djs-bot.svg)](https://www.npmjs.com/package/@ix-xs/djs-bot)
-[![node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](https://nodejs.org)
-[![types](https://img.shields.io/badge/types-included-blue)](#)
+[![npm version](https://img.shields.io/npm/v/@ix-xs/djs-bot.svg?color=cb3837&logo=npm)](https://www.npmjs.com/package/@ix-xs/djs-bot)
+[![npm downloads](https://img.shields.io/npm/dm/@ix-xs/djs-bot.svg?color=cb3837&logo=npm)](https://www.npmjs.com/package/@ix-xs/djs-bot)
+[![CI](https://img.shields.io/github/actions/workflow/status/ix-xs/djs-bot/ci.yml?branch=main&label=CI&logo=github)](https://github.com/ix-xs/djs-bot/actions)
+[![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2?logo=discord&logoColor=white)](https://discord.js.org)
+[![node](https://img.shields.io/badge/node-%3E%3D22-brightgreen?logo=node.js&logoColor=white)](https://nodejs.org)
+[![types](https://img.shields.io/badge/types-included-3178c6?logo=typescript&logoColor=white)](#)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
 </div>
@@ -480,17 +483,23 @@ Prod-readiness is built in, not an afterthought:
 - **Graceful shutdown** - `SIGTERM`/`SIGINT` stop the scheduler, run
   `onShutdown` hooks, tear down plugins and destroy the client.
 - **Diff deploys** - commands are only pushed when they actually change.
-- **Cooldowns & permissions** - first-class guards.
-- **Retries & timeouts** - reach for `node-comfort`'s `func.retry` / `func.timeout`
-  in your services.
+- **Cooldowns, rate limits & permissions** - first-class guards (`cooldown`,
+  `rateLimit`, `hasPermission`, …).
+- **Resilience primitives** - `retry`, `timeout`, `createCircuitBreaker` and
+  `createRateLimiter` for hardening calls to databases and third-party APIs.
+- **Health & metrics** - a zero-dependency `/healthz` `/readyz` `/metrics` server
+  for Docker/Kubernetes.
+- **Persistence, audit & flags** - a pluggable `KVStore`, a queryable audit trail,
+  and per-guild feature flags - all optional, all typed.
 
 ## Error codes
 
 Every framework error carries a stable `DJSBOT_Exxx` code, an actionable hint,
 and is grep-able in your logs. Highlights: `E001` missing token, `E010`
-duplicate command, `E011` duplicate component id, `E020` customId too long,
-`E030` service cycle, `E040` unmet feature/plugin contract, `E070` privileged
-intent required.
+duplicate command, `E011` duplicate component id, `E012` invalid command/option
+name, `E013` invalid component id, `E020` customId too long, `E030` service
+cycle, `E040` unmet feature/plugin contract, `E070` privileged intent required.
+The full table is in [USAGE.md](./USAGE.md#27-error-handling--codes).
 
 ---
 
