@@ -260,8 +260,27 @@ function commandKey(cmd: Record<string, unknown>): string {
   return `${(cmd.type as number) ?? ApplicationCommandType.ChatInput}:${cmd.name as string}`;
 }
 
-function canonical(cmd: RESTPostAPIApplicationCommandsJSONBody): string {
-  // Stable stringify of the fields that matter for equality.
+export function canonical(cmd: RESTPostAPIApplicationCommandsJSONBody): string {
+  // Stable stringify of the fields that matter for equality. Options are picked
+  // *recursively* so nested subcommands / groups (and their options) are part of
+  // the comparison - otherwise a changed subcommand option would look identical
+  // and never deploy.
+  const pickOption = (o: Record<string, unknown>): unknown => ({
+    type: o.type,
+    name: o.name,
+    description: o.description ?? "",
+    required: o.required ?? false,
+    choices: o.choices ?? null,
+    min_value: o.min_value ?? null,
+    max_value: o.max_value ?? null,
+    min_length: o.min_length ?? null,
+    max_length: o.max_length ?? null,
+    channel_types: o.channel_types ?? null,
+    autocomplete: o.autocomplete ?? false,
+    name_localizations: o.name_localizations ?? null,
+    description_localizations: o.description_localizations ?? null,
+    options: ((o.options as Array<Record<string, unknown>>) ?? []).map(pickOption),
+  });
   const pick = (c: Record<string, unknown>): unknown => ({
     type: c.type ?? ApplicationCommandType.ChatInput,
     name: c.name,
@@ -273,19 +292,7 @@ function canonical(cmd: RESTPostAPIApplicationCommandsJSONBody): string {
     name_localizations: c.name_localizations ?? null,
     description_localizations: c.description_localizations ?? null,
     nsfw: c.nsfw ?? false,
-    options: ((c.options as Array<Record<string, unknown>>) ?? []).map((o) => ({
-      type: o.type,
-      name: o.name,
-      description: o.description ?? "",
-      required: o.required ?? false,
-      choices: o.choices ?? null,
-      min_value: o.min_value ?? null,
-      max_value: o.max_value ?? null,
-      min_length: o.min_length ?? null,
-      max_length: o.max_length ?? null,
-      channel_types: o.channel_types ?? null,
-      autocomplete: o.autocomplete ?? false,
-    })),
+    options: ((c.options as Array<Record<string, unknown>>) ?? []).map(pickOption),
   });
   return JSON.stringify(pick(cmd as unknown as Record<string, unknown>));
 }

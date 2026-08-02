@@ -27,6 +27,8 @@ export interface HealthOptions {
   port?: number;
   /** Host/interface to bind. Default all interfaces. */
   host?: string;
+  /** Called if the server fails to bind (e.g. the port is in use). */
+  onError?: (error: Error) => void;
 }
 
 function send(res: http.ServerResponse, code: number, body: unknown): void {
@@ -55,6 +57,12 @@ export function startHealthServer(getStatus: () => HealthStatus, options: Health
       default:
         return send(res, 404, { error: "not found" });
     }
+  });
+  // A bind failure (e.g. EADDRINUSE) emits 'error'; without a handler it would
+  // crash the whole bot. Report it and carry on - health is non-essential.
+  server.on("error", (error: Error) => {
+    if (options.onError) options.onError(error);
+    else process.stderr.write(`[djs-bot] health server error: ${error.message}\n`);
   });
   server.listen(options.port ?? 3000, options.host);
   server.unref?.();

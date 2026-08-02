@@ -59,6 +59,8 @@ interface BaseInput {
   services?: Partial<ServiceMap>;
   /** The user's locale for `ctx.locale` (default `"en"`). */
   locale?: string;
+  /** Bot owner ids for `ctx.owners` (so `ownerOnly()` can be tested). */
+  owners?: string[];
   /** Run the definition's guards before the handler (default `true`). */
   runGuards?: boolean;
 }
@@ -101,6 +103,7 @@ function baseCtx(input: BaseInput, bot?: Bot) {
     logger: createLogger({ level: "silent" }),
     correlationId: "test",
     locale: input.locale ?? "en",
+    owners: input.owners ?? [],
     t: (key: string) => key,
     audit: async () => undefined,
   };

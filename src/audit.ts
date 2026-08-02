@@ -125,7 +125,10 @@ export function createAuditLog(options: AuditLogOptions = {}): AuditLog {
   return {
     async record(action, data = {}) {
       const entry: AuditEntry = { id: comfort.id.nano(12), timestamp: Date.now(), action, ...data };
-      await Promise.all(sinks.map((s) => s.record(entry)));
+      // Best-effort: a failing sink (e.g. a transient store error) must never
+      // break the command that recorded the entry. Failures are swallowed here;
+      // add a logger sink if you want them surfaced.
+      await Promise.allSettled(sinks.map((s) => s.record(entry)));
       return entry;
     },
     async query(filter) {

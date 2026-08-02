@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   createI18n,
   memoryStore,
+  sqliteStore,
   createRateLimiter,
   rateLimit,
   createCircuitBreaker,
@@ -49,6 +50,31 @@ describe("memory store", () => {
 
     expect(await store.getOrSet("x", () => 7)).toBe(7);
     expect(await store.get("x")).toBe(7);
+  });
+});
+
+describe("sqlite store", () => {
+  it("persists, expires, and isolates namespaces", async () => {
+    const store = sqliteStore<number>(":memory:");
+    await store.set("a", 1);
+    expect(await store.get("a")).toBe(1);
+    const ns = store.namespace("guild-1");
+    await ns.set("a", 99);
+    expect(await ns.get("a")).toBe(99);
+    expect(await store.get("a")).toBe(1);
+    expect(await ns.keys()).toEqual(["a"]);
+  });
+
+  it("keys()/clear() do not leak across namespaces whose names contain LIKE wildcards", async () => {
+    const store = sqliteStore<number>(":memory:");
+    const under = store.namespace("a_b"); // '_' is a LIKE wildcard
+    const other = store.namespace("aXb"); // would match 'a_b%' if unescaped
+    await under.set("x", 1);
+    await other.set("y", 2);
+
+    expect((await under.keys()).sort()).toEqual(["x"]); // must NOT include "y"
+    await under.clear();
+    expect(await other.get("y")).toBe(2); // clearing "a_b" must not wipe "aXb"
   });
 });
 

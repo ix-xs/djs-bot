@@ -93,10 +93,16 @@ export function inChannel(...channelIds: string[]): Guard {
   );
 }
 
-/** Restricts usage to the given user ids (bot owners/admins). */
+/**
+ * Restricts usage to specific user ids. Pass ids explicitly, or call `ownerOnly()`
+ * with no arguments to use the owners from `defineBot({ owners })`.
+ */
 export function ownerOnly(...userIds: string[]): Guard {
-  const set = new Set(userIds);
-  return guard("ownerOnly", (ctx) => (set.has(ctx.user.id) ? pass() : fail("You can't use this.")));
+  const explicit = new Set(userIds);
+  return guard("ownerOnly", (ctx) => {
+    const owners = explicit.size > 0 ? explicit : new Set(ctx.owners ?? []);
+    return owners.has(ctx.user.id) ? pass() : fail("You can't use this.");
+  });
 }
 
 /** Cooldown scope. */

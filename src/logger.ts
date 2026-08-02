@@ -96,9 +96,15 @@ export class Logger {
     if (typeof obj === "string") {
       message = obj;
     } else if (obj instanceof Error) {
-      fields.err = { name: obj.name, message: obj.message, stack: obj.stack };
+      fields.err = serializeError(obj);
     } else if (obj && typeof obj === "object") {
       fields = { ...fields, ...(obj as Record<string, unknown>) };
+    }
+
+    // Errors don't JSON-serialise (message/stack are lost as `{}`). Normalise any
+    // Error value in the fields - e.g. the ubiquitous `logger.error({ err }, ...)`.
+    for (const [key, value] of Object.entries(fields)) {
+      if (value instanceof Error) fields[key] = serializeError(value);
     }
 
     const time = new Date();
@@ -118,6 +124,11 @@ export class Logger {
     const stream = level === "error" || level === "warn" ? process.stderr : process.stdout;
     stream.write(`${ts} ${tag} ${body}${extra}\n`);
   }
+}
+
+/** Serialises an Error (incl. BotError's code/hint/docs) into a loggable object. */
+function serializeError(err: Error): Record<string, unknown> {
+  return { name: err.name, message: err.message, stack: err.stack, ...(err as unknown as Record<string, unknown>) };
 }
 
 function safeInline(fields: Record<string, unknown>): string {
