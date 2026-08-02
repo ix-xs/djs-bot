@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://ix-xs.github.io/djs-bot/
+    about: The full guide - commands, components, events, deploy, and production features.
+  - name: Usage question
+    url: https://github.com/ix-xs/djs-bot/discussions
+    about: Ask how to do something (please don't open an issue for questions).

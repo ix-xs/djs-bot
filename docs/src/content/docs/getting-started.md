@@ -67,5 +67,5 @@ npx djs-bot explain    # see everything that's loaded
 npx djs-bot doctor     # diagnose config, intents, permissions
 ```
 
-Continue with the [Guide](/djs-bot/guide/install-project-layout/) for the full
-tour - commands, components, events, deployment, and production features.
+Continue with the [Guide](/djs-bot/guide/basics/install-project-layout/) for the
+full tour - commands, components, events, deployment, and production features.

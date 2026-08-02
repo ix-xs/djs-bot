@@ -12,15 +12,19 @@ hero:
     - text: View on GitHub
       link: https://github.com/ix-xs/djs-bot
       icon: external
+    - text: npm
+      link: https://www.npmjs.com/package/@ix-xs/djs-bot
+      icon: external
+      variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Card, CardGrid, LinkCard, Tabs, TabItem } from '@astrojs/starlight/components';
 
 ## Why djs-bot
 
 <CardGrid stagger>
   <Card title="Type-safe end to end" icon="approve-check">
-    Typed slash options, typed `customId` params, typed services and config. `required: true` makes an option non-optional.
+    Typed slash options, typed `customId` params, typed services and config. `required: true` makes an option non-optional - no casts, no `any`.
   </Card>
   <Card title="No magic" icon="setting">
     Files export `define*()` objects; nothing registers by importing. `djs-bot explain` shows exactly what's loaded and why.
@@ -33,14 +37,41 @@ import { Card, CardGrid } from '@astrojs/starlight/components';
   </Card>
 </CardGrid>
 
-```ts
-import { defineBot, defineCommand, s, env } from "@ix-xs/djs-bot";
+## Your first command
 
-export default defineBot({ token: env("DISCORD_TOKEN"), features: "./src/features" })
-  .use(defineCommand({
-    name: "ping",
-    description: "Check the bot is alive",
-    options: { user: s.user({ required: true }) }, // ctx.options.user is a User
-    run: (ctx) => ctx.reply.success(`Pong, ${ctx.options.user}! 🏓`),
-  }));
-```
+<Tabs>
+  <TabItem label="Install">
+    ```bash
+    npm install @ix-xs/djs-bot discord.js
+    npx djs-bot init          # scaffold a starter
+    npx djs-bot dev           # watch + instant guild deploy
+    ```
+    Requires **Node 22+** (a dependency uses the built-in `node:sqlite`).
+  </TabItem>
+  <TabItem label="Code">
+    ```ts
+    import { defineBot, defineCommand, s, env } from "@ix-xs/djs-bot";
+
+    export default defineBot({ token: env("DISCORD_TOKEN"), features: "./src/features" })
+      .use(defineCommand({
+        name: "ping",
+        description: "Check the bot is alive",
+        options: { user: s.user({ required: true }) }, // ctx.options.user is a User
+        run: (ctx) => ctx.reply.success(`Pong, ${ctx.options.user}! 🏓`),
+      }));
+    ```
+  </TabItem>
+</Tabs>
+
+## Explore the guide
+
+<CardGrid>
+  <LinkCard title="Basics" description="The entry file, lifecycle, and the ctx object." href="/djs-bot/guide/basics/the-entry-file-definebot/" />
+  <LinkCard title="Commands & options" description="Typed slash options, subcommands, context menus, guards." href="/djs-bot/guide/commands/slash-commands-typed-options/" />
+  <LinkCard title="Components & interactions" description="Typed buttons, selects, modals, Components V2, pagination." href="/djs-bot/guide/components/typed-buttons-the-customid-router/" />
+  <LinkCard title="Events & triggers" description="The intent autopilot and message auto-responders." href="/djs-bot/guide/events/events-intent-autopilot/" />
+  <LinkCard title="Architecture" description="Services & DI, scheduled jobs, plugins, and features." href="/djs-bot/guide/architecture/services-dependency-injection/" />
+  <LinkCard title="Data & state" description="Smart cache, i18n, key-value persistence, feature flags." href="/djs-bot/guide/data/persistence-key-value-stores/" />
+  <LinkCard title="Production & ops" description="Deploy, CLI, sharding, resilience, audit, health checks." href="/djs-bot/guide/ops/deploying-global-specific-guilds/" />
+  <LinkCard title="Reference" description="Error codes and testing without Discord." href="/djs-bot/guide/reference/error-handling-codes/" />
+</CardGrid>

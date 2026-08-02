@@ -1,0 +1,41 @@
+name: Bug report
+description: Something isn't working as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting! Please fill in the details below so it can be reproduced.
+  - type: input
+    id: version
+    attributes:
+      label: "@ix-xs/djs-bot version"
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      placeholder: "22.x"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead? Include the error code (DJSBOT_Exxx) if there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: The smallest `define*` / `defineBot` snippet that shows the problem.
+      render: ts
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack trace
+      render: shell
