@@ -1,0 +1,35 @@
+---
+/**
+ * A row of Discord component buttons.
+ * Usage: <DiscordButtons buttons={[{ label: "Close", style: "danger", emoji: "🔒" }]} />
+ */
+interface Button { label: string; style?: "primary" | "secondary" | "success" | "danger" | "link"; emoji?: string; disabled?: boolean }
+interface Props { buttons: Button[] }
+const { buttons } = Astro.props;
+---
+
+<div class="dc-row">
+  {buttons.map((b) => (
+    <button class:list={["dc-btn", `is-${b.style ?? "secondary"}`, b.disabled && "is-disabled"]} type="button" disabled={b.disabled}>
+      {b.emoji && <span class="dc-btn-emoji">{b.emoji}</span>}{b.label}
+    </button>
+  ))}
+</div>
+
+<style>
+  .dc-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
+  .dc-btn {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-family: var(--sl-font); font-size: 0.85rem; font-weight: 600;
+    padding: 0.42rem 0.85rem; border-radius: 4px; border: 0; color: #fff;
+    cursor: pointer; transition: filter 140ms ease, transform 140ms ease;
+  }
+  .dc-btn:hover:not(.is-disabled) { filter: brightness(1.12); transform: translateY(-1px); }
+  .is-primary { background: #5865f2; }
+  .is-secondary { background: #4e5058; }
+  .is-success { background: #23a55a; }
+  .is-danger { background: #da373c; }
+  .is-link { background: transparent; color: #00a8fc; text-decoration: underline; padding-inline: 0.2rem; }
+  .is-disabled { opacity: 0.5; cursor: not-allowed; }
+  .dc-btn-emoji { font-size: 0.95em; }
+</style>

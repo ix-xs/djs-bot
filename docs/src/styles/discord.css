@@ -1,0 +1,213 @@
+/* =========================================================================
+   Discord-inspired theme for the djs-bot documentation.
+   Palette mirrors the Discord client so code samples and their rendered
+   output feel like the same product. Respects prefers-reduced-motion.
+   ========================================================================= */
+
+:root {
+  /* Discord brand */
+  --dc-blurple: #5865f2;
+  --dc-blurple-hover: #4752c4;
+  --dc-green: #23a55a;
+  --dc-red: #f23f43;
+  --dc-yellow: #f0b232;
+  --dc-fuchsia: #eb459e;
+
+  --sl-font: "gg sans", "Inter", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --sl-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono",
+    Menlo, Consolas, "Liberation Mono", monospace;
+
+  --dc-radius: 8px;
+  --dc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dc-fast: 140ms;
+  --dc-slow: 320ms;
+}
+
+/* ------------------------------ Dark theme ------------------------------ */
+:root[data-theme="dark"] {
+  --sl-color-accent-low: #2b2f61;
+  --sl-color-accent: var(--dc-blurple);
+  --sl-color-accent-high: #c3c8ff;
+
+  --sl-color-white: #f2f3f5;
+  --sl-color-gray-1: #dbdee1;
+  --sl-color-gray-2: #b5bac1;
+  --sl-color-gray-3: #949ba4;
+  --sl-color-gray-4: #5c626b;
+  --sl-color-gray-5: #3f434a;
+  --sl-color-gray-6: #2b2d31;
+  --sl-color-black: #1e1f22;
+
+  --sl-color-bg: #313338;
+  --sl-color-bg-nav: rgba(30, 31, 34, 0.85);
+  --sl-color-bg-sidebar: #2b2d31;
+  --sl-color-bg-inline-code: #2b2d31;
+  --sl-color-hairline: #26282c;
+  --sl-color-hairline-light: #3f434a;
+  --sl-color-text-accent: #a7aeff;
+}
+
+/* ------------------------------ Light theme ----------------------------- */
+:root[data-theme="light"] {
+  --sl-color-accent-low: #dee0fc;
+  --sl-color-accent: var(--dc-blurple);
+  --sl-color-accent-high: #2b2f61;
+
+  --sl-color-white: #060607;
+  --sl-color-gray-1: #2e3338;
+  --sl-color-gray-2: #4e5058;
+  --sl-color-gray-3: #6d6f78;
+  --sl-color-gray-4: #b5bac1;
+  --sl-color-gray-5: #e3e5e8;
+  --sl-color-gray-6: #f2f3f5;
+  --sl-color-gray-7: #f7f8f8;
+  --sl-color-black: #ffffff;
+
+  --sl-color-bg: #ffffff;
+  --sl-color-bg-nav: rgba(255, 255, 255, 0.85);
+  --sl-color-bg-sidebar: #f2f3f5;
+  --sl-color-bg-inline-code: #ebedef;
+  --sl-color-hairline: #e3e5e8;
+  --sl-color-text-accent: var(--dc-blurple);
+}
+
+/* --------------------------- Global smoothing --------------------------- */
+html { scroll-behavior: smooth; }
+
+a, button, .card, summary,
+[class*="sidebar"] a, .sl-link-card {
+  transition:
+    color var(--dc-fast) var(--dc-ease),
+    background-color var(--dc-fast) var(--dc-ease),
+    border-color var(--dc-fast) var(--dc-ease),
+    transform var(--dc-fast) var(--dc-ease),
+    box-shadow var(--dc-fast) var(--dc-ease);
+}
+
+/* Header: frosted like the Discord title bar */
+.header {
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--sl-color-hairline);
+}
+
+/* ------------------------- Sidebar: Discord pills ------------------------ */
+.sidebar-content a {
+  border-radius: var(--dc-radius);
+  padding-inline: 0.6rem;
+}
+.sidebar-content a:hover,
+.sidebar-content a:focus-visible {
+  background: var(--sl-color-gray-6);
+  transform: translateX(3px);
+}
+.sidebar-content a[aria-current="page"] {
+  background: var(--sl-color-accent);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 2px 10px -2px color-mix(in srgb, var(--dc-blurple) 60%, transparent);
+}
+.sidebar-content a[aria-current="page"]:hover { transform: none; }
+
+/* Group headings */
+.sidebar-content summary { border-radius: var(--dc-radius); }
+.sidebar-content summary:hover { background: var(--sl-color-gray-6); }
+
+/* --------------------------- Content entrance --------------------------- */
+.content-panel { animation: dc-fade-up var(--dc-slow) var(--dc-ease) both; }
+.content-panel:nth-of-type(2) { animation-delay: 40ms; }
+
+@keyframes dc-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Headings get a subtle anchor accent */
+.sl-markdown-content h2 {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--sl-color-hairline);
+}
+.sl-markdown-content h2::before,
+.sl-markdown-content h3::before {
+  content: "";
+  display: inline-block;
+  width: 3px; height: 0.85em;
+  margin-inline-end: 0.5rem;
+  vertical-align: -0.08em;
+  border-radius: 2px;
+  background: var(--sl-color-accent);
+  opacity: 0.85;
+}
+
+/* ------------------------------ Cards / links --------------------------- */
+.card, .sl-link-card {
+  border-radius: 12px;
+  border: 1px solid var(--sl-color-hairline-light, var(--sl-color-hairline));
+}
+.card:hover, .sl-link-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--sl-color-accent);
+  box-shadow: 0 10px 28px -12px color-mix(in srgb, var(--dc-blurple) 55%, transparent);
+}
+
+/* ------------------------------- Code blocks ---------------------------- */
+.expressive-code .frame {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 22px -14px rgba(0, 0, 0, 0.6);
+}
+.sl-markdown-content code:not(:where(.expressive-code *)) {
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+  color: var(--sl-color-text-accent);
+}
+
+/* --------------------------------- Tables ------------------------------- */
+.sl-markdown-content table {
+  display: table; width: 100%;
+  border-collapse: separate; border-spacing: 0;
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 10px; overflow: hidden;
+}
+.sl-markdown-content thead { background: var(--sl-color-gray-6); }
+.sl-markdown-content th, .sl-markdown-content td {
+  border: 0; border-bottom: 1px solid var(--sl-color-hairline);
+}
+.sl-markdown-content tbody tr { transition: background var(--dc-fast) var(--dc-ease); }
+.sl-markdown-content tbody tr:hover { background: var(--sl-color-gray-6); }
+.sl-markdown-content tbody tr:last-child td { border-bottom: 0; }
+
+/* ------------------------------- Scrollbar ------------------------------ */
+* { scrollbar-width: thin; scrollbar-color: var(--sl-color-gray-4) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--sl-color-gray-4);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--sl-color-gray-3); }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* --------------------------- Hero (splash page) ------------------------- */
+.hero > img, .hero > .hero-html { animation: dc-float 6s ease-in-out infinite; }
+@keyframes dc-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.hero h1 { animation: dc-fade-up 520ms var(--dc-ease) both; }
+.hero .tagline { animation: dc-fade-up 520ms var(--dc-ease) 80ms both; }
+.hero .actions { animation: dc-fade-up 520ms var(--dc-ease) 160ms both; }
+
+.action.primary {
+  box-shadow: 0 4px 16px -4px color-mix(in srgb, var(--dc-blurple) 70%, transparent);
+}
+.action.primary:hover { transform: translateY(-2px); }
+
+/* ---------------------------- Accessibility ----------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

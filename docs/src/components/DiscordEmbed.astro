@@ -1,0 +1,44 @@
+---
+/** A Discord embed mock (the coloured card produced by ctx.reply.success etc.). */
+interface Props {
+  color?: string;
+  title?: string;
+  description?: string;
+  author?: string;
+  footer?: string;
+}
+const { color = "#5865f2", title, description, author, footer } = Astro.props;
+---
+
+<div class="dc-embed" style={`--embed-color:${color}`}>
+  <div class="dc-embed-inner">
+    {author && <div class="dc-embed-author">{author}</div>}
+    {title && <div class="dc-embed-title">{title}</div>}
+    {description && <div class="dc-embed-desc" set:html={description} />}
+    <slot />
+    {footer && <div class="dc-embed-footer">{footer}</div>}
+  </div>
+</div>
+
+<style>
+  .dc-embed {
+    margin-top: 0.5rem;
+    border-radius: 4px;
+    background: var(--sl-color-bg);
+    border-inline-start: 4px solid var(--embed-color);
+    max-width: 520px;
+    animation: dc-embed-in 260ms var(--dc-ease, ease) both;
+  }
+  @keyframes dc-embed-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
+  .dc-embed-inner { padding: 0.7rem 0.9rem 0.8rem; }
+  .dc-embed-author { font-size: 0.8rem; font-weight: 600; color: var(--sl-color-gray-1); margin-bottom: 0.25rem; }
+  .dc-embed-title { font-weight: 700; color: var(--sl-color-white); margin-bottom: 0.3rem; }
+  .dc-embed-desc { font-size: 0.9rem; color: var(--sl-color-gray-1); }
+  .dc-embed-footer {
+    margin-top: 0.6rem; font-size: 0.72rem; color: var(--sl-color-gray-3);
+    border-top: 1px solid var(--sl-color-hairline); padding-top: 0.45rem;
+  }
+</style>

@@ -17,14 +17,22 @@ export default defineConfig({
       editLink: {
         baseUrl: "https://github.com/ix-xs/djs-bot/edit/main/docs/",
       },
+      customCss: ["./src/styles/discord.css"],
       tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
+      lastUpdated: false,
       sidebar: [
         {
           label: "Start here",
           items: [
             { label: "Introduction", slug: "index" },
-            { label: "Getting started", slug: "getting-started" },
+            { label: "Quick start", slug: "getting-started" },
           ],
+        },
+        {
+          // The guided path for newcomers: zero to a deployed bot.
+          label: "Tutorial: build a bot",
+          badge: { text: "Start here", variant: "success" },
+          autogenerate: { directory: "tutorial" },
         },
         // One collapsible group per guide category (see scripts/generate.mjs).
         ...CATEGORIES.map((category) => ({

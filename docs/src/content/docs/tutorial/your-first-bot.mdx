@@ -1,0 +1,154 @@
+---
+title: Your first bot
+description: Create the project, wire your token, and get a working /ping command in under five minutes.
+sidebar:
+  label: "3. Your first bot"
+  order: 3
+---
+
+import { Steps, Aside, FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
+import DiscordMessage from '../../../components/DiscordMessage.astro';
+import DiscordEmbed from '../../../components/DiscordEmbed.astro';
+
+Time to write code. At the end of this page your bot will be **online and
+answering a command**.
+
+<Steps>
+
+1. **Create the project**
+
+   ```bash
+   mkdir my-bot && cd my-bot
+   npm init -y
+   npm install @ix-xs/djs-bot discord.js
+   npm install -D tsx typescript
+   ```
+
+   - `@ix-xs/djs-bot` - the framework
+   - `discord.js` - the Discord library it builds on
+   - `tsx` - lets you run TypeScript directly, no build step while developing
+
+2. **Scaffold the starter**
+
+   ```bash
+   npx djs-bot init
+   ```
+
+   This creates a minimal, working project:
+
+   <FileTree>
+   - my-bot
+     - src
+       - index.ts        the bot's entry point
+       - features
+         - ping
+           - ping.command.ts   your first command
+     - .env              your secrets (never commit this)
+   </FileTree>
+
+3. **Fill in your secrets**
+
+   Open `.env` and paste the values from the previous step:
+
+   ```bash title=".env"
+   DISCORD_TOKEN=your-bot-token-here
+   DISCORD_CLIENT_ID=your-application-id
+   DISCORD_DEV_GUILD=your-server-id
+   NODE_ENV=development
+   ```
+
+   <Aside type="danger">
+   Add `.env` to your `.gitignore` **before** your first commit. The `init` command
+   already does this for you, but check.
+   </Aside>
+
+   <Aside type="tip" title="What DISCORD_DEV_GUILD does">
+   Global commands take **up to an hour** to appear in Discord. Commands registered
+   to a single server appear **instantly**. During development `djs-bot` deploys
+   everything to this one server so you never wait.
+   </Aside>
+
+4. **Run it**
+
+   ```bash
+   npx djs-bot dev
+   ```
+
+   You should see something like:
+
+   ```ansi
+   INFO  Ready user=my-bot#1234 guilds=1
+   INFO  Commands deployed scope=guild added=["ping"]
+   ```
+
+   Your bot is now **online** in your server. Type `/ping` in any channel:
+
+   <DiscordMessage author="my-bot" content="">
+     <DiscordEmbed color="#23a55a" description="✅ Pong! 🏓" />
+   </DiscordMessage>
+
+   <Aside type="caution" title="Command not showing up?">
+   - Wait a few seconds and press `Ctrl+R` in Discord to refresh.
+   - Make sure you invited the bot with the **`applications.commands`** scope.
+   - Check `DISCORD_DEV_GUILD` is the server you're typing in.
+   - Run `npx djs-bot doctor` - it checks your token, intents and permissions.
+   </Aside>
+
+</Steps>
+
+## Understanding what you just ran
+
+There are only two files. Here's every line explained.
+
+### The entry file
+
+```ts title="src/index.ts"
+import { defineBot, env } from "@ix-xs/djs-bot";
+
+const bot = defineBot({
+  token: env("DISCORD_TOKEN"),                        // reads .env, errors clearly if missing
+  features: `${import.meta.dirname}/features`,        // auto-load every command in this folder
+  intents: "auto",                                    // work out the intents from your code
+  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") }, // instant deploys while developing
+});
+
+export default bot;
+
+// Only start when run directly - the CLI imports this file for `explain`/`deploy`.
+if (!process.env.DJSBOT_CLI) void bot.start();
+```
+
+| Line | What it does |
+| --- | --- |
+| `env("DISCORD_TOKEN")` | Reads the variable from `.env` **or** the environment. Throws a readable error if it's missing, instead of a confusing crash later. |
+| `features: ".../features"` | Every file matching a naming convention in that folder is loaded automatically. Add a file, it works - no registration list to maintain. |
+| `intents: "auto"` | Discord makes you declare which events you want. `djs-bot` reads your code and asks for exactly those. |
+| `export default bot` | Lets the CLI (`explain`, `deploy`, `doctor`) inspect your bot **without connecting** to Discord. |
+
+### The command
+
+```ts title="src/features/ping/ping.command.ts"
+import { defineCommand } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "ping",                                  // becomes /ping
+  description: "Check the bot is alive",         // shown in Discord's command picker
+  run: (ctx) => ctx.reply.success("Pong! 🏓"),   // ctx is everything you need
+});
+```
+
+The file is called `ping.command.ts`. That `.command.ts` suffix is how the loader
+finds it - **importing a file never registers anything by itself**, which means you
+can always tell what your bot does by looking at your folders.
+
+<Aside type="tip" title="See exactly what's loaded">
+```bash
+npx djs-bot explain
+```
+Prints every command, event, intent and the full deployment plan - without logging
+in. It's the fastest way to answer "why isn't my command showing up?".
+</Aside>
+
+---
+
+Next: make the command actually *do* something, with typed options.

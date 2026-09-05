@@ -1,0 +1,167 @@
+---
+title: Going live
+description: Deploy your commands globally, run the bot in production, and keep it healthy.
+sidebar:
+  label: "7. Going live"
+  order: 7
+---
+
+import { Steps, Aside, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Your bot works on your machine. Let's make it work for everyone, all the time.
+
+## Guild commands vs global commands
+
+This trips up every beginner, so let's be precise:
+
+| | Guild commands | Global commands |
+| --- | --- | --- |
+| **Where** | one specific server | every server your bot is in |
+| **Appear** | **instantly** | **up to 1 hour** |
+| **Used for** | development, server-specific admin tools | your real, public commands |
+
+During `djs-bot dev`, everything is deployed to your `DISCORD_DEV_GUILD` so you
+never wait. For production, you deploy **globally**, once per release.
+
+<Steps>
+
+1. **Deploy your commands globally**
+
+   ```bash
+   npx djs-bot deploy --dry-run   # preview: shows added / changed / removed
+   npx djs-bot deploy             # actually push
+   ```
+
+   Deployment is **declarative**: your code is the source of truth. A command you
+   deleted from your code is **removed** from Discord. You never clean up by hand.
+
+   <Aside type="caution" title="Seeing duplicate commands?">
+   If you tested with `djs-bot dev`, your dev server still holds guild copies of
+   every command. Once you deploy globally, that server shows **both**. Clear the
+   dev mirror:
+
+   ```bash
+   npx djs-bot clear --guild YOUR_DEV_SERVER_ID
+   ```
+
+   `djs-bot deploy` warns you about this automatically.
+   </Aside>
+
+2. **Scope admin commands to one server**
+
+   Some commands shouldn't be public. Add `guilds` and they deploy **only** there:
+
+   ```ts
+   export default defineCommand({
+     name: "announce",
+     description: "Post an announcement",
+     guilds: ["123456789012345678"],   // your support server only
+     run: …,
+   });
+   ```
+
+3. **Run in production mode**
+
+   ```bash
+   NODE_ENV=production npx djs-bot start
+   ```
+
+   This disables the dev auto-deploy and switches logs from pretty colours to
+   single-line JSON (what log aggregators expect).
+
+</Steps>
+
+## Hosting it
+
+Your bot needs to run 24/7 somewhere. Any Node 22+ host works.
+
+<Tabs>
+  <TabItem label="A VPS (systemd)">
+    ```ini title="/etc/systemd/system/mybot.service"
+    [Unit]
+    Description=My Discord bot
+    After=network.target
+
+    [Service]
+    WorkingDirectory=/srv/my-bot
+    ExecStart=/usr/bin/npx djs-bot start
+    Environment=NODE_ENV=production
+    Restart=always
+    RestartSec=5
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+    ```bash
+    sudo systemctl enable --now mybot
+    sudo journalctl -u mybot -f    # follow the logs
+    ```
+  </TabItem>
+  <TabItem label="Docker">
+    ```dockerfile title="Dockerfile"
+    FROM node:22-alpine
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm ci --omit=dev
+    COPY . .
+    ENV NODE_ENV=production
+    CMD ["npx", "djs-bot", "start"]
+    ```
+    Pass secrets as environment variables - never bake the token into the image.
+  </TabItem>
+  <TabItem label="Platform (Railway, Fly…)">
+    Set the start command to `npx djs-bot start`, add `DISCORD_TOKEN` and
+    `DISCORD_CLIENT_ID` as environment variables, and set `NODE_ENV=production`.
+    Deploy your commands once with `npx djs-bot deploy` from your machine.
+  </TabItem>
+</Tabs>
+
+<Aside type="danger" title="Secrets in production">
+Never commit `.env`. On a server, set real environment variables (systemd
+`Environment=`, Docker `-e`, or your platform's secrets UI). If a token ever
+leaks, reset it in the Developer Portal immediately.
+</Aside>
+
+## Keeping it healthy
+
+```ts title="src/index.ts"
+export default defineBot({
+  token: env("DISCORD_TOKEN"),
+  health: 3000,                     // GET /healthz /readyz /metrics
+  logger: { level: "info", pretty: false },
+  onError: (err, ctx) => {
+    // send to Sentry, a webhook, wherever
+    return ctx?.reply.error("Something went wrong - we're on it.");
+  },
+});
+```
+
+- `/healthz` - is the process alive? (liveness)
+- `/readyz` - is it connected to Discord? (readiness)
+- `/metrics` - JSON: uptime, interaction/command/error counts, guild count
+
+Every interaction is already wrapped in an error boundary: a handler that throws is
+logged with a correlation id and the user still gets a reply. Your bot **does not
+crash**.
+
+## Growing bigger
+
+<CardGrid>
+  <LinkCard title="Sharding" description="Past ~2500 servers Discord requires sharding. Set sharding: 'auto' - your code doesn't change." href="/djs-bot/guide/ops/sharding-scaling/" />
+  <LinkCard title="Rate limits & retries" description="Circuit breakers, retries and rate limiters for calls to your database or third-party APIs." href="/djs-bot/guide/ops/resilience-rate-limits-circuit-breakers-retry/" />
+  <LinkCard title="Translations" description="Reply in each user's own Discord language with ctx.t()." href="/djs-bot/guide/data/internationalisation-ctx-t/" />
+  <LinkCard title="Testing" description="Unit-test your handlers with no token and no network." href="/djs-bot/guide/reference/testing-without-discord/" />
+</CardGrid>
+
+## You're done 🎉
+
+You can now build, run and ship a Discord bot. From here, the
+[Guide](/djs-bot/guide/basics/install-project-layout/) documents every feature in
+depth - audit logs, feature flags, Components V2, context menus, autocomplete and
+more.
+
+<Aside type="tip" title="Stuck?">
+`npx djs-bot doctor` checks your token, intents and permissions.
+`npx djs-bot explain` shows everything that's loaded and the exact deployment plan.
+Between them they answer most "why isn't this working?" questions.
+</Aside>

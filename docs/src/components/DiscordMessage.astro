@@ -1,0 +1,70 @@
+---
+/**
+ * A faithful mock of a Discord message, so a code sample can sit next to the
+ * output it actually produces. Put embeds/buttons in the default slot.
+ */
+interface Props {
+  author?: string;
+  bot?: boolean;
+  time?: string;
+  /** Avatar background colour (a Discord-ish accent by default). */
+  color?: string;
+  /** Plain message content rendered above any embed. */
+  content?: string;
+}
+const {
+  author = "djs-bot",
+  bot = true,
+  time = "today at 12:00",
+  color = "#5865f2",
+  content,
+} = Astro.props;
+const initials = author.slice(0, 1).toUpperCase();
+---
+
+<div class="dc-msg" role="figure" aria-label={`Discord message from ${author}`}>
+  <div class="dc-avatar" style={`background:${color}`} aria-hidden="true">{initials}</div>
+  <div class="dc-body">
+    <div class="dc-head">
+      <span class="dc-name">{author}</span>
+      {bot && <span class="dc-tag">APP</span>}
+      <span class="dc-time">{time}</span>
+    </div>
+    {content && <p class="dc-content" set:html={content} />}
+    <slot />
+  </div>
+</div>
+
+<style>
+  .dc-msg {
+    display: flex;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    margin: 1.2rem 0;
+    border-radius: 10px;
+    background: var(--sl-color-gray-6);
+    border: 1px solid var(--sl-color-hairline);
+    font-family: var(--sl-font);
+    line-height: 1.4;
+    transition: box-shadow 200ms var(--dc-ease, ease);
+  }
+  .dc-msg:hover { box-shadow: 0 8px 24px -16px rgba(0, 0, 0, 0.7); }
+  .dc-avatar {
+    flex: 0 0 40px; width: 40px; height: 40px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: #fff; font-weight: 700; font-size: 1rem;
+    user-select: none;
+  }
+  .dc-body { min-width: 0; flex: 1; }
+  .dc-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .dc-name { font-weight: 600; color: var(--sl-color-white); }
+  .dc-tag {
+    background: var(--dc-blurple, #5865f2);
+    color: #fff; font-size: 0.62rem; font-weight: 700;
+    padding: 0.05rem 0.28rem; border-radius: 3px;
+    letter-spacing: 0.02em; text-transform: uppercase;
+  }
+  .dc-time { font-size: 0.72rem; color: var(--sl-color-gray-3); }
+  .dc-content { margin: 0.35rem 0 0; color: var(--sl-color-gray-1); }
+</style>

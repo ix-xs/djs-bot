@@ -1,0 +1,174 @@
+---
+title: Buttons, menus & forms
+description: Make your bot interactive - and understand the customId problem djs-bot solves for you.
+sidebar:
+  label: "5. Buttons & forms"
+  order: 5
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import DiscordMessage from '../../../components/DiscordMessage.astro';
+import DiscordEmbed from '../../../components/DiscordEmbed.astro';
+import DiscordButtons from '../../../components/DiscordButtons.astro';
+
+Buttons, dropdowns and pop-up forms turn a command into a real interface.
+
+## The problem every bot tutorial glosses over
+
+When a user clicks a button, Discord tells your bot **one string**: the button's
+`customId`. That's the *only* state you get back, and it's capped at 100
+characters.
+
+So every bot ends up doing this:
+
+```ts
+// The usual mess
+if (interaction.customId.startsWith("ticket_close_")) {
+  const parts = interaction.customId.split("_");
+  const ticketId = parts[2];        // hope this is right
+  const ownerId  = parts[3];        // strings, always strings
+}
+```
+
+One typo and it silently breaks. `djs-bot` replaces this with **typed params**.
+
+## A button, done properly
+
+<Steps>
+
+1. **Declare the button and what it carries**
+
+   ```ts title="src/features/tickets/close.button.ts"
+   import { defineButton, p } from "@ix-xs/djs-bot";
+
+   export const CloseTicket = defineButton({
+     id: "ticket:close",
+     params: { ticketId: p.string, ownerId: p.string },
+     run: async (ctx) => {
+       // ctx.params is decoded and typed: { ticketId: string; ownerId: string }
+       if (ctx.user.id !== ctx.params.ownerId) {
+         return void ctx.reply.error("This isn't your ticket.");
+       }
+       await ctx.update.disable();               // grey out the button
+       await ctx.reply.success(`Ticket ${ctx.params.ticketId} closed 🔒`, { ephemeral: true });
+     },
+   });
+   ```
+
+2. **Build it somewhere else - type-checked**
+
+   ```ts title="src/features/tickets/open.command.ts"
+   import { defineCommand, s, ui, ButtonStyle } from "@ix-xs/djs-bot";
+   import { CloseTicket } from "./close.button.js";
+
+   export default defineCommand({
+     name: "ticket",
+     description: "Open a support ticket",
+     options: { subject: s.string({ description: "What's wrong?", required: true }) },
+     run: async (ctx) => {
+       const button = CloseTicket.build(
+         { ticketId: "A42", ownerId: ctx.user.id },   // forget one -> compile error
+         { label: "Close ticket", style: ButtonStyle.Danger, emoji: "🔒" },
+       );
+       await ctx.reply({
+         content: `🎫 **${ctx.options.subject}**`,
+         components: [ui.row(button)],
+       });
+     },
+   });
+   ```
+
+</Steps>
+
+The result:
+
+<DiscordMessage author="my-bot" content="🎫 <strong>Printer is on fire</strong>">
+  <DiscordButtons buttons={[{ label: "Close ticket", style: "danger", emoji: "🔒" }]} />
+</DiscordMessage>
+
+<Aside type="tip" title="Why this is better">
+`CloseTicket.build({ ... })` **will not compile** if you forget `ownerId` or pass a
+number where a string belongs. And if the encoded id would exceed Discord's
+100-character limit, you get a clear error (`DJSBOT_E020`) at build time - not a
+mystery failure in production.
+</Aside>
+
+## Dropdown menus
+
+```ts title="src/features/roles/roles.select.ts"
+import { defineSelectMenu } from "@ix-xs/djs-bot";
+
+export const RolePicker = defineSelectMenu({
+  id: "roles:pick",
+  run: (ctx) => ctx.reply.success(`You picked: ${ctx.values.join(", ")}`),
+});
+```
+
+```ts
+const menu = RolePicker.build(undefined, {
+  placeholder: "Choose your roles",
+  minValues: 0,
+  maxValues: 2,
+  options: [
+    { label: "Developer", value: "dev", emoji: { name: "💻" } },
+    { label: "Designer", value: "design", description: "UI/UX" },
+  ],
+});
+await ctx.reply({ content: "Pick your roles:", components: [ui.row(menu)] });
+```
+
+There are also **native** menus where Discord does the picking for you -
+`defineUserSelect`, `defineRoleSelect`, `defineChannelSelect` - giving you
+`ctx.users`, `ctx.roles`, `ctx.channels` already resolved.
+
+## Pop-up forms (modals)
+
+```ts title="src/features/feedback/feedback.modal.ts"
+import { defineModal, field } from "@ix-xs/djs-bot";
+
+export const FeedbackModal = defineModal({
+  id: "feedback:submit",
+  title: "Send feedback",
+  fields: {
+    subject: field.short({ label: "Subject", required: true, maxLength: 80 }),
+    body: field.paragraph({ label: "Details", maxLength: 1000 }),
+  },
+  run: (ctx) => {
+    // ctx.fields is typed: { subject: string; body: string }
+    return ctx.reply.success(`Thanks for the feedback on **${ctx.fields.subject}**!`, { ephemeral: true });
+  },
+});
+```
+
+Open it from a command:
+
+```ts
+run: (ctx) => ctx.interaction.showModal(FeedbackModal.build()),
+```
+
+<Aside type="caution" title="A modal must be the first response">
+Discord requires `showModal` to be the **first** reply to an interaction. If you
+call `ctx.reply(...)` or `ctx.reply.defer()` first, opening a modal will fail.
+</Aside>
+
+## Ready-made interactions
+
+Two helpers cover the most common flows, and manage their own buttons for you:
+
+```ts
+// A yes/no dialog that resolves to a boolean
+if (await confirm(ctx, { content: "⚠️ Delete everything?", confirmLabel: "Delete" })) {
+  await wipe();
+}
+
+// Paginated pages with ⏮ ◀ ▶ ⏭ controls
+await paginate(ctx, { pages: embeds, timeout: "5m" });
+```
+
+<DiscordMessage author="my-bot" content="⚠️ Delete everything?">
+  <DiscordButtons buttons={[{ label: "Delete", style: "success" }, { label: "Cancel", style: "danger" }]} />
+</DiscordMessage>
+
+---
+
+Next: organise your bot as it grows.

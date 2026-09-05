@@ -1,0 +1,90 @@
+---
+title: Create your bot on Discord
+description: Register an application, get your token, enable intents, and invite the bot to your server.
+sidebar:
+  label: "2. Create your bot"
+  order: 2
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Before writing code, your bot needs an **identity** on Discord. This is done once,
+in the Developer Portal.
+
+<Steps>
+
+1. **Create the application**
+
+   Go to the [Discord Developer Portal](https://discord.com/developers/applications)
+   → **New Application**. Give it your bot's name (this is what users will see) and
+   accept the terms.
+
+2. **Copy the Application ID**
+
+   On the **General Information** page, copy the **Application ID**. You'll need it
+   to deploy commands. It's a long number like `1234567890123456789`.
+
+   <Aside type="note">
+   The Application ID is public and harmless. The **token** in the next step is not.
+   </Aside>
+
+3. **Create the bot and copy its token**
+
+   Open the **Bot** tab → **Reset Token** → **Copy**.
+
+   <Aside type="danger" title="Treat the token like a password">
+   Anyone with your token can control your bot completely. **Never** commit it to
+   git, paste it in Discord, or put it in a screenshot. If it leaks, come back here
+   and hit **Reset Token** - the old one dies instantly.
+   </Aside>
+
+4. **Enable the privileged intents**
+
+   Still on the **Bot** tab, scroll to **Privileged Gateway Intents** and turn on
+   what your bot needs:
+
+   | Intent | Turn it on if you want to… |
+   | --- | --- |
+   | **Server Members** | react to members joining/leaving (welcome messages, auto-roles) |
+   | **Message Content** | read message text (auto-responders, prefix commands) |
+   | **Presence** | see members' online status |
+
+   <Aside type="tip">
+   `djs-bot` works out which intents your code needs and tells you at startup. If
+   you forget to flip one of these switches, `npx djs-bot doctor` will say so
+   explicitly instead of your bot silently failing to log in.
+   </Aside>
+
+5. **Invite the bot to your server**
+
+   Go to **OAuth2 → URL Generator** and tick:
+
+   - **Scopes:** `bot` and `applications.commands`
+   - **Bot permissions:** start with `Send Messages`, `Embed Links`, `Read Message History`
+     (add more later - e.g. `Kick Members` only if your bot kicks people)
+
+   Copy the generated URL at the bottom, open it in your browser, and pick your
+   server.
+
+   <Aside type="caution" title="Why applications.commands matters">
+   Without the `applications.commands` scope, your slash commands will never appear,
+   no matter how correct your code is. It's the single most common beginner
+   blocker.
+   </Aside>
+
+6. **Turn on Developer Mode (so you can copy IDs)**
+
+   In Discord: **User Settings → Advanced → Developer Mode**. Now you can
+   right-click any server, channel, role or user and choose **Copy ID**. You'll need
+   your **server ID** in the next step.
+
+</Steps>
+
+## What you should have now
+
+- ✅ Your **bot token** (secret)
+- ✅ Your **Application ID**
+- ✅ Your **server ID**
+- ✅ The bot visible (offline) in your server's member list
+
+Keep the three values handy - the next step puts them in a `.env` file.
