@@ -32,6 +32,11 @@ export default defineConfig({
           collapsed: true,
           autogenerate: { directory: `guide/${category.slug}` },
         })),
+        {
+          label: "📘 Référence (français)",
+          collapsed: true,
+          autogenerate: { directory: "reference-fr" },
+        },
       ],
     }),
   ],
