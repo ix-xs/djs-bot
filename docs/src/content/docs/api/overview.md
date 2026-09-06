@@ -20,7 +20,7 @@ Only the official plugins live on a subpath:
 import { antiSpam, commandLogger } from "@ix-xs/djs-bot/plugins";
 ```
 
-There is no default export, no side-effectful import and no global state — every
+There is no default export, no side-effectful import and no global state - every
 symbol below is a plain function, class or type.
 
 ## Entry points
@@ -69,7 +69,7 @@ symbol below is a plain function, class or type.
 ## Guards
 
 `guard`, `pass`, `fail`, `inGuild`, `dmOnly`, `hasPermission`, `botHasPermission`,
-`inChannel`, `ownerOnly`, `cooldown` — see [Guards](/djs-bot/api/guards/).
+`inChannel`, `ownerOnly`, `cooldown` - see [Guards](/djs-bot/api/guards/).
 
 ## Runtime services
 
@@ -100,14 +100,14 @@ symbol below is a plain function, class or type.
 
 `deployCommands`, `clearCommands`, `planDeployment`, `buildCommandTree`,
 `commandToJSON`, `computeIntents`, `Registry`, `isShardChild`,
-`normalizeSharding`, `launchShardManager` — see
+`normalizeSharding`, `launchShardManager` - see
 [Deployment](/djs-bot/guide/ops/deploying-global-specific-guilds/) and
 [Sharding](/djs-bot/guide/ops/sharding-scaling/).
 
 ## Errors & constants
 
 `BotError`, `isBotError`, `ERROR_CATALOGUE`, `VERSION`, `FRAMEWORK_NAME`,
-`CUSTOM_ID_MAX_LENGTH` — see [Errors](/djs-bot/api/errors/).
+`CUSTOM_ID_MAX_LENGTH` - see [Errors](/djs-bot/api/errors/).
 
 ## Re-exported from discord.js
 
@@ -118,6 +118,6 @@ For convenience, so a simple bot needs only one import:
 `AttachmentBuilder`, `ActionRowBuilder`, `Collection`.
 
 :::note
-These are the *same objects* discord.js exports — importing them from
+These are the *same objects* discord.js exports - importing them from
 `@ix-xs/djs-bot` or from `discord.js` is interchangeable.
 :::

@@ -7,7 +7,7 @@ sidebar:
 
 A **service** is any shared object your handlers need: a database client, an API
 wrapper, a cache, business logic. Declare it once, and it is injected into every
-`ctx.services` — no singletons, no import cycles, no `reflect-metadata`.
+`ctx.services` - no singletons, no import cycles, no `reflect-metadata`.
 
 ## `defineService`
 
@@ -94,7 +94,7 @@ The framework registers these for you when the matching configuration is present
 | `audit` | `defineBot({ audit })` | [`AuditLog`](/djs-bot/api/audit/) |
 | `flags` | `defineBot({ flags })` | [`FeatureFlags`](/djs-bot/api/flags/) |
 
-Plugins can register more with `app.services.register(token, value)` — see
+Plugins can register more with `app.services.register(token, value)` - see
 [Plugins](/djs-bot/api/plugins/).
 
 ## `Container`
@@ -128,7 +128,7 @@ definePlugin({ name: "postgres", provides: ["db"], setup: (app) => app.services.
 ```
 
 At boot the framework verifies every `requires` is satisfied by a `provides`, by
-a registered service, or by built-in configuration — failing fast with
+a registered service, or by built-in configuration - failing fast with
 [`DJSBOT_E040`](/djs-bot/api/errors/#djsbot_e040) instead of crashing later on
 the first interaction. Two plugins providing the same capability raise
 [`DJSBOT_E041`](/djs-bot/api/errors/#djsbot_e041).
@@ -140,4 +140,4 @@ npx djs-bot explain
 ```
 
 prints every loaded definition, the resolved service tokens and the deployment
-plan — the fastest way to answer "is my service actually registered?".
+plan - the fastest way to answer "is my service actually registered?".

@@ -1,6 +1,6 @@
 ---
 title: "Error handling & codes"
-description: "Every DJSBOT_Exxx code, what causes it, how to fix it — plus the error boundary and BotError."
+description: "Every DJSBOT_Exxx code, what causes it, how to fix it - plus the error boundary and BotError."
 sidebar:
   order: 19
 ---
@@ -21,7 +21,7 @@ When a handler throws, the framework:
 1. **logs** it with the interaction `correlationId`,
 2. runs every plugin `onError` hook,
 3. calls your `defineBot({ onError })`,
-4. replies to the user with a friendly ephemeral message — unless your `onError`
+4. replies to the user with a friendly ephemeral message - unless your `onError`
    returned a value, which marks the error handled.
 
 ```ts
@@ -39,7 +39,7 @@ Return something to take over the reply entirely:
 ```ts
 async onError(error, ctx) {
   await ctx?.reply.error("Something broke. The team has been notified.");
-  return true;   // handled — no default reply
+  return true;   // handled - no default reply
 }
 ```
 
@@ -88,7 +88,7 @@ try {
 #### `DJSBOT_E001`
 
 **Missing bot token.** Set `token` in `defineBot()`, or the `DISCORD_TOKEN`
-environment variable. Remember that an *empty* value counts as missing — check
+environment variable. Remember that an *empty* value counts as missing - check
 for a stray `DISCORD_TOKEN=` in your `.env`.
 
 #### `DJSBOT_E002`
@@ -102,7 +102,7 @@ the Developer Portal.
 
 #### `DJSBOT_E010`
 
-**Duplicate command name.** Two commands registered under the same name — often
+**Duplicate command name.** Two commands registered under the same name - often
 the same file discovered twice (exported *and* listed in a
 `defineFeature`), or a copy-pasted definition. Run `npx djs-bot explain` to see
 everything that loaded.
@@ -115,14 +115,14 @@ be unique per type. Namespace them: `ticket:close`, `poll:vote`.
 #### `DJSBOT_E012`
 
 **Invalid command or option name.** Slash command, subcommand, group and option
-names must be **1–32 characters, lowercase**, letters/digits/`-`/`_`, no spaces.
+names must be **1-32 characters, lowercase**, letters/digits/`-`/`_`, no spaces.
 
 ```ts
 name: "My Command"   // ✗
 name: "my-command"   // ✓
 ```
 
-Context-menu commands (`defineUserCommand`, `defineMessageCommand`) are exempt —
+Context-menu commands (`defineUserCommand`, `defineMessageCommand`) are exempt -
 they may use spaces and capitals.
 
 #### `DJSBOT_E013`
@@ -145,14 +145,14 @@ Publish.build({ key });
 
 #### `DJSBOT_E021`
 
-**Invalid customId payload.** A payload could not be decoded — almost always an
+**Invalid customId payload.** A payload could not be decoded - almost always an
 old message whose buttons were built by a previous version with a different
 `params` schema. Handle it gracefully:
 
 ```ts
 onError(error, ctx) {
   if (isBotError(error) && error.code === "DJSBOT_E021") {
-    return ctx.reply.error("This message is out of date — please run the command again.");
+    return ctx.reply.error("This message is out of date - please run the command again.");
   }
 }
 ```
@@ -167,7 +167,7 @@ the shared part into a third service, or by injecting lazily.
 
 #### `DJSBOT_E031`
 
-**Unknown service.** You asked for a token that was never registered — a typo in
+**Unknown service.** You asked for a token that was never registered - a typo in
 `deps`, or a `defineService` file that is not inside your features directory.
 `npx djs-bot explain` lists every registered token.
 
@@ -189,7 +189,7 @@ explicit override. Remove one, or rename what it provides.
 
 #### `DJSBOT_E050`
 
-**Invalid option value.** An option failed validation at the Discord boundary —
+**Invalid option value.** An option failed validation at the Discord boundary -
 usually a `choices` value that no longer matches, or an out-of-range number.
 
 #### `DJSBOT_E060`
@@ -197,7 +197,7 @@ usually a `choices` value that no longer matches, or an out-of-range number.
 **Loader error.** A discovered file could not be imported, or exported no valid
 definitions. The detail names the file. Common causes:
 
-- a syntax or import error in that file — import it directly to see the real error;
+- a syntax or import error in that file - import it directly to see the real error;
 - the file exports something that is not a `define*()` result;
 - a stale build in `dist/` alongside the source.
 
@@ -210,7 +210,7 @@ Portal:
 | Intent | Needed for |
 | --- | --- |
 | `GuildMembers` | `guildMemberAdd`, `guildMemberRemove`, member caching |
-| `MessageContent` | Reading message text — **every** `defineTrigger` |
+| `MessageContent` | Reading message text - **every** `defineTrigger` |
 | `GuildPresences` | Presence updates |
 
 Bots in 100+ servers must be verified to use these.

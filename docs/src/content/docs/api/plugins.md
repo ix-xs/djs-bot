@@ -28,7 +28,7 @@ in a minute and doubles as a worked example of the plugin API.
 
 ### `antiSpam(options?)`
 
-Rejects interactions from users who exceed a per-window rate limit — a blanket
+Rejects interactions from users who exceed a per-window rate limit - a blanket
 guard against interaction spam, applied to every interaction.
 
 | Option | Type | Default | Description |
@@ -56,7 +56,7 @@ so every line can be tied back to a single interaction.
 
 ### `errorReporter(options)`
 
-Forwards every unhandled interaction error to your reporter — Sentry, a webhook,
+Forwards every unhandled interaction error to your reporter - Sentry, a webhook,
 whatever you use. It runs **alongside** the framework error boundary, so the
 user still gets a friendly reply.
 
@@ -72,7 +72,7 @@ errorReporter({
 })
 ```
 
-A throwing reporter is swallowed — reporting must never take the bot down.
+A throwing reporter is swallowed - reporting must never take the bot down.
 
 ### `maintenance(options?)`
 
@@ -129,7 +129,7 @@ The restricted façade handed to `setup` and `teardown`:
 
 | Hook | Signature | When it runs |
 | --- | --- | --- |
-| `beforeInteraction(fn)` | `(ctx, next) => unknown` | Before **every** interaction handler. Middleware — see below. |
+| `beforeInteraction(fn)` | `(ctx, next) => unknown` | Before **every** interaction handler. Middleware - see below. |
 | `afterInteraction(fn)` | `(ctx) => unknown` | After a handler completes successfully. |
 | `onError(fn)` | `(error, ctx?) => unknown` | Whenever any handler throws. |
 | `onReady(fn)` | `(client) => unknown` | Once the gateway connection is ready. |
@@ -152,7 +152,7 @@ app.hooks.beforeInteraction(async (ctx, next) => {
 });
 ```
 
-Everything around `await next()` is your before/after logic — timing, metrics,
+Everything around `await next()` is your before/after logic - timing, metrics,
 transactions, tracing.
 
 ### A complete example
@@ -204,11 +204,11 @@ Guidelines that keep third-party plugins pleasant to use:
 - Export a **factory function** taking options, not a pre-built plugin.
 - Keep `@ix-xs/djs-bot` a `peerDependency`, never a `dependency`.
 - Declare `provides` when you register a service, so consumers can `requires` it.
-- Clean up in `teardown` — sockets, timers, pools.
+- Clean up in `teardown` - sockets, timers, pools.
 - Never let your own error handling throw.
 
 Need commands and events too, not just hooks? Ship a
-[`defineFeature`](/djs-bot/api/definitions/#definefeature) instead — or both,
+[`defineFeature`](/djs-bot/api/definitions/#definefeature) instead - or both,
 with the feature bundling the plugin.
 
 ## Plugins vs guards vs features

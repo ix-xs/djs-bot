@@ -39,7 +39,7 @@ npx djs-bot dev
 
 Runs your bot in development: mirrors **every** command to your dev guild so
 changes appear instantly, sets `autoDeploy` on, and uses pretty logs. If `tsx` is
-installed it runs your TypeScript directly — no build step.
+installed it runs your TypeScript directly - no build step.
 
 Set the dev guild once:
 
@@ -73,7 +73,7 @@ npx djs-bot deploy --guild 123456789012345678
 
 Deployment is a **diff**: the framework fetches what is registered, compares it
 field by field (including nested subcommand options) and pushes only what
-changed — adding, updating and pruning commands you deleted.
+changed - adding, updating and pruning commands you deleted.
 
 ```
 ✓ deploy complete
@@ -92,7 +92,7 @@ npx djs-bot clear --guild 123456789012345678
 npx djs-bot clear --guild 123456789012345678 --dry-run
 ```
 
-Removes **all** commands from one scope. You must name the scope — there is no
+Removes **all** commands from one scope. You must name the scope - there is no
 default, on purpose.
 
 The usual reason to reach for it: your dev guild shows every command twice
@@ -123,7 +123,7 @@ npx djs-bot explain
 ```
 
 Prints what is loaded: commands (with their options and guards), events,
-triggers, components, services and their dependency graph, jobs, plugins — and
+triggers, components, services and their dependency graph, jobs, plugins - and
 the deployment plan, showing which commands go global and which go to which
 guild.
 
@@ -178,7 +178,7 @@ npx djs-bot dev
 | Code | Meaning |
 | --- | --- |
 | `0` | Success |
-| `1` | A failure — a `BotError` with its code and hint, or a usage error |
+| `1` | A failure - a `BotError` with its code and hint, or a usage error |
 
 ## In CI
 

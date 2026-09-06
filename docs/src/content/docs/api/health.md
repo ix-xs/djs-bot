@@ -19,8 +19,8 @@ export default defineBot({
 
 | Route | Status | Body | Meaning |
 | --- | --- | --- | --- |
-| `GET /healthz` | always `200` | `{ status, uptimeMs }` | **Liveness** — the process is running. A failure here means "restart me". |
-| `GET /readyz` | `200` / `503` | `{ ready }` | **Readiness** — the gateway is connected. `503` while starting or reconnecting. |
+| `GET /healthz` | always `200` | `{ status, uptimeMs }` | **Liveness** - the process is running. A failure here means "restart me". |
+| `GET /readyz` | `200` / `503` | `{ ready }` | **Readiness** - the gateway is connected. `503` while starting or reconnecting. |
 | `GET /metrics` | `200` | full status | Uptime, counters and shard info as JSON. |
 | anything else | `404` | `{ error }` | |
 
@@ -70,7 +70,7 @@ The shape returned by `/metrics`:
 | --- | --- | --- |
 | `ready` | `boolean` | Whether the gateway is connected. |
 | `uptimeMs` | `number` | Milliseconds since the process started. |
-| `metrics` | `Record<string, number>` | Counters — interactions, errors, guilds, and anything you add. |
+| `metrics` | `Record<string, number>` | Counters - interactions, errors, guilds, and anything you add. |
 | `shard` | `{ id, count }?` | Present when sharded. |
 
 ## Standalone
@@ -94,7 +94,7 @@ const server = startHealthServer(
 server.close();
 ```
 
-`getStatus` is called **per request**, so the numbers are always current — never
+`getStatus` is called **per request**, so the numbers are always current - never
 a snapshot captured at boot.
 
 ## Docker

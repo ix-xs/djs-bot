@@ -23,7 +23,7 @@ export const CATEGORIES = [
   { label: "Architecture", slug: "architecture", sections: [22, 23, 24, 25] },
   { label: "Data & state", slug: "data", sections: [20, 35, 36, 39] },
   { label: "Production & ops", slug: "ops", sections: [26, 29, 31, 34, 37, 38, 40] },
-  { label: "Reference", slug: "reference", sections: [27, 28] },
+  { label: "Errors & testing", slug: "reference", sections: [27, 28] },
 ];
 
 const categoryOf = (num) => CATEGORIES.find((c) => c.sections.includes(num)) ?? CATEGORIES[CATEGORIES.length - 1];

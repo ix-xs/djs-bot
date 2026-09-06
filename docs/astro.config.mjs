@@ -34,18 +34,34 @@ export default defineConfig({
           badge: { text: "Start here", variant: "success" },
           autogenerate: { directory: "tutorial" },
         },
-        // One collapsible group per guide category (see scripts/generate.mjs).
-        ...CATEGORIES.map((category) => ({
-          label: category.label,
+        {
+          // Task-oriented guides, one nested group per category (scripts/generate.mjs).
+          label: "Guides",
           collapsed: true,
-          autogenerate: { directory: `guide/${category.slug}` },
-        })),
+          items: CATEGORIES.map((category) => ({
+            label: category.label,
+            collapsed: true,
+            autogenerate: { directory: `guide/${category.slug}` },
+          })),
+        },
         {
           // Hand-written, exhaustive reference: every export, option and error code.
           label: "API reference",
           badge: { text: "Complete", variant: "tip" },
           collapsed: true,
           autogenerate: { directory: "api" },
+        },
+        {
+          // Full, copy-pasteable features built from the primitives.
+          label: "Recipes",
+          collapsed: true,
+          autogenerate: { directory: "recipes" },
+        },
+        {
+          // Troubleshooting, FAQ and vocabulary.
+          label: "Help",
+          collapsed: true,
+          autogenerate: { directory: "help" },
         },
       ],
     }),

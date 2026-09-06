@@ -37,7 +37,7 @@ interaction shares it:
 14:22:07 INFO  interaction handled correlationId=8f3a2b ms=143
 ```
 
-Grep one id and you have the whole story of one interaction — including lines
+Grep one id and you have the whole story of one interaction - including lines
 written by plugins.
 
 ## The API
@@ -61,7 +61,7 @@ logger.error({ err, userId }, "failed"); // an Error among fields
 
 ## Logging errors
 
-`Error` objects do **not** JSON-serialise — `JSON.stringify(err)` gives `{}`,
+`Error` objects do **not** JSON-serialise - `JSON.stringify(err)` gives `{}`,
 which is how stack traces vanish from production logs. The logger normalises any
 `Error` it finds, at the top level or in a field, into `name`, `message`,
 `stack`, plus a `BotError` `code`, `hint` and `docs`:
@@ -82,13 +82,13 @@ try {
 ```
 
 :::tip
-Use the field name `err` — it is the convention this logger, pino and most log
+Use the field name `err` - it is the convention this logger, pino and most log
 processors expect.
 :::
 
 ## Child loggers
 
-`child()` returns a logger that always includes the given fields — ideal in a
+`child()` returns a logger that always includes the given fields - ideal in a
 service, so its lines are identifiable without repeating context:
 
 ```ts
@@ -108,7 +108,7 @@ correlation id and adds the step.
 
 ## Output formats
 
-**Development** (`pretty: true`) — timestamp, coloured level, message, then
+**Development** (`pretty: true`) - timestamp, coloured level, message, then
 fields:
 
 ```
@@ -117,7 +117,7 @@ fields:
 14:22:09 ERROR command failed correlationId=8f3a err={"name":"TypeError",…}
 ```
 
-**Production** (`NODE_ENV=production`) — one JSON object per line, ready for any
+**Production** (`NODE_ENV=production`) - one JSON object per line, ready for any
 log pipeline:
 
 ```json
@@ -141,7 +141,7 @@ logger.info("started");
 | `pretty` | `boolean` | Force a format. |
 | `bindings` | `Record<string, unknown>` | Fields merged into every record. |
 
-`new Logger(options)` is equivalent — `createLogger` just reads better.
+`new Logger(options)` is equivalent - `createLogger` just reads better.
 
 ## Choosing a level
 

@@ -1,17 +1,17 @@
 ---
 title: "Resilience"
-description: "Rate limiters, circuit breakers, retry and timeout — every option explained."
+description: "Rate limiters, circuit breakers, retry and timeout - every option explained."
 sidebar:
   order: 15
 ---
 
 Four primitives for the moment your bot depends on something that can be slow,
-flaky or abused. They are plain functions — usable inside handlers, services,
+flaky or abused. They are plain functions - usable inside handlers, services,
 jobs or anywhere else.
 
 ## Rate limiting
 
-### `rateLimit()` — as a guard
+### `rateLimit()` - as a guard
 
 More expressive than [`cooldown`](/djs-bot/api/guards/#cooldown), which is one
 use per duration:
@@ -29,7 +29,7 @@ guards: [rateLimit({ limit: 100, window: "1h", scope: "guild" })]  // 100 per ho
 
 The failure message tells the user exactly how long to wait.
 
-### `createRateLimiter()` — programmatic
+### `createRateLimiter()` - programmatic
 
 ```ts
 const limiter = createRateLimiter({ limit: 10, window: "1m" });
@@ -68,8 +68,8 @@ const data = await breaker.run(() => externalApi.fetch(id));
 | `resetTimeout` | `number \| string` | `"30s"` | How long it stays open before a trial call. |
 | `successThreshold` | `number` | `1` | Successful trials needed to fully close. |
 | `isFailure` | `(error) => boolean` | all errors | Decide what counts as a failure. |
-| `onOpen` | `() => void` | — | Called when the circuit opens. |
-| `onClose` | `() => void` | — | Called when it closes. |
+| `onOpen` | `() => void` | - | Called when the circuit opens. |
+| `onClose` | `() => void` | - | Called when it closes. |
 
 ### States
 
@@ -87,7 +87,7 @@ try {
   return ctx.reply.info(data.title);
 } catch (error) {
   if (error instanceof CircuitOpenError) {
-    return ctx.reply.error("That service is down right now — try again in a minute.");
+    return ctx.reply.error("That service is down right now - try again in a minute.");
   }
   throw error;
 }
@@ -115,9 +115,9 @@ retry(fn, options?): Promise<T>
 | `attempts` | `number` | `3` | Total attempts, including the first. |
 | `delay` | `number` | `200` | Base delay in ms. |
 | `backoff` | `number` | `2` | Exponential multiplier. |
-| `maxDelay` | `number` | — | Cap on the delay. |
+| `maxDelay` | `number` | - | Cap on the delay. |
 | `shouldRetry` | `(error, attempt) => boolean` | retry everything | Decide whether to try again. |
-| `onRetry` | `(error, attempt) => void` | — | Called before each retry. |
+| `onRetry` | `(error, attempt) => void` | - | Called before each retry. |
 
 ```ts
 const user = await retry(() => api.getUser(id), {

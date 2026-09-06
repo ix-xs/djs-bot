@@ -41,7 +41,7 @@ it("bans a member", async () => {
 
 | Method | Extra input |
 | --- | --- |
-| `harness.command(def, input?)` | `options` — matching the command schema |
+| `harness.command(def, input?)` | `options` - matching the command schema |
 | `harness.button(def, input?)` | `params` |
 | `harness.select(def, input?)` | `params`, `values` |
 | `harness.modal(def, input?)` | `fields`, `params` |
@@ -51,7 +51,7 @@ it("bans a member", async () => {
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `userId` | `string` | `"test-user"` | The invoking user id. |
-| `guildId` | `string` | none (DM) | Fake guild id — needed to test `inGuild()`. |
+| `guildId` | `string` | none (DM) | Fake guild id - needed to test `inGuild()`. |
 | `services` | `Partial<ServiceMap>` | the bot services | Injected services. Overrides the bot ones. |
 | `locale` | `string` | `"en"` | For `ctx.locale` and `ctx.t()`. |
 | `owners` | `string[]` | `[]` | For `ctx.owners`, so `ownerOnly()` is testable. |
@@ -65,8 +65,8 @@ it("bans a member", async () => {
 | `passedGuards` | `boolean` | Whether every guard passed. The handler only runs when it did. |
 | `rejectionReason` | `string?` | The message from the guard that rejected. |
 
-A `CapturedReply` has a `type` — `reply`, `success`, `error`, `info`, `defer`,
-`followUp`, `editReply`, `update`, `update:disable` — and the `content` that was
+A `CapturedReply` has a `type` - `reply`, `success`, `error`, `info`, `defer`,
+`followUp`, `editReply`, `update`, `update:disable` - and the `content` that was
 passed.
 
 ## Testing guards
@@ -138,7 +138,7 @@ const durable = sqliteStore(":memory:");   // same code path as production
 
 ## Testing services and jobs directly
 
-They are ordinary values — no harness required:
+They are ordinary values - no harness required:
 
 ```ts
 const service = new TicketService(fakeDb);
@@ -151,7 +151,7 @@ await MyJob.run({ client: fakeClient, services: { db: fakeDb }, logger, correlat
 ## Integration checks without a connection
 
 `bot.load()` performs discovery, service resolution and contract validation
-**without** connecting to Discord — so a single test catches duplicate names,
+**without** connecting to Discord - so a single test catches duplicate names,
 missing services and broken contracts:
 
 ```ts

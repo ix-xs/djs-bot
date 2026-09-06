@@ -9,7 +9,7 @@ Everything your bot does is a **definition**: a plain object created by a
 `define*()` factory and tagged with a `kind`. The loader discovers them from
 your features directory, or you pass them explicitly to `defineBot({ features })`.
 
-Definitions have **no import side effects** — importing a file never registers
+Definitions have **no import side effects** - importing a file never registers
 anything. The loader reads the exports and routes them by `kind`, so a file can
 export one definition, several, a default, or a `defineFeature()` bundle.
 
@@ -19,10 +19,10 @@ A slash command, with typed options **or** subcommands.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `name` | `string` | Lowercase name users type after `/`. 1–32 chars, letters/digits/`-`/`_`. |
+| `name` | `string` | Lowercase name users type after `/`. 1-32 chars, letters/digits/`-`/`_`. |
 | `description` | `string` | Shown in the command picker. |
 | `options` | `OptionMap` | Typed options. Drives `ctx.options`. Omit when using subcommands. |
-| `guards` | `Guard[]` | Preconditions checked before `run` — and before any subcommand. |
+| `guards` | `Guard[]` | Preconditions checked before `run` - and before any subcommand. |
 | `run` | `(ctx) => unknown` | The handler. Optional when using subcommands. |
 | `subcommands` | `Record<string, SubcommandDefinition>` | Subcommands keyed by name. |
 | `groups` | `Record<string, SubcommandGroupDefinition>` | Subcommand groups keyed by name. |
@@ -57,7 +57,7 @@ export default defineCommand({
 
 :::note[Localization vs translation]
 `nameLocalizations` changes what the **command picker** shows. `ctx.t()` changes
-what your **replies** say. They are independent — see [i18n](/djs-bot/api/i18n/).
+what your **replies** say. They are independent - see [i18n](/djs-bot/api/i18n/).
 :::
 
 ## `subcommand`
@@ -154,13 +154,13 @@ An auto-responder on `messageCreate`.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | `string` | — | Unique, used in logs and diagnostics. |
-| `pattern` | `string \| RegExp \| (message) => boolean` | — | What to match. |
+| `name` | `string` | - | Unique, used in logs and diagnostics. |
+| `pattern` | `string \| RegExp \| (message) => boolean` | - | What to match. |
 | `mode` | `"includes" \| "equals" \| "startsWith" \| "endsWith"` | `"includes"` | How a string pattern is compared. |
 | `caseInsensitive` | `boolean` | `true` | For string patterns. |
 | `ignoreBots` | `boolean` | `true` | Ignore other bots and itself. |
-| `cooldown` | `string \| number` | — | Per-author cooldown, e.g. `"5s"`. |
-| `run` | `(ctx: TriggerContext) => unknown` | — | The handler. |
+| `cooldown` | `string \| number` | - | Per-author cooldown, e.g. `"5s"`. |
+| `run` | `(ctx: TriggerContext) => unknown` | - | The handler. |
 
 `TriggerContext`: `message`, `client`, `author`, `member`, `guild`, `channel`,
 `services`, `logger`, `match` (the `RegExpMatchArray` when the pattern was a
@@ -177,7 +177,7 @@ export default defineTrigger({
 
 :::caution[Privileged intent]
 Any trigger enables `GuildMessages` **and** `MessageContent`. `MessageContent`
-is privileged — turn it on in the Developer Portal, or the bot cannot read
+is privileged - turn it on in the Developer Portal, or the bot cannot read
 message text.
 :::
 
@@ -268,7 +268,7 @@ export const Assign = defineRoleSelect({
 | --- | --- | --- |
 | `id` | `string` | Routing key. |
 | `title` | `string` | The modal window title. |
-| `fields` | `FieldMap` | Text inputs — see [`field`](/djs-bot/api/options/#field--modal-inputs). Max 5. |
+| `fields` | `FieldMap` | Text inputs - see [`field`](/djs-bot/api/options/#field--modal-inputs). Max 5. |
 | `params` | `ParamMap` | Params round-tripped through the customId. |
 | `guards` | `Guard[]` | Preconditions. |
 | `run` | `(ctx: ModalContext) => unknown` | `ctx.fields` holds typed values; `ctx.params` the decoded params. |
@@ -289,7 +289,7 @@ await ctx.interaction.showModal(Feedback.build());
 ```
 
 :::caution
-A modal must be the **first** response to an interaction — you cannot `defer()`
+A modal must be the **first** response to an interaction - you cannot `defer()`
 and then show one.
 :::
 
@@ -297,12 +297,12 @@ and then show one.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `name` | `string` | — | Unique name, used in logs. |
-| `schedule` | `string` | — | A cron expression (`"0 3 * * *"`) **or** a plain duration (`"30s"`, `"1h"`) for a simple interval. |
+| `name` | `string` | - | Unique name, used in logs. |
+| `schedule` | `string` | - | A cron expression (`"0 3 * * *"`) **or** a plain duration (`"30s"`, `"1h"`) for a simple interval. |
 | `timezone` | `string` | system | IANA zone, e.g. `"Europe/Paris"`. |
 | `concurrency` | `number` | `1` | Max simultaneous runs. |
 | `runOnStart` | `boolean` | `false` | Also run immediately at boot. |
-| `run` | `(ctx: JobContext) => unknown` | — | The handler. |
+| `run` | `(ctx: JobContext) => unknown` | - | The handler. |
 
 ```ts
 export default defineJob({
@@ -323,7 +323,7 @@ See [Plugins](/djs-bot/api/plugins/).
 
 ## `defineFeature`
 
-Bundles definitions into one reusable, publishable unit — the right shape for
+Bundles definitions into one reusable, publishable unit - the right shape for
 sharing a "tickets" or "levelling" pack between bots.
 
 | Field | Type | Description |
@@ -346,7 +346,7 @@ export default defineFeature({
 
 ## File naming
 
-When you point `features` at a directory, any file is scanned — the suffix is
+When you point `features` at a directory, any file is scanned - the suffix is
 only a convention that keeps things readable, and `djs-bot generate` follows it:
 
 ```

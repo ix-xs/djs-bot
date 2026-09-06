@@ -28,7 +28,7 @@ export default defineBot({
 | Field | Type | Description |
 | --- | --- | --- |
 | `sink` | `AuditSink` | A single destination. |
-| `sinks` | `AuditSink[]` | Several destinations — **all** receive every entry. |
+| `sinks` | `AuditSink[]` | Several destinations - **all** receive every entry. |
 | `autoRecordCommands` | `boolean` | Record every command use as `command:<name>`, with no code in your handlers. |
 
 Configuring `audit` enables `ctx.audit(...)` and registers the `audit` service.
@@ -56,7 +56,7 @@ run: async (ctx) => {
 }
 ```
 
-When audit is not configured, `ctx.audit()` is a no-op — never a crash.
+When audit is not configured, `ctx.audit()` is a no-op - never a crash.
 
 :::tip[Naming actions]
 Use `domain.verb`: `member.ban`, `ticket.close`, `config.update`. Consistent
@@ -77,7 +77,7 @@ names make `query({ action })` and log filtering actually useful.
 
 ## Sinks
 
-A sink is where entries go. Ship several at once — for example one durable and
+A sink is where entries go. Ship several at once - for example one durable and
 one for live tailing.
 
 | Sink | Durable | Queryable | Use for |
@@ -93,7 +93,7 @@ storeAuditSink(store, { namespace: "audit", ttl: "90d" })
 | Option | Default | Description |
 | --- | --- | --- |
 | `namespace` | `"audit"` | Store namespace, keeping entries away from your other keys. |
-| `ttl` | none | Auto-expire old entries — a simple retention policy. |
+| `ttl` | none | Auto-expire old entries - a simple retention policy. |
 
 `loggerAuditSink()` takes an optional logger and otherwise creates its own, so
 it works inline in the config.
@@ -140,11 +140,11 @@ const entries = await ctx.services.audit.query({
 | `action` | `string` | Exact match. |
 | `actorId` | `string` | Who did it. |
 | `guildId` | `string` | Where. |
-| `since` | `number` | Unix ms — entries at or after this time. |
+| `since` | `number` | Unix ms - entries at or after this time. |
 | `limit` | `number` | Max entries, newest first. |
 
 Results come from the **first read-capable sink**, newest first. A logger-only
-setup returns an empty array — include a memory or store sink to query.
+setup returns an empty array - include a memory or store sink to query.
 
 ## A history command
 
@@ -169,7 +169,7 @@ export default defineCommand({
 
     return ctx.reply.info(
       entries
-        .map((e) => `${timestamp(e.timestamp, TimestampStyles.RelativeTime)} — \`${e.action}\` by <@${e.actorId}>`)
+        .map((e) => `${timestamp(e.timestamp, TimestampStyles.RelativeTime)} - \`${e.action}\` by <@${e.actorId}>`)
         .join("\n"),
     );
   },

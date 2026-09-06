@@ -23,7 +23,7 @@ ctx.reply(`${mention.user(id)} please read ${mention.channel(rulesId)}`);
 ctx.reply(`Try ${mention.command("config", commandId, "set")}`);
 ```
 
-The command id comes from a deployed command — `bot.deploy()` returns them, and
+The command id comes from a deployed command - `bot.deploy()` returns them, and
 `djs-bot explain` prints them.
 
 ## `timestamp`
@@ -33,7 +33,7 @@ timestamp(date: Date | number, style?: TimestampStylesString): string
 ```
 
 Renders a Discord timestamp, which every user sees **in their own timezone and
-locale** — far better than formatting a date yourself.
+locale** - far better than formatting a date yourself.
 
 ```ts
 import { timestamp, TimestampStyles } from "@ix-xs/djs-bot";
@@ -43,7 +43,7 @@ timestamp(Date.now() + 3600_000, TimestampStyles.RelativeTime); // in an hour
 timestamp(member.joinedAt!, TimestampStyles.LongDate);          // 1 January 2026
 ```
 
-Accepts a `Date`, Unix milliseconds or Unix seconds — it detects which.
+Accepts a `Date`, Unix milliseconds or Unix seconds - it detects which.
 
 | Style | Example |
 | --- | --- |
@@ -55,7 +55,7 @@ Accepts a `Date`, Unix milliseconds or Unix seconds — it detects which.
 | `LongDateTime` | Thursday, 1 January 2026 12:00 |
 | `RelativeTime` | in an hour / 3 days ago |
 
-`RelativeTime` is the one to use for cooldowns, bans and reminders — it keeps
+`RelativeTime` is the one to use for cooldowns, bans and reminders - it keeps
 counting down live in the client.
 
 ## `emoji`
@@ -76,13 +76,13 @@ if (found) await ctx.reply(`${found} Done!`);
 ```
 
 :::tip[Where do I find an emoji id?]
-Type `\:emojiname:` in Discord and send it — the raw markup appears, ids
+Type `\:emojiname:` in Discord and send it - the raw markup appears, ids
 included. The bot must share a server with the emoji to use it.
 :::
 
 ## `allowedMentions`
 
-Controls who a message may actually ping — the difference between rendering
+Controls who a message may actually ping - the difference between rendering
 `@everyone` and *notifying* everyone.
 
 | Helper | Effect |
@@ -116,7 +116,7 @@ URL helpers for avatars, banners and guild images.
 
 | Helper | Returns | Notes |
 | --- | --- | --- |
-| `assets.avatar(userOrMember, options?)` | `string` | The best avatar — a member server avatar wins over their global one. |
+| `assets.avatar(userOrMember, options?)` | `string` | The best avatar - a member server avatar wins over their global one. |
 | `assets.banner(user, options?)` | `Promise<string \| null>` | **Async**: banners are not cached, so the user is fetched. |
 | `assets.guildIcon(guild, options?)` | `string \| null` | |
 | `assets.guildBanner(guild, options?)` | `string \| null` | |
@@ -127,7 +127,7 @@ URL helpers for avatars, banners and guild images.
 
 | Option | Type | Description |
 | --- | --- | --- |
-| `size` | `ImageSize` | Power of two, 16–4096. |
+| `size` | `ImageSize` | Power of two, 16-4096. |
 | `extension` | `"webp" \| "png" \| "jpg" \| "jpeg" \| "gif"` | Output format. |
 | `forceStatic` | `boolean` | Force a still image even for animated assets. |
 
@@ -140,7 +140,7 @@ const embed = new EmbedBuilder()
 ## `voice`
 
 Voice-state helpers for moderation and utility commands. They use the gateway
-and REST only — **no** `@discordjs/voice`, no audio dependencies.
+and REST only - **no** `@discordjs/voice`, no audio dependencies.
 
 | Helper | Returns | Description |
 | --- | --- | --- |
@@ -172,5 +172,5 @@ export default defineCommand({
 });
 ```
 
-These need the `GuildVoiceStates` intent — supplied automatically under
+These need the `GuildVoiceStates` intent - supplied automatically under
 `intents: "auto"` when you register a `voiceStateUpdate` event.

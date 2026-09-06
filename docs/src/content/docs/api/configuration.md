@@ -8,7 +8,7 @@ sidebar:
 ## `defineBot(config)`
 
 Creates a [`Bot`](#the-bot-instance) from a plain configuration object. It does
-**not** connect — call `.start()` (the CLI does that for you).
+**not** connect - call `.start()` (the CLI does that for you).
 
 ```ts title="src/index.ts"
 import { defineBot, env } from "@ix-xs/djs-bot";
@@ -40,7 +40,7 @@ Every field is optional. Fields with an env fallback can be omitted entirely.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `features` | `string \| Registrable \| Registrable[]` (or an array of those) | — | Where definitions come from: a **directory** to auto-discover, and/or explicit definitions. Mix freely: `["./features", MyCommand]`. |
+| `features` | `string \| Registrable \| Registrable[]` (or an array of those) | - | Where definitions come from: a **directory** to auto-discover, and/or explicit definitions. Mix freely: `["./features", MyCommand]`. |
 | `intents` | `"auto" \| GatewayIntentBits[]` | `"auto"` | `"auto"` derives the minimum intent set from the events, triggers and guards you registered. Pass an array to take control. |
 | `partials` | `Partials[]` | derived | Extra partials, merged with the auto-derived ones. |
 | `plugins` | `PluginDefinition[]` | `[]` | Cross-cutting plugins. See [Plugins](/djs-bot/api/plugins/). |
@@ -134,7 +134,7 @@ export default defineBot({
 
 ## The `Bot` instance
 
-`defineBot()` returns a `Bot`. You rarely touch it directly — the CLI does — but
+`defineBot()` returns a `Bot`. You rarely touch it directly - the CLI does - but
 it is a normal object you can drive yourself.
 
 ### Properties
@@ -160,7 +160,7 @@ it is a normal object you can drive yourself.
 | `setPresence(presence)` | `void` | Updates the gateway presence at runtime. |
 | `setActivity(name, options?)` | `void` | Shortcut for a single activity. |
 | `shutdown()` | `Promise<void>` | Drains jobs, tears down plugins, closes the client. |
-| `describe()` | `Promise<BotDescription>` | A structured snapshot — what `djs-bot explain` prints. |
+| `describe()` | `Promise<BotDescription>` | A structured snapshot - what `djs-bot explain` prints. |
 
 ```ts
 import bot from "./index.js";
@@ -171,7 +171,7 @@ console.dir(await bot.describe(), { depth: null });
 
 ### `isBot(value)`
 
-A cross-realm type guard — it keeps working across duplicated copies of the
+A cross-realm type guard - it keeps working across duplicated copies of the
 package, where `instanceof` would silently fail:
 
 ```ts
@@ -197,7 +197,7 @@ Add it to your environment or a .env file.
 ```
 
 ```ts
-const token = env("DISCORD_TOKEN");            // required — throws if missing
+const token = env("DISCORD_TOKEN");            // required - throws if missing
 const level = env("LOG_LEVEL", "info");        // optional with a default
 ```
 
@@ -210,7 +210,7 @@ loudly instead of quietly authenticating as nobody.
 env.optional(name: string): string | undefined
 ```
 
-The same lookup, but returns `undefined` instead of throwing — for genuinely
+The same lookup, but returns `undefined` instead of throwing - for genuinely
 optional configuration:
 
 ```ts
@@ -233,13 +233,13 @@ loadEnvFile(path = ".env"): void
 ```
 
 Parses a `.env` file into `process.env` **without overwriting** variables that
-are already set — so real environment variables always win over the file, which
+are already set - so real environment variables always win over the file, which
 is what you want in production. Handles `#` comments, blank lines and quoted
 values. Safe to call when the file does not exist.
 
 The CLI calls it for you; call it yourself only from a custom entry point.
 
 :::danger[Never commit your token]
-Keep `.env` in `.gitignore`. A leaked token lets anyone control your bot —
+Keep `.env` in `.gitignore`. A leaked token lets anyone control your bot -
 regenerate it immediately in the Developer Portal if that happens.
 :::

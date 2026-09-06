@@ -5,8 +5,8 @@ sidebar:
   order: 9
 ---
 
-The framework never imposes a database. It speaks one small interface —
-`KVStore` — and ships two adapters. Anything that implements the interface (Redis,
+The framework never imposes a database. It speaks one small interface -
+`KVStore` - and ships two adapters. Anything that implements the interface (Redis,
 Postgres, a file, an HTTP API) drops straight in.
 
 ```ts title="src/index.ts"
@@ -51,7 +51,7 @@ await store.set("config", settings);            // no expiry
 
 An expired key reads back as `undefined` and is removed lazily on access.
 
-### `getOrSet` — the cache-aside pattern
+### `getOrSet` - the cache-aside pattern
 
 ```ts
 const stats = await store.getOrSet(
@@ -64,7 +64,7 @@ const stats = await store.getOrSet(
 Concurrent calls for the same key are **de-duplicated per process**: ten
 simultaneous requests run the factory once and all await the same promise.
 
-### `namespace` — keeping keys apart
+### `namespace` - keeping keys apart
 
 ```ts
 const tickets = store.namespace("tickets");
@@ -75,7 +75,7 @@ await economy.keys();                       // only economy keys
 await tickets.clear();                      // only clears tickets
 ```
 
-Namespaces nest, and `keys()`/`clear()` are always scoped to the view you hold —
+Namespaces nest, and `keys()`/`clear()` are always scoped to the view you hold -
 so a feature can safely wipe its own data without touching anyone else. Prefix
 characters are escaped internally, so a namespace containing `%` or `_` still
 matches literally.
@@ -97,7 +97,7 @@ and single-process bots that do not need durability.
 sqliteStore<V = unknown>(path = "data/store.sqlite"): KVStore<V>
 ```
 
-Durable, file-backed, no server to run — backed by Node built-in SQLite. Pass
+Durable, file-backed, no server to run - backed by Node built-in SQLite. Pass
 `":memory:"` for a transient database with the same code path as production.
 
 ```ts
@@ -115,7 +115,7 @@ inspect the database with any SQLite client.
 
 ## `defineStore`
 
-Registers a store as a service under any token — useful when you want more than
+Registers a store as a service under any token - useful when you want more than
 one, for example a durable store plus a fast ephemeral one:
 
 ```ts title="features/cache.service.ts"
@@ -183,12 +183,12 @@ Several framework features accept a `KVStore`, so one adapter covers them all:
 
 | Feature | How |
 | --- | --- |
-| [Feature flags](/djs-bot/api/flags/) | `flags: { store }` — toggles survive restarts |
+| [Feature flags](/djs-bot/api/flags/) | `flags: { store }` - toggles survive restarts |
 | [Audit trail](/djs-bot/api/audit/) | `storeAuditSink(store)` |
 | Your own features | `ctx.services.store` |
 
 :::tip[A store is not a cache]
 For hot in-process data with automatic eviction, reach for
-[`createCache`](/djs-bot/api/cache/) instead — it is synchronous, bounded and
+[`createCache`](/djs-bot/api/cache/) instead - it is synchronous, bounded and
 supports stale-while-revalidate.
 :::

@@ -35,9 +35,9 @@ Configuring `flags` registers the `flags` service and enables the
 
 For `isEnabled(name, { guildId })`:
 
-1. **guild override** — set by `enable/disable(name, { guildId })`
-2. **global override** — set by `enable/disable(name)`
-3. **declared default** — from `defaults`
+1. **guild override** - set by `enable/disable(name, { guildId })`
+2. **global override** - set by `enable/disable(name)`
+3. **declared default** - from `defaults`
 4. **`false`**
 
 So an unknown flag is off, a default can be overridden globally, and any single
@@ -64,7 +64,7 @@ everywhere else it works normally.
 
 :::note[Fail-open by design]
 If `flags` is not configured at all, the guard **passes**. Forgetting to wire
-flags disables nothing — it just removes the switch.
+flags disables nothing - it just removes the switch.
 :::
 
 ## The `flags` service
@@ -76,7 +76,7 @@ flags disables nothing — it just removes the switch.
 | `disable` | `(name, scope?) => Promise<void>` | Turn off globally, or for one guild. |
 | `clear` | `(name, scope?) => Promise<void>` | Remove an override so it falls back to the next level. |
 | `setDefault` | `(name, enabled) => void` | Change the in-memory default. Not persisted. |
-| `list` | `(guildId?) => Promise<Record<string, boolean>>` | Effective flags — defaults merged with overrides. |
+| `list` | `(guildId?) => Promise<Record<string, boolean>>` | Effective flags - defaults merged with overrides. |
 
 ## An admin command
 
@@ -144,7 +144,7 @@ run: async (ctx) => {
 
 ## Standalone
 
-`createFeatureFlags` works without a bot — handy in tests:
+`createFeatureFlags` works without a bot - handy in tests:
 
 ```ts
 import { createFeatureFlags, memoryStore } from "@ix-xs/djs-bot";

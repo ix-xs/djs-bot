@@ -20,7 +20,7 @@ run(ctx) {
 }
 ```
 
-## `BaseContext` — shared by every handler
+## `BaseContext` - shared by every handler
 
 | Property | Type | Description |
 | --- | --- | --- |
@@ -31,7 +31,7 @@ run(ctx) {
 | `guildId` | `string \| null` | Shortcut for `ctx.guild?.id`. |
 | `channel` | `TextBasedChannel \| null` | The originating channel, when resolvable. |
 | `member` | `GuildMember \| null` | The guild member, when in a guild. |
-| `services` | `ServiceMap` | Injected services. Augment `ServiceMap` for full typing — see [Services](/djs-bot/api/services/#typing-ctxservices). |
+| `services` | `ServiceMap` | Injected services. Augment `ServiceMap` for full typing - see [Services](/djs-bot/api/services/#typing-ctxservices). |
 | `logger` | `Logger` | A child logger already bound to `correlationId`. |
 | `correlationId` | `string` | Unique per interaction. Every log line from this handler carries it. |
 | `locale` | `string` | The user Discord client locale, e.g. `"fr"` or `"en-US"`. |
@@ -43,10 +43,10 @@ run(ctx) {
 | `audit` | `(action, details?) => Promise<void>` | Records an audit entry. No-op when audit is not configured. `actorId` and `guildId` are filled in for you. See [Audit](/djs-bot/api/audit/). |
 | `reply` | see below | The reply helper. |
 
-## `ctx.reply` — answering the user
+## `ctx.reply` - answering the user
 
 `ctx.reply` is **callable and has methods**. It always picks the correct
-underlying call — `reply`, `editReply` or `followUp` — depending on whether the
+underlying call - `reply`, `editReply` or `followUp` - depending on whether the
 interaction was already deferred or answered, so you never hit
 `InteractionAlreadyReplied` again.
 
@@ -60,7 +60,7 @@ await ctx.reply({ embeds: [embed], components: [row] });
 | `ctx.reply(content)` | `string \| InteractionReplyOptions` | Replies, or edits/follows up if already answered. |
 | `ctx.reply.success(msg, opts?)` | | Green embed. `ephemeral` defaults to `false`. |
 | `ctx.reply.info(msg, opts?)` | | Blue embed. `ephemeral` defaults to `false`. |
-| `ctx.reply.error(msg, opts?)` | | Red embed. `ephemeral` defaults to **`true`** — pass `{ ephemeral: false }` to make it public. |
+| `ctx.reply.error(msg, opts?)` | | Red embed. `ephemeral` defaults to **`true`** - pass `{ ephemeral: false }` to make it public. |
 | `ctx.reply.defer(opts?)` | `{ ephemeral?: boolean }` | Shows the loading state. Call it within 3 seconds for slow work. |
 | `ctx.reply.followUp(content)` | | Sends an additional message. |
 | `ctx.reply.editReply(content)` | | Edits the current (deferred or sent) reply. |
@@ -70,7 +70,7 @@ await ctx.reply({ embeds: [embed], components: [row] });
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `ephemeral` | `boolean` | `false` (`true` for `error`) | Only the invoking user sees it. |
-| `title` | `string` | — | Title shown above the message. |
+| `title` | `string` | - | Title shown above the message. |
 
 ```ts
 await ctx.reply.defer();                     // 3-second clock stopped
@@ -83,7 +83,7 @@ Discord invalidates an interaction that has not been answered within **3
 seconds**. If a handler can ever take longer, `await ctx.reply.defer()` first.
 :::
 
-## `ctx.update` — editing the source message
+## `ctx.update` - editing the source message
 
 Available on **button** and **select menu** contexts only. It edits the message
 the component lives on, rather than sending a new one.
@@ -92,7 +92,7 @@ the component lives on, rather than sending a new one.
 | --- | --- |
 | `ctx.update(content)` | Replaces the message content/embeds/components. |
 | `ctx.update.defer()` | Acknowledges silently, changing nothing visible. |
-| `ctx.update.disable()` | Disables every component on the source message — the standard "this menu is closed" ending. |
+| `ctx.update.disable()` | Disables every component on the source message - the standard "this menu is closed" ending. |
 
 ```ts
 run(ctx) {
@@ -106,7 +106,7 @@ run(ctx) {
 
 | Property | Description |
 | --- | --- |
-| `options` | Fully typed, resolved options — inferred from the `options` map you declared. Required options are non-nullable; optional ones are `T \| undefined`. |
+| `options` | Fully typed, resolved options - inferred from the `options` map you declared. Required options are non-nullable; optional ones are `T \| undefined`. |
 
 ```ts
 options: { target: s.user({ required: true }), reason: s.string() },
@@ -128,7 +128,7 @@ run(ctx) {
 | Property | Type | Present for |
 | --- | --- | --- |
 | `params` | your param types | all selects |
-| `values` | `string[]` | all selects — option values, or ids for native selects |
+| `values` | `string[]` | all selects - option values, or ids for native selects |
 | `users` | `Collection<string, User>` | user & mentionable selects |
 | `members` | `Collection<string, GuildMember>` | user & mentionable selects, in a guild |
 | `roles` | `Collection<string, Role>` | role & mentionable selects |
@@ -156,7 +156,7 @@ run(ctx) {
 
 ### `AutocompleteContext`
 
-Passed to an option `autocomplete` handler. It is **not** repliable — return up
+Passed to an option `autocomplete` handler. It is **not** repliable - return up
 to 25 choices instead.
 
 | Property | Description |
@@ -175,7 +175,7 @@ query: s.string({
 }),
 ```
 
-A handler may return `AutocompleteChoice[]`, `string[]` or `number[]` — plain
+A handler may return `AutocompleteChoice[]`, `string[]` or `number[]` - plain
 arrays are mapped to choices automatically.
 
 ### `EventContext` and `JobContext`
@@ -184,7 +184,7 @@ Events and jobs are not interactions, so they carry no `reply`:
 
 | Context | Contains |
 | --- | --- |
-| `EventContext` | `client`, `services`, `logger` — plus the raw discord.js event arguments. |
+| `EventContext` | `client`, `services`, `logger` - plus the raw discord.js event arguments. |
 | `JobContext` | `client`, `services`, `logger`, `correlationId`. |
 
 ```ts
@@ -202,7 +202,7 @@ Anything a handler throws is caught by the framework error boundary, which:
 1. logs it with the interaction `correlationId`,
 2. calls every plugin `onError` hook,
 3. calls your `defineBot({ onError })`, and
-4. sends the user a friendly ephemeral message — unless your `onError` returned a
+4. sends the user a friendly ephemeral message - unless your `onError` returned a
    value, which marks the error handled.
 
 So you can simply `throw` for exceptional cases, and use `ctx.reply.error(...)`

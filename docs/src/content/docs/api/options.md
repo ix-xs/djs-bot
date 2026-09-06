@@ -16,7 +16,7 @@ Three tiny builder objects describe the three kinds of typed input:
 All three are **type-driven**: what you declare is exactly what the handler
 receives, with no casting and no `as`.
 
-## `s` — command options
+## `s` - command options
 
 ```ts
 import { s } from "@ix-xs/djs-bot";
@@ -53,8 +53,8 @@ Accepted by every builder:
 | --- | --- | --- | --- |
 | `description` | `string` | `"No description provided."` | Shown in the picker. |
 | `required` | `boolean` | `false` | Drives both Discord and the inferred type. |
-| `nameLocalizations` | `LocalizationMap` | — | Per-locale option names. |
-| `descriptionLocalizations` | `LocalizationMap` | — | Per-locale descriptions. |
+| `nameLocalizations` | `LocalizationMap` | - | Per-locale option names. |
+| `descriptionLocalizations` | `LocalizationMap` | - | Per-locale descriptions. |
 
 ### Type-specific config
 
@@ -103,10 +103,10 @@ options: {
 ```
 
 The handler receives an [`AutocompleteContext`](/djs-bot/api/context/#autocompletecontext)
-and may return `{ name, value }[]`, `string[]` or `number[]` — plain arrays are
+and may return `{ name, value }[]`, `string[]` or `number[]` - plain arrays are
 mapped to choices for you. Discord accepts at most **25** suggestions.
 
-## `p` — customId params
+## `p` - customId params
 
 Discord round-trips exactly one piece of state for a component: its `customId`,
 capped at **100 characters**. `p` codecs turn that into typed data instead of a
@@ -128,7 +128,7 @@ export const Close = defineButton({
   },
 });
 
-Close.build({ ticketId: "42", notify: true });   // typed — a typo will not compile
+Close.build({ ticketId: "42", notify: true });   // typed - a typo will not compile
 ```
 
 :::caution[The 100-character limit]
@@ -153,7 +153,7 @@ const date: ParamCodec<Date> = {
 };
 ```
 
-## `field` — modal inputs
+## `field` - modal inputs
 
 | Builder | Renders |
 | --- | --- |
@@ -162,11 +162,11 @@ const date: ParamCodec<Date> = {
 
 | Config | Type | Default | Description |
 | --- | --- | --- | --- |
-| `label` | `string` | — | **Required.** Shown above the input. |
+| `label` | `string` | - | **Required.** Shown above the input. |
 | `required` | `boolean` | `false` | Whether it must be filled. |
-| `placeholder` | `string` | — | Greyed-out hint. |
-| `minLength`, `maxLength` | `number` | — | Length bounds. |
-| `value` | `string` | — | Pre-filled value. |
+| `placeholder` | `string` | - | Greyed-out hint. |
+| `minLength`, `maxLength` | `number` | - | Length bounds. |
+| `value` | `string` | - | Pre-filled value. |
 
 ```ts
 fields: {
@@ -175,7 +175,7 @@ fields: {
 }
 ```
 
-A modal accepts at most **5** fields, and every submitted value is a `string` —
+A modal accepts at most **5** fields, and every submitted value is a `string` -
 parse and validate it yourself in the handler.
 
 ## Type helpers

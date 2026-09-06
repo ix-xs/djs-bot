@@ -5,7 +5,7 @@ sidebar:
   order: 17
 ---
 
-## `ui` — component builders
+## `ui` - component builders
 
 Terse factories that return **real discord.js builders**, so anything you know
 about `ButtonBuilder` still applies.
@@ -15,7 +15,7 @@ about `ButtonBuilder` still applies.
 | Helper | Returns | Description |
 | --- | --- | --- |
 | `ui.row(...components)` | `ActionRowBuilder` | A row of buttons, or a single select menu. |
-| `ui.linkButton(label, url, emoji?)` | `ButtonBuilder` | A URL button — no handler, no customId. |
+| `ui.linkButton(label, url, emoji?)` | `ButtonBuilder` | A URL button - no handler, no customId. |
 
 ```ts
 const row = ui.row(
@@ -53,7 +53,7 @@ per message with the `IsComponentsV2` flag.
 | `ui.container(...children)` | `ContainerBuilder` | Groups display components into one visual block. |
 | `ui.text(content)` | `TextDisplayBuilder` | A markdown text block. |
 | `ui.separator(options?)` | `SeparatorBuilder` | A gap, optionally with a divider line. `{ divider?, spacing?: "small" \| "large" }`. |
-| `ui.section(options)` | `SectionBuilder` | `{ text: string \| string[]; accessory: ButtonBuilder \| ThumbnailBuilder }` — text on the left, a button or thumbnail on the right. |
+| `ui.section(options)` | `SectionBuilder` | `{ text: string \| string[]; accessory: ButtonBuilder \| ThumbnailBuilder }` - text on the left, a button or thumbnail on the right. |
 | `ui.thumbnail(url, description?)` | `ThumbnailBuilder` | A thumbnail accessory for a section. |
 | `ui.gallery(...urls)` | `MediaGalleryBuilder` | An image or video gallery. Accepts `attachment://name`. |
 | `ui.file(attachmentUrl)` | `FileBuilder` | A file display component. |
@@ -78,7 +78,7 @@ await ctx.reply({
 ```
 
 :::caution[V2 rules]
-A message using `IsComponentsV2` **cannot** carry `content` or `embeds` — every
+A message using `IsComponentsV2` **cannot** carry `content` or `embeds` - every
 piece of text has to be a `ui.text` or a `ui.section`. Attachments must be
 referenced as `attachment://filename`.
 :::
@@ -86,7 +86,7 @@ referenced as `attachment://filename`.
 ## `paginate()`
 
 A multi-page message with prev/next controls that manages its own buttons and
-collector — nothing to register, nothing to route.
+collector - nothing to register, nothing to route.
 
 ```ts
 await paginate(ctx, { pages: [embed1, embed2, embed3], timeout: "5m" });
@@ -94,8 +94,8 @@ await paginate(ctx, { pages: [embed1, embed2, embed3], timeout: "5m" });
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `pages` | `Page[] \| (index) => Page \| Promise<Page>` | — | **Required.** An array, or a builder called per page. |
-| `count` | `number` | — | Total pages. **Required** when `pages` is a function. |
+| `pages` | `Page[] \| (index) => Page \| Promise<Page>` | - | **Required.** An array, or a builder called per page. |
+| `count` | `number` | - | Total pages. **Required** when `pages` is a function. |
 | `startPage` | `number` | `0` | Page to open on. |
 | `timeout` | `string \| number` | `"2m"` | How long the controls stay active. |
 | `ephemeral` | `boolean` | `false` | Send as an only-you message. |
@@ -104,7 +104,7 @@ await paginate(ctx, { pages: [embed1, embed2, embed3], timeout: "5m" });
 | `allowedUsers` | `string[]` | the invoker | Who may use the controls. |
 
 A `Page` is an `EmbedBuilder`, or a payload with `content`, `embeds`,
-`components`, `files` and `flags` — so Components V2 pages work too:
+`components`, `files` and `flags` - so Components V2 pages work too:
 
 ```ts
 await paginate(ctx, {
@@ -126,7 +126,7 @@ readable.
 
 :::note[Why the buttons keep working]
 `paginate` uses a private nonce plus its own collector, and the framework router
-deliberately ignores customIds it does not own — so pagination controls are never
+deliberately ignores customIds it does not own - so pagination controls are never
 intercepted, and never expire early with an "interaction failed" error.
 :::
 
@@ -142,8 +142,8 @@ if (await confirm(ctx, { content: "Delete every message in this channel?" })) {
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `content` | `string` | — | The question. |
-| `embed` | `EmbedBuilder` | — | An embed instead of, or alongside, the text. |
+| `content` | `string` | - | The question. |
+| `embed` | `EmbedBuilder` | - | An embed instead of, or alongside, the text. |
 | `confirmLabel` | `string` | `"Confirm"` | Confirm button label. |
 | `cancelLabel` | `string` | `"Cancel"` | Cancel button label. |
 | `timeout` | `string \| number` | `"1m"` | How long to wait. |
@@ -157,7 +157,7 @@ Discord round-trips exactly one piece of state for a component: its `customId`,
 capped at 100 characters. The framework encodes a routing **key** plus a typed
 payload, and decodes it back with the types you declared.
 
-Wire format — the key alone, or `key$<base64url(json-array)>`:
+Wire format - the key alone, or `key$<base64url(json-array)>`:
 
 ```
 ticket:close
@@ -168,7 +168,7 @@ The `$` separator never appears in a routing key or in base64url output, so
 parsing is unambiguous. That is why component ids may not contain `$`
 ([`DJSBOT_E013`](/djs-bot/api/errors/#djsbot_e013)).
 
-You normally never call these — `Button.build()` and `ctx.params` do — but they
+You normally never call these - `Button.build()` and `ctx.params` do - but they
 are exported:
 
 | Function | Description |
@@ -214,4 +214,4 @@ const embed = new EmbedBuilder()
 ```
 
 For the built-in coloured embeds, `ctx.reply.success/error/info` already do this
-— see [the ctx object](/djs-bot/api/context/#ctxreply--answering-the-user).
+- see [the ctx object](/djs-bot/api/context/#ctxreply--answering-the-user).

@@ -40,7 +40,7 @@ invoked.
 
 ### `hasPermission` / `botHasPermission`
 
-Accept any `PermissionResolvable` — an enum member, a string, or several:
+Accept any `PermissionResolvable` - an enum member, a string, or several:
 
 ```ts
 guards: [hasPermission(PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ManageThreads)]
@@ -99,7 +99,7 @@ export const isPremium = guard("isPremium", async (ctx) => {
 ```
 
 Guards are `async`-friendly, receive the full `ctx` (services, logger, store),
-and are just values — so they compose:
+and are just values - so they compose:
 
 ```ts
 export const modOnly = [inGuild(), hasPermission(PermissionFlagsBits.ModerateMembers)];
