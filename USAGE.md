@@ -763,6 +763,10 @@ export default defineCommand({
 
 ## 17. Attachments & images
 
+Files are attached to a message with discord.js's `AttachmentBuilder`, and an
+uploaded file can be referenced from an embed or a Components V2 gallery with the
+`attachment://` scheme. Incoming files arrive through the `s.attachment` option.
+
 ### Sending files & images
 
 ```ts
@@ -1175,6 +1179,10 @@ for (const t of result.targets) {
 
 ## 27. Error handling & codes
 
+Nothing a handler throws can take the process down or leave an interaction
+hanging. The framework wraps every handler in an error boundary, and every error
+it raises itself carries a stable code, a hint and a docs link.
+
 - **Every interaction is wrapped.** A throwing handler is logged (with a
   `correlationId`) and the user gets an error message - never "This application
   did not respond".
@@ -1480,8 +1488,9 @@ run: async (ctx) => {
 
 ## 36. Persistence (key-value stores)
 
-The core never imposes a database - it speaks the async {@link KVStore}
-interface. Ship with two adapters (and write your own over Redis/Postgres):
+The core never imposes a database - it speaks the async `KVStore` interface. Two
+adapters ship with the framework, and you can write your own over
+Redis/Postgres/anything else:
 
 ```ts
 import { defineBot, memoryStore, sqliteStore } from "@ix-xs/djs-bot";
