@@ -14,6 +14,12 @@ _Write features, not plumbing._
 [![types](https://img.shields.io/badge/types-included-3178c6?logo=typescript&logoColor=white)](#)
 [![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
+**[Documentation](https://ix-xs.github.io/djs-bot/)** ·
+[Tutorial](https://ix-xs.github.io/djs-bot/tutorial/what-you-need/) ·
+[API reference](https://ix-xs.github.io/djs-bot/api/overview/) ·
+[Recipes](https://ix-xs.github.io/djs-bot/recipes/moderation/) ·
+[Troubleshooting](https://ix-xs.github.io/djs-bot/help/troubleshooting/)
+
 </div>
 
 ```bash
@@ -79,14 +85,27 @@ Works the same in **TypeScript** and **plain JavaScript** (CommonJS or ESM) - th
 package ships full `.d.ts` declarations, so JS editors get autocomplete and inline
 docs too. See [examples/](./examples) for a runnable bot in each language.
 
-> 📖 **Full walkthrough:** see [USAGE.md](./USAGE.md) - events, embeds, Components V2,
-> attachments, subcommands, context menus, global + per-server deploy, and more.
->
+## Documentation
+
+Everything lives at **[ix-xs.github.io/djs-bot](https://ix-xs.github.io/djs-bot/)**:
+
+| Section | For |
+| --- | --- |
+| [Quick start](https://ix-xs.github.io/djs-bot/getting-started/) | A working bot in five steps |
+| [Tutorial](https://ix-xs.github.io/djs-bot/tutorial/what-you-need/) | Zero to a deployed bot, no prior experience assumed |
+| [Guides](https://ix-xs.github.io/djs-bot/guide/basics/install-project-layout/) | One topic at a time: commands, components, events, data, ops |
+| [API reference](https://ix-xs.github.io/djs-bot/api/overview/) | Every export, option and error code |
+| [Recipes](https://ix-xs.github.io/djs-bot/recipes/moderation/) | Complete features to copy: moderation, tickets, role menus, levelling, hosting |
+| [Troubleshooting](https://ix-xs.github.io/djs-bot/help/troubleshooting/) | Symptom, cause, fix |
+| [Glossary](https://ix-xs.github.io/djs-bot/help/glossary/) | Every Discord and framework term in plain language |
+
+The guides are generated from [USAGE.md](./USAGE.md), which is also readable on
+its own if you prefer a single file.
+
 > Also in this repo: official plugins ([`@ix-xs/djs-bot/plugins`](./src/plugins)),
-> [VS Code snippets](./editors/vscode), and an [Astro docs site](./docs)
-> generated from `USAGE.md`. Hacking on the framework? See
-> [CONTRIBUTING.md](./CONTRIBUTING.md) - every task runs from the repo root
-> (`npm run check`, `npm run docs`, `npm run bench`, …).
+> [VS Code snippets](./editors/vscode), and the [docs site](./docs) itself.
+> Hacking on the framework? See [CONTRIBUTING.md](./CONTRIBUTING.md) - every task
+> runs from the repo root (`npm run check`, `npm run docs`, `npm run bench`, …).
 
 ## Official plugins
 
