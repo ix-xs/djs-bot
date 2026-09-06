@@ -270,7 +270,9 @@ async function cmdDoctor(entryArg?: string): Promise<void> {
 async function cmdGenerate(args: string[]): Promise<void> {
   const [type, name] = args;
   if (!type || !name) {
-    bad("Usage: djs-bot generate <command|event|button|modal|select|service|job|feature> <name>");
+    bad(
+      "Usage: djs-bot generate <command|user|message|event|trigger|button|modal|select|service|job|feature> <name>",
+    );
     process.exit(1);
   }
   const featuresDir = comfort.fs.exists(path.resolve("src/features")) ? "src/features" : "features";

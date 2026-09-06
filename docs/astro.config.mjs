@@ -40,6 +40,13 @@ export default defineConfig({
           collapsed: true,
           autogenerate: { directory: `guide/${category.slug}` },
         })),
+        {
+          // Hand-written, exhaustive reference: every export, option and error code.
+          label: "API reference",
+          badge: { text: "Complete", variant: "tip" },
+          collapsed: true,
+          autogenerate: { directory: "api" },
+        },
       ],
     }),
   ],
