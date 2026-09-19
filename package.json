@@ -101,7 +101,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@ix-xs/node-comfort": "^1.2.0"
+    "@ix-xs/node-comfort": "^2.0.0"
   },
   "peerDependencies": {
     "discord.js": "^14.16.0"
