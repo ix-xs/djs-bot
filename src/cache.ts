@@ -143,6 +143,30 @@ export function createCache<K, V>(options?: TTLCacheOptions): TTLCache<K, V> {
 /*  Cache-first resolution of Discord entities                                */
 /* -------------------------------------------------------------------------- */
 
+/** The flag Discord sets on a channel whose details are withheld from the bot. */
+const CHANNEL_OBFUSCATED = 1 << 17;
+/** The placeholder name such a channel carries. */
+const HIDDEN_CHANNEL_NAME = "___hidden___";
+
+/**
+ * Whether a channel is one the bot cannot view, sent by Discord with its name
+ * and details withheld ("obfuscated").
+ *
+ * From November 16, 2026, Discord no longer sends bots the real data of
+ * channels they lack `VIEW_CHANNEL` on: the Gateway delivers them with the name
+ * `"___hidden___"` and this flag, and the REST channel list omits them. Use
+ * this before showing a channel's name or counting channels.
+ *
+ * @example
+ * const visible = guild.channels.cache.filter((channel) => !isHiddenChannel(channel));
+ */
+export function isHiddenChannel(channel: { flags?: unknown; name?: string | null } | null | undefined): boolean {
+  if (!channel) return false;
+  const flags = channel.flags as { bitfield?: number | bigint } | number | null | undefined;
+  const bits = typeof flags === "number" ? flags : Number(flags?.bitfield ?? 0);
+  return (bits & CHANNEL_OBFUSCATED) !== 0 || channel.name === HIDDEN_CHANNEL_NAME;
+}
+
 /**
  * Cache-first fetch helpers. Each reads discord.js's own cache and only calls
  * the API on a miss. Pass `force: true` to always fetch.

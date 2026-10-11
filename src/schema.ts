@@ -111,6 +111,20 @@ interface ChannelOpt extends CommonOpt {
   channelTypes?: ReadonlyArray<ChannelType>;
 }
 
+/**
+ * What a file may be: one of Discord's categories, or a dot-prefixed extension.
+ * Matching is done on the file's extension only.
+ */
+export type FileType = "image" | "video" | "audio" | `.${string}`;
+
+interface AttachmentOpt extends CommonOpt {
+  /**
+   * Restricts which files the user may attach, e.g. `["image", ".pdf"]`. Up to
+   * 10 entries. Discord filters the file picker and refuses anything else.
+   */
+  fileTypes?: ReadonlyArray<FileType>;
+}
+
 function def<K extends OptionKind>(kind: K, config: CommonOpt): OptionDef<K, boolean> {
   return {
     kind,
@@ -171,9 +185,9 @@ function makeMentionable(config?: CommonOpt): OptionDef<"mentionable", false>;
 function makeMentionable(config: CommonOpt = {}): OptionDef<"mentionable", boolean> {
   return def("mentionable", config);
 }
-function makeAttachment(config: CommonOpt & { required: true }): OptionDef<"attachment", true>;
-function makeAttachment(config?: CommonOpt): OptionDef<"attachment", false>;
-function makeAttachment(config: CommonOpt = {}): OptionDef<"attachment", boolean> {
+function makeAttachment(config: AttachmentOpt & { required: true }): OptionDef<"attachment", true>;
+function makeAttachment(config?: AttachmentOpt): OptionDef<"attachment", false>;
+function makeAttachment(config: AttachmentOpt = {}): OptionDef<"attachment", boolean> {
   return def("attachment", config);
 }
 
@@ -456,8 +470,13 @@ export const field = {
   mentionables<R extends boolean = false>(config: PickOpt<R>): FieldDef<R, "mentionables"> {
     return make("mentionables", config);
   },
-  /** A file upload. `ctx.fields.x` is a `Collection<string, Attachment>`. */
-  files<R extends boolean = false>(config: Omit<PickOpt<R>, "placeholder">): FieldDef<R, "files"> {
+  /**
+   * A file upload. `ctx.fields.x` is a `Collection<string, Attachment>`.
+   * `fileTypes` restricts what may be uploaded, e.g. `["image", ".pdf"]`.
+   */
+  files<R extends boolean = false>(
+    config: Omit<PickOpt<R>, "placeholder"> & { fileTypes?: ReadonlyArray<FileType> },
+  ): FieldDef<R, "files"> {
     return make("files", config);
   },
   /** A group of radio buttons (pick one). `ctx.fields.x` is the chosen value. */

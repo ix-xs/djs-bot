@@ -399,3 +399,117 @@ describe("ui", () => {
     });
   });
 });
+
+describe("Discord limits, checked when a command is defined", () => {
+  const codeOf = (make: () => unknown): string | undefined => {
+    try {
+      make();
+    } catch (error) {
+      return isBotError(error) ? `${error.code}: ${error.message}` : "other";
+    }
+    return undefined;
+  };
+  const base = { name: "x", description: "ok", run: () => undefined };
+
+  it("rejects a description that is empty or over 100 characters", () => {
+    expect(codeOf(() => defineCommand({ ...base, description: "" }))).toMatch(/E015.*1-100 characters/);
+    expect(codeOf(() => defineCommand({ ...base, description: "d".repeat(101) }))).toMatch(/E015/);
+    expect(
+      codeOf(() => defineCommand({ ...base, options: { a: s.string({ description: "d".repeat(101) }) } })),
+    ).toMatch(/E015.*option "a"/);
+    // The longest localization is what counts.
+    expect(
+      codeOf(() => defineCommand({ ...base, descriptionLocalizations: { fr: "d".repeat(101) } })),
+    ).toMatch(/E015/);
+  });
+
+  it("rejects too many options or choices, and choices combined with autocomplete", () => {
+    const many = Object.fromEntries(Array.from({ length: 26 }, (_, i) => [`o${i}`, s.string()]));
+    expect(codeOf(() => defineCommand({ ...base, options: many }))).toMatch(/E015.*26 options/);
+
+    const choices = Array.from({ length: 26 }, (_, i) => ({ name: `c${i}`, value: `v${i}` }));
+    expect(codeOf(() => defineCommand({ ...base, options: { a: s.string({ choices }) } }))).toMatch(
+      /E015.*26 choices.*autocomplete/,
+    );
+    expect(
+      codeOf(() =>
+        defineCommand({
+          ...base,
+          options: { a: s.string({ choices: [{ name: "a", value: "a" }], autocomplete: () => [] }) },
+        }),
+      ),
+    ).toMatch(/E015.*both choices and autocomplete/);
+  });
+
+  it("rejects impossible ranges", () => {
+    expect(codeOf(() => defineCommand({ ...base, options: { a: s.integer({ min: 5, max: 1 }) } }))).toMatch(/E015.*min/);
+    expect(
+      codeOf(() => defineCommand({ ...base, options: { a: s.string({ minLength: 10, maxLength: 2 }) } })),
+    ).toMatch(/E015.*minLength/);
+    expect(codeOf(() => defineCommand({ ...base, options: { a: s.string({ maxLength: 6001 }) } }))).toMatch(/E015/);
+  });
+
+  it("checks subcommands too, naming the path", () => {
+    expect(
+      codeOf(() =>
+        defineCommand({
+          name: "config",
+          description: "c",
+          groups: { role: { description: "r", subcommands: { add: subcommand({ description: "", run: () => undefined }) } } },
+        }),
+      ),
+    ).toMatch(/E015.*subcommand "role add"/);
+  });
+
+  it("accepts Discord's full name alphabet, including Thai and Devanagari", () => {
+    expect(codeOf(() => defineCommand({ ...base, name: "คำสั่ง" }))).toBeUndefined();
+    expect(codeOf(() => defineCommand({ ...base, name: "आदेश" }))).toBeUndefined();
+    expect(codeOf(() => defineCommand({ ...base, name: "Has Space" }))).toMatch(/E012/);
+  });
+
+  it("refuses a scope holding more commands than Discord allows", async () => {
+    const { assertScopeLimits } = await import("../src/validate.js");
+    const slash = Array.from({ length: 101 }, () => ({ type: 1 }));
+    expect(codeOf(() => assertScopeLimits("global", slash))).toMatch(/E015.*101 slash commands in the global scope/);
+    expect(codeOf(() => assertScopeLimits("global", slash.slice(0, 100)))).toBeUndefined();
+    expect(codeOf(() => assertScopeLimits("guild 1", Array.from({ length: 16 }, () => ({ type: 2 }))))).toMatch(/E015.*16 user/);
+  });
+});
+
+describe("file type filters", () => {
+  it("are sent on attachment options, and compared order-independently", () => {
+    const local = commandToJSON(
+      defineCommand({
+        name: "scan",
+        description: "Scan",
+        options: { file: s.attachment({ description: "File", required: true, fileTypes: ["image", ".pdf"] }) },
+        run: () => undefined,
+      }),
+    );
+    expect((local.options![0] as Record<string, unknown>).file_types).toEqual(["image", ".pdf"]);
+
+    const remote = JSON.parse(JSON.stringify(local)) as Record<string, any>;
+    remote.options[0].file_types = [".pdf", "image"];
+    expect(commandsEqual(local, remote)).toBe(true);
+    remote.options[0].file_types = ["video"];
+    expect(commandsEqual(local, remote)).toBe(false);
+  });
+
+  it("reject a malformed entry and more than ten of them", () => {
+    const attempt = (fileTypes: string[]) => () =>
+      defineCommand({ name: "x", description: "x", options: { f: s.attachment({ fileTypes: fileTypes as never }) }, run: () => undefined });
+    expect(attempt(["pdf"])).toThrow(/not a valid file type/);
+    expect(attempt(Array.from({ length: 11 }, (_, i) => `.e${i}`))).toThrow(/11 file types/);
+  });
+});
+
+describe("isHiddenChannel", () => {
+  it("recognises a channel Discord withheld, by flag or by placeholder name", async () => {
+    const { isHiddenChannel } = await import("../src/index.js");
+    expect(isHiddenChannel({ flags: { bitfield: 1 << 17 }, name: "general" })).toBe(true);
+    expect(isHiddenChannel({ flags: 1 << 17 })).toBe(true);
+    expect(isHiddenChannel({ flags: { bitfield: 0 }, name: "___hidden___" })).toBe(true);
+    expect(isHiddenChannel({ flags: { bitfield: 1 << 1 }, name: "general" })).toBe(false);
+    expect(isHiddenChannel(null)).toBe(false);
+  });
+});

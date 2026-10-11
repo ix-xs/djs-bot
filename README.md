@@ -65,7 +65,7 @@ export default defineBot({
 | Counters that lose updates under load | **Atomic store** - `store.increment()` and `store.update()` never lose a write; SQLite or memory built in, anything else in four methods |
 | Decorator magic you can't debug | **No side-effect loading** - files export `define*()` objects; nothing registers by importing. `djs-bot explain` shows it all |
 | Bots are impossible to unit-test | **Test harness** - invoke handlers with no token, no network |
-| "Frameworks are slow" | **~1.4 µs** per-interaction routing overhead - see [benchmarks](./benchmarks) |
+| "Frameworks are slow" | **~4 µs** of overhead per interaction, end to end (context, guards, reply helpers included) - see [benchmarks](./benchmarks) |
 | Rebuilding the same helpers every project | **Batteries included** - subcommands, context menus, autocomplete, native selects, user-install, i18n (`ctx.t`), key-value stores, audit trail, per-guild feature flags, health checks & metrics, rate limiters & circuit breakers, message triggers, sharding, `paginate()`/`confirm()`, presence rotation, `assets`/`voice`, `ui` Components-V2 builders, and a smart TTL cache |
 
 ## Install

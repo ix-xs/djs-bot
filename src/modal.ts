@@ -28,10 +28,27 @@ import {
   type ModalSubmitFields,
 } from "discord.js";
 import { BotError } from "./errors.js";
+import { assertFileType } from "./validate.js";
 import type { FieldChoice, FieldDef, FieldMap } from "./schema.js";
 
 /** Discord's limit on top-level components in one modal. */
 export const MODAL_MAX_COMPONENTS = 5;
+
+/** Discord's limits on what a modal and its components may contain. */
+export const MODAL_LIMITS = {
+  title: 45,
+  label: 45,
+  description: 100,
+  textPlaceholder: 100,
+  selectPlaceholder: 150,
+  textLength: 4000,
+  optionText: 100,
+  /** Most items a select, picker or checkbox group lets the user choose. */
+  picks: 25,
+  /** Most files one upload field accepts. */
+  files: 10,
+  fileTypes: 10,
+} as const;
 
 interface FieldConfig {
   description?: string;
@@ -44,6 +61,7 @@ interface FieldConfig {
   options?: readonly FieldChoice[];
   defaultValues?: readonly string[];
   channelTypes?: readonly ChannelType[];
+  fileTypes?: readonly string[];
   default?: boolean;
 }
 
@@ -60,8 +78,14 @@ const OPTION_LIMITS: Partial<Record<FieldDef["kind"], readonly [number, number]>
  * first time someone opens it.
  * @throws {BotError} `DJSBOT_E014`
  */
-export function assertModalFields(modalId: string, fields: FieldMap): void {
+export function assertModalFields(modalId: string, fields: FieldMap, title?: string): void {
   const entries = Object.entries(fields);
+  const reject = (detail: string, hint?: string): never => {
+    throw new BotError("DJSBOT_E014", { detail: `modal "${modalId}": ${detail}`, hint });
+  };
+  if (title !== undefined && (title.length < 1 || title.length > MODAL_LIMITS.title)) {
+    reject(`the title must be 1-${MODAL_LIMITS.title} characters (got ${title.length})`);
+  }
   if (entries.length === 0 || entries.length > MODAL_MAX_COMPONENTS) {
     throw new BotError("DJSBOT_E014", {
       detail: `modal "${modalId}" has ${entries.length} components (allowed: 1-${MODAL_MAX_COMPONENTS})`,
@@ -77,6 +101,56 @@ export function assertModalFields(modalId: string, fields: FieldMap): void {
         hint: `A ${def.kind} field needs between ${limits[0]} and ${limits[1]} options.`,
       });
     }
+  }
+
+  for (const [name, def] of entries) {
+    if (def.kind === "text") continue;
+    const cfg = def.config as FieldConfig;
+    const field = `field "${name}"`;
+    const tooLong = (what: string, value: string | undefined, max: number): void => {
+      if (value !== undefined && value.length > max) {
+        reject(`${field}: ${what} is ${value.length} characters (max ${max})`);
+      }
+    };
+    if (def.label.length < 1) reject(`${field} has an empty label`);
+    tooLong("the label", def.label, MODAL_LIMITS.label);
+    tooLong("the description", cfg.description, MODAL_LIMITS.description);
+
+    const isText = def.kind === "short" || def.kind === "paragraph";
+    tooLong("the placeholder", cfg.placeholder, isText ? MODAL_LIMITS.textPlaceholder : MODAL_LIMITS.selectPlaceholder);
+    if (isText) {
+      tooLong("the pre-filled value", cfg.value, MODAL_LIMITS.textLength);
+      const { minLength, maxLength } = cfg;
+      if (minLength !== undefined && (minLength < 0 || minLength > MODAL_LIMITS.textLength)) {
+        reject(`${field}: minLength must be 0-${MODAL_LIMITS.textLength}`);
+      }
+      if (maxLength !== undefined && (maxLength < 1 || maxLength > MODAL_LIMITS.textLength)) {
+        reject(`${field}: maxLength must be 1-${MODAL_LIMITS.textLength}`);
+      }
+      if (minLength !== undefined && maxLength !== undefined && minLength > maxLength) {
+        reject(`${field}: minLength (${minLength}) is greater than maxLength (${maxLength})`);
+      }
+    }
+
+    for (const option of cfg.options ?? []) {
+      tooLong(`the label of option "${option.value}"`, option.label, MODAL_LIMITS.optionText);
+      tooLong(`the value of option "${option.label}"`, option.value, MODAL_LIMITS.optionText);
+      tooLong(`the description of option "${option.label}"`, option.description, MODAL_LIMITS.optionText);
+    }
+
+    const most = def.kind === "files" ? MODAL_LIMITS.files : MODAL_LIMITS.picks;
+    const { minValues, maxValues } = cfg;
+    if (minValues !== undefined && (minValues < 0 || minValues > most)) reject(`${field}: minValues must be 0-${most}`);
+    if (maxValues !== undefined && (maxValues < 1 || maxValues > most)) reject(`${field}: maxValues must be 1-${most}`);
+    if (minValues !== undefined && maxValues !== undefined && minValues > maxValues) {
+      reject(`${field}: minValues (${minValues}) is greater than maxValues (${maxValues})`);
+    }
+
+    const fileTypes = cfg.fileTypes ?? [];
+    if (fileTypes.length > MODAL_LIMITS.fileTypes) {
+      reject(`${field} lists ${fileTypes.length} file types (max ${MODAL_LIMITS.fileTypes})`);
+    }
+    for (const type of fileTypes) assertFileType(type, reject, field);
   }
 }
 
@@ -150,7 +224,10 @@ function attach(label: LabelBuilder, name: string, def: FieldDef, cfg: FieldConf
       label.setMentionableSelectMenuComponent(applyPick(new MentionableSelectMenuBuilder(), name, def, cfg));
       return;
     case "files": {
-      const upload = new FileUploadBuilder().setCustomId(name).setRequired(def.required);
+      // `file_types` has no setter in discord.js yet; the builder keeps raw
+      // API fields passed to its constructor, so it is seeded there.
+      const seed = cfg.fileTypes?.length ? { file_types: [...cfg.fileTypes] } : {};
+      const upload = new FileUploadBuilder(seed as never).setCustomId(name).setRequired(def.required);
       if (cfg.minValues !== undefined) upload.setMinValues(cfg.minValues);
       if (cfg.maxValues !== undefined) upload.setMaxValues(cfg.maxValues);
       label.setFileUploadComponent(upload);

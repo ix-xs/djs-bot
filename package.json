@@ -102,7 +102,10 @@
     "docs:build": "npm --prefix docs install && npm --prefix docs run build",
     "lint": "tsc --noEmit",
     "example": "tsx examples/minimal/bot.ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "live": "tsx examples/playground/check.ts",
+    "playground": "tsx src/cli.ts dev examples/playground/bot.ts",
+    "bench:dispatch": "tsx benchmarks/dispatch.ts"
   },
   "dependencies": {
     "@ix-xs/node-comfort": "^2.0.0"

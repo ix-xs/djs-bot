@@ -66,8 +66,22 @@ peer range, `^14.16.0`, was wrong: Components V2 already needed 14.19).
   discord.js version, the token's shape, the ids and that `.env` is git-ignored;
   `explain --json`; `generate plugin`; `version` prints the three versions a bug
   report needs.
-- Two error codes: `DJSBOT_E014` (invalid modal) and `DJSBOT_E080` (invalid job
-  schedule), both raised when the definition is created.
+- **`fileTypes`** on `s.attachment` and `field.files` restricts what a user may
+  upload (`"image"`, `"video"`, `"audio"` or extensions), as Discord now allows.
+- **Discord's limits are checked when you define things**, not when you deploy.
+  `defineCommand` rejects a description outside 1-100 characters, more than 25
+  options or choices, `choices` with `autocomplete`, an impossible range, a
+  command over 8000 characters; `deploy` rejects a scope with too many commands;
+  `defineModal` rejects a label, description, placeholder or value that is too
+  long. Each failure names the field.
+- **`isHiddenChannel(channel)`** recognises the channels Discord obfuscates for
+  bots from November 16, 2026.
+- Three error codes: `DJSBOT_E014` (invalid modal), `DJSBOT_E015` (invalid
+  command) and `DJSBOT_E080` (invalid job schedule), all raised when the
+  definition is created.
+- `npm run live` runs the framework against the real Discord API (deploy diff,
+  gateway, message payloads), and `examples/playground` is a bot that checks
+  itself as you click through it.
 - The antiSpam plugin accepts `allow` (ids that are never limited).
 
 ### Changed
@@ -88,6 +102,13 @@ peer range, `^14.16.0`, was wrong: Components V2 already needed 14.19).
   in a server the bot is not a member of. `ctx.member` is `null` there instead of
   a raw API object typed as a `GuildMember`.
 - `dmPermission` is marked deprecated, as Discord replaced it with `contexts`.
+- **Routing is about twice as fast.** An interaction now costs the framework
+  roughly 4 µs end to end, down from 9 (p99 from 40 µs to 10): the reply helpers
+  are built once per class rather than as a closure set per interaction, and
+  correlation ids come from a counter instead of a random generator. Measured by
+  the new `npm run bench:dispatch`.
+- Command, subcommand and option names accept Discord's full alphabet (Thai and
+  Devanagari included).
 - Feature files are imported concurrently (registration order stays
   alphabetical), and per-guild deployments are reconciled a few at a time.
 - Upgraded to `@ix-xs/node-comfort` 2.0 (prototype-pollution fix included).

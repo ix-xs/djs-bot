@@ -32,6 +32,9 @@ So end users interact with just three things: the **CLI** (`npx djs-bot …`), t
 | `npm run build` | Build dual ESM/CJS + `.d.ts` into `dist/` |
 | `npm run attw` | `@arethetypeswrong/cli` - verify published types resolve (CJS/ESM/node10/bundler) |
 | `npm run bench` | Run the loader/routing benchmarks |
+| `npm run bench:dispatch` | Time one interaction through the real router |
+| `npm run live` | Check the framework against the real Discord API (needs a test bot in `.env`) |
+| `npm run playground` | Run the self-checking playground bot |
 | `npm run example` | Run the minimal example bot (needs `DISCORD_TOKEN` in `.env`) |
 | `npm run docs` | Generate docs from `USAGE.md` and serve the site locally |
 | `npm run docs:build` | Build the static docs site into `docs/dist/` |

@@ -98,7 +98,7 @@ combinators `anyOf` and `not` - see [Guards](/api/guards/).
 | `startHealthServer`, `toPrometheus` | Health & metrics | [Health](/api/health/) |
 | `parseSchedule` | Job schedules | [Definitions](/api/definitions/#schedule-syntax) |
 | `createRateLimiter`, `rateLimit`, `RateLimiter`, `createCircuitBreaker`, `CircuitBreaker`, `CircuitOpenError`, `retry`, `timeout` | Resilience | [Resilience](/api/resilience/) |
-| `TTLCache`, `createCache`, `resolve` | Caching | [Cache](/api/cache/) |
+| `TTLCache`, `createCache`, `resolve`, `isHiddenChannel` | Caching and entity lookups | [Cache](/api/cache/) |
 | `Container` | Dependency injection | [Services](/api/services/#container) |
 
 ## Building messages

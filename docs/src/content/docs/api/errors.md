@@ -150,9 +150,30 @@ is reserved as the customId separator. Use `:` or `-`.
 #### `DJSBOT_E014`
 
 **Invalid modal definition.** A modal holds 1 to 5 components, a `field.select`
-takes 1-25 options, a `field.radio` 2-10 and a `field.checkboxes` 1-10. The
-detail names the modal and the offending field. Raised when the modal is
-defined, so it never reaches a user.
+takes 1-25 options, a `field.radio` 2-10 and a `field.checkboxes` 1-10. Texts
+have limits too: 45 characters for the title and for a label, 100 for a
+description or an option, 100 for a text placeholder (150 on a picker), 4000
+for a text value. The detail names the modal and the offending field. Raised
+when the modal is defined, so it never reaches a user.
+
+#### `DJSBOT_E015`
+
+**Invalid command definition.** A command breaks one of the limits Discord
+enforces when it is deployed. The detail names the exact field:
+
+| Limit | Value |
+| --- | --- |
+| Description (command, subcommand, group, option), longest localization included | 1-100 characters |
+| Options per command or subcommand; subcommands and groups per command | 25 |
+| Choices per option | 25, each name 1-100 characters |
+| `minLength` / `maxLength` of a string option | 0-6000 / 1-6000 |
+| `fileTypes` of an attachment option | 10 entries |
+| Names, descriptions and choices of one command, added up | 8000 characters |
+| Commands per scope (global, or one guild) | 100 slash, 15 user, 15 message |
+
+It also catches `choices` combined with `autocomplete`, and a `min` above its
+`max`. Raised by `defineCommand` (and by `deploy` for the per-scope count),
+where the API would only have answered `400 Invalid Form Body`.
 
 ### Components
 
@@ -237,7 +258,9 @@ Portal:
 | `MessageContent` | Reading message text - **every** `defineTrigger` |
 | `GuildPresences` | Presence updates |
 
-Bots in 100+ servers must be verified to use these.
+An app with fewer than **10,000 users** can toggle these freely. From 10,000
+users on, Discord requires an application for each privileged intent, and the
+access has to be reconfirmed every year.
 
 If a listener does not actually need one - a `messageCreate` handler that only
 reacts to mentions, say - drop it instead of enabling it:

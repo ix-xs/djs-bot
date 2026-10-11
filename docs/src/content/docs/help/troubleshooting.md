@@ -160,12 +160,19 @@ An event needs a **privileged intent** you have not enabled. Turn it on under
 | `Message Content Intent` | reading message text, so **every** `defineTrigger` |
 | `Presence Intent` | presence updates |
 
-Bots in 100 or more servers must be verified to use these.
+An app with fewer than 10,000 users can toggle them freely; beyond that, Discord
+requires an application, reconfirmed every year.
 
 ### `DJSBOT_E080`: invalid job schedule
 
 A `defineJob` schedule is not a duration, a 5-field cron expression or a macro.
 The error names the job and the part that is wrong.
+
+### `DJSBOT_E015`: invalid command
+
+A command breaks a limit Discord enforces at deploy time: a description that is
+empty or over 100 characters, more than 25 options or choices, `choices`
+together with `autocomplete`. The error names the command and the field.
 
 ### `DJSBOT_E014`: invalid modal
 
@@ -207,6 +214,21 @@ Messages server-wide can still be denied in one channel.
 Check, in this order: the bot role position (it must be **above** the roles it
 manages), the channel overwrites, and whether the target is the server owner
 (nobody can moderate the owner).
+
+### A channel is called `___hidden___`
+
+From November 16, 2026, Discord no longer sends bots the details of channels
+they cannot view: the name is replaced and the channel is flagged. Filter them
+out before listing or counting channels:
+
+```ts
+import { isHiddenChannel } from "@ix-xs/djs-bot";
+
+const visible = guild.channels.cache.filter((channel) => !isHiddenChannel(channel));
+```
+
+Channels a user passes to a command are unaffected: interaction payloads are
+never obfuscated.
 
 ## Data
 

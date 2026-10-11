@@ -86,6 +86,7 @@ export {
   field,
   oneOf,
   type FieldKind,
+  type FileType,
   type FieldChoice,
   type FieldOutput,
   type OptionKind,
@@ -197,7 +198,7 @@ export { mention, emoji, timestamp, allowedMentions, TimestampStyles } from "./f
 
 // Component builders (rows + Components V2) and smart caching/resolution
 export { ui, type ContainerChild, type ContainerOptions, type PollOptions } from "./ui.js";
-export { TTLCache, createCache, resolve, type TTLCacheOptions } from "./cache.js";
+export { TTLCache, createCache, resolve, isHiddenChannel, type TTLCacheOptions } from "./cache.js";
 
 // Interactive helpers
 export {

@@ -43,7 +43,7 @@ makes it `T | undefined`. That single flag drives both Discord and TypeScript.
 | `s.channel(config?)` | `GuildBasedChannel` | Supports `channelTypes`. |
 | `s.role(config?)` | `Role` | |
 | `s.mentionable(config?)` | `Role \| User \| GuildMember` | Whatever the user picks. |
-| `s.attachment(config?)` | `Attachment` | An uploaded file. |
+| `s.attachment(config?)` | `Attachment` | An uploaded file. Supports `fileTypes`. |
 
 ### Common config
 
@@ -63,6 +63,7 @@ Accepted by every builder:
 | `s.string` | `minLength`, `maxLength`, `choices: { name, value: string }[]`, `autocomplete` |
 | `s.integer`, `s.number` | `min`, `max`, `choices: { name, value: number }[]`, `autocomplete` |
 | `s.channel` | `channelTypes: ChannelType[]` |
+| `s.attachment` | `fileTypes: ("image" \| "video" \| "audio" \| ".ext")[]`, up to 10 |
 
 ```ts
 options: {
@@ -78,6 +79,23 @@ options: {
   target: s.channel({ description: "Where", channelTypes: [ChannelType.GuildText] }),
 }
 ```
+
+Restrict what a user may attach with `fileTypes`: Discord filters the file
+picker and refuses anything else. Matching is on the file extension only, so
+still check `contentType` if the type really matters.
+
+```ts
+options: {
+  avatar: s.attachment({ description: "Your picture", required: true, fileTypes: ["image"] }),
+  report: s.attachment({ description: "The report", fileTypes: [".pdf", ".docx"] }),
+}
+```
+
+:::tip[Strings can span several lines]
+Since September 2026 users can type line breaks into a string option. If a value
+ends up somewhere single-line (an embed title, a channel name), strip them:
+`value.replace(/\s+/g, " ")`.
+:::
 
 :::note[choices vs autocomplete]
 `choices` is a fixed list of up to 25 values Discord renders itself. Use
@@ -242,7 +260,7 @@ export const Apply = defineModal({
 | `users`, `roles` | `placeholder`, `minValues`, `maxValues`, `defaultValues` (ids) |
 | `channels` | the same, plus `channelTypes` |
 | `mentionables` | `placeholder`, `minValues`, `maxValues` |
-| `files` | `minValues`, `maxValues` |
+| `files` | `minValues`, `maxValues` (up to 10), `fileTypes` (`"image"`, `"video"`, `"audio"` or `".pdf"`-style extensions, up to 10) |
 | `radio` | `options` |
 | `checkboxes` | `options`, `minValues`, `maxValues` |
 | `checkbox` | `default` (ticked when the modal opens) |
@@ -256,7 +274,9 @@ A choice (`FieldChoice`) is `{ label, value, description?, default?, emoji? }`;
   chosen: no `null` to check.
 - Text values are plain strings. Parse and validate them yourself.
 - A modal that breaks Discord's limits fails at definition time with
-  [`DJSBOT_E014`](/api/errors/#djsbot_e014).
+  [`DJSBOT_E014`](/api/errors/#djsbot_e014): a label over 45 characters, a
+  description or option text over 100, a placeholder over 100 (text) or 150
+  (pickers), a text length outside 0-4000, more than 10 files.
 - These components need discord.js 14.27 or newer.
 
 ## Type helpers
@@ -269,6 +289,7 @@ Rarely needed directly, but exported for building your own abstractions:
 | `InferParams<M>` | The `ctx.params` shape for a param map. |
 | `InferFields<M>` | The `ctx.fields` shape for a field map. |
 | `FieldKind`, `FieldChoice`, `FieldOutput` | Modal component kinds, a choice entry, and the value each kind resolves to. |
+| `FileType` | An entry of a `fileTypes` filter. |
 | `OptionKind`, `OptionDef`, `OptionMap` | Option descriptors. |
 | `ParamCodec`, `ParamMap` | Param codecs. |
 | `FieldDef`, `FieldMap` | Field descriptors. |

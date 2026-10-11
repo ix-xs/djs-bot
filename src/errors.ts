@@ -39,6 +39,10 @@ export const ERROR_CATALOGUE = {
     title: "Invalid modal definition",
     hint: "A modal holds 1 to 5 components. A select takes 1-25 options, a radio group 2-10, a checkbox group 1-10.",
   },
+  DJSBOT_E015: {
+    title: "Invalid command definition",
+    hint: "Discord limits: descriptions of 1-100 characters, 25 options and 25 choices per command, 8000 characters in total, and 100 slash commands (15 of each context-menu type) per scope.",
+  },
   DJSBOT_E020: {
     title: "customId too long",
     hint: `Encoded customId exceeds Discord's ${CUSTOM_ID_MAX_LENGTH}-char limit. Store the payload out-of-band and keep only a short key.`,

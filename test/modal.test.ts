@@ -182,3 +182,47 @@ describe("modals in the harness", () => {
     expect(result.replies).toEqual([{ type: "success", content: "spam:true" }]);
   });
 });
+
+describe("modal limits and file types", () => {
+  const failure = (make: () => unknown): string => {
+    try {
+      make();
+    } catch (error) {
+      return String((error as Error).message);
+    }
+    return "";
+  };
+  const modal = (fields: Parameters<typeof defineModal>[0]["fields"], title = "T") => () =>
+    defineModal({ id: "m", title, fields, run: () => undefined });
+
+  it("passes fileTypes through to the upload component", () => {
+    const built = defineModal({
+      id: "up",
+      title: "Upload",
+      fields: { doc: field.files({ label: "Document", fileTypes: ["image", ".pdf"], maxValues: 2 }) },
+      run: () => undefined,
+    })
+      .build()
+      .toJSON();
+    expect((built.components[0] as Record<string, any>).component).toMatchObject({
+      type: ComponentType.FileUpload,
+      custom_id: "doc",
+      file_types: ["image", ".pdf"],
+      max_values: 2,
+    });
+  });
+
+  it("rejects text over Discord's limits, naming the field", () => {
+    expect(failure(modal({ a: field.short({ label: "L".repeat(46) }) }))).toMatch(/field "a": the label is 46 characters \(max 45\)/);
+    expect(failure(modal({ a: field.short({ label: "A", description: "d".repeat(101) }) }))).toMatch(/description/);
+    expect(failure(modal({ a: field.short({ label: "A", placeholder: "p".repeat(101) }) }))).toMatch(/placeholder/);
+    expect(failure(modal({ a: field.short({ label: "A" }) }, "T".repeat(46)))).toMatch(/title must be 1-45/);
+  });
+
+  it("rejects impossible lengths and counts", () => {
+    expect(failure(modal({ a: field.paragraph({ label: "A", maxLength: 4001 }) }))).toMatch(/maxLength must be 1-4000/);
+    expect(failure(modal({ a: field.short({ label: "A", minLength: 9, maxLength: 3 }) }))).toMatch(/minLength \(9\)/);
+    expect(failure(modal({ a: field.files({ label: "A", maxValues: 11 }) }))).toMatch(/maxValues must be 1-10/);
+    expect(failure(modal({ a: field.files({ label: "A", fileTypes: ["exe" as never] }) }))).toMatch(/not a valid file type/);
+  });
+});

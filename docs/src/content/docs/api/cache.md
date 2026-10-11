@@ -1,6 +1,6 @@
 ---
 title: "Cache & entity resolution"
-description: "TTLCache, stale-while-revalidate, and cache-first resolve helpers for Discord entities."
+description: "TTLCache, stale-while-revalidate, cache-first resolve helpers, and telling hidden channels apart."
 sidebar:
   order: 16
 ---
@@ -98,6 +98,32 @@ Members, roles and channels are already cached by the client. Cache the
 **result of your work** - an aggregated leaderboard, an external API response, a
 rendered image - not the raw entities.
 :::
+
+## `isHiddenChannel`
+
+```ts
+isHiddenChannel(channel): boolean
+```
+
+From **November 16, 2026**, Discord stops sending bots the real data of channels
+they lack `VIEW_CHANNEL` on. Over the Gateway such a channel still arrives, but
+with the name `"___hidden___"`, its other details blanked and a dedicated flag;
+the REST channel list simply leaves it out. When the bot gains access, a channel
+update delivers the full data.
+
+`isHiddenChannel` tells the two apart, so a channel list, a counter or an
+autocomplete never shows a placeholder:
+
+```ts
+import { isHiddenChannel } from "@ix-xs/djs-bot";
+
+const names = guild.channels.cache
+  .filter((channel) => !isHiddenChannel(channel))
+  .map((channel) => channel.name);
+```
+
+Channels received through an interaction (a channel option, a channel select)
+are never obfuscated.
 
 ## `TTLCache`
 

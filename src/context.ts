@@ -366,135 +366,187 @@ export interface Responder {
   disarm(): void;
 }
 
+/** The start of every response queue. Never mutated, so one instance is shared. */
+const SETTLED: Promise<unknown> = Promise.resolve();
+
 /**
- * Builds the reply helpers for an interaction.
+ * The reply helpers of one interaction.
  *
  * Every response goes through one queue, so the automatic deferral and the
  * handler's own replies can never collide: whichever comes second sees that the
  * interaction was already acknowledged and edits the reply instead.
+ *
+ * The state lives on the instance and the logic on the prototype; the functions
+ * handed to user code (`ctx.reply.*`, `ctx.update.*`, `ctx.showModal`) are thin
+ * arrows over it. A responder is built for every interaction, so this keeps its
+ * construction cheap.
  */
-export function createResponder(interaction: RepliableInteraction, theme: Theme = DEFAULT_THEME): Responder {
-  let queue: Promise<unknown> = Promise.resolve();
-  let timer: NodeJS.Timeout | undefined;
+class InteractionResponder implements Responder {
+  public readonly reply: ReplyFn;
+  public readonly update?: UpdateFn;
+  private queue: Promise<unknown> = SETTLED;
+  private timer: NodeJS.Timeout | undefined;
 
-  const enqueue = <T>(task: () => Promise<T>): Promise<T> => {
-    const run = queue.then(task);
-    queue = run.catch(() => undefined);
-    return run;
-  };
-  const acknowledged = (): boolean => interaction.deferred || interaction.replied;
-  const disarm = (): void => {
-    if (timer) clearTimeout(timer);
-    timer = undefined;
-  };
+  public constructor(
+    private readonly interaction: RepliableInteraction,
+    theme: Theme,
+  ) {
+    const self = this;
 
-  const respond = (options: InteractionReplyOptions): Promise<void> =>
-    enqueue(async () => {
-      disarm();
-      if (interaction.deferred && !interaction.replied) await interaction.editReply(options as never);
-      else if (interaction.replied) await interaction.followUp(options);
-      else await interaction.reply(options);
-    });
+    const reply = ((content: ReplyContent) => self.respond(normalize(content))) as ReplyFn;
+    reply.success = (message, options) => self.semantic(theme.success, false, message, options);
+    reply.info = (message, options) => self.semantic(theme.info, false, message, options);
+    reply.warn = (message, options) => self.semantic(theme.warn, false, message, options);
+    reply.error = (message, options) => self.semantic(theme.error, true, message, options);
+    reply.ephemeral = (content) => self.respond(withEphemeral(normalize(content)));
+    reply.defer = (options) => self.defer(options?.ephemeral ?? false);
+    reply.followUp = (content) => self.followUp(normalize(content));
+    reply.editReply = (content) => self.editReply(normalize(content));
+    reply.fetch = () => self.enqueue(() => interaction.fetchReply());
+    reply.delete = () => self.enqueue(() => interaction.deleteReply()) as Promise<void>;
+    this.reply = reply;
 
-  const reply = ((content: ReplyContent) => respond(normalize(content))) as ReplyFn;
+    if (interaction.isMessageComponent()) {
+      const update = ((content: ReplyContent) => self.edit(normalize(content))) as UpdateFn;
+      update.defer = () => self.deferUpdate();
+      update.disable = () => self.disableComponents();
+      this.update = update;
+    }
+  }
 
-  const semantic =
-    (color: number, ephemeralByDefault: boolean) =>
-    (message: string, options: SemanticReplyOptions = {}): Promise<void> => {
-      const payload: InteractionReplyOptions = { embeds: [embed(color, options.title, message)] };
-      return respond((options.ephemeral ?? ephemeralByDefault) ? withEphemeral(payload) : payload);
-    };
-
-  reply.success = semantic(theme.success, false);
-  reply.info = semantic(theme.info, false);
-  reply.warn = semantic(theme.warn, false);
-  reply.error = semantic(theme.error, true);
-  reply.ephemeral = (content) => respond(withEphemeral(normalize(content)));
-  reply.defer = (options = {}) =>
-    enqueue(async () => {
-      disarm();
-      if (acknowledged()) return;
-      await interaction.deferReply(options.ephemeral ? { flags: MessageFlags.Ephemeral } : {});
-    });
-  reply.followUp = (content) =>
-    enqueue(async () => {
-      disarm();
-      await interaction.followUp(normalize(content));
-    });
-  reply.editReply = (content) =>
-    enqueue(async () => {
-      disarm();
-      await interaction.editReply(normalize(content) as never);
-    });
-  reply.fetch = () => enqueue(() => interaction.fetchReply());
-  reply.delete = () =>
-    enqueue(async () => {
-      await interaction.deleteReply();
-    });
-
-  const showModal: ShowModalFn = (modal, ...args) =>
-    enqueue(async () => {
+  /** Bound, because user code receives it detached as `ctx.showModal`. */
+  public readonly showModal: ShowModalFn = (modal, ...args) =>
+    this.enqueue(async () => {
       // A modal is only valid as the first response, so the timer must not
       // sneak a deferral in front of it.
-      disarm();
-      await (interaction as unknown as { showModal(modal: ModalBuilder): Promise<unknown> }).showModal(
+      this.disarm();
+      await (this.interaction as unknown as { showModal(modal: ModalBuilder): Promise<unknown> }).showModal(
         modal.build(...args),
       );
     });
 
-  let update: UpdateFn | undefined;
-  if (interaction.isMessageComponent()) {
-    const component = interaction as ComponentInteraction;
-    update = ((content: ReplyContent) =>
-      enqueue(async () => {
-        disarm();
-        const payload = normalize(content) as never;
-        // After a defer, `update()` is no longer valid: edit the reply instead.
-        if (acknowledged()) await component.editReply(payload);
-        else await component.update(payload);
-      })) as UpdateFn;
-    update.defer = () =>
-      enqueue(async () => {
-        disarm();
-        if (!acknowledged()) await component.deferUpdate();
-      });
-    update.disable = () =>
-      enqueue(async () => {
-        disarm();
-        const rows = component.message.components.map((row) => {
-          const builder = ActionRowBuilder.from(row as never) as ActionRowBuilder;
-          for (const child of builder.components as Array<{ setDisabled?: (v: boolean) => unknown }>) {
-            child.setDisabled?.(true);
-          }
-          return builder;
-        });
-        const payload = { components: rows } as never;
-        if (acknowledged()) await component.editReply(payload);
-        else await component.update(payload);
-      });
+  public armDefer(defer: ResolvedDefer): void {
+    this.disarm();
+    if (defer.afterMs <= 0) {
+      this.autoDefer(defer);
+      return;
+    }
+    this.timer = setTimeout(() => {
+      this.timer = undefined;
+      this.autoDefer(defer);
+    }, defer.afterMs);
+    this.timer.unref?.();
   }
 
-  const armDefer = (defer: ResolvedDefer): void => {
-    disarm();
-    const fire = (): void => {
-      timer = undefined;
-      void enqueue(async () => {
-        if (acknowledged()) return;
-        if (defer.update && interaction.isMessageComponent()) {
-          await (interaction as ComponentInteraction).deferUpdate();
-        } else {
-          await interaction.deferReply(defer.ephemeral ? { flags: MessageFlags.Ephemeral } : {});
-        }
-      }).catch(() => undefined); // the interaction may already be gone
-    };
-    if (defer.afterMs <= 0) fire();
-    else {
-      timer = setTimeout(fire, defer.afterMs);
-      timer.unref?.();
-    }
-  };
+  public disarm(): void {
+    if (this.timer === undefined) return;
+    clearTimeout(this.timer);
+    this.timer = undefined;
+  }
 
-  return { reply, update, showModal, armDefer, disarm };
+  private enqueue<T>(task: () => Promise<T>): Promise<T> {
+    const run = this.queue.then(task);
+    this.queue = run.catch(noop);
+    return run;
+  }
+
+  private get acknowledged(): boolean {
+    return this.interaction.deferred || this.interaction.replied;
+  }
+
+  private respond(options: InteractionReplyOptions): Promise<void> {
+    return this.enqueue(async () => {
+      this.disarm();
+      const { interaction } = this;
+      if (interaction.deferred && !interaction.replied) await interaction.editReply(options as never);
+      else if (interaction.replied) await interaction.followUp(options);
+      else await interaction.reply(options);
+    });
+  }
+
+  private semantic(
+    color: number,
+    ephemeralByDefault: boolean,
+    message: string,
+    options: SemanticReplyOptions = {},
+  ): Promise<void> {
+    const payload: InteractionReplyOptions = { embeds: [embed(color, options.title, message)] };
+    return this.respond((options.ephemeral ?? ephemeralByDefault) ? withEphemeral(payload) : payload);
+  }
+
+  private defer(ephemeral: boolean): Promise<void> {
+    return this.enqueue(async () => {
+      this.disarm();
+      if (this.acknowledged) return;
+      await this.interaction.deferReply(ephemeral ? { flags: MessageFlags.Ephemeral } : {});
+    });
+  }
+
+  private followUp(options: InteractionReplyOptions): Promise<void> {
+    return this.enqueue(async () => {
+      this.disarm();
+      await this.interaction.followUp(options);
+    });
+  }
+
+  private editReply(options: InteractionReplyOptions): Promise<void> {
+    return this.enqueue(async () => {
+      this.disarm();
+      await this.interaction.editReply(options as never);
+    });
+  }
+
+  /** Edits the source message of a component, before or after a defer. */
+  private edit(payload: InteractionReplyOptions): Promise<void> {
+    return this.enqueue(async () => {
+      this.disarm();
+      const component = this.interaction as ComponentInteraction;
+      // After a defer, `update()` is no longer valid: edit the reply instead.
+      if (this.acknowledged) await component.editReply(payload as never);
+      else await component.update(payload as never);
+    });
+  }
+
+  private deferUpdate(): Promise<void> {
+    return this.enqueue(async () => {
+      this.disarm();
+      if (!this.acknowledged) await (this.interaction as ComponentInteraction).deferUpdate();
+    });
+  }
+
+  private disableComponents(): Promise<void> {
+    const component = this.interaction as ComponentInteraction;
+    const rows = component.message.components.map((row) => {
+      const builder = ActionRowBuilder.from(row as never) as ActionRowBuilder;
+      for (const child of builder.components as Array<{ setDisabled?: (v: boolean) => unknown }>) {
+        child.setDisabled?.(true);
+      }
+      return builder;
+    });
+    return this.edit({ components: rows } as never);
+  }
+
+  /** Acknowledges on the handler's behalf, unless it answered in the meantime. */
+  private autoDefer(defer: ResolvedDefer): void {
+    void this.enqueue(async () => {
+      if (this.acknowledged) return;
+      const { interaction } = this;
+      if (defer.update && interaction.isMessageComponent()) {
+        await (interaction as ComponentInteraction).deferUpdate();
+      } else {
+        await interaction.deferReply(defer.ephemeral ? { flags: MessageFlags.Ephemeral } : {});
+      }
+    }).catch(noop); // the interaction may already be gone
+  }
+}
+
+function noop(): void {
+  /* intentionally empty */
+}
+
+/** Builds the reply helpers for an interaction. */
+export function createResponder(interaction: RepliableInteraction, theme: Theme = DEFAULT_THEME): Responder {
+  return new InteractionResponder(interaction, theme);
 }
 
 /** Builds the {@link ReplyFn} bound to a repliable interaction. */

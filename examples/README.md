@@ -1,11 +1,28 @@
 # Examples
 
-Two runnable examples showing the same framework in both languages.
-
-| Folder | Language | Run |
+| Folder | What it is | Run |
 | --- | --- | --- |
-| [`minimal/`](./minimal) | TypeScript | `npx djs-bot dev examples/minimal/bot.ts` |
-| [`javascript/`](./javascript) | plain CommonJS JS | `node examples/javascript/bot.js` |
+| [`minimal/`](./minimal) | A small bot in TypeScript | `npx djs-bot dev examples/minimal/bot.ts` |
+| [`javascript/`](./javascript) | The same in plain CommonJS | `node examples/javascript/bot.js` |
+| [`production/`](./production) | The full stack wired together: sharding, store, audit, flags, i18n | reference |
+| [`playground/`](./playground) | A bot that exercises every feature and checks itself as you click | `npm run playground` |
+
+## The playground
+
+Fill `.env` with `DISCORD_TOKEN`, `DISCORD_CLIENT_ID` and `DISCORD_DEV_GUILD`,
+then:
+
+```bash
+npm run live         # automated: deploy diff, gateway, message payloads, against the real API
+npm run playground   # interactive: run /selftest panel in your test server
+```
+
+`npm run live` needs no clicking. It temporarily replaces the commands of the
+test server and restores them, and, when `DISCORD_TEST_CHANNEL` is set, sends
+and deletes one message per kind of payload.
+
+In the playground every step verifies what it received (the shape of each modal
+field, the typed params, the automatic deferral) and answers with a checklist.
 
 > Inside this repo the examples import the framework from a relative source path
 > so they run without publishing. In **your** project, import it by name:

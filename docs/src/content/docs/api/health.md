@@ -86,20 +86,6 @@ Metric names are the JSON keys in snake case with a `djsbot_` prefix. On a
 sharded bot each series carries a `shard` label. `toPrometheus(status)` is
 exported if you serve metrics from your own HTTP server.
 
-# {"status":"ok","uptimeMs":128374}
-
-curl localhost:3000/metrics
-# {"ready":true,"uptimeMs":128374,
-#  "metrics":{"interactions":842,"errors":3,"guilds":17},
-#  "shard":{"id":0,"count":2}}
-```
-
-:::note[Liveness vs readiness]
-Use `/healthz` to decide whether to **restart** the container, and `/readyz` to
-decide whether to **send it traffic**. Restarting a bot that is merely
-reconnecting turns a blip into an outage.
-:::
-
 ## Options
 
 | Option | Type | Default | Description |

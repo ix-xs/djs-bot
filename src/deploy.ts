@@ -30,6 +30,7 @@ import type {
 } from "./definitions.js";
 import type { Registry } from "./registry.js";
 import type { Logger } from "./logger.js";
+import { assertScopeLimits } from "./validate.js";
 
 const OPTION_TYPE: Record<OptionKind, ApplicationCommandOptionType> = {
   string: ApplicationCommandOptionType.String,
@@ -58,6 +59,7 @@ function optionToJSON(name: string, opt: AnyOption): Record<string, unknown> {
   if (cfg.min !== undefined) json.min_value = cfg.min;
   if (cfg.max !== undefined) json.max_value = cfg.max;
   if (cfg.channelTypes) json.channel_types = cfg.channelTypes;
+  if (Array.isArray(cfg.fileTypes) && cfg.fileTypes.length > 0) json.file_types = cfg.fileTypes;
   if (cfg.autocomplete) json.autocomplete = true;
   if (cfg.nameLocalizations) json.name_localizations = cfg.nameLocalizations;
   if (cfg.descriptionLocalizations) json.description_localizations = cfg.descriptionLocalizations;
@@ -305,6 +307,8 @@ function normalizeOption(o: Json): Json {
     min_length: o.min_length ?? undefined,
     max_length: o.max_length ?? undefined,
     channel_types: numbers(o.channel_types),
+    file_types:
+      Array.isArray(o.file_types) && o.file_types.length ? [...(o.file_types as string[])].sort() : undefined,
     autocomplete: o.autocomplete || undefined,
     name_localizations: localizations(o.name_localizations),
     description_localizations: localizations(o.description_localizations),
@@ -473,10 +477,15 @@ export async function deployCommands(registry: Registry, options: DeployOptions)
     if (options.guildId) {
       // Force everything onto one guild (dev), ignoring per-command scoping.
       const desired = buildCommandTree(registry);
+      assertScopeLimits(`guild ${options.guildId}`, desired);
       targets.push(await reconcileTarget(rest, options.clientId, options.guildId, desired, dryRun, options.logger));
       deployedGuilds = [options.guildId];
     } else {
       const plan = planDeployment(registry);
+      // Refuse the whole deploy before the first request if any scope is over
+      // Discord's limits, rather than leave it half applied.
+      assertScopeLimits("global", plan.global);
+      for (const [guildId, commands] of plan.guilds) assertScopeLimits(`guild ${guildId}`, commands);
       targets.push(await reconcileTarget(rest, options.clientId, undefined, plan.global, dryRun, options.logger));
       // Guild scopes are independent of each other: reconcile a few at a time.
       // The REST client still queues per route, so this cannot trip a rate limit.

@@ -15,6 +15,7 @@
 import comfort from "@ix-xs/node-comfort";
 import type { JobContext, JobDefinition } from "./definitions.js";
 import type { Logger } from "./logger.js";
+import { nextCorrelationId } from "./ids.js";
 
 /** A schedule parsed into something the scheduler can evaluate. */
 export type ParsedSchedule =
@@ -248,7 +249,7 @@ export class Scheduler {
     }
     this.running.set(job.name, active + 1);
     const started = Date.now();
-    const correlationId = comfort.id.nano(10);
+    const correlationId = nextCorrelationId();
     try {
       await job.run(this.makeContext(job, this.abort.signal, correlationId));
       this.logger.debug({ job: job.name, correlationId, ms: Date.now() - started }, "Job finished");

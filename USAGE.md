@@ -300,7 +300,7 @@ export default defineCommand({
 | `s.channel()` | `GuildBasedChannel` | `channelTypes: [ChannelType.GuildText]` |
 | `s.role()` | `Role` | |
 | `s.mentionable()` | `User \| Role \| GuildMember` | |
-| `s.attachment()` | `Attachment` | see [Attachments](#17-attachments--images) |
+| `s.attachment()` | `Attachment` | `fileTypes` restricts what may be attached; see [Attachments](#17-attachments--images) |
 
 Every builder accepts `{ description, required }`. `required: true` makes the
 field non-optional in `ctx.options`.
@@ -532,6 +532,8 @@ triggers) you registered:
 
 `Guilds` is always included. Privileged intents trigger a startup warning telling
 you to enable them in the Developer Portal (`djs-bot doctor` reminds you too).
+An app with fewer than 10,000 users can simply toggle them there; beyond that
+Discord requires an application, reconfirmed every year.
 
 Keep the autopilot but adjust it - add what it cannot guess, drop what you do
 not need:
@@ -872,7 +874,9 @@ await ctx.reply({ poll: ui.poll("Pizza tonight?", ["Yes", { text: "No", emoji: "
 
 Files are attached to a message with discord.js's `AttachmentBuilder`, and an
 uploaded file can be referenced from an embed or a Components V2 gallery with the
-`attachment://` scheme. Incoming files arrive through the `s.attachment` option.
+`attachment://` scheme. Incoming files arrive through the `s.attachment` option
+(or a `field.files` upload in a modal), both of which can be restricted with
+`fileTypes`. Bots can upload up to 20 MiB per file by default.
 
 ### Sending files & images
 
@@ -902,7 +906,10 @@ await ctx.reply({
 export default defineCommand({
   name: "scan",
   description: "Scan an uploaded file",
-  options: { file: s.attachment({ description: "File to scan", required: true }) },
+  options: {
+    // Discord filters the picker: "image", "video", "audio" or an extension (up to 10).
+    file: s.attachment({ description: "File to scan", required: true, fileTypes: ["image", ".pdf"] }),
+  },
   run: async (ctx) => {
     const a = ctx.options.file;   // Attachment
     await ctx.reply.info(`Got **${a.name}** - ${a.contentType ?? "?"} - ${a.size} bytes\n${a.url}`);
@@ -1363,6 +1370,8 @@ All framework errors carry a stable `DJSBOT_Exxx` code and an actionable hint:
 | `DJSBOT_E011` | duplicate component id |
 | `DJSBOT_E012` | invalid command/option name (not lowercase, spaces, too long…) |
 | `DJSBOT_E013` | invalid component id (empty or contains `$`) |
+| `DJSBOT_E014` | invalid modal (component count, option count, a text over Discord's limits) |
+| `DJSBOT_E015` | invalid command (description length, more than 25 options or choices, an impossible range, too many commands in a scope) |
 | `DJSBOT_E020` | customId over 100 chars |
 | `DJSBOT_E021` | invalid customId payload |
 | `DJSBOT_E030` | service dependency cycle |

@@ -55,7 +55,7 @@ import { encodeCustomId } from "./customId.js";
 import { assertModalFields, buildModal } from "./modal.js";
 import { parseSchedule } from "./scheduler.js";
 import { BotError } from "./errors.js";
-import { assertChatName, assertComponentId, assertMenuName } from "./validate.js";
+import { assertChatName, assertCommandShape, assertComponentId, assertMenuName } from "./validate.js";
 
 /* -------------------------------------------------------------------------- */
 /*  Shared app-facing types                                                   */
@@ -280,6 +280,16 @@ export function defineCommand<M extends OptionMap = Record<string, never>>(
       validateOptionNames(sub.options);
     }
   }
+  // Lengths, counts and ranges: everything Discord would otherwise reject at
+  // deploy time with an opaque "Invalid Form Body".
+  assertCommandShape({
+    name: input.name,
+    description: input.description,
+    descriptionLocalizations: input.descriptionLocalizations as Record<string, string | null> | undefined,
+    options: input.options ?? {},
+    subcommands: input.subcommands as never,
+    groups: input.groups as never,
+  });
   return {
     kind: "command",
     name: input.name,
@@ -884,7 +894,7 @@ export function defineModal<F extends FieldMap, P extends ParamMap = Record<stri
   input: ModalInput<F, P>,
 ): ModalDefinition<F, P> {
   assertComponentId("modal", input.id);
-  assertModalFields(input.id, input.fields);
+  assertModalFields(input.id, input.fields, input.title);
   const params = (input.params ?? {}) as P;
   return {
     kind: "modal",

@@ -3,7 +3,8 @@
 Micro-benchmarks for the framework's hot paths, using [tinybench](https://github.com/tinylibs/tinybench).
 
 ```bash
-npm run bench
+npm run bench            # the suites below
+npm run bench:dispatch   # one interaction through the real router, end to end
 ```
 
 ## What's measured
@@ -16,10 +17,30 @@ npm run bench
 | **intent autopilot** | `computeIntents` over your events (boot-time) |
 | **infra primitives** | `i18n.t`, `rateLimiter.consume`, `TTLCache` - used in hot handlers |
 | **loader** | file discovery (repeatable) and a one-time cold load of N features |
+| **dispatch** (`bench:dispatch`) | everything the framework does for one interaction: context, reply helpers, option resolution, middleware, guards, handler, bookkeeping |
 
 ## Representative results
 
 Node 24, Windows x64 (your numbers will vary - these are indicative):
+
+### Dispatch, end to end (per interaction)
+
+The interaction is a stub whose Discord calls resolve immediately, so this is
+the framework's own cost and nothing else.
+
+| Interaction | ops/sec | avg | p99 |
+| --- | ---: | ---: | ---: |
+| command, no options | ~270,000 | 4.0 µs | 10 µs |
+| command, 2 options + 2 guards | ~240,000 | 4.6 µs | 12 µs |
+| subcommand | ~250,000 | 4.4 µs | 12 µs |
+| button, 2 typed params | ~205,000 | 5.4 µs | 14 µs |
+| command + 2 middlewares + automatic deferral | ~200,000 | 5.5 µs | 14 µs |
+
+One core routes a couple of hundred thousand interactions per second. Discord's
+network round-trip is measured in milliseconds: the router is never your
+bottleneck.
+
+The table below times the pieces of that path in isolation.
 
 ### Routing (per interaction)
 
@@ -30,9 +51,8 @@ Node 24, Windows x64 (your numbers will vary - these are indicative):
 | guard pipeline (3 guards) | ~2,200,000 | 0.49 µs |
 | **full route** (key + lookup + decode + guards) | **~750,000** | **1.4 µs** |
 
-The framework's per-interaction overhead is **~1.4 microseconds** - utterly
-negligible next to Discord's network round-trip (milliseconds). You are never
-bottlenecked by the router.
+Lookup, decoding and guards together take about 1.4 µs; the rest of the 4 µs
+above is building the context and the reply helpers.
 
 ### customId codec
 

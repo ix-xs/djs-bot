@@ -61,6 +61,7 @@ import { upgradeStore, type KVStore } from "./store.js";
 import { DEFAULT_THEME, renderMessage, type Theme } from "./messages.js";
 import { readModalFields } from "./modal.js";
 import { VERSION } from "./constants.js";
+import { nextCorrelationId } from "./ids.js";
 import type { Guard } from "./guards.js";
 import type { OptionMap } from "./schema.js";
 import type { Server } from "node:http";
@@ -530,7 +531,7 @@ export class Bot {
           map.set(message.author.id, Date.now() + cooldownMs);
         }
 
-        const correlationId = comfort.id.nano(10);
+        const correlationId = nextCorrelationId();
         const ctx = {
           message,
           client: this.client,
@@ -850,7 +851,7 @@ export class Bot {
   /* ------------------------------ routing ------------------------------ */
 
   private async handleInteraction(interaction: Interaction): Promise<void> {
-    const correlationId = comfort.id.nano(10);
+    const correlationId = nextCorrelationId();
     this.counters.interactions++;
     try {
       if (interaction.isChatInputCommand()) await this.routeCommand(interaction, correlationId);
