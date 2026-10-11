@@ -328,7 +328,7 @@ Returns the routing key of a customId without decoding its params.
 | [`DJSBOT_E013`](/api/errors/#djsbot_e013) | The `id` is empty, contains `$` or is longer than 100 characters. Thrown by `defineButton`. |
 | [`DJSBOT_E011`](/api/errors/#djsbot_e011) | Two buttons share an `id`. Thrown at startup. |
 | [`DJSBOT_E020`](/api/errors/#djsbot_e020) | The encoded customId exceeds 100 characters. Thrown by `build()`, in the handler that sends the message, so the mistake is visible the first time that code runs. |
-| [`DJSBOT_E021`](/api/errors/#djsbot_e021) | A click arrived with a payload that cannot be decoded. The click is logged as a routing failure, `run` is not called, and the user sees Discord's "This interaction failed". |
+| [`DJSBOT_E021`](/api/errors/#djsbot_e021) | A click arrived with a payload that cannot be decoded. `run` is not called, and the click is handled like a failing handler: the user gets the error message and `onError` is called. |
 
 A click whose routing key matches no registered button is ignored, not answered
 with an error: it may belong to a collector, such as the ones behind

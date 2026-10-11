@@ -66,12 +66,14 @@ Two things are handled for you:
   `"No description provided."`. Write one anyway: it is the only help the user
   gets in the picker.
 
-:::caution[`s.member()` can be empty]
+:::note[`s.member()` and users who are not members]
 Discord has no "member" option type, so `s.member()` is deployed as a user
 option and resolved to a member afterwards. When the picked user is not in the
-server, or the command runs outside a server, the value is `undefined` at
-runtime, even with `required: true`. Add the `inGuild()`
-[guard](/commands/guards/) and check the value before using it.
+server, or the command runs outside a server, a required option refuses the
+command before the handler runs, with the `notAMember`
+[message](/basics/wording-and-theme/) ("That user is not a member of this
+server."). A required member is therefore never `undefined` in the handler. An
+optional `s.member()` is `undefined` in that case.
 :::
 
 ## Choices and ranges

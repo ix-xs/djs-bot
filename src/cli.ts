@@ -96,14 +96,10 @@ async function ensureTsLoader(entry: string): Promise<void> {
 }
 
 /** Imports the entry in-process (introspection only - never connects). */
-async function loadBot(explicit?: string): Promise<Bot> {
+async function loadBot(explicit: string | undefined, command: string): Promise<Bot> {
   loadEnvFile();
   process.env.DJSBOT_CLI = "introspect";
-  const entry = findEntry(explicit);
-  if (!entry) {
-    bad("Could not find a bot entry file. Pass one explicitly, e.g. `djs-bot explain src/index.ts`.");
-    process.exit(1);
-  }
+  const entry = requireEntry(explicit, command);
   await ensureTsLoader(entry);
   const mod = (await import(pathToFileURL(entry).href)) as Record<string, unknown>;
   const bot = interopDefault(mod);
@@ -159,7 +155,7 @@ async function cmdStart(entryArg?: string): Promise<void> {
 }
 
 async function cmdDeploy(args: string[]): Promise<void> {
-  const bot = await loadBot(positional(args));
+  const bot = await loadBot(positional(args), "deploy");
   const dryRun = args.includes("--dry-run");
   const guildId = flagValue(args, "--guild");
   const result = await bot.deploy({ dryRun, guildId });
@@ -196,7 +192,7 @@ async function cmdDeploy(args: string[]): Promise<void> {
 }
 
 async function cmdClear(args: string[]): Promise<void> {
-  const bot = await loadBot(positional(args));
+  const bot = await loadBot(positional(args), "clear");
   const dryRun = args.includes("--dry-run");
   const global = args.includes("--global");
   const guildId = flagValue(args, "--guild");
@@ -218,7 +214,7 @@ async function cmdClear(args: string[]): Promise<void> {
 }
 
 async function cmdExplain(args: string[]): Promise<void> {
-  const bot = await loadBot(positional(args));
+  const bot = await loadBot(positional(args), "explain");
   const d = await bot.describe();
   if (args.includes("--json")) {
     // Machine-readable, for scripts and CI checks.
@@ -307,7 +303,7 @@ async function cmdDoctor(entryArg?: string): Promise<void> {
   }
 
   try {
-    const bot = await loadBot(entryArg);
+    const bot = await loadBot(entryArg, "doctor");
     const d = await bot.describe();
     const components = d.buttons.length + d.selectMenus.length + d.modals.length;
     ok(

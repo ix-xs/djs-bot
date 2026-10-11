@@ -187,9 +187,7 @@ Returns `true` in a process or thread spawned by a shard manager, which should
 run the bot, and `false` in the manager (and in a bot that is not sharded). Use
 it to keep manager-only work out of the shards.
 
-Read it before `bot.start()`. It looks at the `SHARDING_MANAGER` environment
-variable, and discord.js also sets that variable in the manager process once the
-manager exists, so the answer there turns to `true` afterwards.
+In the manager the answer stays `false`, before and after `bot.start()`.
 
 ```ts title="src/index.ts"
 import { defineBot, env, isShardChild } from "@ix-xs/djs-bot";

@@ -15,6 +15,7 @@ import {
   defineRoleSelect,
   defineUserCommand,
   hasRole,
+  inGuild,
   memoryAuditSink,
   memoryStore,
   paginate,
@@ -187,6 +188,21 @@ describe("a required member option", () => {
 
     expect(ran).toBe(false);
     expect(textOf(i.calls[0])).toBe("That user is not a member of this server.");
+    expect(bot.stats().guardRejections).toBe(1);
+  });
+
+  it("lets the command own guards answer first", async () => {
+    const Guarded = defineCommand({
+      name: "kick",
+      description: "Kick",
+      guards: [inGuild()],
+      options: { who: s.member({ required: true }) },
+      run: () => undefined,
+    });
+    const bot = await boot({ features: [Guarded] });
+    // No guild id: a DM. `inGuild()` refuses before the member check does.
+    const i = await send(bot, { commandName: "kick", guildId: null });
+    expect(textOf(i.calls[0])).toBe("This can only be used in a server.");
   });
 
   it("runs it when the member is there, and the wording can be changed", async () => {

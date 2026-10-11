@@ -997,12 +997,11 @@ export class Bot {
         return;
       }
       const options = resolveOptions(sub.options, interaction);
-      if (await this.refuseMissingMember(sub.options, options, base)) return;
       const ctx = { ...base, options, showModal };
       await this.dispatch({
         ctx,
         responder,
-        guards: [...command.guards, ...sub.guards],
+        guards: [...command.guards, ...sub.guards, ...memberGuards(sub.options, options)],
         defer: sub.defer ?? command.defer,
         handler: () => sub.run(ctx as never),
       });
@@ -1010,31 +1009,14 @@ export class Bot {
     }
 
     const options = resolveOptions(command.options, interaction);
-    if (await this.refuseMissingMember(command.options, options, base)) return;
     const ctx = { ...base, options, showModal };
     await this.dispatch({
       ctx,
       responder,
-      guards: command.guards,
+      guards: [...command.guards, ...memberGuards(command.options, options)],
       defer: command.defer,
       handler: () => command.run?.(ctx as never),
     });
-  }
-
-  /**
-   * `s.member({ required: true })` promises a `GuildMember`, but Discord only
-   * has a user option: the picked user may not be in the server, or there may
-   * be no server. Rather than handing the handler `undefined` behind a
-   * non-optional type, the command is refused with an explanation.
-   */
-  private async refuseMissingMember(optionMap: OptionMap, options: Record<string, unknown>, ctx: BaseContext): Promise<boolean> {
-    for (const [name, option] of Object.entries(optionMap)) {
-      if (option.kind === "member" && option.required && options[name] === undefined) {
-        await ctx.reply.error(ctx.say("notAMember", { option: name }));
-        return true;
-      }
-    }
-    return false;
   }
 
   private async routeAutocomplete(interaction: AutocompleteInteraction, cid: string): Promise<void> {
@@ -1334,6 +1316,22 @@ export class Bot {
       }
     }
   }
+}
+
+/**
+ * `s.member({ required: true })` promises a `GuildMember`, but Discord only
+ * has a user option: the picked user may not be in the server, or there may be
+ * no server. Rather than handing the handler `undefined` behind a non-optional
+ * type, a guard refuses the command with an explanation. It runs after the
+ * command's own guards, so `inGuild()` still answers first in a DM.
+ */
+function memberGuards(optionMap: OptionMap, options: Record<string, unknown>): Guard[] {
+  const missing = Object.entries(optionMap).find(
+    ([name, option]) => option.kind === "member" && option.required && options[name] === undefined,
+  );
+  if (!missing) return [];
+  const [name] = missing;
+  return [{ kind: "guard", name: "memberOption", run: (ctx) => ({ ok: false, reason: ctx.say("notAMember", { option: name }) }) }];
 }
 
 /** Evaluates a trigger against a message. Returns `true`, a RegExp match, or `false`. */

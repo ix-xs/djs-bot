@@ -165,8 +165,9 @@ requires an application, reconfirmed every year.
 
 ### `DJSBOT_E080`: invalid job schedule
 
-A `defineJob` schedule is not a duration, a 5-field cron expression or a macro.
-The error names the job and the part that is wrong.
+A `defineJob` schedule is not a duration, a 5-field cron expression or a macro,
+or its `timezone` is not a known IANA zone. The error names the job and the
+part that is wrong.
 
 ### `DJSBOT_E015`: invalid command
 

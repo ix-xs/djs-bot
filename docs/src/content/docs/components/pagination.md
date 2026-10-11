@@ -208,10 +208,10 @@ field is optional:
 
 - **At least one page.** `paginate` throws `paginate() needs at least one page.`
   for an empty array, and for a function without a `count`.
-- **Use them as the first answer.** Both helpers send their message with
-  `ctx.reply` and then listen on the interaction's original reply. A deferral
-  before them is fine. After another reply, their message is a follow-up, and
-  its buttons are not listened to.
+- **They work after a first reply.** When the interaction was already
+  answered, the message of either helper goes out as a follow-up and its
+  buttons listen on that follow-up. A `confirm` followed by a `paginate` in one
+  handler works, and so does a deferral before them.
 - **The collector lives in memory.** After a restart, or once the timeout has
   elapsed, the buttons of an older message do nothing. For controls that must
   survive a restart, write your own with

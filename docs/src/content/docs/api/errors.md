@@ -70,8 +70,8 @@ protected too, with one difference: there is nobody to answer.
 | Routing, before the handler starts | `Interaction routing failed` | Not called | Discord's own "This interaction failed" |
 
 The last row is rare. It covers what goes wrong while the framework prepares
-the `ctx`, in practice a customId it cannot decode
-([`DJSBOT_E021`](#djsbot_e021)).
+the `ctx`. A customId it cannot decode ([`DJSBOT_E021`](#djsbot_e021)) is not
+part of it: it is handled like a failing handler, the first row.
 
 A failing `afterInteraction` hook is reported but never turns into an error
 message: the handler had already succeeded and answered. Failures during
@@ -366,10 +366,11 @@ Portal.
 **Duplicate command name.** Hint: two commands registered under the same name;
 command names must be unique.
 
-Two different slash command definitions share a name. The detail gives the
-name. The usual causes are a copy-pasted file whose `name` was not changed, and
-a stale copy of the same file loaded from a second place (a `dist/` folder next
-to the sources, for example).
+Two different slash command definitions share a name, or two user context-menu
+commands, or two message context-menu commands. The detail gives the kind and
+the name. The usual causes are a copy-pasted file whose `name` was not changed,
+and a stale copy of the same file loaded from a second place (a `dist/` folder
+next to the sources, for example).
 
 Registering the same object twice is harmless: a definition can be discovered
 from its own file and also listed in a `defineFeature`. Run
@@ -383,9 +384,6 @@ button/select/modal ids must be unique per type.
 Two buttons, two select menus or two modals share an `id`. Ids are unique per
 type, so a button and a modal may use the same one. Namespace them to stay out
 of trouble: `ticket:close`, `poll:vote`.
-
-The same code is raised for two user context-menu commands, or two message
-context-menu commands, with the same name. The detail says which kind collided.
 
 ### `DJSBOT_E012`
 
@@ -499,15 +497,25 @@ params section that cannot be read. This happens with old messages whose
 components were built by different code, or with a customId written by hand.
 Always build components with `.build()`.
 
-The error is raised before the handler's error boundary starts. It is logged
-as `Interaction routing failed` with the `correlationId`, `onError` is not
-called, and the user sees Discord's "This interaction failed". The fix is to
-send a fresh message.
+The error is handled like a failing handler, although `run` is never called.
+It is logged as `Interaction handler failed` with the `correlationId`, the
+plugin `onError` hooks and `onError` are called with the `ctx`, it counts in
+`stats().errors`, and the user gets the error message. The fix is to send a
+fresh message, and `onError` can say so:
+
+```ts
+async onError(error, ctx) {
+  if (ctx && isBotError(error) && error.code === "DJSBOT_E021") {
+    await ctx.reply.error("This message is out of date. Run the command again.");
+    return true; // handled: no default message
+  }
+}
+```
 
 ### `DJSBOT_E030`
 
-**Service resolution failed.** Hint: a service dependency is missing or forms a
-cycle; check the `deps` arrays.
+**Service resolution failed.** Hint: services depend on each other in a cycle;
+check the `deps` arrays and break the loop.
 
 Raised at startup when services depend on each other in a circle. The detail
 prints the chain (`dependency cycle: a -> b -> a`) and `error.meta.chain` holds
@@ -519,8 +527,9 @@ A dependency that does not exist at all raises
 
 ### `DJSBOT_E031`
 
-**Unknown service.** Hint: requested a service that was never registered,
-followed by the list of the services that are.
+**Unknown service.** Hint: a service that was never registered was requested;
+check the token, and the `deps` arrays that name it. On the error itself, the
+hint lists the services that are registered instead.
 
 Raised at startup when a `deps` array names a token nobody registered, and at
 run time when a handler reads `ctx.services.something` that does not exist.
@@ -541,8 +550,8 @@ A capability is offered by a service registered under that name, by the
 
 ### `DJSBOT_E041`
 
-**Capability conflict.** Hint: two plugins provide the same capability without
-an explicit override.
+**Capability conflict.** Hint: a plugin lists in `conflicts` a capability that
+something else provides; load one or the other.
 
 A plugin lists a capability in `conflicts`, and a service, a plugin or a
 feature provides that capability. The detail names the plugin and the
@@ -618,7 +627,8 @@ See [Events and intents](/events/events-and-intents/).
 
 Raised by `defineJob`, at startup and not when the job was due. The detail
 names the job and its schedule, and `error.cause` says which part is wrong
-(`"61" is not a valid minute (expected 0-59)`). See
+(`"61" is not a valid minute (expected 0-59)`). A `timezone` that is not a
+known IANA zone raises it too, with the detail `unknown timezone "X"`. See
 [Scheduled jobs](/events/jobs/).
 
 ## See also

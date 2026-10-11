@@ -176,7 +176,7 @@ Everything in [the ctx object](/basics/context/), plus:
 | Name | 1-32 characters, any case, spaces allowed | [`DJSBOT_E012`](/api/errors/#djsbot_e012) |
 | User commands in one scope (global, or one guild) | 15 | [`DJSBOT_E015`](/api/errors/#djsbot_e015), raised by the deploy |
 | Message commands in one scope | 15 | [`DJSBOT_E015`](/api/errors/#djsbot_e015), raised by the deploy |
-| Two user commands, or two message commands, with the same name | not allowed | [`DJSBOT_E011`](/api/errors/#djsbot_e011) |
+| Two user commands, or two message commands, with the same name | not allowed | [`DJSBOT_E010`](/api/errors/#djsbot_e010) |
 
 A slash command, a user command and a message command may share a name: they
 are three different types for Discord (chat input is type 1, user is 2, message

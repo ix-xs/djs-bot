@@ -357,10 +357,12 @@ Runs a select-menu handler, string or native.
 | --- | --- | --- | --- |
 | `params` | `Record<string, unknown>` | `{}` | What `ctx.params` holds. |
 | `values` | `string[]` | `[]` | The picked values or ids: `ctx.values`. |
-| `users` | `unknown` | none | `ctx.users`, for a user or mentionable select. |
-| `members` | `unknown` | none | `ctx.members`, for a user or mentionable select. |
-| `channels` | `unknown` | none | `ctx.channels`, for a channel select. |
-| `roles` | `string[]` | none | `ctx.roles`, for a role or mentionable select. It is the same field as the shared `roles` input, so the value also becomes the role ids of the member. |
+| `resolved` | `{ users?, members?, roles?, channels? }` | none | What a native select resolved: `ctx.users` and `ctx.members` for a user or mentionable select, `ctx.roles` for a role or mentionable select, `ctx.channels` for a channel select. |
+
+The shared `roles` input keeps its usual meaning here: the role ids of the
+invoking member, for `hasRole()`. The roles the menu picked go in
+`resolved.roles`. `users`, `members` and `channels` are still accepted at the
+top level, but they are deprecated: use `resolved`.
 
 ### `harness.modal(def, input)`
 

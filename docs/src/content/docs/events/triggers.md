@@ -108,8 +108,8 @@ Three things to know:
 - `mode` and `caseInsensitive` only apply to string patterns. A `RegExp` uses
   its own flags (`i` for the case).
 - `ctx.match` is `null` for a string pattern and for a predicate.
-- Avoid the `g` flag: with it, `ctx.match` lists every full match and the
-  capture groups are lost.
+- The `g` flag changes nothing: `ctx.match` is still the first match, with its
+  capture groups.
 
 A predicate runs for every message the bot sees, so keep it cheap. It must
 answer synchronously: a promise always counts as a match.

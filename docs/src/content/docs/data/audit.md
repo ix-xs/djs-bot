@@ -142,11 +142,10 @@ export const webhookSink = (url: string): AuditSink => ({
 ```
 
 :::note[Failures are contained, and silent]
-A sink whose `record` rejects never breaks the command that recorded the entry:
-the other sinks still receive it, and the error is discarded. Nothing is logged
-about the failure, so pair a fragile sink with `loggerAuditSink()` to be sure
-the entry lands somewhere. Declare a custom `record` as `async`, as above, so
-that anything it throws is contained the same way.
+A sink whose `record` throws or rejects never breaks the command that recorded
+the entry: the other sinks still receive it, and the error is discarded.
+Nothing is logged about the failure, so pair a fragile sink with
+`loggerAuditSink()` to be sure the entry lands somewhere.
 :::
 
 `ctx.audit` resolves once every sink has finished. A slow sink, such as a

@@ -134,13 +134,6 @@ export default defineCommand({
 does nothing unless the [audit trail](/data/audit/) is configured. Used in a
 DM, `set` and `reset` have no guild, so they change the global override.
 
-:::note[`list` and `isEnabled`]
-`list` is meant for display. It applies the stored overrides in the order the
-store returns them, so when a flag has both a guild override and a global one,
-the listing can show the global value. To decide whether a feature runs, always
-ask `isEnabled`, which puts the guild first.
-:::
-
 ## Checking inside a handler
 
 The service is available anywhere `ctx.services` is, so a flag can gate a

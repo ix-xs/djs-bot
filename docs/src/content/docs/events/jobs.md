@@ -242,8 +242,9 @@ It returns a `ParsedSchedule`: `{ type: "interval", ms }` for a duration,
   so you find out at startup and not at 3 am. In an auto-discovered file, the
   loader reports it as [`DJSBOT_E060`](/api/errors/#djsbot_e060) with the name
   of the file and the reason.
-- **`timezone` is not checked when the job is defined.** Check the spelling of
-  the zone name.
+- **An unknown `timezone` fails the same way.** `defineJob` throws
+  [`DJSBOT_E080`](/api/errors/#djsbot_e080) with the detail
+  `unknown timezone "X"` when the zone is not a known IANA name.
 - **A job that throws does not stop the schedule.** The error is logged with the
   job name and its `correlationId`, then passed to every plugin `onError` hook
   and to the `onError` of `defineBot`, without a `ctx`. The next run happens as

@@ -158,6 +158,7 @@ key is optional and holds a [`MessageValue`](#messagevalue).
 | `rateLimited` | `{seconds}` | `Rate limit reached. Try again in {seconds}s.` | `rateLimit()` failed. |
 | `slowDown` | `{seconds}` | `You're doing that too fast - please slow down.` | The `antiSpam` plugin refused an interaction. |
 | `featureDisabled` | `{feature}` | `This feature is currently disabled here.` | `featureEnabled()` failed. |
+| `notAMember` | `{option}` | `That user is not a member of this server.` | A required `s.member()` option was given a user who is not a member of the server, or the command ran outside a server. |
 | `confirm` | none | `Confirm` | Label of the confirm button of `confirm()`. |
 | `cancel` | none | `Cancel` | Label of the cancel button of `confirm()`. |
 
@@ -169,6 +170,7 @@ The variables:
 | `permissions` | `string` | The missing permissions, readable and comma-separated: `Ban Members, Kick Members`. |
 | `seconds` | `number` | The remaining wait, in whole seconds, rounded up. |
 | `feature` | `string` | The name of the flag that is off. |
+| `option` | `string` | The name of the member option. |
 
 Every message except `confirm` and `cancel` is sent with `ctx.reply.error`: an
 ephemeral embed in the `error` colour of the theme.
@@ -186,7 +188,7 @@ type MessageValue<K extends MessageKey = MessageKey> =
 | `string` | A template. Each `{placeholder}` that names a variable of the message is replaced by its value. Other placeholders are left as written. |
 | function | Called with the variables and the `ctx`, when there is one. Its return value is used as is, without placeholder replacement. |
 
-`MessageKey` is the union of the eighteen keys above, and `MessageVars` maps
+`MessageKey` is the union of the nineteen keys above, and `MessageVars` maps
 each key to the type of its variables.
 
 ### `ctx.say(key, vars?)`
@@ -222,9 +224,10 @@ The type behind `theme`, which accepts a `Partial<Theme>`.
   that reason. `antiSpam({ message })` replaces `slowDown`, and the
   `confirmLabel` and `cancelLabel` options of `confirm()` replace `confirm` and
   `cancel` for one dialog.
-- **Two defaults ignore their variable.** The English `slowDown` and
-  `featureDisabled` sentences do not mention `{seconds}` or `{feature}`. Your
-  own wording can.
+- **Five defaults ignore their variable.** The English `unknownCommand`,
+  `unknownSubcommand`, `slowDown`, `featureDisabled` and `notAMember` sentences
+  do not mention `{name}`, `{seconds}`, `{feature}` or `{option}`. Your own
+  wording can.
 - **`error` is not shown when you handle the error.** An `onError` that returns
   a value suppresses the default reply: see [Errors](/api/errors/).
 - **`messages` is only for the framework's sentences.** The text your own

@@ -251,8 +251,9 @@ const db = await bot.container.resolve("db");
   startup with [`DJSBOT_E030`](/api/errors/#djsbot_e030). The message names the
   chain (`a -> b -> a`).
 - **A factory that throws** stops the startup with its own error.
-- **Tokens are not checked for duplicates.** If two definitions use the same
-  token, the last one registered replaces the other without an error.
+- **A duplicate token is a warning, not an error.** If two definitions use the
+  same token, the last one registered replaces the other, and the bot logs
+  `Two services share this token; the one registered last is used` at startup.
 - **Is my service registered?** `npx djs-bot explain` prints every loaded
   definition and the service tokens, without connecting. See [CLI](/api/cli/).
 

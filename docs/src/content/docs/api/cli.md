@@ -66,14 +66,6 @@ Before either, the CLI reads the `.env` file of the current folder into the
 environment. Variables that are already set are kept, so your shell and your
 host win over the file.
 
-:::caution[Put the entry before `--guild`]
-The first argument that does not start with `--` is read as the entry, and that
-includes the id after `--guild`. `npx djs-bot deploy --guild 123456789012345678`
-looks for a file named `123456789012345678` and stops with
-`Could not find a bot entry file`. Whenever you use `--guild`, name the entry
-first: `npx djs-bot deploy src/index.ts --guild 123456789012345678`.
-:::
-
 ## Create files
 
 ### `init`
@@ -196,8 +188,9 @@ them explicitly, with `djs-bot deploy`, from your machine or from CI.
 `tsx` when both are there. To run a compiled build, pass it:
 `npx djs-bot start dist/index.js`.
 
-When `dev` or `start` find no entry, they print `No entry file found.` and
-start nothing.
+When a command finds no entry, it prints `Could not find a bot entry file`, or
+`Entry file "x" does not exist.` when you named one, and exits with code 1
+without starting or deploying anything.
 
 ## Deploy and clear
 
@@ -206,13 +199,13 @@ start nothing.
 ```bash
 npx djs-bot deploy
 npx djs-bot deploy --dry-run
-npx djs-bot deploy src/index.ts --guild 123456789012345678
+npx djs-bot deploy --guild 123456789012345678
 ```
 
 | Flag | Effect |
 | --- | --- |
 | `--dry-run` | Computes and prints the difference without writing anything to Discord. |
-| `--guild <id>` | Puts **every** command on that one guild, ignoring the scope of each command. Name the entry before it. |
+| `--guild <id>` | Puts **every** command on that one guild, ignoring the scope of each command. `--guild=<id>` works too. |
 
 A deployment is a difference, not a blind overwrite. The command fetches what
 Discord holds, compares it with your definitions, and writes only the scopes
@@ -237,7 +230,7 @@ everywhere, localized commands included.
 If your configuration has a dev guild and you deploy global commands, `deploy`
 ends with a warning: that guild still holds the mirror left by `dev`, so each
 command would show twice there. It prints the `clear` command that removes the
-mirror (add the entry before `--guild` when you run it).
+mirror.
 
 Scopes, per-guild commands and the pruning of guilds you stop targeting are
 explained in [Deploying commands](/production/deploying/).
@@ -246,8 +239,8 @@ explained in [Deploying commands](/production/deploying/).
 
 ```bash
 npx djs-bot clear --global
-npx djs-bot clear src/index.ts --guild 123456789012345678
-npx djs-bot clear src/index.ts --guild 123456789012345678 --dry-run
+npx djs-bot clear --guild 123456789012345678
+npx djs-bot clear --guild 123456789012345678 --dry-run
 ```
 
 Removes **all** the commands of one scope and lists what it removed.
@@ -255,7 +248,7 @@ Removes **all** the commands of one scope and lists what it removed.
 | Flag | Effect |
 | --- | --- |
 | `--global` | Clears the global commands. |
-| `--guild <id>` | Clears the commands of that guild. Name the entry before it. |
+| `--guild <id>` | Clears the commands of that guild. `--guild=<id>` works too. |
 | `--dry-run` | Lists what would be removed without removing it. |
 
 You must name the scope: without `--global` or `--guild` the command stops, on
@@ -366,7 +359,8 @@ versions a bug report needs, on one line.
 | `0` | The command succeeded. `doctor` with warnings only is a success. |
 | `1` | A usage error (unknown command, missing argument, no scope for `clear`), an entry that cannot be found or does not export a bot, a failed `doctor` check, or any error raised while loading or deploying. |
 
-`dev` and `start` exit with the code of the bot process they started.
+`dev` and `start` exit with the code of the bot process they started, or with
+`1` when they find no entry to run.
 
 An error raised by the framework is printed with its code, its hint and a link
 to its entry in [Errors](/api/errors/). When Discord rejects a request, the CLI

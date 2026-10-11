@@ -263,7 +263,7 @@ What `run` receives, on top of the [base context](/basics/context/):
 | [`DJSBOT_E013`](/api/errors/#djsbot_e013) | The `id` is empty, contains `$` or is longer than 100 characters. Thrown by the factory. |
 | [`DJSBOT_E011`](/api/errors/#djsbot_e011) | Two select menus share an `id`. The five kinds share one namespace, so a role select and a string select cannot use the same `id`. Thrown at startup. |
 | [`DJSBOT_E020`](/api/errors/#djsbot_e020) | The encoded customId exceeds 100 characters. Thrown by `build()`. |
-| [`DJSBOT_E021`](/api/errors/#djsbot_e021) | A selection arrived with params that cannot be decoded. |
+| [`DJSBOT_E021`](/api/errors/#djsbot_e021) | A selection arrived with params that cannot be decoded. `run` is not called, and the user gets the error message, as for a failing handler. |
 
 A selection whose routing key matches no registered menu is ignored, so that a
 collector of your own can handle it.

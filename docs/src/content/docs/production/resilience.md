@@ -147,7 +147,7 @@ once the attempts are used.
 ```ts
 const user = await retry(() => api.getUser(id), {
   attempts: 4,
-  delay: 250,        // waits 250 ms, then 500 ms, then 1 s
+  delay: 250,        // waits about 250 ms, then 500 ms, then 1 s
   backoff: 2,
   maxDelay: 2000,
   shouldRetry: (error) => isNetworkError(error),
@@ -155,11 +155,10 @@ const user = await retry(() => api.getUser(id), {
 });
 ```
 
-:::caution[Set a delay]
-With no options, `retry` makes three attempts back to back: `delay` defaults to
-`0` and `backoff` to `1`. Against a service that is struggling, always pass a
-`delay`, and a `backoff` above `1` to space the attempts out.
-:::
+With no options, `retry` makes three attempts, waiting about 200 ms and then
+about 400 ms: `delay` defaults to `200`, `backoff` to `2` and `jitter` to
+`0.2`. The jitter moves each wait by a random amount, so that many callers
+hitting the same failure do not all come back at the same instant.
 
 :::caution[Retry only what is safe to repeat]
 Retrying a read is harmless. Retrying "send a message" can post it three times.
@@ -301,9 +300,10 @@ Rejects with the last error. `options` is `RetryOptions`:
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `attempts` | `number` | `3` | Total attempts, the first one included. |
-| `delay` | `number` | `0` | Wait before the second attempt, in milliseconds. |
-| `backoff` | `number` | `1` | Multiplies the wait after each failure. `2` turns 200 into 200, 400, 800. |
+| `delay` | `number` | `200` | Wait before the second attempt, in milliseconds. |
+| `backoff` | `number` | `2` | Multiplies the wait after each failure. `2` turns 200 into 200, 400, 800. |
 | `maxDelay` | `number` | no cap | Upper bound of the wait, in milliseconds. |
+| `jitter` | `number` | `0.2` | Randomises each wait: `0` for none, up to `1` for anywhere between zero and twice the delay. |
 | `shouldRetry` | `(error: unknown, attempt: number) => boolean` | retry every error | Return `false` to give up at once. |
 | `onRetry` | `(error: unknown, attempt: number) => void` | none | Called before each wait. `attempt` is the one that failed, starting at 1. |
 

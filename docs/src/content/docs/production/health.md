@@ -36,8 +36,8 @@ It is closed by `bot.shutdown()`, and it never keeps the process alive on its
 own.
 
 A port that is already taken does not crash the bot. Health is not essential,
-so the failure is logged as `Health server failed to start` and the bot keeps
-running without it.
+so the failure is logged as `Health server failed to start`, passed to
+`health.onError` when you set one, and the bot keeps running without it.
 
 ## Endpoints
 
@@ -225,7 +225,7 @@ The `health` field of [`defineBot`](/basics/configuration/): a port number, or
 | --- | --- | --- | --- |
 | `port` | `number` | `3000` | Port to listen on. |
 | `host` | `string` | all interfaces | Interface to bind. |
-| `onError` | `(error: Error) => void` | writes to stderr | Called when the server cannot bind. Only used by `startHealthServer`: inside `defineBot` the bot installs its own, which logs the failure. |
+| `onError` | `(error: Error) => void` | writes to stderr | Called when the server cannot bind. Inside `defineBot`, the bot logs the failure first, then calls it. |
 
 ### `startHealthServer(getStatus, options)`
 
