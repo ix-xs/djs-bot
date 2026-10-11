@@ -25,6 +25,7 @@ import { interopDefault } from "./loader.js";
 import { closeRestConnections } from "./deploy.js";
 import { VERSION } from "./constants.js";
 import { adoptPackage, STARTER_SCRIPTS } from "./scaffold.js";
+import { flagValue, positional } from "./cli-args.js";
 
 const C = {
   reset: "\x1b[0m",
@@ -131,17 +132,27 @@ function run(entry: string, opts: { watch?: boolean; prod?: boolean }): void {
 
 /* ------------------------------- commands -------------------------------- */
 
-async function cmdDev(entryArg?: string): Promise<void> {
+/** Stops with a clear message, and a failing exit code, when there is nothing to run. */
+function requireEntry(entryArg: string | undefined, command: string): string {
   const entry = findEntry(entryArg);
-  if (!entry) return void bad("No entry file found.");
+  if (entry) return entry;
+  bad(
+    entryArg
+      ? `Entry file "${entryArg}" does not exist.`
+      : `Could not find a bot entry file. Pass one explicitly, e.g. \`djs-bot ${command} src/index.ts\`.`,
+  );
+  process.exit(1);
+}
+
+async function cmdDev(entryArg?: string): Promise<void> {
+  const entry = requireEntry(entryArg, "dev");
   loadEnvFile();
   print(`${C.cyan}${C.bold}djs-bot dev${C.reset} ${C.gray}→ ${path.relative(process.cwd(), entry)} (watch)${C.reset}`);
   run(entry, { watch: true, prod: false });
 }
 
 async function cmdStart(entryArg?: string): Promise<void> {
-  const entry = findEntry(entryArg);
-  if (!entry) return void bad("No entry file found.");
+  const entry = requireEntry(entryArg, "start");
   loadEnvFile();
   print(`${C.cyan}${C.bold}djs-bot start${C.reset} ${C.gray}→ ${path.relative(process.cwd(), entry)}${C.reset}`);
   run(entry, { watch: false, prod: true });
@@ -432,14 +443,6 @@ ${C.bold}Commands${C.reset}
 }
 
 /* -------------------------------- helpers -------------------------------- */
-
-function positional(args: string[]): string | undefined {
-  return args.find((a) => !a.startsWith("--"));
-}
-function flagValue(args: string[], flag: string): string | undefined {
-  const i = args.indexOf(flag);
-  return i !== -1 ? args[i + 1] : undefined;
-}
 
 async function main(): Promise<void> {
   const [command, ...rest] = process.argv.slice(2);

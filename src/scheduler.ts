@@ -225,7 +225,12 @@ export class Scheduler {
         if (minute !== this.lastCronMinute) {
           this.lastCronMinute = minute;
           for (const { job, fields } of cronJobs) {
-            if (cronMatches(fields, now, job.timezone)) this.launch(job);
+            // One job that cannot be evaluated must not stop the clock for the others.
+            try {
+              if (cronMatches(fields, now, job.timezone)) this.launch(job);
+            } catch (error) {
+              this.logger.error({ err: error, job: job.name }, "Job schedule could not be evaluated");
+            }
           }
         }
         arm();

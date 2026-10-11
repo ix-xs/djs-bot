@@ -27,12 +27,17 @@ export function normalizeSharding(input: boolean | "auto" | ShardingOptions): Sh
   return { totalShards: input.totalShards ?? "auto", mode: input.mode ?? "process", respawn: input.respawn ?? true };
 }
 
+/** Set once this process has started a shard manager: it is the manager, not a shard. */
+let managing = false;
+
 /**
  * True when the current process is a shard child spawned by a manager (so it
  * should run the bot), rather than the manager itself.
  */
 export function isShardChild(): boolean {
-  return process.env.SHARDING_MANAGER === "true";
+  // discord.js sets the variable in the manager process too, once the manager
+  // exists: the manager itself is not a shard.
+  return !managing && process.env.SHARDING_MANAGER === "true";
 }
 
 /**
@@ -45,6 +50,7 @@ export async function launchShardManager(
   options: ShardingOptions,
   logger: Logger,
 ): Promise<ShardingManager> {
+  managing = true;
   const manager = new ShardingManager(entryFile, {
     token,
     totalShards: options.totalShards ?? "auto",

@@ -64,12 +64,12 @@ export const ERROR_CATALOGUE = {
   /** Service resolution failed. */
   DJSBOT_E030: {
     title: "Service resolution failed",
-    hint: "A service dependency is missing or forms a cycle. Check the `deps` arrays.",
+    hint: "Services depend on each other in a cycle. Check the `deps` arrays and break the loop.",
   },
   /** Unknown service. */
   DJSBOT_E031: {
     title: "Unknown service",
-    hint: "Requested a service that was never registered.",
+    hint: "A service that was never registered was requested. Check the token, and the `deps` arrays that name it.",
   },
   /** Feature contract not satisfied. */
   DJSBOT_E040: {
@@ -79,7 +79,7 @@ export const ERROR_CATALOGUE = {
   /** Capability conflict. */
   DJSBOT_E041: {
     title: "Capability conflict",
-    hint: "Two plugins provide the same capability without an explicit override.",
+    hint: "A plugin lists in `conflicts` a capability that something else provides. Load one or the other.",
   },
   /** Invalid option value. */
   DJSBOT_E050: {

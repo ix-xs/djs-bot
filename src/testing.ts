@@ -234,13 +234,17 @@ export interface Harness {
       params?: Record<string, unknown>;
       /** The values (or ids) that were picked: what `ctx.values` holds. */
       values?: string[];
-      /** The resolved users of a user or mentionable select: `ctx.users`. */
+      /**
+       * What a native select resolved: `ctx.users`, `ctx.members`, `ctx.roles`
+       * and `ctx.channels`. Kept apart from `roles`, which every harness call
+       * uses for the role ids of the invoking member.
+       */
+      resolved?: { users?: unknown; members?: unknown; roles?: unknown; channels?: unknown };
+      /** @deprecated Use `resolved.users`. */
       users?: unknown;
-      /** The resolved members of a user or mentionable select: `ctx.members`. */
+      /** @deprecated Use `resolved.members`. */
       members?: unknown;
-      /** The resolved roles of a role or mentionable select: `ctx.roles`. */
-      roles?: unknown;
-      /** The resolved channels of a channel select: `ctx.channels`. */
+      /** @deprecated Use `resolved.channels`. */
       channels?: unknown;
     },
   ): Promise<HarnessResult>;
@@ -357,10 +361,10 @@ export function createHarness(bot?: Bot): Harness {
         showModal,
         params: input.params ?? {},
         values: input.values ?? [],
-        users: input.users,
-        members: input.members,
-        roles: input.roles,
-        channels: input.channels,
+        users: input.resolved?.users ?? input.users,
+        members: input.resolved?.members ?? input.members,
+        roles: input.resolved?.roles,
+        channels: input.resolved?.channels ?? input.channels,
       };
       const gate = await runGuards(def.guards, ctx, input.runGuards ?? true);
       if (!gate.ok) return { replies, passedGuards: false, rejectionReason: gate.reason };

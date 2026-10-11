@@ -224,6 +224,11 @@ export interface RetryOptions {
   backoff?: number;
   /** Max delay cap in ms. */
   maxDelay?: number;
+  /**
+   * Randomises each delay so that many callers do not retry in step: `0` for
+   * none, up to `1` for anywhere between zero and twice the delay. Default `0.2`.
+   */
+  jitter?: number;
   /** Decide whether to retry after an error. */
   shouldRetry?: (error: unknown, attempt: number) => boolean;
   /** Called before each retry. */
@@ -234,8 +239,14 @@ export interface RetryOptions {
  * Retries an async function with exponential backoff + jitter.
  * @example await retry(() => fetchFromApi(), { attempts: 5, delay: 300 });
  */
-export function retry<T>(fn: () => T | Promise<T>, options?: RetryOptions): Promise<T> {
-  return comfort.func.retry(fn, options);
+export function retry<T>(fn: () => T | Promise<T>, options: RetryOptions = {}): Promise<T> {
+  return comfort.func.retry(fn, {
+    ...options,
+    // The documented defaults. Without them the retries would fire back to back.
+    delay: options.delay ?? 200,
+    backoff: options.backoff ?? 2,
+    jitter: options.jitter ?? 0.2,
+  }) as Promise<T>;
 }
 
 /**

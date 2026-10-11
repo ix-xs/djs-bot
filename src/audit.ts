@@ -138,7 +138,8 @@ export function createAuditLog(options: AuditLogOptions = {}): AuditLog {
       // Best-effort: a failing sink (e.g. a transient store error) must never
       // break the command that recorded the entry. Failures are swallowed here;
       // add a logger sink if you want them surfaced.
-      await Promise.allSettled(sinks.map((s) => s.record(entry)));
+      // `async` turns a sink that throws synchronously into a rejection too.
+      await Promise.allSettled(sinks.map(async (s) => s.record(entry)));
       return entry;
     },
     async query(filter) {

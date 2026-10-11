@@ -73,10 +73,10 @@ export class Registry {
         this.addCommand(item);
         break;
       case "userCommand":
-        this.addComponent(this.userCommands, item.name, item, "user command");
+        this.addComponent(this.userCommands, item.name, item, "user command", "DJSBOT_E010");
         break;
       case "messageCommand":
-        this.addComponent(this.messageCommands, item.name, item, "message command");
+        this.addComponent(this.messageCommands, item.name, item, "message command", "DJSBOT_E010");
         break;
       case "button":
         this.addComponent(this.buttons, item.id, item, "button");
@@ -124,9 +124,15 @@ export class Registry {
     this.commands.set(command.name, command);
   }
 
-  private addComponent<T>(map: Map<string, T>, key: string, def: T, label: string): void {
+  private addComponent<T>(
+    map: Map<string, T>,
+    key: string,
+    def: T,
+    label: string,
+    code: "DJSBOT_E010" | "DJSBOT_E011" = "DJSBOT_E011",
+  ): void {
     if (map.has(key)) {
-      throw new BotError("DJSBOT_E011", { detail: `${label} "${key}"` });
+      throw new BotError(code, { detail: `${label} "${key}"` });
     }
     map.set(key, def);
   }

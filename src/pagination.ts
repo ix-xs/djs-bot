@@ -20,6 +20,7 @@ import {
   type ButtonInteraction,
   type InteractionEditReplyOptions,
   type InteractionReplyOptions,
+  type Message,
   type InteractionUpdateOptions,
 } from "discord.js";
 import comfort from "@ix-xs/node-comfort";
@@ -100,6 +101,17 @@ export function toPayload(page: Page, nav: ActionRowBuilder<ButtonBuilder> | nul
 }
 
 /**
+ * Sends the message the controls live on, and returns it. When the interaction
+ * was already answered, the message goes out as a follow-up: the collector has
+ * to listen on that follow-up, not on the first reply.
+ */
+async function send(ctx: BaseContext, payload: InteractionReplyOptions): Promise<Message> {
+  if (ctx.interaction.replied) return ctx.interaction.followUp(payload);
+  await ctx.reply(payload);
+  return ctx.interaction.fetchReply();
+}
+
+/**
  * Sends a paginated message with prev/next (and first/last) controls, updating in
  * place as the user navigates and disabling the controls on timeout.
  *
@@ -123,10 +135,10 @@ export async function paginate(ctx: BaseContext, options: PaginateOptions): Prom
   let page = Math.min(Math.max(options.startPage ?? 0, 0), total - 1);
   const extraFlags = options.ephemeral ? MessageFlags.Ephemeral : 0;
 
-  await ctx.reply(toPayload(await getPage(page), total > 1 ? navRow(nonce, page, total, options) : null, extraFlags));
-  if (total <= 1) return;
+  const first = toPayload(await getPage(page), total > 1 ? navRow(nonce, page, total, options) : null, extraFlags);
+  if (total <= 1) return void (await ctx.reply(first));
 
-  const message = await ctx.interaction.fetchReply();
+  const message = await send(ctx, first as InteractionReplyOptions);
   const allowed = new Set(options.allowedUsers ?? [ctx.user.id]);
 
   const collector = message.createMessageComponentCollector({
@@ -149,7 +161,7 @@ export async function paginate(ctx: BaseContext, options: PaginateOptions): Prom
     const disabled = navRow(nonce, page, total, options);
     for (const b of disabled.components) b.setDisabled(true);
     const payload = toPayload(await getPage(page), disabled, 0) as InteractionEditReplyOptions;
-    await ctx.interaction.editReply(payload).catch(() => undefined);
+    await ctx.interaction.editReply({ ...payload, message }).catch(() => undefined);
   });
 }
 
@@ -186,9 +198,7 @@ export async function confirm(ctx: BaseContext, options: ConfirmOptions = {}): P
   if (options.content) payload.content = options.content;
   if (options.embed) payload.embeds = [options.embed];
   if (options.ephemeral !== false) payload.flags = MessageFlags.Ephemeral;
-  await ctx.reply(payload);
-
-  const message = await ctx.interaction.fetchReply();
+  const message = await send(ctx, payload);
   try {
     const picked = await message.awaitMessageComponent({
       componentType: ComponentType.Button,
@@ -200,7 +210,7 @@ export async function confirm(ctx: BaseContext, options: ConfirmOptions = {}): P
     return picked.customId.endsWith(":y");
   } catch {
     for (const b of row.components) b.setDisabled(true);
-    await ctx.interaction.editReply({ components: [row] }).catch(() => undefined);
+    await ctx.interaction.editReply({ components: [row], message }).catch(() => undefined);
     return false;
   }
 }

@@ -48,6 +48,11 @@ export interface MessageVars {
   guildOwnerOnly: Record<string, never>;
   /** `hasRole()` failed. */
   missingRole: Record<string, never>;
+  /** A required `s.member()` option was given a user who is not a member of the server. */
+  notAMember: {
+    /** The name of the option. */
+    option: string;
+  };
   /** `cooldown()` failed. `seconds` is the remaining wait, rounded up. */
   cooldown: {
     /** The remaining wait, in whole seconds. */
@@ -107,6 +112,7 @@ export const DEFAULT_MESSAGES: { readonly [K in MessageKey]: string } = {
   rateLimited: "Rate limit reached. Try again in {seconds}s.",
   slowDown: "You're doing that too fast - please slow down.",
   featureDisabled: "This feature is currently disabled here.",
+  notAMember: "That user is not a member of this server.",
   confirm: "Confirm",
   cancel: "Cancel",
 };

@@ -111,7 +111,7 @@ import { /* ... */ } from "@ix-xs/djs-bot";
 | `DEFAULT_MESSAGES` | The built-in English wording. | [Wording and theme](/basics/wording-and-theme/) |
 | `DEFAULT_THEME` | The default palette. | [Wording and theme](/basics/wording-and-theme/) |
 | `DOCS_URL` | Root URL of the documentation site. | [Project layout](/basics/project-layout/) |
-| `emoji` | Custom & unicode emoji helpers. | [Mentions, timestamps and safe pings](/messages/formatting/) |
+| `emoji` | Custom emoji helpers: build the markup, and read it back. | [Mentions, timestamps and safe pings](/messages/formatting/) |
 | `ERROR_CATALOGUE` | Catalogue of framework error codes and their default messages/hints. | [Errors](/api/errors/) |
 | `field` | Modal component builders. | [Modals](/components/modals/) |
 | `FRAMEWORK_NAME` | Human-facing framework name, used in logs and CLI output. | [Project layout](/basics/project-layout/) |

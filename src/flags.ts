@@ -80,15 +80,18 @@ export function createFeatureFlags(options: FeatureFlagsOptions = {}): FeatureFl
     },
     async list(guildId) {
       const result: Record<string, boolean> = { ...defaults };
+      // The same precedence as `isEnabled`: defaults, then global values, then
+      // the guild's own, whatever order the store returns the keys in.
+      const overrides: Record<string, boolean> = {};
       for (const [key, value] of await store.entries()) {
         const m = /^flag:(.+):(global|guild:(.+))$/.exec(key);
         if (!m) continue;
         const [, name, kind] = m;
         if (name === undefined) continue;
         if (kind === "global") result[name] = value;
-        else if (guildId && kind === `guild:${guildId}`) result[name] = value;
+        else if (guildId && kind === `guild:${guildId}`) overrides[name] = value;
       }
-      return result;
+      return { ...result, ...overrides };
     },
   };
 }

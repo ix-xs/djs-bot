@@ -285,7 +285,14 @@ export class Bot {
     this.registry.addAll(registrables);
     for (const plugin of this.config.plugins ?? []) this.registry.add(plugin);
 
-    for (const service of this.registry.services) this.container.register(service);
+    const tokens = new Set<string>();
+    for (const service of this.registry.services) {
+      if (tokens.has(service.name)) {
+        this.logger.warn({ service: service.name }, "Two services share this token; the one registered last is used");
+      }
+      tokens.add(service.name);
+      this.container.register(service);
+    }
     if (this.config.store) {
       // An adapter written against an earlier version gains the newer methods.
       this.store = upgradeStore(this.config.store);
@@ -336,9 +343,10 @@ export class Bot {
     for (const service of this.registry.services) provided.add(service.name);
     for (const plugin of this.registry.plugins) plugin.provides.forEach((c) => provided.add(c));
     for (const feature of this.registry.features) feature.provides.forEach((c) => provided.add(c));
-    // Config-provided services (store/audit/flags) and any value a plugin
-    // registered are real capabilities too - they live in the container, not in
-    // `registry.services`, so consult it as well.
+    // Config-provided services (store, audit, flags) are capabilities too. They
+    // live in the container rather than in `registry.services`, so consult it as
+    // well. Plugins have not run `setup` yet: what a plugin registers there
+    // counts only if the plugin also declares it in `provides`.
     const isProvided = (need: string): boolean => provided.has(need) || this.container.has(need);
 
     for (const feature of this.registry.features) {
@@ -600,7 +608,14 @@ export class Bot {
   private startHealth(client: Client<true>): void {
     if (this.config.health === undefined) return;
     const base = typeof this.config.health === "number" ? { port: this.config.health } : this.config.health;
-    const options = { ...base, onError: (error: Error) => this.logger.error({ err: error }, "Health server failed to start") };
+    const userOnError = typeof this.config.health === "number" ? undefined : this.config.health.onError;
+    const options = {
+      ...base,
+      onError: (error: Error) => {
+        this.logger.error({ err: error }, "Health server failed to start");
+        userOnError?.(error);
+      },
+    };
     this.healthServer = startHealthServer(() => {
       const { uptimeMs, ...metrics } = this.stats();
       return {
@@ -981,7 +996,9 @@ export class Bot {
         await base.reply.error(base.say("unknownSubcommand", { name: target.name }));
         return;
       }
-      const ctx = { ...base, options: resolveOptions(sub.options, interaction), showModal };
+      const options = resolveOptions(sub.options, interaction);
+      if (await this.refuseMissingMember(sub.options, options, base)) return;
+      const ctx = { ...base, options, showModal };
       await this.dispatch({
         ctx,
         responder,
@@ -992,7 +1009,9 @@ export class Bot {
       return;
     }
 
-    const ctx = { ...base, options: resolveOptions(command.options, interaction), showModal };
+    const options = resolveOptions(command.options, interaction);
+    if (await this.refuseMissingMember(command.options, options, base)) return;
+    const ctx = { ...base, options, showModal };
     await this.dispatch({
       ctx,
       responder,
@@ -1000,6 +1019,22 @@ export class Bot {
       defer: command.defer,
       handler: () => command.run?.(ctx as never),
     });
+  }
+
+  /**
+   * `s.member({ required: true })` promises a `GuildMember`, but Discord only
+   * has a user option: the picked user may not be in the server, or there may
+   * be no server. Rather than handing the handler `undefined` behind a
+   * non-optional type, the command is refused with an explanation.
+   */
+  private async refuseMissingMember(optionMap: OptionMap, options: Record<string, unknown>, ctx: BaseContext): Promise<boolean> {
+    for (const [name, option] of Object.entries(optionMap)) {
+      if (option.kind === "member" && option.required && options[name] === undefined) {
+        await ctx.reply.error(ctx.say("notAMember", { option: name }));
+        return true;
+      }
+    }
+    return false;
   }
 
   private async routeAutocomplete(interaction: AutocompleteInteraction, cid: string): Promise<void> {
@@ -1110,7 +1145,8 @@ export class Bot {
     }
     this.counters.components++;
     const { base, responder } = this.open(interaction, cid);
-    const { params } = decodeCustomId(interaction.customId, button.params);
+    const params = await this.decodeParams(interaction.customId, button.params, base);
+    if (!params) return;
     const ctx = { ...base, params, update: responder.update!, showModal: responder.showModal };
     await this.dispatch({
       ctx,
@@ -1130,7 +1166,8 @@ export class Bot {
     }
     this.counters.components++;
     const { base, responder } = this.open(interaction, cid);
-    const { params } = decodeCustomId(interaction.customId, menu.params);
+    const params = await this.decodeParams(interaction.customId, menu.params, base);
+    if (!params) return;
 
     const resolved: Record<string, unknown> = {};
     if (interaction.isUserSelectMenu()) {
@@ -1172,7 +1209,8 @@ export class Bot {
     }
     this.counters.modals++;
     const { base, responder } = this.open(interaction, cid);
-    const { params } = decodeCustomId(interaction.customId, modal.params);
+    const params = await this.decodeParams(interaction.customId, modal.params, base);
+    if (!params) return;
     const ctx = { ...base, params, fields: readModalFields(modal.fields, interaction.fields) };
     await this.dispatch({
       ctx,
@@ -1191,6 +1229,24 @@ export class Bot {
    * interaction before any guard runs (maintenance mode) and time the whole
    * thing (logging, metrics).
    */
+  /**
+   * Decodes the params a component carries in its customId. A payload that
+   * cannot be decoded (`DJSBOT_E021`) is treated like a failing handler: the
+   * user is told, and the error hooks run. Returns `undefined` in that case.
+   */
+  private async decodeParams(
+    customId: string,
+    schema: Parameters<typeof decodeCustomId>[1],
+    ctx: BaseContext,
+  ): Promise<Record<string, unknown> | undefined> {
+    try {
+      return decodeCustomId(customId, schema).params as Record<string, unknown>;
+    } catch (error) {
+      await this.fail(ctx, error);
+      return undefined;
+    }
+  }
+
   private async dispatch({ ctx, responder, guards, defer, handler }: Dispatch): Promise<void> {
     const started = performance.now();
     const deferral = resolveDefer(defer ?? this.config.defaults?.defer);
@@ -1286,8 +1342,11 @@ function matchTrigger(trigger: TriggerDefinition, message: Message): boolean | R
   if (typeof pattern === "function") return pattern(message);
   if (pattern instanceof RegExp) {
     // A global or sticky RegExp keeps state in `lastIndex` between calls.
+    // `exec` returns the groups even with the `g` flag, which `match` does not.
     pattern.lastIndex = 0;
-    return message.content.match(pattern) ?? false;
+    const match = pattern.exec(message.content);
+    pattern.lastIndex = 0;
+    return match ?? false;
   }
   const content = trigger.caseInsensitive ? message.content.toLowerCase() : message.content;
   const needle = trigger.caseInsensitive ? pattern.toLowerCase() : pattern;

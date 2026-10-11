@@ -3,7 +3,54 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.1.1
+
+Thirteen defects, all found by checking every page of the documentation
+against the source, and the documentation itself rebuilt.
+
+### Fixed
+
+- **`djs-bot deploy --guild <id>` and `djs-bot clear --guild <id>` failed
+  without an explicit entry file**: the guild id was taken for the entry.
+  `--guild=<id>` is accepted too.
+- **`retry()` did not wait between attempts.** Its defaults are now the
+  documented ones: 200 ms, doubling each time, with a new `jitter` option
+  (default `0.2`).
+- **A component whose customId could not be decoded (`DJSBOT_E021`) left the
+  user without an answer** and skipped the error hooks. It is now handled like
+  any failing handler: the user is told, `onError` runs.
+- **`paginate()` and `confirm()` after a first reply showed buttons that did
+  nothing.** They now listen on the follow-up they send, so `confirm()` then
+  `paginate()` in one handler works.
+- **`flags.list(guildId)` could return the global value** where `isEnabled`
+  returned the one set for the guild.
+- **A required `s.member()` option could be `undefined`** when the picked user
+  was not in the server. The command is now refused with a clear message
+  (`notAMember`, rewordable like the others) instead of running the handler.
+- An audit sink that throws synchronously no longer breaks the handler that
+  recorded the entry.
+- `djs-bot dev` and `djs-bot start` exit with code 1 when there is no entry
+  file, instead of printing an error and reporting success.
+- `health.onError` given to `defineBot` was never called.
+- A job with an unknown `timezone` now fails when it is defined
+  (`DJSBOT_E080`), and a job that cannot be evaluated no longer stops the
+  clock for the other cron jobs.
+- Two context-menu commands with the same name raise `DJSBOT_E010` (duplicate
+  command) rather than `DJSBOT_E011` (duplicate component).
+- `isShardChild()` returned `true` in the manager process once the manager
+  existed.
+- A `RegExp` trigger with the `g` flag lost its capture groups in `ctx.match`.
+- The hints of `DJSBOT_E030`, `DJSBOT_E031` and `DJSBOT_E041` describe what
+  actually raises them.
+- Two services registered under the same token now log a warning (the last
+  one is still used).
+
+### Changed
+
+- **Test harness:** what a native select resolved is passed as
+  `resolved: { users, members, roles, channels }`. The top-level `roles` input
+  is the role ids of the invoking member, as in every other harness call.
+  `users`, `members` and `channels` at the top level still work.
 
 ### Documentation
 
@@ -14,8 +61,8 @@ adheres to [Semantic Versioning](https://semver.org).
   first example, one section per need, a reference, limits and errors.
 - Every old address redirects to its new page. `/api/errors/` did not move.
 - The pages were checked against the source while merging, which corrected a
-  number of statements (how `.env` is read, who calls `bot.start()`, the
-  defaults of `retry()`, when `DJSBOT_E041` is raised, and more).
+  number of statements (how `.env` is read, who calls `bot.start()`, when
+  `DJSBOT_E041` is raised, and more) and surfaced the defects fixed above.
 - **A new design**: graphite and gold, editorial type, the section a page
   belongs to above its title, numbered sections, tables that scroll on a
   phone instead of breaking words, and motion only where it explains something.

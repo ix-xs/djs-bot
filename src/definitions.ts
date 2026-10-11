@@ -422,7 +422,7 @@ export interface MessageCommandDefinition {
 interface ContextCommandCommon {
   /** The label shown in the right-click Apps menu (spaces & capitals allowed). */
   name: string;
-  /** Preconditions checked before `run`, e.g. `[guildOnly(), hasPermission("KickMembers")]`. */
+  /** Preconditions checked before `run`, e.g. `[inGuild(), hasPermission("KickMembers")]`. */
   guards?: Guard[];
   /**
    * Allow use in DMs (global commands only).
@@ -1170,6 +1170,13 @@ export function defineJob(input: JobInput): JobDefinition {
     parseSchedule(input.schedule);
   } catch (cause) {
     throw new BotError("DJSBOT_E080", { detail: `job "${input.name}": "${input.schedule}"`, cause });
+  }
+  if (input.timezone !== undefined) {
+    try {
+      new Intl.DateTimeFormat("en-US", { timeZone: input.timezone });
+    } catch (cause) {
+      throw new BotError("DJSBOT_E080", { detail: `job "${input.name}": unknown timezone "${input.timezone}"`, cause });
+    }
   }
   return {
     kind: "job",

@@ -53,7 +53,7 @@ export function timestamp(date: Date | number, style?: TimestampStylesString): s
 
 const EMOJI_RE = /^<(a)?:(\w{2,32}):(\d{2,20})>$/;
 
-/** Custom & unicode emoji helpers. */
+/** Custom emoji helpers: build the markup, and read it back. */
 export const emoji = {
   /** Builds custom-emoji markup: `<:name:id>` or `<a:name:id>` when animated. */
   custom: (name: string, id: string, animated = false): string => `<${animated ? "a" : ""}:${name}:${id}>`,
