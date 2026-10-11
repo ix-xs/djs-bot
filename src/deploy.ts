@@ -550,9 +550,13 @@ function stopRest(rest: REST): void {
 
 /**
  * Gracefully closes the shared HTTP connection pool (undici) used for REST calls.
- * A one-shot CLI can call this before exiting so `process.exit()` never races a
- * socket that is mid-close (which throws a libuv assertion on Windows).
- * Best-effort: if undici isn't resolvable, it quietly does nothing.
+ * A one-shot CLI calls this before `process.exit()`.
+ *
+ * On Windows, exiting right after network activity can abort the process with a
+ * libuv assertion (`!(handle->flags & UV_HANDLE_CLOSING)`): closing the pool is
+ * not enough, because the teardown of its sockets completes a few milliseconds
+ * later. So after closing, this waits briefly for that teardown before
+ * resolving. Best-effort: if undici isn't resolvable, it only waits.
  */
 export async function closeRestConnections(): Promise<void> {
   try {
@@ -562,4 +566,13 @@ export async function closeRestConnections(): Promise<void> {
   } catch {
     /* undici not resolvable, or nothing to close */
   }
+  if (process.platform === "win32") {
+    await new Promise((resolve) => setTimeout(resolve, WINDOWS_SOCKET_TEARDOWN_MS));
+  }
 }
+
+/**
+ * How long Windows needs to finish tearing down closed sockets before the
+ * process may exit safely. Measured: 10 ms still aborts, 25 ms never did.
+ */
+const WINDOWS_SOCKET_TEARDOWN_MS = 60;

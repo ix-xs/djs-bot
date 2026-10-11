@@ -48,6 +48,8 @@ import {
   type DeployResult,
 } from "../../src/index.js";
 
+import { closeRestConnections } from "../../src/deploy.js";
+
 loadEnvFile();
 
 const C = { reset: "\x1b[0m", green: "\x1b[32m", red: "\x1b[31m", yellow: "\x1b[33m", gray: "\x1b[90m", bold: "\x1b[1m" };
@@ -374,16 +376,19 @@ async function main(): Promise<void> {
     assert(threw, "the client is still attached after shutdown");
   });
 
-  finish();
+  await finish();
 }
 
-function finish(): void {
+async function finish(): Promise<never> {
   const failed = results.filter((result) => !result.ok);
   console.log(
     failed.length === 0
       ? `\n${C.green}${C.bold}All ${results.length} live checks passed.${C.reset}`
       : `\n${C.red}${C.bold}${failed.length} of ${results.length} live checks failed.${C.reset}`,
   );
+  // Close the HTTP pool first: exiting while a socket is mid-close trips an
+  // assertion in libuv on Windows.
+  await closeRestConnections();
   process.exit(failed.length === 0 ? 0 : 1);
 }
 

@@ -690,7 +690,30 @@ data/
 };
 
 // Kick off the CLI last, so const templates above are initialised first.
-main().catch((error) => {
-  bad((error as Error).message);
+/**
+ * Turns the Discord API errors people actually hit from the CLI into a next
+ * step. Returns `undefined` for anything it does not recognise.
+ */
+function restHint(error: unknown): string | undefined {
+  const { status, code } = (error ?? {}) as { status?: number; code?: number | string };
+  if (status === 401) {
+    return "Discord rejected the token. Copy it again from the Developer Portal (Bot > Reset Token) into DISCORD_TOKEN.";
+  }
+  if (code === 50001 || status === 403) {
+    return "Missing access: the bot is not in that server, or it was invited without the applications.commands scope.";
+  }
+  if (code === 10002) return "Unknown application: DISCORD_CLIENT_ID does not match the token's application.";
+  if (code === 30034) return "Daily limit reached: Discord allows 200 command creations per day and per server. Try again tomorrow.";
+  if (status === 429) return "Rate limited by Discord. Wait a moment, then run the command again.";
+  return undefined;
+}
+
+main().catch(async (error) => {
+  // A BotError prints its code, its hint and a docs link; show all of it.
+  bad(error instanceof Error ? error.toString() : String(error));
+  const hint = restHint(error);
+  if (hint) print(`  ${C.gray}↳ ${hint}${C.reset}`);
+  // A failed deploy has open connections too: let them close before exiting.
+  await closeRestConnections();
   process.exit(1);
 });

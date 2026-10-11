@@ -146,6 +146,13 @@ peer range, `^14.16.0`, was wrong: Components V2 already needed 14.19).
 - A trigger whose RegExp is sticky (`y`) could skip messages, as the pattern kept its position between them.
 - Two concurrent `bot.load()` calls raced and failed with a duplicate-name error.
 - Auto-deploy ran on every shard instead of once.
+- **On Windows, the CLI could abort with a libuv assertion** when it exited right
+  after talking to Discord, most visibly when a deploy failed. Closing the
+  connection pool was not enough: the sockets finish closing a few milliseconds
+  later. The CLI now waits for that, on every exit path.
+- A failed `deploy` or `clear` explains the usual causes (rejected token, bot
+  missing from the server or invited without `applications.commands`, daily
+  creation limit) instead of printing the raw API error alone.
 
 ## 1.0.0
 
