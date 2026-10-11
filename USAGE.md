@@ -315,9 +315,11 @@ options: {
 
 ### Autocomplete
 
-Pass an async handler to an option's `autocomplete` - it returns up to 25
-suggestions as the user types. Works on `s.string`, `s.integer`, `s.number`, and
-inside subcommands.
+A fixed list of `choices` stops at 25 values and cannot change. When the list
+is long, comes from a database or depends on who is typing, give the option an
+`autocomplete` handler instead: it is called on every keystroke and returns the
+suggestions to show. It works on `s.string`, `s.integer` and `s.number`, in
+commands and in subcommands.
 
 ```ts
 const FRUITS = ["apple", "apricot", "banana", "cherry"];
@@ -329,20 +331,75 @@ export default defineCommand({
     name: s.string({
       description: "Fruit",
       required: true,
-      autocomplete: async (ctx) => {
-        // ctx.value = what they've typed; ctx.focused = the option name
-        return FRUITS.filter((f) => f.startsWith(ctx.value.toLowerCase()))
-          .map((f) => ({ name: f, value: f }));   // or just return string[] / number[]
-      },
+      autocomplete: (ctx) => FRUITS.filter((fruit) => fruit.startsWith(ctx.value.toLowerCase())),
     }),
   },
   run: (ctx) => ctx.reply.success(`You picked ${ctx.options.name}`),
 });
 ```
 
-The handler `ctx` also gives you `interaction`, `client`, `user`, `guild`,
-`services`, and `logger` - so suggestions can be data-driven. Errors are caught
-and an empty list is returned, so a slow/failing lookup never breaks the command.
+**What the handler returns.** Any of these, sync or async:
+
+| Return | Shown as | Sent to your command as |
+| --- | --- | --- |
+| `["apple", "banana"]` | `apple`, `banana` | the same text |
+| `[10, 20]` | `10`, `20` | the same number |
+| `[{ name: "Apple (3 left)", value: "apple" }]` | `Apple (3 left)` | `"apple"` |
+
+**What the handler receives.** `ctx` is typed, nothing to annotate:
+
+| Property | What it holds |
+| --- | --- |
+| `ctx.value` | What the user has typed so far, as text (`""` when the field was just opened). |
+| `ctx.focused` | The name of the option being typed. |
+| `ctx.options` | The other options already filled in: `ctx.options.category`. Text, numbers and booleans as such; the **id** of a user, role or channel. |
+| `ctx.user`, `ctx.guild`, `ctx.guildId`, `ctx.channelId` | Who is typing and where. |
+| `ctx.services`, `ctx.logger`, `ctx.client` | The same as in a command. |
+| `ctx.locale`, `ctx.t()` | The user's language, to translate suggestion names. |
+| `ctx.interaction` | The raw discord.js `AutocompleteInteraction`. |
+
+**Suggestions that depend on another option.** Read it from `ctx.options`:
+
+```ts
+options: {
+  category: s.string({ description: "Category", required: true, choices: CATEGORIES }),
+  item: s.string({
+    description: "Item",
+    required: true,
+    autocomplete: async (ctx) => {
+      const items = await ctx.services.shop.search(ctx.options.category, ctx.value);
+      return items.map((item) => ({ name: `${item.label} - ${item.price} coins`, value: item.id }));
+    },
+  }),
+}
+```
+
+**The rules Discord enforces, handled for you.** One invalid suggestion makes
+Discord refuse the whole list, so the framework makes each one valid:
+
+- only the first **25** are sent;
+- a name longer than **100** characters is cut;
+- the value takes the type of the option: a number for `s.integer` and
+  `s.number`, text for `s.string`;
+- a suggestion that cannot be made valid (an empty name, a text value over 100
+  characters, `"abc"` for a number) is left out, and a warning is logged once.
+
+**Keep it fast.** Discord waits **3 seconds** at most and an autocomplete answer
+cannot be deferred. Query an index or a cache, not a slow API: `TTLCache` (§20)
+is made for this. If the handler throws, the error is logged and an empty list
+is shown, so a failing lookup never breaks the command.
+
+**A suggestion is not a validation.** The user can ignore the list and send
+whatever they typed. Check the value again in `run`.
+
+Test a handler without Discord with `h.autocomplete` (§28):
+
+```ts
+const choices = await h.autocomplete(Buy, { option: "item", value: "sw", options: { category: "weapons" } });
+```
+
+Passing `autocomplete: true` only marks the option: the framework stays out of
+the way, and you answer from your own `interactionCreate` listener.
 
 ---
 
@@ -1428,7 +1485,7 @@ test("button params are decoded", async () => {
 | `h.userCommand(def, { targetUser? })` / `h.messageCommand(def, { targetMessage? })` | a context-menu command |
 | `h.button(def, { params })` / `h.select(def, { params, values })` | a component |
 | `h.modal(def, { fields, params })` | a modal submission |
-| `h.autocomplete(def, { option, value })` | an option's autocomplete handler; returns the choices |
+| `h.autocomplete(def, { option, value, options? })` | an option's autocomplete handler; returns the choices the bot would send |
 | `h.job(def)` | a scheduled job, once |
 
 Shared options: `userId`, `guildId`, `channelId`, `services` (injection),

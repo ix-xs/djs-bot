@@ -57,9 +57,13 @@ export interface OptionOutput {
 
 /** Internal descriptor for a single option. */
 export interface OptionDef<K extends OptionKind = OptionKind, Req extends boolean = boolean> {
+  /** Which kind of option this is (`string`, `user`, ...). */
   readonly kind: K;
+  /** Whether the user must fill the option in. */
   readonly required: Req;
+  /** The description shown under the option in Discord. */
   readonly description: string;
+  /** The remaining settings (limits, choices, autocomplete...), as passed to `s.*`. */
   readonly config: Readonly<Record<string, unknown>>;
   /** Phantom marker for output-type inference. Never present at runtime. */
   readonly __out?: OptionOutput[K];
@@ -94,20 +98,37 @@ interface CommonOpt {
 }
 
 interface StringOpt extends CommonOpt {
+  /** Shortest text accepted (0 to 6000). */
   minLength?: number;
+  /** Longest text accepted (1 to 6000). */
   maxLength?: number;
+  /** A fixed list of up to 25 values the user picks from. Excludes `autocomplete`. */
   choices?: ReadonlyArray<{ name: string; value: string }>;
-  /** `true`, or an async handler returning up to 25 suggestions. */
+  /**
+   * Suggestions computed while the user types: a handler receiving what was
+   * typed (`ctx.value`) and the other options (`ctx.options`), returning up to
+   * 25 suggestions. Pass `true` instead to answer from your own
+   * `interactionCreate` listener.
+   */
   autocomplete?: boolean | AutocompleteHandler;
 }
 interface NumberOpt extends CommonOpt {
+  /** Smallest value accepted. */
   min?: number;
+  /** Largest value accepted. */
   max?: number;
+  /** A fixed list of up to 25 values the user picks from. Excludes `autocomplete`. */
   choices?: ReadonlyArray<{ name: string; value: number }>;
-  /** `true`, or an async handler returning up to 25 suggestions. */
+  /**
+   * Suggestions computed while the user types: a handler receiving what was
+   * typed (`ctx.value`, as text) and the other options (`ctx.options`),
+   * returning up to 25 suggestions. Values are sent as numbers. Pass `true`
+   * instead to answer from your own `interactionCreate` listener.
+   */
   autocomplete?: boolean | AutocompleteHandler;
 }
 interface ChannelOpt extends CommonOpt {
+  /** Only offer channels of these types, e.g. `[ChannelType.GuildText]`. */
   channelTypes?: ReadonlyArray<ChannelType>;
 }
 
@@ -233,6 +254,7 @@ export const s = {
 
 /** Encodes/decodes a single customId parameter with a known runtime type. */
 export interface ParamCodec<T> {
+  /** The runtime type the param decodes to. */
   readonly type: "string" | "number" | "boolean";
   /** Serialises a value to a string. */
   encode(value: T): string;
@@ -314,16 +336,25 @@ export type FieldKind =
 
 /** What `ctx.fields.<name>` holds for each kind of field. */
 export interface FieldOutput<Req extends boolean = boolean> {
+  /** The text typed in a one-line input; `""` when left empty. */
   short: string;
+  /** The text typed in a multi-line input; `""` when left empty. */
   paragraph: string;
   /** The values picked in a string select. */
   select: string[];
+  /** The users picked in a user select. */
   users: Collection<string, User>;
+  /** The roles picked in a role select. */
   roles: Collection<string, Role>;
+  /** The channels picked in a channel select. */
   channels: Collection<string, GuildBasedChannel>;
+  /** What was picked in a mentionable select, split by type. */
   mentionables: {
+    /** The users that were picked. */
     users: Collection<string, User>;
+    /** The same users as guild members, when the modal was opened in a server. */
     members: Collection<string, GuildMember>;
+    /** The roles that were picked. */
     roles: Collection<string, Role>;
   };
   /** The uploaded files. */
@@ -338,12 +369,15 @@ export interface FieldOutput<Req extends boolean = boolean> {
 
 /** Internal descriptor for one modal component. */
 export interface FieldDef<Req extends boolean = boolean, K extends FieldKind = FieldKind> {
+  /** Which kind of component this is. */
   readonly kind: K;
   /** The label shown above the component (the content itself for `text`). */
   readonly label: string;
   /** Text-input style. Only set on `short` and `paragraph` fields. */
   readonly style?: "short" | "paragraph";
+  /** Whether the user must fill the field in. */
   readonly required: Req;
+  /** The remaining settings of the field, as passed to `field.*`. */
   readonly config: Readonly<Record<string, unknown>>;
 }
 
@@ -358,8 +392,11 @@ interface LabelOpt<R extends boolean> {
 }
 
 interface TextOpt<R extends boolean> extends LabelOpt<R> {
+  /** Greyed text shown while the input is empty (up to 100 characters). */
   placeholder?: string;
+  /** Shortest text accepted (0 to 4000). */
   minLength?: number;
+  /** Longest text accepted (1 to 4000). */
   maxLength?: number;
   /** A pre-filled value. */
   value?: string;
@@ -380,6 +417,7 @@ export interface FieldChoice {
 }
 
 interface PickOpt<R extends boolean> extends LabelOpt<R> {
+  /** Greyed text shown while nothing is picked (up to 150 characters). */
   placeholder?: string;
   /** Fewest items that must be picked. */
   minValues?: number;
@@ -462,7 +500,10 @@ export const field = {
   },
   /** A channel picker. `ctx.fields.x` is a `Collection<string, GuildBasedChannel>`. */
   channels<R extends boolean = false>(
-    config: EntityOpt<R> & { channelTypes?: readonly ChannelType[] },
+    config: EntityOpt<R> & {
+      /** Only offer channels of these types, e.g. `[ChannelType.GuildText]`. */
+      channelTypes?: readonly ChannelType[];
+    },
   ): FieldDef<R, "channels"> {
     return make("channels", config);
   },
@@ -475,13 +516,19 @@ export const field = {
    * `fileTypes` restricts what may be uploaded, e.g. `["image", ".pdf"]`.
    */
   files<R extends boolean = false>(
-    config: Omit<PickOpt<R>, "placeholder"> & { fileTypes?: ReadonlyArray<FileType> },
+    config: Omit<PickOpt<R>, "placeholder"> & {
+      /** What may be uploaded, e.g. `["image", ".pdf"]`. Up to 10 entries. */
+      fileTypes?: ReadonlyArray<FileType>;
+    },
   ): FieldDef<R, "files"> {
     return make("files", config);
   },
   /** A group of radio buttons (pick one). `ctx.fields.x` is the chosen value. */
   radio<R extends boolean = false>(
-    config: LabelOpt<R> & { options: readonly FieldChoice[] },
+    config: LabelOpt<R> & {
+      /** The choices, 2 to 10. Mark one with `default: true` to pre-select it. */
+      options: readonly FieldChoice[];
+    },
   ): FieldDef<R, "radio"> {
     return make("radio", config);
   },
@@ -490,7 +537,12 @@ export const field = {
     return make("checkboxes", config);
   },
   /** A single checkbox. `ctx.fields.x` is a `boolean`. */
-  checkbox(config: Omit<LabelOpt<false>, "required"> & { default?: boolean }): FieldDef<false, "checkbox"> {
+  checkbox(
+    config: Omit<LabelOpt<false>, "required"> & {
+      /** Whether the box starts ticked. Default `false`. */
+      default?: boolean;
+    },
+  ): FieldDef<false, "checkbox"> {
     return make("checkbox", config);
   },
   /** A block of markdown shown between fields. Display only: absent from `ctx.fields`. */

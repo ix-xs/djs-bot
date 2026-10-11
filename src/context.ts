@@ -63,7 +63,10 @@ export interface ReplyFn {
   /** Replies with content only the invoking user can see. */
   ephemeral(content: ReplyContent): Promise<void>;
   /** Defers the reply, showing a loading state (use for slow handlers). */
-  defer(options?: { ephemeral?: boolean }): Promise<void>;
+  defer(options?: {
+    /** Make the eventual reply visible to the invoking user only. */
+    ephemeral?: boolean;
+  }): Promise<void>;
   /** Sends an additional follow-up message. */
   followUp(content: ReplyContent): Promise<void>;
   /** Edits the current (deferred or sent) reply. */
@@ -137,7 +140,15 @@ export interface BaseContext<I extends RepliableInteraction = RepliableInteracti
    * Records an audit entry (no-op if audit is unconfigured). `actorId` and
    * `guildId` are filled in from the interaction.
    */
-  audit(action: string, details?: { targetId?: string; metadata?: Record<string, unknown> }): Promise<void>;
+  audit(
+    action: string,
+    details?: {
+      /** The id of what the action was applied to: a user, a message, a channel. */
+      targetId?: string;
+      /** Anything else worth keeping, e.g. `{ reason }`. */
+      metadata?: Record<string, unknown>;
+    },
+  ): Promise<void>;
   /** Ergonomic reply helper. */
   readonly reply: ReplyFn;
 }
@@ -186,12 +197,21 @@ export interface SelectMenuContext<Params> extends BaseContext<AnySelectMenuInte
 
 /** One autocomplete suggestion. */
 export interface AutocompleteChoice {
+  /** The text shown in the suggestion list (1 to 100 characters). */
   name: string;
+  /** What the option receives when the user picks this suggestion. */
   value: string | number;
 }
 
 /** What an autocomplete handler may return (auto-mapped to choices). */
 export type AutocompleteResult = AutocompleteChoice[] | string[] | number[];
+
+/**
+ * What the user has filled in so far, by option name, as Discord sends it while
+ * they type: text, numbers and booleans as such, and the **id** of a user,
+ * role, channel, mentionable or attachment. Options left empty are absent.
+ */
+export type AutocompleteOptions = Readonly<Record<string, string | number | boolean | undefined>>;
 
 /** Context passed to an option's autocomplete handler. */
 export interface AutocompleteContext {
@@ -203,6 +223,10 @@ export interface AutocompleteContext {
   readonly user: User;
   /** The guild, if any. */
   readonly guild: Guild | null;
+  /** The id of the guild the user is typing in; `null` in DMs. */
+  readonly guildId: string | null;
+  /** The id of the channel the user is typing in. */
+  readonly channelId: string | null;
   /** Injected services. */
   readonly services: ServiceMap;
   /** Correlation-scoped logger. */
@@ -211,16 +235,117 @@ export interface AutocompleteContext {
   readonly focused: string;
   /** The current (partial) value the user has typed, as a string. */
   readonly value: string;
+  /**
+   * The other options already filled in, to make suggestions depend on them:
+   * `ctx.options.category`. See {@link AutocompleteOptions} for what each holds.
+   */
+  readonly options: AutocompleteOptions;
   /** The user's Discord client locale. */
   readonly locale: string;
   /** Translates a key for this user's locale. */
   t(key: string, vars?: Record<string, unknown>): string;
 }
 
-/** An option's autocomplete handler. Return up to 25 choices. */
+/**
+ * An option's autocomplete handler. Return the suggestions for what the user
+ * has typed (`ctx.value`): the first 25 are shown. Discord waits 3 seconds at
+ * most and the answer cannot be deferred, so keep lookups fast or cached.
+ */
 export type AutocompleteHandler = (
   ctx: AutocompleteContext,
 ) => AutocompleteResult | Promise<AutocompleteResult>;
+
+/** The most suggestions Discord shows for one option. */
+export const AUTOCOMPLETE_MAX_CHOICES = 25;
+/** The longest suggestion name, and the longest text value, Discord accepts. */
+export const AUTOCOMPLETE_MAX_LENGTH = 100;
+
+/** What {@link toAutocompleteChoices} produced, and what it had to leave out. */
+export interface NormalizedChoices {
+  /** The suggestions to send, at most 25. */
+  choices: AutocompleteChoice[];
+  /** How many suggestions were left out because Discord would refuse them. */
+  dropped: number;
+}
+
+/**
+ * Turns what an autocomplete handler returned into suggestions Discord accepts.
+ * One invalid suggestion makes Discord refuse the whole list, so each is made
+ * valid or left out:
+ *  - plain strings and numbers become `{ name, value }`;
+ *  - names longer than 100 characters are cut, empty ones left out;
+ *  - the value takes the type of the option (text for `s.string`, a number for
+ *    `s.integer` and `s.number`); what cannot be converted is left out, and so
+ *    is a text value longer than 100 characters;
+ *  - only the first 25 are kept.
+ *
+ * @param result What the handler returned.
+ * @param kind The kind of the option being completed. Default `"string"`.
+ */
+export function toAutocompleteChoices(
+  result: unknown,
+  kind: "string" | "integer" | "number" | (string & {}) = "string",
+): NormalizedChoices {
+  if (!Array.isArray(result)) return { choices: [], dropped: 0 };
+  const choices: AutocompleteChoice[] = [];
+  let dropped = 0;
+  for (const item of result) {
+    if (choices.length === AUTOCOMPLETE_MAX_CHOICES) break;
+    const pair =
+      typeof item === "object" && item !== null
+        ? (item as { name?: unknown; value?: unknown })
+        : { name: item, value: item };
+    if (pair.value === undefined || pair.value === null) {
+      dropped++;
+      continue;
+    }
+    const label = String(pair.name ?? pair.value).trim();
+    let value: string | number;
+    if (kind === "integer" || kind === "number") {
+      value = typeof pair.value === "number" ? pair.value : Number(String(pair.value).trim() || Number.NaN);
+      if (!Number.isFinite(value) || (kind === "integer" && !Number.isInteger(value))) {
+        dropped++;
+        continue;
+      }
+    } else {
+      value = String(pair.value);
+      if (value.length > AUTOCOMPLETE_MAX_LENGTH) {
+        dropped++;
+        continue;
+      }
+    }
+    if (label === "") {
+      dropped++;
+      continue;
+    }
+    choices.push({
+      name: label.length > AUTOCOMPLETE_MAX_LENGTH ? `${label.slice(0, AUTOCOMPLETE_MAX_LENGTH - 3)}...` : label,
+      value,
+    });
+  }
+  return { choices, dropped };
+}
+
+/** The shape of one entry of `interaction.options.data`. */
+interface RawOption {
+  name: string;
+  type: number;
+  value?: string | number | boolean;
+  options?: readonly RawOption[];
+}
+
+/**
+ * Reads what the user has filled in so far from an autocomplete interaction,
+ * looking inside the subcommand (and group) being typed.
+ */
+export function readAutocompleteOptions(data: readonly RawOption[] | undefined): AutocompleteOptions {
+  let level = data ?? [];
+  // 1 = subcommand, 2 = subcommand group: the real options are nested inside.
+  while (level.length === 1 && (level[0]!.type === 1 || level[0]!.type === 2)) level = level[0]!.options ?? [];
+  const filled: Record<string, string | number | boolean | undefined> = {};
+  for (const option of level) if (option.value !== undefined) filled[option.name] = option.value;
+  return filled;
+}
 
 /** Context passed to modal handlers. `fields` holds the submitted values. */
 export interface ModalContext<Fields> extends BaseContext<ModalSubmitInteraction> {
@@ -265,7 +390,14 @@ export type DeferOption =
   | boolean
   | "ephemeral"
   | "update"
-  | { ephemeral?: boolean; update?: boolean; after?: number | string };
+  | {
+      /** Make the eventual reply visible to the invoking user only. */
+      ephemeral?: boolean;
+      /** Acknowledge without a loading message, to edit the original message (components). */
+      update?: boolean;
+      /** How long the handler may run before the deferral is sent. Default `2000` ms. */
+      after?: number | string;
+    };
 
 /** A {@link DeferOption} resolved to concrete values. */
 export interface ResolvedDefer {

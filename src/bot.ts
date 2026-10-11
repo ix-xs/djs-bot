@@ -47,7 +47,9 @@ import { BotError } from "./errors.js";
 import { customIdKey, decodeCustomId } from "./customId.js";
 import {
   createResponder,
+  readAutocompleteOptions,
   resolveDefer,
+  toAutocompleteChoices,
   type BaseContext,
   type DeferOption,
   type Responder,
@@ -89,23 +91,43 @@ export interface DeployCallOptions {
 export interface BotDescription {
   /** The framework version. */
   version: string;
+  /** Gateway intents the client connects with, by name. */
   intents: string[];
+  /** Partials enabled on the client, by name. */
   partials: string[];
+  /** The subset of `intents` that must be switched on in the Developer Portal. */
   privilegedIntents: string[];
+  /** Slash command names. */
   commands: string[];
+  /** User context-menu command names. */
   userCommands: string[];
+  /** Message context-menu command names. */
   messageCommands: string[];
+  /** Button routing ids. */
   buttons: string[];
+  /** Select menu routing ids. */
   selectMenus: string[];
+  /** Modal routing ids. */
   modals: string[];
+  /** The event of each registered listener. */
   events: string[];
+  /** Message trigger names. */
   triggers: string[];
+  /** Scheduled jobs, as `name (schedule)`. */
   jobs: string[];
+  /** Service tokens registered in the container. */
   services: string[];
+  /** Plugins, as `name@version`. */
   plugins: string[];
+  /** Feature names. */
   features: string[];
   /** Deployment plan: command names deployed globally, and per guild id. */
-  deployment: { global: string[]; guilds: Record<string, string[]> };
+  deployment: {
+    /** Names of the commands deployed globally. */
+    global: string[];
+    /** Names of the commands deployed to each guild, by guild id. */
+    guilds: Record<string, string[]>;
+  };
 }
 
 /** A snapshot of the runtime counters, as returned by {@link Bot.stats}. */
@@ -181,6 +203,8 @@ export class Bot {
   private signals?: { dispose?: () => void };
   private readonly theme: Theme;
   private readonly startedAt = Date.now();
+  /** Options whose dropped autocomplete suggestions were already reported. */
+  private readonly warnedAutocomplete = new Set<string>();
   private readonly counters = {
     interactions: 0,
     commands: 0,
@@ -620,7 +644,14 @@ export class Bot {
   /** Shortcut to set a single activity (e.g. `setActivity("/help", { type: ActivityType.Watching })`). */
   public setActivity(
     name: string,
-    options: { type?: ActivityType; url?: string; status?: PresenceStatusData } = {},
+    options: {
+      /** The verb shown before the name. Default `ActivityType.Playing`. */
+      type?: ActivityType;
+      /** A Twitch or YouTube URL, for `ActivityType.Streaming`. */
+      url?: string;
+      /** The status dot: `"online"`, `"idle"`, `"dnd"` or `"invisible"`. */
+      status?: PresenceStatusData;
+    } = {},
   ): void {
     this.client.user.setPresence({
       activities: [{ name, type: options.type, url: options.url }],
@@ -738,7 +769,14 @@ export class Bot {
    * wipe that guild, or omit it to wipe the **global** commands.
    * @example await bot.clear({ guildId: "123..." });
    */
-  public async clear(options: { guildId?: string; dryRun?: boolean } = {}): Promise<DeployTargetResult> {
+  public async clear(
+    options: {
+      /** The guild to wipe. Omit to wipe the global commands. */
+      guildId?: string;
+      /** Report what would be removed without writing anything. */
+      dryRun?: boolean;
+    } = {},
+  ): Promise<DeployTargetResult> {
     await this.load();
     const { token, clientId } = this.deployCredentials();
     return clearScope({ token, clientId, guildId: options.guildId, dryRun: options.dryRun, logger: this.logger });
@@ -972,8 +1010,11 @@ export class Bot {
     const optionMap: OptionMap = target ? (target.sub?.options ?? {}) : command.options;
 
     const focused = interaction.options.getFocused(true);
-    const handler = optionMap[focused.name]?.config.autocomplete;
-    if (typeof handler !== "function") return void (await interaction.respond([]));
+    const option = optionMap[focused.name];
+    const handler = option?.config.autocomplete;
+    // `autocomplete: true` means the bot answers from its own listener.
+    if (handler === true) return;
+    if (!option || typeof handler !== "function") return void (await interaction.respond([]));
 
     this.counters.autocompletes++;
     try {
@@ -984,15 +1025,28 @@ export class Bot {
         client: this.client,
         user: interaction.user,
         guild: interaction.guild,
+        guildId: interaction.guildId,
+        channelId: interaction.channelId,
         services: this.container.view(),
         logger: this.logger.child({ correlationId: cid, autocomplete: focused.name }),
         focused: focused.name,
         value: String(focused.value ?? ""),
+        options: readAutocompleteOptions(interaction.options.data as never),
         locale,
         t: (key: string, vars?: Record<string, unknown>) => (i18n ? i18n.t(locale, key, vars) : key),
       };
       const result = await (handler as (c: unknown) => unknown)(ctx);
-      await interaction.respond(normalizeChoices(result).slice(0, 25));
+      const { choices, dropped } = toAutocompleteChoices(result, option.kind);
+      // Say it once per option: this runs on every keystroke.
+      const where = `${interaction.commandName}:${target?.name ?? ""}:${focused.name}`;
+      if (dropped > 0 && !this.warnedAutocomplete.has(where)) {
+        this.warnedAutocomplete.add(where);
+        this.logger.warn(
+          { command: interaction.commandName, option: focused.name, dropped },
+          "Autocomplete suggestions were left out: a value must match the option's type, and a text value cannot exceed 100 characters",
+        );
+      }
+      await interaction.respond(choices);
     } catch (error) {
       this.counters.errors++;
       this.logger.error({ err: error, correlationId: cid }, "Autocomplete handler failed");
@@ -1224,16 +1278,6 @@ export class Bot {
       }
     }
   }
-}
-
-/** Normalises an autocomplete handler result into Discord choice objects. */
-function normalizeChoices(result: unknown): Array<{ name: string; value: string | number }> {
-  if (!Array.isArray(result)) return [];
-  return result.map((item) =>
-    typeof item === "object" && item !== null
-      ? (item as { name: string; value: string | number })
-      : { name: String(item), value: item as string | number },
-  );
 }
 
 /** Evaluates a trigger against a message. Returns `true`, a RegExp match, or `false`. */

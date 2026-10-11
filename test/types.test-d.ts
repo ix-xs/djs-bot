@@ -183,3 +183,26 @@ defineService("report", {
     return {};
   },
 });
+
+/* ------------- an autocomplete handler is typed without annotations ------- */
+
+defineCommand({
+  name: "ac",
+  description: "a",
+  options: {
+    category: s.string({ required: true }),
+    item: s.string({
+      autocomplete: (ctx) => {
+        type _a1 = Expect<Equal<typeof ctx.value, string>>;
+        type _a2 = Expect<Equal<typeof ctx.options.category, string | number | boolean | undefined>>;
+        type _a3 = Expect<Equal<typeof ctx.guildId, string | null>>;
+        return [ctx.value];
+      },
+    }),
+    amount: s.integer({ autocomplete: () => [1, 2, 3] }),
+  },
+  run: (ctx) => {
+    type _a4 = Expect<Equal<typeof ctx.options.item, string | undefined>>;
+    type _a5 = Expect<Equal<typeof ctx.options.amount, number | undefined>>;
+  },
+});

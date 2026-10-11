@@ -158,6 +158,10 @@ export function assertCommandShape(command: CommandLike): void {
         reject(`${label} sets both choices and autocomplete; Discord accepts only one`);
       }
       for (const choice of choices) {
+        // Reached from plain JavaScript only: the types refuse anything else.
+        if (typeof choice !== "object" || choice === null || typeof choice.name !== "string" || choice.value === undefined) {
+          reject(`${label}: each choice must be { name, value }, got ${JSON.stringify(choice)}`);
+        }
         if (choice.name.length < 1 || choice.name.length > COMMAND_LIMITS.choiceName) {
           reject(`${label}: choice name "${choice.name.slice(0, 20)}" must be 1-${COMMAND_LIMITS.choiceName} characters`);
         }

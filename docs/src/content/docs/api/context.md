@@ -232,28 +232,38 @@ run(ctx) {
 
 ### `AutocompleteContext`
 
-Passed to an option `autocomplete` handler. It is **not** repliable - return up
-to 25 choices instead.
+Passed to an option's `autocomplete` handler. It is **not** repliable: the
+handler returns the suggestions instead.
 
-| Property | Description |
-| --- | --- |
-| `interaction` | The raw `AutocompleteInteraction`. |
-| `client`, `user`, `guild`, `services`, `logger` | As on `BaseContext`. |
-| `focused` | The name of the option being typed into. |
-| `value` | The partial text typed so far, as a string. |
-| `locale`, `t` | The user's language and your translator, for localized suggestions. |
+| Property | Type | Description |
+| --- | --- | --- |
+| `value` | `string` | What the user has typed so far. `""` when the field was just opened. |
+| `focused` | `string` | The name of the option being typed. |
+| `options` | `AutocompleteOptions` | The other options already filled in, by name. Text, numbers and booleans as such; the id of a user, role, channel, mentionable or attachment. An option left empty is absent. |
+| `user` | `User` | Who is typing. |
+| `guild` | `Guild \| null` | The server, when cached. |
+| `guildId` | `string \| null` | The server id; `null` in DMs. |
+| `channelId` | `string \| null` | The channel id. |
+| `services` | `ServiceMap` | Your services, as in a command. |
+| `logger` | `Logger` | Tagged with the correlation id and the option name. |
+| `client` | `Client<true>` | The connected client. |
+| `locale` | `string` | The user's Discord language. |
+| `t(key, vars?)` | `string` | Translates for that language. |
+| `interaction` | `AutocompleteInteraction` | The raw discord.js interaction. |
 
 ```ts
 query: s.string({
-  autocomplete: async (ac) => {
-    const rows = await ac.services.db.search(ac.value);
-    return rows.slice(0, 25).map((r) => ({ name: r.title, value: r.id }));
+  autocomplete: async (ctx) => {
+    const rows = await ctx.services.db.search(ctx.options.category, ctx.value);
+    return rows.map((row) => ({ name: row.title, value: row.id }));
   },
 }),
 ```
 
-A handler may return `AutocompleteChoice[]`, `string[]` or `number[]` - plain
-arrays are mapped to choices automatically.
+A handler returns `AutocompleteChoice[]` (`{ name, value }`), `string[]` or
+`number[]`, directly or as a promise (`AutocompleteResult`). The list is made
+valid for Discord before it is sent: see
+[Options, autocomplete](/api/options/#autocomplete).
 
 ### Events, triggers and jobs
 

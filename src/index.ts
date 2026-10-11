@@ -124,7 +124,7 @@ export {
 } from "./guards.js";
 
 // Contexts
-export { describeInteraction } from "./context.js";
+export { describeInteraction, toAutocompleteChoices } from "./context.js";
 export type {
   DeferOption,
   InteractionSummary,
@@ -144,6 +144,8 @@ export type {
   AutocompleteHandler,
   AutocompleteResult,
   AutocompleteChoice,
+  AutocompleteOptions,
+  NormalizedChoices,
 } from "./context.js";
 
 // Container / services

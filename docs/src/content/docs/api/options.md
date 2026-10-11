@@ -105,24 +105,58 @@ They are mutually exclusive.
 
 ### Autocomplete
 
-`autocomplete` is either `true` (you handle it elsewhere) or a handler:
+`autocomplete` takes a handler, called on every keystroke, that returns the
+suggestions to show:
 
 ```ts
 options: {
   song: s.string({
     description: "Search the library",
     required: true,
-    autocomplete: async (ac) => {
-      const results = await ac.services.music.search(ac.value);
-      return results.slice(0, 25).map((r) => ({ name: r.title, value: r.id }));
+    autocomplete: async (ctx) => {
+      const results = await ctx.services.music.search(ctx.value);
+      return results.map((song) => ({ name: song.title, value: song.id }));
     },
   }),
 }
 ```
 
 The handler receives an [`AutocompleteContext`](/api/context/#autocompletecontext)
-and may return `{ name, value }[]`, `string[]` or `number[]` - plain arrays are
-mapped to choices for you. Discord accepts at most **25** suggestions.
+and may return `{ name, value }[]`, `string[]` or `number[]`.
+
+| Rule | What the framework does |
+| --- | --- |
+| At most 25 suggestions | Sends the first 25. |
+| Names of 1 to 100 characters | Cuts a longer name, leaves out an empty one. |
+| The value has the type of the option | Converts it: a number for `s.integer` / `s.number`, text for `s.string`. |
+| A text value of at most 100 characters | Leaves the suggestion out. |
+| An answer within 3 seconds, not deferrable | Nothing: keep the lookup fast, or cache it with [`TTLCache`](/api/cache/). |
+
+Suggestions left out are reported once per option in the logs. A handler that
+throws is logged and answers an empty list.
+
+Make suggestions depend on what was already filled in with `ctx.options`:
+
+```ts
+item: s.string({
+  autocomplete: (ctx) => ctx.services.shop.search(ctx.options.category, ctx.value),
+}),
+```
+
+`toAutocompleteChoices(result, kind?)` is the function that applies these
+rules. It is exported for the rare bot that answers autocomplete itself
+(`autocomplete: true` marks the option and leaves the answer to your own
+`interactionCreate` listener):
+
+```ts
+const { choices, dropped } = toAutocompleteChoices(rows, "string");
+await interaction.respond(choices);
+```
+
+:::caution[A suggestion is not a validation]
+The user can ignore the list and submit what they typed. Validate the value
+again in `run`.
+:::
 
 ## `p` - customId params
 

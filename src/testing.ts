@@ -18,7 +18,14 @@ import { PermissionsBitField, type PermissionResolvable } from "discord.js";
 import { createLogger } from "./logger.js";
 import type { ServiceMap } from "./container.js";
 import type { Bot } from "./bot.js";
-import type { AutocompleteChoice, ReplyFn, ShowModalFn, UpdateFn } from "./context.js";
+import {
+  toAutocompleteChoices,
+  type AutocompleteChoice,
+  type AutocompleteOptions,
+  type ReplyFn,
+  type ShowModalFn,
+  type UpdateFn,
+} from "./context.js";
 import type {
   ButtonDefinition,
   CommandDefinition,
@@ -33,6 +40,7 @@ import { renderMessage, type FrameworkMessages } from "./messages.js";
 
 /** A single captured response produced by a handler under test. */
 export interface CapturedReply {
+  /** Which responder method the handler called. */
   type:
     | "reply"
     | "success"
@@ -47,6 +55,7 @@ export interface CapturedReply {
     | "update"
     | "update:disable"
     | "modal";
+  /** What was passed to it: the text or the payload. */
   content?: unknown;
 }
 
@@ -182,49 +191,99 @@ export interface Harness {
    */
   command(
     def: CommandDefinition,
-    input?: BaseInput & { options?: Record<string, unknown>; subcommand?: string; group?: string },
+    input?: BaseInput & {
+      /** The values of the command's options, by name: what `ctx.options` holds. */
+      options?: Record<string, unknown>;
+      /** The subcommand to run, for a command built from subcommands. */
+      subcommand?: string;
+      /** The group that subcommand belongs to, if any. */
+      group?: string;
+    },
   ): Promise<HarnessResult>;
   /** Invokes a user context-menu command on a target user. */
   userCommand(
     def: UserCommandDefinition,
-    input?: BaseInput & { targetUser?: unknown; targetMember?: unknown },
+    input?: BaseInput & {
+      /** The user that was right-clicked: what `ctx.targetUser` holds. */
+      targetUser?: unknown;
+      /** The same user as a guild member: what `ctx.targetMember` holds. */
+      targetMember?: unknown;
+    },
   ): Promise<HarnessResult>;
   /** Invokes a message context-menu command on a target message. */
-  messageCommand(def: MessageCommandDefinition, input?: BaseInput & { targetMessage?: unknown }): Promise<HarnessResult>;
+  messageCommand(
+    def: MessageCommandDefinition,
+    input?: BaseInput & {
+      /** The message that was right-clicked: what `ctx.targetMessage` holds. */
+      targetMessage?: unknown;
+    },
+  ): Promise<HarnessResult>;
   /** Invokes a button handler with typed params. */
-  button(def: ButtonDefinition, input?: BaseInput & { params?: Record<string, unknown> }): Promise<HarnessResult>;
+  button(
+    def: ButtonDefinition,
+    input?: BaseInput & {
+      /** The params decoded from the customId: what `ctx.params` holds. */
+      params?: Record<string, unknown>;
+    },
+  ): Promise<HarnessResult>;
   /** Invokes a select-menu handler (string or native). */
   select(
     def: SelectRoutable,
     input?: BaseInput & {
+      /** The params decoded from the customId: what `ctx.params` holds. */
       params?: Record<string, unknown>;
+      /** The values (or ids) that were picked: what `ctx.values` holds. */
       values?: string[];
+      /** The resolved users of a user or mentionable select: `ctx.users`. */
       users?: unknown;
+      /** The resolved members of a user or mentionable select: `ctx.members`. */
       members?: unknown;
+      /** The resolved roles of a role or mentionable select: `ctx.roles`. */
       roles?: unknown;
+      /** The resolved channels of a channel select: `ctx.channels`. */
       channels?: unknown;
     },
   ): Promise<HarnessResult>;
   /** Invokes a modal handler with submitted field values. */
   modal(
     def: ModalDefinition,
-    input?: BaseInput & { fields?: Record<string, unknown>; params?: Record<string, unknown> },
+    input?: BaseInput & {
+      /** The submitted values, by field name: what `ctx.fields` holds. */
+      fields?: Record<string, unknown>;
+      /** The params decoded from the customId: what `ctx.params` holds. */
+      params?: Record<string, unknown>;
+    },
   ): Promise<HarnessResult>;
   /**
-   * Runs an option's autocomplete handler and returns the choices it produced
-   * (already mapped and capped at 25, as the router does).
+   * Runs an option's autocomplete handler and returns the suggestions exactly
+   * as the bot would send them: mapped, made valid for Discord, capped at 25.
+   * `value` is what the user has typed; `options` what the other options hold.
    */
   autocomplete(
     def: CommandDefinition,
-    input: Pick<BaseInput, "userId" | "guildId" | "services" | "locale"> & {
+    input: Pick<BaseInput, "userId" | "guildId" | "channelId" | "services" | "locale"> & {
+      /** The name of the option being typed. */
       option: string;
+      /** What the user has typed so far. Default `""`. */
       value?: string;
+      /** What the other options already hold: `ctx.options`. */
+      options?: AutocompleteOptions;
+      /** The subcommand the option belongs to, for a command built from subcommands. */
       subcommand?: string;
+      /** The group that subcommand belongs to, if any. */
       group?: string;
     },
   ): Promise<AutocompleteChoice[]>;
   /** Runs a job once, with the bot's services (or the ones you pass). */
-  job(def: JobDefinition, input?: { services?: Partial<ServiceMap>; signal?: AbortSignal }): Promise<void>;
+  job(
+    def: JobDefinition,
+    input?: {
+      /** Services available as `ctx.services` (overrides the bot's, if any). */
+      services?: Partial<ServiceMap>;
+      /** What `ctx.signal` holds, to test how a job reacts to a shutdown. */
+      signal?: AbortSignal;
+    },
+  ): Promise<void>;
 }
 
 /** Finds the subcommand a harness call targets. */
@@ -324,8 +383,9 @@ export function createHarness(bot?: Bot): Harness {
     async autocomplete(def, input) {
       const sub = pickSubcommand(def, input.subcommand, input.group);
       const options = sub ? sub.options : def.options;
-      const handler = options[input.option]?.config.autocomplete;
-      if (typeof handler !== "function") {
+      const option = options[input.option];
+      const handler = option?.config.autocomplete;
+      if (!option || typeof handler !== "function") {
         throw new Error(`Option "${input.option}" of "${def.name}" has no autocomplete handler.`);
       }
       const base = baseCtx(input, bot);
@@ -334,21 +394,17 @@ export function createHarness(bot?: Bot): Harness {
         client: base.client,
         user: base.user,
         guild: base.guild,
+        guildId: input.guildId ?? null,
+        channelId: input.channelId ?? null,
         services: base.services,
         logger: base.logger,
         focused: input.option,
         value: input.value ?? "",
+        options: { ...input.options, [input.option]: input.value ?? "" },
         locale: base.locale,
         t: base.t,
       });
-      const list = Array.isArray(result) ? result : [];
-      return list
-        .map((item) =>
-          typeof item === "object" && item !== null
-            ? (item as AutocompleteChoice)
-            : { name: String(item), value: item as string | number },
-        )
-        .slice(0, 25);
+      return toAutocompleteChoices(result, option.kind).choices;
     },
     async job(def, input = {}) {
       await def.run({

@@ -47,7 +47,7 @@ it("bans a member", async () => {
 | `harness.button(def, input?)` | `params` |
 | `harness.select(def, input?)` | `params`, `values`, and `users` / `members` / `roles` / `channels` for native selects |
 | `harness.modal(def, input?)` | `fields`, `params` |
-| `harness.autocomplete(def, input)` | `option`, `value`, `subcommand`, `group`; resolves to the choices |
+| `harness.autocomplete(def, input)` | `option`, `value`, `options`, `subcommand`, `group`; resolves to the choices the bot would send |
 | `harness.job(def, input?)` | `services`, `signal`; runs the job once |
 
 ### Shared input
@@ -159,6 +159,10 @@ checkbox.
 
 ## Testing autocomplete
 
+`value` is what the user has typed, `options` what the other options hold.
+The result is exactly what the bot would send: mapped to `{ name, value }`,
+made valid for Discord and capped at 25.
+
 ```ts
 it("suggests matching songs", async () => {
   const choices = await harness.autocomplete(Play, {
@@ -168,9 +172,16 @@ it("suggests matching songs", async () => {
   });
   expect(choices).toEqual([{ name: "Bohemian Rhapsody", value: "s1" }]);
 });
-```
 
-The result is mapped and capped at 25, exactly as the router does it.
+it("suggests the items of the chosen category", async () => {
+  const choices = await harness.autocomplete(Buy, {
+    option: "item",
+    value: "sw",
+    options: { category: "weapons" },
+  });
+  expect(choices.map((choice) => choice.value)).toEqual(["sword", "switchblade"]);
+});
+```
 
 ## Testing jobs
 
