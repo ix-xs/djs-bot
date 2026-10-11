@@ -7,13 +7,18 @@ export const Report = defineModal({
     kind: field.select({
       label: "Kind",
       required: true,
-      options: [{ label: "Bug", value: "bug" }],
+      options: [
+        { label: "Bug", value: "bug" },
+        { label: "Spam", value: "spam" },
+      ],
     }),
     details: field.paragraph({ label: "Details", required: true }),
     urgent: field.checkbox({ label: "This is urgent" }),
   },
-  run: (ctx) =>
-    ctx.reply.success(ctx.t("report.sent", { details: ctx.fields.details })),
+  run: (ctx) => {
+    const { kind, details } = ctx.fields;
+    return ctx.reply.success(ctx.t("report.sent", { kind: kind[0], details }));
+  },
 });
 
 export default defineCommand({

@@ -1,7 +1,8 @@
 ---
 // One message of the showcase's Discord screen. `at` and `until` say during
 // which steps of the scene it is there (see Showcase.astro). The pieces of
-// text are HTML: each holds its English and its French form.
+// text are HTML: each holds its English and its French form. What goes in the
+// "tools" slot sits at the end of the author's line.
 interface Props {
   author?: string;
   bot?: boolean;
@@ -22,11 +23,12 @@ const { author = "djs-bot", bot = true, color = "#5865f2", time, used, ephemeral
   <div class="sc-av" style={`background:${color}`} aria-hidden="true">{author.charAt(0).toUpperCase()}</div>
   <div class="sc-body">
     {used && <p class="sc-used" set:html={used} />}
-    <p class="sc-meta">
+    <div class="sc-meta">
       <b>{author}</b>
       {bot && <span class="sc-app">APP</span>}
       <time set:html={time} />
-    </p>
+      <slot name="tools" />
+    </div>
     <slot />
     {ephemeral && <p class="sc-eph" set:html={ephemeral} />}
   </div>

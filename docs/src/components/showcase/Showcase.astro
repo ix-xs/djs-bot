@@ -10,7 +10,9 @@
 //
 // A scene is a small script. Elements carry the steps during which they are
 // there (`data-at`, `data-until`), and what moves the scene on:
-//   data-go="n"       pressing it brings the scene to step n (from n - 1 only)
+//   data-go="n"       pressing it brings the scene to step n (from n - 1 only);
+//                     several steps ("1 2") for a control that is pressed again
+//   data-field="x"    a field the reader fills in, copied into [data-echo="x"]
 //   data-auto="ms"    once shown (and typed), the scene moves on by itself
 //   data-typed-en/fr  the text is typed out when the element appears
 //   data-pick-en/fr   with data-go: the text copied into every [data-echo]
@@ -34,6 +36,7 @@ const used = (en: string, fr: string): string => both((lang) => `Jo ${DISCORD.us
 const mention = (name: string): string => `<span class="sc-mention">@${name}</span>`;
 /** The last step of a scene: the highest one its trace mentions. */
 const last = (id: string): number => Math.max(...SCENES.find((scene) => scene.id === id)!.trace.map((line) => line.at));
+const intro = `<b aria-hidden="true">#</b><p><strong>${d("welcome")}</strong>${d("start")}</p>`;
 const FRUITS = ["mango", "melon"];
 const COLOURS = [
   { id: "red", emoji: "🔴" },
@@ -42,7 +45,9 @@ const COLOURS = [
 ---
 
 <at-showcase class="sc not-content" data-client={page}>
-  <div class="sc-rail" role="tablist" aria-label={w("kinds")}>
+  <div class="sc-railwrap">
+    <button type="button" class="sc-rail-go" data-rail="-1" tabindex="-1" aria-label={w("earlier")}><span aria-hidden="true">‹</span></button>
+    <div class="sc-rail" role="tablist" aria-label={w("kinds")}>
     {SCENES.map((scene, index) => (
       <button
         type="button"
@@ -57,6 +62,8 @@ const COLOURS = [
       </button>
     ))}
     <i class="sc-mark" aria-hidden="true"></i>
+    </div>
+    <button type="button" class="sc-rail-go" data-rail="1" tabindex="-1" aria-label={w("later")}><span aria-hidden="true">›</span></button>
   </div>
 
   <div class="sc-stage">
@@ -92,6 +99,7 @@ const COLOURS = [
           {scene.id === "command" && (
             <>
               <div class="sc-feed">
+                <div class="sc-intro" set:html={intro} />
                 <Msg time={d("today")} used={used("profile", "profil")} at={1}>
                   <p class="sc-dots" data-at="1" data-until="2" data-auto="800" aria-label={DISCORD.typing[page]}><i></i><i></i><i></i></p>
                   <p class="sc-embed is-ok" data-at="2">✅ <Fragment set:html={s("profile.of", { user: mention("Aleksandra") })} /></p>
@@ -108,6 +116,7 @@ const COLOURS = [
           {scene.id === "autocomplete" && (
             <>
               <div class="sc-feed">
+                <div class="sc-intro" set:html={intro} />
                 <Msg time={d("today")} used={used("fruit", "fruit")} at={2}>
                   <p class="sc-embed is-ok">✅ <Fragment set:html={both((lang) => say(lang, "fruit.picked", { fruit: "<span data-echo></span>" }))} /></p>
                 </Msg>
@@ -128,11 +137,18 @@ const COLOURS = [
           {scene.id === "button" && (
             <>
               <div class="sc-feed">
+                <div class="sc-intro" set:html={intro} />
                 <Msg time={d("today")} used={used("ticket", "ticket")}>
-                  <p set:html={s("ticket.opened", { id: "T-1042" })} />
-                  <p class="sc-row"><button type="button" class="sc-btn is-danger" data-go="1" data-disable-at="1">🔒 <Fragment set:html={s("ticket.close")} /></button></p>
+                  <p data-until="2" set:html={s("ticket.opened", { id: "T-1042" })} />
+                  <p data-at="2" set:html={s("ticket.closed", { id: "T-1042" })} />
+                  <p class="sc-row" data-until="2"><button type="button" class="sc-btn is-danger" data-go="1 2">🔒 <Fragment set:html={s("ticket.close")} /></button></p>
+                </Msg>
+                <Msg time={d("today")} ephemeral={d("onlyYou")} at={1} until={2}>
+                  <p class="sc-embed is-error">❌ <Fragment set:html={s("ticket.notYours")} /></p>
                 </Msg>
               </div>
+              <p class="sc-actor" data-until="1"><i style="background:#ed4245" aria-hidden="true">M</i><span set:html={w("actor").replace("{who}", `<b>Mallory</b>, ${w("stranger")}`)} /></p>
+              <p class="sc-actor" data-at="1" data-until="2"><i style="background:#3ba55c" aria-hidden="true">J</i><span set:html={w("actor").replace("{who}", `<b>Jo</b>, ${w("owner")}`)} /></p>
               <div class="sc-composer"><span class="sc-hint" set:html={d("composer")} /></div>
             </>
           )}
@@ -140,6 +156,7 @@ const COLOURS = [
           {scene.id === "select" && (
             <>
               <div class="sc-feed">
+                <div class="sc-intro" set:html={intro} />
                 <Msg time={d("today")} used={used("colour", "couleur")}>
                   <p data-until="2" set:html={s("colour.which")} />
                   <p data-at="2" set:html={both((lang) => say(lang, "colour.chosen", { colour: "<span data-echo></span>" }))} />
@@ -162,8 +179,9 @@ const COLOURS = [
           {scene.id === "modal" && (
             <>
               <div class="sc-feed">
+                <div class="sc-intro" set:html={intro} />
                 <Msg time={d("today")} used={used("report", "signaler")} at={2}>
-                  <p class="sc-embed is-ok">✅ <Fragment set:html={both((lang) => say(lang, "report.sent", { details: lang === "fr" ? "Le bouton d'export ne fait rien." : "The export button does nothing." }))} /></p>
+                  <p class="sc-embed is-ok">✅ <Fragment set:html={both((lang) => say(lang, "report.sent", { kind: '<span data-echo="kind"></span>', details: '<span data-echo="details"></span>' }))} /></p>
                 </Msg>
               </div>
               <div class="sc-composer">
@@ -175,13 +193,16 @@ const COLOURS = [
               <div class="sc-modal" data-at="1" data-until="2" role="group" aria-label={say(page, "report.title")}>
                 <p class="sc-modal-title" set:html={s("report.title")} />
                 <p class="sc-label"><Fragment set:html={s("report.kind")} /> <b>*</b></p>
-                <p class="sc-field">Bug<span aria-hidden="true">⌄</span></p>
+                <select class="sc-field" data-field="kind" aria-label={say(page, "report.kind")}>
+                  <option value="bug">Bug</option>
+                  <option value="spam">Spam</option>
+                </select>
                 <p class="sc-label"><Fragment set:html={s("report.details")} /> <b>*</b></p>
-                <p class="sc-field is-area"><span data-typed-en="The export button does nothing." data-typed-fr="Le bouton d'export ne fait rien."></span></p>
+                <textarea class="sc-field is-area" data-field="details" rows="2" maxlength="120" aria-label={say(page, "report.details")} data-typed-en="The export button does nothing." data-typed-fr="Le bouton d'export ne fait rien."></textarea>
                 <label class="sc-check"><input type="checkbox" /> <Fragment set:html={s("report.urgent")} /></label>
                 <p class="sc-modal-actions">
                   <button type="button" class="sc-btn is-ghost" data-replay set:html={d("cancel")} />
-                  <button type="button" class="sc-btn is-primary" data-go="2" set:html={d("submit")} />
+                  <button type="button" class="sc-btn is-primary" data-go="2" data-submit set:html={d("submit")} />
                 </p>
               </div>
             </>
@@ -190,9 +211,10 @@ const COLOURS = [
           {scene.id === "context" && (
             <>
               <div class="sc-feed">
+                <div class="sc-intro" set:html={intro} />
                 <Msg author="Mallory" bot={false} color="#ed4245" time={d("today")}>
                   <p set:html={both((lang) => (lang === "fr" ? "NITRO GRATUIT sur totally-legit.example" : "FREE NITRO at totally-legit.example"))} />
-                  <div class="sc-anchor is-corner">
+                  <div class="sc-anchor is-tools" slot="tools">
                     <button type="button" class="sc-more" data-go="1" aria-label={DISCORD.more[page]}>⋯</button>
                     <div class="sc-pop sc-menu" data-at="1" data-until="2">
                       <p set:html={d("reply")} />
@@ -214,6 +236,7 @@ const COLOURS = [
           {scene.id === "event" && (
             <>
               <div class="sc-feed">
+                <div class="sc-intro" set:html={intro} />
                 <p class="sc-center" data-until="1"><button type="button" class="sc-chip" data-go="1">{w("join")}</button></p>
                 <p class="sc-system" data-at="1"><span aria-hidden="true">→</span><span><b>Jo</b> <Fragment set:html={d("joined")} /></span></p>
                 <Msg time={d("today")} at={1}>
@@ -246,7 +269,10 @@ const COLOURS = [
               <p data-caption={index} data-from={line.at} data-lines={line.lines.join("-")} set:html={line.text[page]} />
             ))}
           </div>
-          <button type="button" class="sc-replay" data-replay data-at={last(scene.id)}>{w("replay")}</button>
+          <p class="sc-after" data-at={last(scene.id)}>
+            <button type="button" class="sc-replay" data-replay>{w("replay")}</button>
+            <button type="button" class="sc-next at-press" data-next>{w("next")}<span aria-hidden="true">→</span></button>
+          </p>
         </div>
       </section>
     ))}
@@ -270,8 +296,20 @@ const COLOURS = [
     private readonly lines: HTMLElement[];
     private readonly captions: HTMLElement[];
     private readonly dots: HTMLButtonElement[];
+    private readonly fields: (HTMLSelectElement | HTMLTextAreaElement)[];
 
     constructor(readonly root: HTMLElement) {
+      this.fields = [...root.querySelectorAll<HTMLSelectElement | HTMLTextAreaElement>("[data-field]")];
+      // Once the reader writes in a field, it is theirs: the typing stops.
+      for (const input of this.fields) {
+        const take = (event: Event) => {
+          if (!event.isTrusted) return;
+          input.dataset.touched = "";
+          input.removeAttribute("data-invalid");
+        };
+        input.addEventListener("input", take);
+        input.addEventListener("pointerdown", take);
+      }
       this.parts = [...root.querySelectorAll<HTMLElement>("[data-at], [data-until]")];
       this.lines = [...root.querySelectorAll<HTMLElement>(".sc-code .ec-line")];
       this.captions = [...root.querySelectorAll<HTMLElement>("[data-caption]")];
@@ -300,6 +338,14 @@ const COLOURS = [
       list.clear();
     }
 
+    /** Whether every field of the form is filled in. The first empty one is pointed at. */
+    private complete(): boolean {
+      const empty = this.fields.find((input) => input.value.trim() === "");
+      empty?.setAttribute("data-invalid", "");
+      empty?.focus();
+      return !empty;
+    }
+
     /** Stops everything and goes back to the first step, without playing it. */
     rest(): void {
       this.stop(this.timers);
@@ -307,7 +353,13 @@ const COLOURS = [
       this.step = 0;
       this.demo = false;
       this.shown = 0;
-      for (const typed of this.root.querySelectorAll<HTMLElement>("[data-typed-en]")) typed.textContent = "";
+      for (const typed of this.root.querySelectorAll<HTMLElement>("[data-typed-en]")) this.write(typed, "");
+      for (const input of this.fields) {
+        delete input.dataset.touched;
+        input.removeAttribute("data-invalid");
+        if (input instanceof HTMLSelectElement) input.selectedIndex = 0;
+      }
+      for (const box of this.root.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) box.checked = false;
       for (const line of this.lines) line.classList.remove("sc-hot", "sc-warm");
       for (const caption of this.captions) caption.removeAttribute("data-current");
       for (const dot of this.dots) {
@@ -344,12 +396,19 @@ const COLOURS = [
         return;
       }
       const control = target?.closest<HTMLElement>("[data-go]");
-      if (!control || control.closest("[data-off]") || Number(control.dataset.go) !== this.step + 1) return;
+      if (!control || control.closest("[data-off]") || !control.dataset.go!.split(" ").includes(String(this.step + 1))) return;
+      // A form is sent only when what it requires is filled in, as in Discord.
+      if (control.hasAttribute("data-submit") && !this.complete()) return;
       // A real press takes over from the demonstration.
       if (event.isTrusted) this.demo = false;
       const picked = this.local(control, "pick");
       if (picked) {
-        for (const echo of this.root.querySelectorAll("[data-echo]")) echo.textContent = picked;
+        for (const echo of this.root.querySelectorAll('[data-echo=""]')) echo.textContent = picked;
+      }
+      // What the reader filled in is what the bot answers with.
+      for (const input of this.fields) {
+        const value = input instanceof HTMLSelectElement ? (input.selectedOptions[0]?.value ?? "") : input.value.trim();
+        for (const echo of this.root.querySelectorAll(`[data-echo="${input.dataset.field}"]`)) echo.textContent = value;
       }
       this.go(this.step + 1);
     }
@@ -368,7 +427,7 @@ const COLOURS = [
       }
       // The control that moves the scene on gets a ring, so the next move is never a guess.
       for (const hinted of this.root.querySelectorAll("[data-hint]")) hinted.removeAttribute("data-hint");
-      const next = [...this.root.querySelectorAll<HTMLElement>(`[data-go="${this.step + 1}"]`)].find((control) => !control.closest("[data-off]"));
+      const next = [...this.root.querySelectorAll<HTMLElement>(`[data-go~="${this.step + 1}"]`)].find((control) => !control.closest("[data-off]"));
       next?.setAttribute("data-hint", "");
       if (!live) return;
 
@@ -394,6 +453,12 @@ const COLOURS = [
       }
     }
 
+    /** Puts text in an element, or in a field. */
+    private write(element: HTMLElement, text: string): void {
+      if (element instanceof HTMLTextAreaElement) element.value = text;
+      else element.textContent = text;
+    }
+
     private type(element: HTMLElement): void {
       const text = this.local(element, "typed") ?? "";
       const done = () => {
@@ -401,13 +466,15 @@ const COLOURS = [
         else if (this.demo) this.later(() => this.root.querySelector<HTMLElement>("[data-hint]")?.click(), 700);
       };
       if (reduced.matches) {
-        element.textContent = text;
+        this.write(element, text);
         done();
         return;
       }
       let shown = 0;
       const tick = () => {
-        element.textContent = text.slice(0, ++shown);
+        // The reader took the field over.
+        if ("touched" in element.dataset) return;
+        this.write(element, text.slice(0, ++shown));
         if (shown < text.length) this.later(tick, 26 + (shown % 3) * 9);
         else done();
       };
@@ -463,7 +530,7 @@ const COLOURS = [
       this.show(this.current, false, false);
 
       let pointer = 0;
-      const rail = this.querySelector(".sc-rail")!;
+      const rail = this.querySelector<HTMLElement>(".sc-rail")!;
       rail.addEventListener("pointerdown", () => (pointer = performance.now()));
       rail.addEventListener("click", (event) => {
         const tab = (event.target as Element).closest<HTMLElement>("[data-tab]");
@@ -479,6 +546,27 @@ const COLOURS = [
         const tab = this.tabs[(moves[key]! + this.tabs.length) % this.tabs.length]!;
         this.show(tab.dataset.tab!, false, true);
         tab.focus();
+      });
+      // Once a scene is over, the next one is a press away.
+      this.addEventListener("click", (event) => {
+        if (!(event.target as Element).closest("[data-next]")) return;
+        const index = this.tabs.findIndex((tab) => tab.dataset.tab === this.current);
+        const tab = this.tabs[(index + 1) % this.tabs.length]!;
+        this.show(tab.dataset.tab!, true, true);
+      });
+      // The rail scrolls when it does not fit: its arrows show where there is more.
+      const ends = () => {
+        const wrap = rail.parentElement!;
+        wrap.toggleAttribute("data-earlier", rail.scrollLeft > 4);
+        wrap.toggleAttribute("data-later", rail.scrollLeft + rail.clientWidth < rail.scrollWidth - 4);
+      };
+      rail.addEventListener("scroll", ends, { passive: true });
+      addEventListener("resize", ends);
+      document.fonts?.ready.then(ends);
+      ends();
+      rail.parentElement!.addEventListener("click", (event) => {
+        const way = (event.target as Element).closest<HTMLElement>("[data-rail]")?.dataset.rail;
+        if (way) rail.scrollBy({ left: Number(way) * rail.clientWidth * 0.6, behavior: reduced.matches ? "auto" : "smooth" });
       });
       // The Discord on screen changes language: the same scene, played again.
       this.addEventListener("click", (event) => {

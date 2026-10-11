@@ -65,10 +65,10 @@ export const SCENES: Scene[] = [
     file: "features/tickets/ticket.button.ts",
     code: ticket,
     trace: [
-      { at: 1, lines: [22, 22], text: { en: "The label was translated when the button was built", fr: "Le libellé a été traduit au moment où le bouton a été construit" } },
-      { at: 1, lines: [5, 5], text: { en: "customId decoded: <code>ticketId \"T-1042\"</code>, typed", fr: "customId décodé : <code>ticketId \"T-1042\"</code>, typé" } },
-      { at: 1, lines: [9, 11], text: { en: "Owner check passed", fr: "Vérification du propriétaire réussie" } },
-      { at: 1, lines: [12, 12], text: { en: "<code>ctx.update.disable()</code> greyed the button out", fr: "<code>ctx.update.disable()</code> a grisé le bouton" } },
+      { at: 1, lines: [5, 5], text: { en: "customId decoded: <code>ownerId</code> comes back typed, with no <code>split(\"_\")</code>", fr: "customId décodé : <code>ownerId</code> revient typé, sans <code>split(\"_\")</code>" } },
+      { at: 1, lines: [9, 11], text: { en: "Mallory does not own the ticket: she is told so, she alone, in her language", fr: "Mallory n'est pas propriétaire du ticket : elle seule en est informée, dans sa langue" } },
+      { at: 2, lines: [9, 9], text: { en: "Jo owns the ticket: the check passes", fr: "Jo est propriétaire du ticket : la vérification passe" } },
+      { at: 2, lines: [12, 15], text: { en: "The message is edited in place and the button is gone", fr: "Le message est modifié sur place et le bouton disparaît" } },
     ],
   },
   {
@@ -88,9 +88,9 @@ export const SCENES: Scene[] = [
     file: "features/report/report.modal.ts",
     code: report,
     trace: [
-      { at: 1, lines: [24, 31], text: { en: "<code>ctx.showModal</code> opened the form, with its text in the reader's language", fr: "<code>ctx.showModal</code> a ouvert le formulaire, avec ses textes dans la langue du lecteur" } },
-      { at: 1, lines: [6, 14], text: { en: "A menu, a paragraph and a checkbox, each declared once", fr: "Un menu, un paragraphe et une case à cocher, déclarés une seule fois" } },
-      { at: 2, lines: [15, 16], text: { en: "<code>ctx.fields</code> typed from the declaration: <code>details</code> is a <code>string</code>", fr: "<code>ctx.fields</code> typé d'après la déclaration : <code>details</code> est une <code>string</code>" } },
+      { at: 1, lines: [28, 36], text: { en: "<code>ctx.showModal</code> opened the form, with its text in the reader's language", fr: "<code>ctx.showModal</code> a ouvert le formulaire, avec ses textes dans la langue du lecteur" } },
+      { at: 1, lines: [6, 17], text: { en: "A menu, a paragraph and a checkbox, each declared once. Fill them in", fr: "Un menu, un paragraphe et une case à cocher, déclarés une seule fois. Remplissez-les" } },
+      { at: 2, lines: [18, 21], text: { en: "<code>ctx.fields</code> typed from the declaration: <code>kind</code> is a <code>string[]</code>, <code>details</code> a <code>string</code>", fr: "<code>ctx.fields</code> typé d'après la déclaration : <code>kind</code> est un <code>string[]</code>, <code>details</code> une <code>string</code>" } },
     ],
   },
   {
@@ -143,6 +143,12 @@ export const WORDS = {
   idle: { en: "Play the scene to see what the framework does.", fr: "Jouez la scène pour voir ce que fait le framework." },
   step: { en: "Step {n}", fr: "Étape {n}" },
   replay: { en: "Replay", fr: "Rejouer" },
+  next: { en: "Next scene", fr: "Scène suivante" },
+  earlier: { en: "Earlier kinds", fr: "Types précédents" },
+  later: { en: "More kinds", fr: "Types suivants" },
+  actor: { en: "You click as {who}", fr: "Vous cliquez en tant que {who}" },
+  owner: { en: "the owner of the ticket", fr: "propriétaire du ticket" },
+  stranger: { en: "who does not own the ticket", fr: "qui n'est pas propriétaire du ticket" },
   client: { en: "Language of this Discord", fr: "Langue de ce Discord" },
   terminal: { en: "Terminal", fr: "Terminal" },
   join: { en: "A member joins", fr: "Un membre arrive" },
@@ -152,6 +158,8 @@ export const WORDS = {
 /** The words of the Discord app itself, which follow the language of its user. */
 export const DISCORD = {
   channel: { en: "general", fr: "général" },
+  welcome: { en: "Welcome to #general!", fr: "Bienvenue dans #général !" },
+  start: { en: "This is the start of the #general channel.", fr: "C'est le début du salon #général." },
   composer: { en: "Message #general", fr: "Envoyer un message dans #général" },
   send: { en: "Send", fr: "Envoyer" },
   used: { en: "used", fr: "a utilisé" },

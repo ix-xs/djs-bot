@@ -9,7 +9,10 @@ export const CloseTicket = defineButton({
     if (ctx.user.id !== ctx.params.ownerId) {
       return ctx.reply.error(ctx.t("ticket.notYours"));
     }
-    await ctx.update.disable();
+    await ctx.update({
+      content: ctx.t("ticket.closed", { id: ctx.params.ticketId }),
+      components: [],
+    });
   },
 });
 

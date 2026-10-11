@@ -14,6 +14,7 @@ export const resources = {
     },
     ticket: {
       opened: "🎫 Ticket {id} is open",
+      closed: "🔒 Ticket {id} is closed",
       close: "Close ticket",
       notYours: "Not your ticket.",
     },
@@ -29,7 +30,7 @@ export const resources = {
       kind: "Kind",
       details: "Details",
       urgent: "This is urgent",
-      sent: "Reported: {details}",
+      sent: "Reported as {kind}: {details}",
       done: "Reported to moderators.",
     },
     welcome: "Welcome {member}!",
@@ -45,6 +46,7 @@ export const resources = {
     },
     ticket: {
       opened: "🎫 Le ticket {id} est ouvert",
+      closed: "🔒 Le ticket {id} est fermé",
       close: "Fermer le ticket",
       notYours: "Ce n'est pas ton ticket.",
     },
@@ -60,7 +62,7 @@ export const resources = {
       kind: "Type",
       details: "Détails",
       urgent: "C'est urgent",
-      sent: "Signalé : {details}",
+      sent: "Signalé ({kind}) : {details}",
       done: "Signalé aux modérateurs.",
     },
     welcome: "Bienvenue {member} !",
