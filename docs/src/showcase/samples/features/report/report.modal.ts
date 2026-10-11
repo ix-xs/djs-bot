@@ -12,11 +12,21 @@ export const Report = defineModal({
     details: field.paragraph({ label: "Details", required: true }),
     urgent: field.checkbox({ label: "This is urgent" }),
   },
-  run: (ctx) => ctx.reply.success(`Reported: ${ctx.fields.details}`),
+  run: (ctx) =>
+    ctx.reply.success(ctx.t("report.sent", { details: ctx.fields.details })),
 });
 
 export default defineCommand({
   name: "report",
+  nameLocalizations: { fr: "signaler" },
   description: "Report a problem",
-  run: (ctx) => ctx.showModal(Report),
+  run: (ctx) =>
+    ctx.showModal(Report, undefined, {
+      title: ctx.t("report.title"),
+      fields: {
+        kind: { label: ctx.t("report.kind") },
+        details: { label: ctx.t("report.details") },
+        urgent: { label: ctx.t("report.urgent") },
+      },
+    }),
 });

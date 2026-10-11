@@ -5,8 +5,14 @@ adheres to [Semantic Versioning](https://semver.org).
 
 ## Unreleased
 
-Nothing changes in the published package: its files are byte for byte those of
-1.1.1.
+### Added
+
+- **A modal can be shown in the language of whoever opens it.** Its title and
+  the label, description and placeholder of its fields were fixed when it was
+  defined. `ctx.showModal(Modal, params, text)` and `Modal.build(params, text)`
+  now take that text, typed from the fields of the modal
+  (`ModalTextOptions`, `FieldText`). What is not given keeps its declared
+  text, and the text given is checked like the declared one (`DJSBOT_E014`).
 
 ### Documentation
 
@@ -16,8 +22,10 @@ Nothing changes in the published package: its files are byte for byte those of
 - **A new home page.** A single centred opening, and under it a showcase to
   play with: pick a kind of feature (command, autocomplete, button, select
   menu, form, context menu, event, job), run it in a simulated Discord, and
-  see which lines of the file each step comes from. Its samples are compiled
-  against the package by the type tests.
+  see which lines of the file each step comes from. The simulated Discord
+  has a language switch: the sample bot answers in French or in English,
+  through `nameLocalizations` and `ctx.t`. Its samples are a small
+  translated bot, compiled against the package by the type tests.
 - Two links of the English pages pointed at a path of the author's machine.
   The link checker now refuses anything that is not a link of the site.
 - **Search opens on suggestions** instead of an empty box: the pages you last

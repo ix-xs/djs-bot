@@ -10,6 +10,6 @@
     "rootDir": "../../..",
     "paths": { "@ix-xs/djs-bot": ["../../../src/index.ts"] }
   },
-  "include": ["samples/*.ts"],
+  "include": ["samples/**/*.ts"],
   "exclude": []
 }

@@ -1,6 +1,7 @@
 ---
 // One message of the showcase's Discord screen. `at` and `until` say during
-// which steps of the scene it is there (see Showcase.astro).
+// which steps of the scene it is there (see Showcase.astro). The pieces of
+// text are HTML: each holds its English and its French form.
 interface Props {
   author?: string;
   bot?: boolean;
@@ -8,7 +9,7 @@ interface Props {
   color?: string;
   time: string;
   /** The "X used /command" line above a command reply. */
-  used?: { user: string; verb: string; command: string };
+  used?: string;
   /** The note under a reply only its recipient sees. */
   ephemeral?: string;
   at?: number;
@@ -20,13 +21,13 @@ const { author = "djs-bot", bot = true, color = "#5865f2", time, used, ephemeral
 <article class="sc-msg" data-at={at} data-until={until}>
   <div class="sc-av" style={`background:${color}`} aria-hidden="true">{author.charAt(0).toUpperCase()}</div>
   <div class="sc-body">
-    {used && <p class="sc-used">{used.user} {used.verb} <b>/{used.command}</b></p>}
+    {used && <p class="sc-used" set:html={used} />}
     <p class="sc-meta">
       <b>{author}</b>
       {bot && <span class="sc-app">APP</span>}
-      <time>{time}</time>
+      <time set:html={time} />
     </p>
     <slot />
-    {ephemeral && <p class="sc-eph">{ephemeral}</p>}
+    {ephemeral && <p class="sc-eph" set:html={ephemeral} />}
   </div>
 </article>

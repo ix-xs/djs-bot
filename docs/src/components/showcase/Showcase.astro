@@ -3,28 +3,45 @@
 // implements it, and play what it does in Discord. Each thing the framework
 // does lights up the lines of the file that asked for it.
 //
+// The Discord on the right has a language of its own, the one of its user
+// (the page's, to begin with). The bot answers in it: its names come from
+// `nameLocalizations`, its messages from `ctx.t`. Everything it says is
+// rendered in both languages (`data-l`), and the showcase shows one.
+//
 // A scene is a small script. Elements carry the steps during which they are
 // there (`data-at`, `data-until`), and what moves the scene on:
 //   data-go="n"       pressing it brings the scene to step n (from n - 1 only)
 //   data-auto="ms"    once shown (and typed), the scene moves on by itself
-//   data-typed="…"    the text is typed out when the element appears
-//   data-pick="…"     with data-go: the value copied into every [data-echo]
+//   data-typed-en/fr  the text is typed out when the element appears
+//   data-pick-en/fr   with data-go: the text copied into every [data-echo]
 //   data-disable-at   a button that stays, disabled, from that step
-// Without JavaScript the first scene is shown in its final state.
 import { Code } from "@astrojs/starlight/components";
-import { SCENES, WORDS } from "../../showcase/scenes";
+import { DISCORD, SCENES, WORDS, say, type Lang } from "../../showcase/scenes";
 import Msg from "./Msg.astro";
 import "../../styles/showcase.css";
 
-const lang = Astro.locals.starlightRoute.locale === "fr" ? "fr" : "en";
-const w = (key: keyof typeof WORDS): string => WORDS[key][lang];
+const page: Lang = Astro.locals.starlightRoute.locale === "fr" ? "fr" : "en";
+const LANGS: Lang[] = ["en", "fr"];
+const w = (key: keyof typeof WORDS): string => WORDS[key][page];
+/** A piece of text in both languages, of which the showcase shows one. */
+const both = (text: (lang: Lang) => string): string => LANGS.map((lang) => `<span data-l="${lang}">${text(lang)}</span>`).join("");
+/** A word of the Discord app. */
+const d = (key: keyof typeof DISCORD): string => both((lang) => DISCORD[key][lang]);
+/** A message of the sample bot. */
+const s = (key: string, vars: Record<string, string> = {}): string => both((lang) => say(lang, key, vars));
+/** The line Discord shows above the reply to a command, with the command's name in each language. */
+const used = (en: string, fr: string): string => both((lang) => `Jo ${DISCORD.used[lang]} <b>/${lang === "fr" ? fr : en}</b>`);
+const mention = (name: string): string => `<span class="sc-mention">@${name}</span>`;
 /** The last step of a scene: the highest one its trace mentions. */
 const last = (id: string): number => Math.max(...SCENES.find((scene) => scene.id === id)!.trace.map((line) => line.at));
-const jo = { author: "Jo", bot: false, color: "#3ba55c", time: w("today") };
-const used = (command: string) => ({ user: "Jo", verb: w("used"), command });
+const FRUITS = ["mango", "melon"];
+const COLOURS = [
+  { id: "red", emoji: "🔴" },
+  { id: "blue", emoji: "🔵" },
+];
 ---
 
-<at-showcase class="sc not-content">
+<at-showcase class="sc not-content" data-client={page}>
   <div class="sc-rail" role="tablist" aria-label={w("kinds")}>
     {SCENES.map((scene, index) => (
       <button
@@ -36,7 +53,7 @@ const used = (command: string) => ({ user: "Jo", verb: w("used"), command });
         tabindex={index === 0 ? 0 : -1}
         data-tab={scene.id}
       >
-        <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>{scene.label[lang]}
+        <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>{scene.label[page]}
       </button>
     ))}
     <i class="sc-mark" aria-hidden="true"></i>
@@ -56,167 +73,180 @@ const used = (command: string) => ({ user: "Jo", verb: w("used"), command });
           <Code code={scene.code.trimEnd()} lang="ts" title={scene.file} />
         </div>
 
-        <div class="sc-side">
-          <div class:list={["sc-screen", scene.id === "job" && "is-term"]}>
-            <p class="sc-chan" aria-hidden="true">
-              {scene.id === "job" ? w("terminal") : <><span>#</span>{w("channel")}</>}
-            </p>
-
-            {scene.id === "command" && (
+        <div class:list={["sc-screen", scene.id === "job" && "is-term"]}>
+          <div class="sc-chan">
+            {scene.id === "job" ? (
+              <p>{w("terminal")}</p>
+            ) : (
               <>
-                <div class="sc-feed">
-                  <Msg time={w("today")} used={used("profile")} at={1}>
-                    <p class="sc-dots" data-at="1" data-until="2" data-auto="800" aria-label={w("typing")}><i></i><i></i><i></i></p>
-                    <p class="sc-embed is-ok" data-at="2">✅ Profile of <span class="sc-mention">@Aleksandra</span></p>
-                  </Msg>
-                </div>
-                <div class="sc-composer">
-                  <span class="sc-typed" data-until="1" data-typed="/profile user:@Aleksandra"></span>
-                  <span class="sc-hint" data-at="1">{w("composer")}</span>
-                  <button type="button" class="sc-send" data-until="1" data-go="1" aria-label={w("send")}>↵</button>
+                <p><span aria-hidden="true">#</span><Fragment set:html={d("channel")} /></p>
+                <div class="sc-client" role="group" aria-label={w("client")}>
+                  {LANGS.map((lang) => (
+                    <button type="button" data-client-set={lang} aria-pressed={lang === page ? "true" : "false"}>{lang.toUpperCase()}</button>
+                  ))}
                 </div>
               </>
             )}
+          </div>
 
-            {scene.id === "autocomplete" && (
-              <>
-                <div class="sc-feed">
-                  <Msg time={w("today")} used={used("fruit")} at={2}>
-                    <p class="sc-embed is-ok">✅ You picked <span data-echo>apricot</span></p>
-                  </Msg>
-                </div>
-                <div class="sc-pop sc-suggest" data-at="1" data-until="2">
-                  <p>name</p>
-                  <button type="button" data-go="2" data-pick="apple">apple</button>
-                  <button type="button" data-go="2" data-pick="apricot">apricot</button>
-                </div>
-                <div class="sc-composer">
-                  <span class="sc-typed" data-until="2" data-typed="/fruit name:ap" data-auto="200"></span>
-                  <span class="sc-hint" data-at="2">{w("composer")}</span>
-                </div>
-              </>
-            )}
-
-            {scene.id === "button" && (
-              <>
-                <div class="sc-feed">
-                  <Msg time={w("today")}>
-                    <p>🎫 Printer is on fire</p>
-                    <p class="sc-row"><button type="button" class="sc-btn is-danger" data-go="1" data-disable-at="1">🔒 Close ticket</button></p>
-                  </Msg>
-                </div>
-                <div class="sc-composer"><span class="sc-hint">{w("composer")}</span></div>
-              </>
-            )}
-
-            {scene.id === "select" && (
-              <>
-                <div class="sc-feed">
-                  <Msg time={w("today")} used={used("colour")}>
-                    <p data-until="2">Which colour?</p>
-                    <p data-at="2">You chose <span data-echo>blue</span>.</p>
-                    <div class="sc-anchor" data-until="2">
-                      <button type="button" class="sc-select" data-go="1">Pick a colour<span aria-hidden="true">⌄</span></button>
-                      <div class="sc-pop sc-options" data-at="1" data-until="2">
-                        <button type="button" data-go="2" data-pick="red">🔴 Red</button>
-                        <button type="button" data-go="2" data-pick="blue">🔵 Blue</button>
-                      </div>
-                    </div>
-                  </Msg>
-                </div>
-                <div class="sc-composer"><span class="sc-hint">{w("composer")}</span></div>
-              </>
-            )}
-
-            {scene.id === "modal" && (
-              <>
-                <div class="sc-feed">
-                  <Msg time={w("today")} used={used("report")} at={2}>
-                    <p class="sc-embed is-ok">✅ Reported: The export button does nothing.</p>
-                  </Msg>
-                </div>
-                <div class="sc-composer">
-                  <span class="sc-typed" data-until="1" data-typed="/report"></span>
-                  <span class="sc-hint" data-at="1">{w("composer")}</span>
-                  <button type="button" class="sc-send" data-until="1" data-go="1" aria-label={w("send")}>↵</button>
-                </div>
-                <div class="sc-scrim" data-at="1" data-until="2"></div>
-                <div class="sc-modal" data-at="1" data-until="2" role="group" aria-label="Report a problem">
-                  <p class="sc-modal-title">Report a problem</p>
-                  <p class="sc-label">Kind <b>*</b></p>
-                  <p class="sc-field">Bug<span aria-hidden="true">⌄</span></p>
-                  <p class="sc-label">Details <b>*</b></p>
-                  <p class="sc-field is-area"><span data-typed="The export button does nothing."></span></p>
-                  <label class="sc-check"><input type="checkbox" /> This is urgent</label>
-                  <p class="sc-modal-actions">
-                    <button type="button" class="sc-btn is-ghost" data-replay>{w("cancel")}</button>
-                    <button type="button" class="sc-btn is-primary" data-go="2">{w("submit")}</button>
-                  </p>
-                </div>
-              </>
-            )}
-
-            {scene.id === "context" && (
-              <>
-                <div class="sc-feed">
-                  <Msg author="Mallory" bot={false} color="#ed4245" time={w("today")}>
-                    <p>FREE NITRO at totally-legit.example</p>
-                    <div class="sc-anchor is-corner">
-                      <button type="button" class="sc-more" data-go="1" aria-label={w("more")}>⋯</button>
-                      <div class="sc-pop sc-menu" data-at="1" data-until="2">
-                        <p>{w("reply")}</p>
-                        <p>{w("copy")}</p>
-                        <hr />
-                        <p class="sc-menu-head">{w("apps")}</p>
-                        <button type="button" data-go="2"><i aria-hidden="true">D</i>Report message</button>
-                      </div>
-                    </div>
-                  </Msg>
-                  <Msg time={w("today")} ephemeral={w("onlyYou")} at={2}>
-                    <p class="sc-embed is-ok">✅ Reported to moderators.</p>
-                  </Msg>
-                </div>
-                <div class="sc-composer"><span class="sc-hint">{w("composer")}</span></div>
-              </>
-            )}
-
-            {scene.id === "event" && (
-              <>
-                <div class="sc-feed">
-                  <p class="sc-center" data-until="1"><button type="button" class="sc-chip" data-go="1">{w("join")}</button></p>
-                  <p class="sc-system" data-at="1"><span aria-hidden="true">→</span><span><b>Jo</b> {w("joined")}</span></p>
-                  <Msg time={w("today")} at={1}>
-                    <p class="sc-dots" data-at="1" data-until="2" data-auto="700" aria-label={w("typing")}><i></i><i></i><i></i></p>
-                    <p data-at="2">Welcome <span class="sc-mention">@Jo</span>!</p>
-                  </Msg>
-                </div>
-                <div class="sc-composer"><span class="sc-hint">{w("composer")}</span></div>
-              </>
-            )}
-
-            {scene.id === "job" && (
+          {scene.id === "command" && (
+            <>
               <div class="sc-feed">
-                <p class="sc-log"><span>$</span> npx djs-bot start</p>
-                <p class="sc-center" data-until="1"><button type="button" class="sc-chip" data-go="1">{w("midnight")}</button></p>
-                <p class="sc-log" data-at="1"><span>00:00:00</span> <b>INFO</b>  daily stats saved <span>{'{"guilds":42}'}</span></p>
+                <Msg time={d("today")} used={used("profile", "profil")} at={1}>
+                  <p class="sc-dots" data-at="1" data-until="2" data-auto="800" aria-label={DISCORD.typing[page]}><i></i><i></i><i></i></p>
+                  <p class="sc-embed is-ok" data-at="2">✅ <Fragment set:html={s("profile.of", { user: mention("Aleksandra") })} /></p>
+                </Msg>
               </div>
-            )}
-          </div>
+              <div class="sc-composer">
+                <span class="sc-typed" data-until="1" data-typed-en="/profile user:@Aleksandra" data-typed-fr="/profil joueur:@Aleksandra"></span>
+                <span class="sc-hint" data-at="1" set:html={d("composer")} />
+                <button type="button" class="sc-send" data-until="1" data-go="1" aria-label={DISCORD.send[page]}>↵</button>
+              </div>
+            </>
+          )}
 
-          <div class="sc-trace">
-            <p class="sc-trace-head">
-              {w("happened")}
-              <button type="button" class="sc-replay" data-replay data-at={last(scene.id)}>{w("replay")}</button>
-            </p>
+          {scene.id === "autocomplete" && (
+            <>
+              <div class="sc-feed">
+                <Msg time={d("today")} used={used("fruit", "fruit")} at={2}>
+                  <p class="sc-embed is-ok">✅ <Fragment set:html={both((lang) => say(lang, "fruit.picked", { fruit: "<span data-echo></span>" }))} /></p>
+                </Msg>
+              </div>
+              <div class="sc-pop sc-suggest" data-at="1" data-until="2">
+                <p set:html={both((lang) => (lang === "fr" ? "nom" : "name"))} />
+                {FRUITS.map((id) => (
+                  <button type="button" data-go="2" data-pick-en={say("en", `fruit.${id}`)} data-pick-fr={say("fr", `fruit.${id}`)} set:html={s(`fruit.${id}`)} />
+                ))}
+              </div>
+              <div class="sc-composer">
+                <span class="sc-typed" data-until="2" data-typed-en="/fruit name:m" data-typed-fr="/fruit nom:m" data-auto="200"></span>
+                <span class="sc-hint" data-at="2" set:html={d("composer")} />
+              </div>
+            </>
+          )}
+
+          {scene.id === "button" && (
+            <>
+              <div class="sc-feed">
+                <Msg time={d("today")} used={used("ticket", "ticket")}>
+                  <p set:html={s("ticket.opened", { id: "T-1042" })} />
+                  <p class="sc-row"><button type="button" class="sc-btn is-danger" data-go="1" data-disable-at="1">🔒 <Fragment set:html={s("ticket.close")} /></button></p>
+                </Msg>
+              </div>
+              <div class="sc-composer"><span class="sc-hint" set:html={d("composer")} /></div>
+            </>
+          )}
+
+          {scene.id === "select" && (
+            <>
+              <div class="sc-feed">
+                <Msg time={d("today")} used={used("colour", "couleur")}>
+                  <p data-until="2" set:html={s("colour.which")} />
+                  <p data-at="2" set:html={both((lang) => say(lang, "colour.chosen", { colour: "<span data-echo></span>" }))} />
+                  <div class="sc-anchor" data-until="2">
+                    <button type="button" class="sc-select" data-go="1"><Fragment set:html={s("colour.pick")} /><span aria-hidden="true">⌄</span></button>
+                    <div class="sc-pop sc-options" data-at="1" data-until="2">
+                      {COLOURS.map(({ id, emoji }) => (
+                        <button type="button" data-go="2" data-pick-en={say("en", `colour.${id}`)} data-pick-fr={say("fr", `colour.${id}`)}>
+                          {emoji} <Fragment set:html={s(`colour.${id}`)} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </Msg>
+              </div>
+              <div class="sc-composer"><span class="sc-hint" set:html={d("composer")} /></div>
+            </>
+          )}
+
+          {scene.id === "modal" && (
+            <>
+              <div class="sc-feed">
+                <Msg time={d("today")} used={used("report", "signaler")} at={2}>
+                  <p class="sc-embed is-ok">✅ <Fragment set:html={both((lang) => say(lang, "report.sent", { details: lang === "fr" ? "Le bouton d'export ne fait rien." : "The export button does nothing." }))} /></p>
+                </Msg>
+              </div>
+              <div class="sc-composer">
+                <span class="sc-typed" data-until="1" data-typed-en="/report" data-typed-fr="/signaler"></span>
+                <span class="sc-hint" data-at="1" set:html={d("composer")} />
+                <button type="button" class="sc-send" data-until="1" data-go="1" aria-label={DISCORD.send[page]}>↵</button>
+              </div>
+              <div class="sc-scrim" data-at="1" data-until="2"></div>
+              <div class="sc-modal" data-at="1" data-until="2" role="group" aria-label={say(page, "report.title")}>
+                <p class="sc-modal-title" set:html={s("report.title")} />
+                <p class="sc-label"><Fragment set:html={s("report.kind")} /> <b>*</b></p>
+                <p class="sc-field">Bug<span aria-hidden="true">⌄</span></p>
+                <p class="sc-label"><Fragment set:html={s("report.details")} /> <b>*</b></p>
+                <p class="sc-field is-area"><span data-typed-en="The export button does nothing." data-typed-fr="Le bouton d'export ne fait rien."></span></p>
+                <label class="sc-check"><input type="checkbox" /> <Fragment set:html={s("report.urgent")} /></label>
+                <p class="sc-modal-actions">
+                  <button type="button" class="sc-btn is-ghost" data-replay set:html={d("cancel")} />
+                  <button type="button" class="sc-btn is-primary" data-go="2" set:html={d("submit")} />
+                </p>
+              </div>
+            </>
+          )}
+
+          {scene.id === "context" && (
+            <>
+              <div class="sc-feed">
+                <Msg author="Mallory" bot={false} color="#ed4245" time={d("today")}>
+                  <p set:html={both((lang) => (lang === "fr" ? "NITRO GRATUIT sur totally-legit.example" : "FREE NITRO at totally-legit.example"))} />
+                  <div class="sc-anchor is-corner">
+                    <button type="button" class="sc-more" data-go="1" aria-label={DISCORD.more[page]}>⋯</button>
+                    <div class="sc-pop sc-menu" data-at="1" data-until="2">
+                      <p set:html={d("reply")} />
+                      <p set:html={d("copy")} />
+                      <hr />
+                      <p class="sc-menu-head" set:html={d("apps")} />
+                      <button type="button" data-go="2"><i aria-hidden="true">D</i><Fragment set:html={both((lang) => (lang === "fr" ? "Signaler le message" : "Report message"))} /></button>
+                    </div>
+                  </div>
+                </Msg>
+                <Msg time={d("today")} ephemeral={d("onlyYou")} at={2}>
+                  <p class="sc-embed is-ok">✅ <Fragment set:html={s("report.done")} /></p>
+                </Msg>
+              </div>
+              <div class="sc-composer"><span class="sc-hint" set:html={d("composer")} /></div>
+            </>
+          )}
+
+          {scene.id === "event" && (
+            <>
+              <div class="sc-feed">
+                <p class="sc-center" data-until="1"><button type="button" class="sc-chip" data-go="1">{w("join")}</button></p>
+                <p class="sc-system" data-at="1"><span aria-hidden="true">→</span><span><b>Jo</b> <Fragment set:html={d("joined")} /></span></p>
+                <Msg time={d("today")} at={1}>
+                  <p class="sc-dots" data-at="1" data-until="2" data-auto="700" aria-label={DISCORD.typing[page]}><i></i><i></i><i></i></p>
+                  <p data-at="2" set:html={s("welcome", { member: mention("Jo") })} />
+                </Msg>
+              </div>
+              <div class="sc-composer"><span class="sc-hint" set:html={d("composer")} /></div>
+            </>
+          )}
+
+          {scene.id === "job" && (
+            <div class="sc-feed">
+              <p class="sc-log"><span>$</span> npx djs-bot start</p>
+              <p class="sc-center" data-until="1"><button type="button" class="sc-chip" data-go="1">{w("midnight")}</button></p>
+              <p class="sc-log" data-at="1"><span>00:00:00</span> <b>INFO</b>  daily stats saved <span>{'{"guilds":42}'}</span></p>
+            </div>
+          )}
+        </div>
+
+        <div class="sc-trace">
+          <ol class="sc-steps" aria-label={w("happened")}>
+            {scene.trace.map((_, line) => (
+              <li><button type="button" data-line={line} disabled aria-label={w("step").replace("{n}", String(line + 1))}>{line + 1}</button></li>
+            ))}
+          </ol>
+          <div class="sc-caption" aria-live="polite">
             <p class="sc-idle" data-until="1">{w("idle")}</p>
-            <ol aria-live="polite">
-              {scene.trace.map((line) => (
-                <li data-at={line.at} data-lines={line.lines?.join("-")} tabindex="0">
-                  <i aria-hidden="true">✓</i><span set:html={line.text[lang]} />
-                </li>
-              ))}
-            </ol>
+            {scene.trace.map((line, index) => (
+              <p data-caption={index} data-from={line.at} data-lines={line.lines.join("-")} set:html={line.text[page]} />
+            ))}
           </div>
+          <button type="button" class="sc-replay" data-replay data-at={last(scene.id)}>{w("replay")}</button>
         </div>
       </section>
     ))}
@@ -226,43 +256,64 @@ const used = (command: string) => ({ user: "Jo", verb: w("used"), command });
 <script>
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
   const num = (value: string | undefined, fallback: number): number => (value === undefined || value === "" ? fallback : Number(value));
+  /** How long a line of the trace stays before the next one takes its place. */
+  const READ = 1500;
 
   /** One scene: its panel, the step it is at, and the timers it has running. */
   class Scene {
     step = 0;
     private demo = false;
     private timers = new Set<number>();
+    private reading = new Set<number>();
+    private shown = 0;
     private readonly parts: HTMLElement[];
     private readonly lines: HTMLElement[];
+    private readonly captions: HTMLElement[];
+    private readonly dots: HTMLButtonElement[];
 
     constructor(readonly root: HTMLElement) {
       this.parts = [...root.querySelectorAll<HTMLElement>("[data-at], [data-until]")];
       this.lines = [...root.querySelectorAll<HTMLElement>(".sc-code .ec-line")];
+      this.captions = [...root.querySelectorAll<HTMLElement>("[data-caption]")];
+      this.dots = [...root.querySelectorAll<HTMLButtonElement>("[data-line]")];
       root.addEventListener("click", (event) => this.press(event));
-      // Pointing at a line of the trace shows again the code it is about.
-      for (const item of root.querySelectorAll<HTMLElement>(".sc-trace li")) {
-        const show = () => this.light(item);
-        item.addEventListener("pointerenter", show);
-        item.addEventListener("focus", show);
-      }
     }
 
-    private later(run: () => void, ms: number): void {
+    /** The language of the Discord on screen: "en" or "fr". */
+    private get client(): string {
+      return this.root.closest<HTMLElement>("at-showcase")?.dataset.client ?? "en";
+    }
+    /** The value of a `data-<name>-en` / `data-<name>-fr` pair for that language. */
+    private local(element: HTMLElement, name: string): string | undefined {
+      return element.dataset[name + (this.client === "fr" ? "Fr" : "En")];
+    }
+
+    private later(run: () => void, ms: number, list = this.timers): void {
       const id = window.setTimeout(() => {
-        this.timers.delete(id);
+        list.delete(id);
         run();
       }, ms);
-      this.timers.add(id);
+      list.add(id);
+    }
+    private stop(list: Set<number>): void {
+      for (const id of list) window.clearTimeout(id);
+      list.clear();
     }
 
     /** Stops everything and goes back to the first step, without playing it. */
     rest(): void {
-      for (const id of this.timers) window.clearTimeout(id);
-      this.timers.clear();
+      this.stop(this.timers);
+      this.stop(this.reading);
       this.step = 0;
       this.demo = false;
-      for (const typed of this.root.querySelectorAll<HTMLElement>("[data-typed]")) typed.textContent = "";
+      this.shown = 0;
+      for (const typed of this.root.querySelectorAll<HTMLElement>("[data-typed-en]")) typed.textContent = "";
       for (const line of this.lines) line.classList.remove("sc-hot", "sc-warm");
+      for (const caption of this.captions) caption.removeAttribute("data-current");
+      for (const dot of this.dots) {
+        dot.disabled = true;
+        dot.removeAttribute("aria-current");
+      }
       this.draw(false);
     }
 
@@ -285,12 +336,20 @@ const used = (command: string) => ({ user: "Jo", verb: w("used"), command });
         this.root.querySelector<HTMLElement>("[data-hint]")?.focus({ preventScroll: true });
         return;
       }
+      // A step of the trace that was reached can be read again.
+      const dot = target?.closest<HTMLButtonElement>("[data-line]");
+      if (dot) {
+        this.stop(this.reading);
+        this.read(Number(dot.dataset.line));
+        return;
+      }
       const control = target?.closest<HTMLElement>("[data-go]");
       if (!control || control.closest("[data-off]") || Number(control.dataset.go) !== this.step + 1) return;
       // A real press takes over from the demonstration.
       if (event.isTrusted) this.demo = false;
-      if (control.dataset.pick) {
-        for (const echo of this.root.querySelectorAll("[data-echo]")) echo.textContent = control.dataset.pick;
+      const picked = this.local(control, "pick");
+      if (picked) {
+        for (const echo of this.root.querySelectorAll("[data-echo]")) echo.textContent = picked;
       }
       this.go(this.step + 1);
     }
@@ -298,14 +357,9 @@ const used = (command: string) => ({ user: "Jo", verb: w("used"), command });
     /** Shows what belongs to the current step. With `live`, what appears is typed, timed and traced. */
     private draw(live: boolean): void {
       const arrived: HTMLElement[] = [];
-      // The trace arrives one line at a time, slowly enough to be read.
-      const pace = reduced.matches ? 0 : 180;
-      let traced = 0;
       for (const part of this.parts) {
         const on = this.step >= num(part.dataset.at, 0) && this.step < num(part.dataset.until, Infinity);
         if (on === !part.hasAttribute("data-off")) continue;
-        // The delay has to be there before the element is: it belongs to its entrance.
-        if (part.matches(".sc-trace li")) part.style.transitionDelay = on && live ? `${traced++ * pace}ms` : "";
         part.toggleAttribute("data-off", !on);
         if (on) arrived.push(part);
       }
@@ -320,22 +374,28 @@ const used = (command: string) => ({ user: "Jo", verb: w("used"), command });
 
       // At the first step nothing "arrives": start what is already there.
       const starting = this.step === 0 ? this.parts.filter((part) => !part.hasAttribute("data-off")) : arrived;
-      const typed = new Set(starting.flatMap((part) => (part.matches("[data-typed]") ? [part] : [...part.querySelectorAll<HTMLElement>("[data-typed]")])));
+      const typed = new Set(starting.flatMap((part) => (part.dataset.typedEn ? [part] : [...part.querySelectorAll<HTMLElement>("[data-typed-en]")])));
       for (const element of typed) this.type(element);
       for (const part of starting) {
-        if (part.dataset.auto && !part.dataset.typed) this.later(() => this.go(this.step + 1), Number(part.dataset.auto));
+        if (part.dataset.auto && !typed.has(part)) this.later(() => this.go(this.step + 1), Number(part.dataset.auto));
       }
-
       // In a demonstration, what a reader would press is pressed after a beat
       // (after the typing, when there is some).
       if (this.demo && next && typed.size === 0 && !starting.some((part) => part.dataset.auto)) this.later(() => next.click(), 900);
 
-      // Each line of the trace lights the code it is about as it arrives.
-      arrived.filter((part) => part.matches(".sc-trace li")).forEach((item, index) => this.later(() => this.light(item), index * pace));
+      // The lines of the trace this step reached are read out one after the
+      // other, each long enough to be read; the last one stays.
+      const reached = this.captions.filter((caption) => Number(caption.dataset.from) <= this.step).length;
+      if (reached > this.shown) {
+        this.stop(this.reading);
+        const first = this.shown;
+        this.shown = reached;
+        for (let index = first; index < reached; index++) this.later(() => this.read(index), (index - first) * READ, this.reading);
+      }
     }
 
     private type(element: HTMLElement): void {
-      const text = element.dataset.typed ?? "";
+      const text = this.local(element, "typed") ?? "";
       const done = () => {
         if (element.dataset.auto) this.later(() => this.go(this.step + 1), Number(element.dataset.auto));
         else if (this.demo) this.later(() => this.root.querySelector<HTMLElement>("[data-hint]")?.click(), 700);
@@ -354,23 +414,32 @@ const used = (command: string) => ({ user: "Jo", verb: w("used"), command });
       this.later(tick, 220);
     }
 
-    /** Marks the lines of code a line of the trace is about; those of earlier lines stay, dimmer. */
-    private light(item: HTMLElement): void {
-      const [first, last] = (item.dataset.lines ?? "").split("-").map(Number);
+    /** Puts one line of the trace in front, and lights the code it is about. */
+    private read(index: number): void {
+      const caption = this.captions[index];
+      if (!caption) return;
+      this.captions.forEach((other, position) => other.toggleAttribute("data-current", position === index));
+      this.dots.forEach((dot, position) => {
+        dot.disabled = position >= this.shown;
+        if (position === index) dot.setAttribute("aria-current", "step");
+        else dot.removeAttribute("aria-current");
+      });
+      // The lines of earlier steps stay lit, dimmer.
+      const [first, last] = (caption.dataset.lines ?? "").split("-").map(Number);
       if (!first) return;
       for (const line of this.lines) {
         if (line.classList.contains("sc-hot")) line.classList.replace("sc-hot", "sc-warm");
       }
-      for (let index = first; index <= (last || first); index++) {
-        this.lines[index - 1]?.classList.remove("sc-warm");
-        this.lines[index - 1]?.classList.add("sc-hot");
+      for (let at = first; at <= (last || first); at++) {
+        this.lines[at - 1]?.classList.remove("sc-warm");
+        this.lines[at - 1]?.classList.add("sc-hot");
       }
       // A long file scrolls inside its pane: bring the lit lines into it.
       const pane = this.root.querySelector<HTMLElement>(".sc-code");
       const line = this.lines[first - 1];
-      if (pane && line) {
-        const [box, at] = [pane.getBoundingClientRect(), line.getBoundingClientRect()];
-        if (at.top < box.top || at.bottom > box.bottom) pane.scrollBy({ top: at.top - box.top - box.height / 3, behavior: reduced.matches ? "auto" : "smooth" });
+      if (pane && line && pane.scrollHeight > pane.clientHeight) {
+        const [box, lit] = [pane.getBoundingClientRect(), line.getBoundingClientRect()];
+        if (lit.top < box.top || lit.bottom > box.bottom) pane.scrollBy({ top: lit.top - box.top - box.height / 3, behavior: reduced.matches ? "auto" : "smooth" });
       }
     }
   }
@@ -411,6 +480,17 @@ const used = (command: string) => ({ user: "Jo", verb: w("used"), command });
         this.show(tab.dataset.tab!, false, true);
         tab.focus();
       });
+      // The Discord on screen changes language: the same scene, played again.
+      this.addEventListener("click", (event) => {
+        const language = (event.target as Element).closest<HTMLElement>("[data-client-set]")?.dataset.clientSet;
+        if (!language || language === this.dataset.client) return;
+        this.dataset.client = language;
+        for (const button of this.querySelectorAll<HTMLElement>("[data-client-set]")) {
+          button.setAttribute("aria-pressed", String(button.dataset.clientSet === language));
+        }
+        this.seen = true;
+        this.scenes.get(this.current)?.play();
+      });
       addEventListener("resize", () => this.place(false));
       document.fonts?.ready.then(() => this.place(false));
 
@@ -419,6 +499,7 @@ const used = (command: string) => ({ user: "Jo", verb: w("used"), command });
         (entries, observer) => {
           if (!entries.some((entry) => entry.isIntersecting)) return;
           observer.disconnect();
+          if (this.seen) return;
           this.seen = true;
           this.scenes.get(this.current)?.play(true);
         },
