@@ -56,7 +56,10 @@ const codeOf = (fn: () => unknown): string => {
   return "did not throw";
 };
 
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 describe("CLI arguments", () => {
   it("does not take the value of --guild for the entry file", () => {
@@ -80,6 +83,8 @@ describe("CLI arguments", () => {
 describe("retry", () => {
   it("waits between attempts by default, and longer each time", async () => {
     vi.useFakeTimers();
+    // The middle of the jitter range: the waits are exactly 200 ms, then 400 ms.
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
     let calls = 0;
     const result = retry(() => {
       calls++;
@@ -88,17 +93,33 @@ describe("retry", () => {
     });
     await vi.advanceTimersByTimeAsync(0);
     expect(calls).toBe(1);
-    // First wait: 200 ms, give or take 20 %.
-    await vi.advanceTimersByTimeAsync(150);
+    await vi.advanceTimersByTimeAsync(199);
     expect(calls).toBe(1);
-    await vi.advanceTimersByTimeAsync(100);
+    await vi.advanceTimersByTimeAsync(1);
     expect(calls).toBe(2);
-    // Second wait: 400 ms, give or take 20 %.
-    await vi.advanceTimersByTimeAsync(300);
+    await vi.advanceTimersByTimeAsync(399);
     expect(calls).toBe(2);
-    await vi.advanceTimersByTimeAsync(200);
+    await vi.advanceTimersByTimeAsync(1);
     expect(calls).toBe(3);
     await expect(result).resolves.toBe("ok");
+  });
+
+  it("spreads the waits with jitter, within a fifth of the delay", async () => {
+    vi.useFakeTimers();
+    for (const [random, expected] of [[0, 160], [1, 240]] as const) {
+      vi.spyOn(Math, "random").mockReturnValue(random);
+      let calls = 0;
+      const result = retry(() => {
+        calls++;
+        if (calls < 2) throw new Error("not yet");
+        return calls;
+      });
+      await vi.advanceTimersByTimeAsync(expected - 1);
+      expect(calls).toBe(1);
+      await vi.advanceTimersByTimeAsync(2);
+      expect(calls).toBe(2);
+      await result;
+    }
   });
 
   it("still retries at once when asked to", async () => {
