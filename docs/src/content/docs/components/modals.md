@@ -209,6 +209,37 @@ hands it to the modal. A modal handler answers with `ctx.reply`. It has no
 The fields are fixed when the modal is defined. A pre-filled `value`, a
 `default` or `defaultValues` is therefore the same for everyone who opens it.
 
+## Translating a modal
+
+A modal is declared once, in one language. To show it in the language of the
+person who opens it, give its text when you open it: the third argument of
+`ctx.showModal` replaces the title and the text of the fields it names.
+
+```ts title="features/report/report.command.ts"
+import { defineCommand } from "@ix-xs/djs-bot";
+import { Report } from "./report.modal.js";
+
+export default defineCommand({
+  name: "report",
+  description: "Report a problem",
+  run: (ctx) =>
+    ctx.showModal(Report, undefined, {
+      title: ctx.t("report.title"),
+      fields: {
+        details: { label: ctx.t("report.details"), placeholder: ctx.t("report.hint") },
+      },
+    }),
+});
+```
+
+Fields that are not named keep the text they were declared with, so a modal
+can be translated one field at a time. The text is checked like the declared
+one: a title or a label that is too long raises `DJSBOT_E014` when the modal
+is opened. The labels of the options of a `field.select`, `field.radio` or
+`field.checkboxes` stay as declared.
+
+`ctx.t` is described under [Internationalisation](/data/i18n/).
+
 ## Reference
 
 ### `defineModal(input)`
@@ -232,9 +263,23 @@ The handler receives a `ModalContext<Fields>`, which adds `fields` to the
 ### `build(params?)`
 
 Returns a discord.js `ModalBuilder` made from the declared fields, with a
-customId that encodes `params`. `ctx.showModal(Modal, params)` calls it for you.
+customId that encodes `params`. A second argument, a
+[`ModalTextOptions`](#modaltextoptions), replaces the title and the text of
+the fields it names. `ctx.showModal(Modal, params, text)` calls it for you.
 Use it directly only when you need the raw builder, and note that `showModal`
 accepts any object with a compatible `build()`.
+
+### `ModalTextOptions`
+
+The second argument of `build`, and the third of `ctx.showModal`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `title` | `string` | Shown at the top of the dialog in place of the declared title. 1-45 characters. |
+| `fields` | `Record<name, FieldText>` | The text of each field, by the name it has in `fields`. Naming a field the modal does not have raises `DJSBOT_E014`. |
+
+A `FieldText` holds any of `label`, `description` and `placeholder`.
+For a `field.text`, `label` is the text itself.
 
 ### `field`
 

@@ -195,6 +195,7 @@ import { /* ... */ } from "@ix-xs/djs-bot";
 | `FieldKind` | Every kind of component a modal can hold. | [Modales](/components/modals/) |
 | `FieldMap` | A map of field name → descriptor, as passed to `defineModal`. | [Modales](/components/modals/) |
 | `FieldOutput` | What `ctx.fields.<name>` holds for each kind of field. | [Modales](/components/modals/) |
+| `FieldText` | The text of one field of a modal, given when the modal is built. | [Modales](/components/modals/) |
 | `FileType` | What a file may be: one of Discord's categories, or a dot-prefixed extension. | [Options et autocomplétion](/commands/options/) |
 | `FlagScope` | A scope for reading/writing a flag. | [Feature flags](/data/flags/) |
 | `FrameworkMessages` | The overridable message table accepted by `defineBot({ messages })`. | [Formulations et thème](/basics/wording-and-theme/) |
@@ -233,6 +234,7 @@ import { /* ... */ } from "@ix-xs/djs-bot";
 | `ModalContext` | Context passed to modal handlers. | [Modales](/components/modals/) |
 | `ModalDefinition` | A registered modal with typed fields and optional customId params. | [Modales](/components/modals/) |
 | `ModalInput` | Input accepted by `defineModal`. | [Modales](/components/modals/) |
+| `ModalTextOptions` | Text given when a modal is built, in place of what was declared. | [Modales](/components/modals/) |
 | `NativeSelectVisualOptions` | Visual configuration for a native (user/role/channel/mentionable) select. | [Menus de sélection](/components/select-menus/) |
 | `NormalizedChoices` | What `toAutocompleteChoices` produced, and what it had to leave out. | [Options et autocomplétion](/commands/options/) |
 | `OptionDef` | Internal descriptor for a single option. | [Options et autocomplétion](/commands/options/) |
@@ -336,4 +338,4 @@ import { /* ... */ } from "@ix-xs/djs-bot/testing";
 | `Harness` | A harness bound to an optional `Bot` (for its services). | [Tests](/production/testing/) |
 | `HarnessResult` | The result of running a handler through the harness. | [Tests](/production/testing/) |
 
-254 symboles sont déclarés par le framework.
+256 symboles sont déclarés par le framework.

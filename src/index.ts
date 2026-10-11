@@ -100,6 +100,7 @@ export {
   type FieldMap,
   type InferFields,
 } from "./schema.js";
+export type { FieldText, ModalTextOptions } from "./modal.js";
 
 // Guards
 export {

@@ -226,3 +226,53 @@ describe("modal limits and file types", () => {
     expect(failure(modal({ a: field.files({ label: "A", fileTypes: ["exe" as never] }) }))).toMatch(/not a valid file type/);
   });
 });
+
+describe("a modal built with text of its own", () => {
+  const texts = (text?: Parameters<typeof Report.build>[1]) => {
+    const json = Report.build({ targetId: "1" }, text).toJSON();
+    const labels = json.components.flatMap((row) => ("label" in row ? [row] : []));
+    return { json, labels };
+  };
+
+  it("keeps the declared text when none is given", () => {
+    const { json, labels } = texts();
+    expect(json.title).toBe("Report");
+    expect(labels.map((label) => label.label)).toEqual(["Reason", "Details", "Screenshots", "Stay anonymous"]);
+  });
+
+  it("shows the title, labels, descriptions and placeholders it is given", () => {
+    const { json, labels } = texts({
+      title: "Signalement",
+      fields: {
+        intro: { label: "Dites-nous ce qui s'est passé." },
+        reason: { label: "Motif", description: "Choisissez le plus proche" },
+        details: { label: "Détails", placeholder: "Facultatif" },
+      },
+    });
+    expect(json.title).toBe("Signalement");
+    expect(JSON.stringify(json.components[0])).toContain("Dites-nous ce qui s'est passé.");
+    // Fields that are not named keep their own text.
+    expect(labels.map((label) => label.label)).toEqual(["Motif", "Détails", "Screenshots", "Stay anonymous"]);
+    expect(labels[0]?.description).toBe("Choisissez le plus proche");
+    expect(JSON.stringify(labels[1])).toContain("Facultatif");
+    // The definition itself is untouched.
+    expect(Report.title).toBe("Report");
+    expect(Report.fields.reason.label).toBe("Reason");
+    expect(texts().labels[0]?.label).toBe("Reason");
+  });
+
+  it("refuses text that breaks Discord's limits, or names a field that does not exist", () => {
+    const code = (run: () => unknown) => {
+      try {
+        run();
+      } catch (error) {
+        return isBotError(error) ? error.code : String(error);
+      }
+      return "no error";
+    };
+    expect(code(() => Report.build({ targetId: "1" }, { title: "x".repeat(46) }))).toBe("DJSBOT_E014");
+    expect(code(() => Report.build({ targetId: "1" }, { fields: { details: { label: "x".repeat(46) } } }))).toBe("DJSBOT_E014");
+    // @ts-expect-error "detail" is not a field of this modal
+    expect(code(() => Report.build({ targetId: "1" }, { fields: { detail: { label: "Détails" } } }))).toBe("DJSBOT_E014");
+  });
+});

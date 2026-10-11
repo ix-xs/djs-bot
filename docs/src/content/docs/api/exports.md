@@ -194,6 +194,7 @@ import { /* ... */ } from "@ix-xs/djs-bot";
 | `FieldKind` | Every kind of component a modal can hold. | [Modals](/components/modals/) |
 | `FieldMap` | A map of field name → descriptor, as passed to `defineModal`. | [Modals](/components/modals/) |
 | `FieldOutput` | What `ctx.fields.<name>` holds for each kind of field. | [Modals](/components/modals/) |
+| `FieldText` | The text of one field of a modal, given when the modal is built. | [Modals](/components/modals/) |
 | `FileType` | What a file may be: one of Discord's categories, or a dot-prefixed extension. | [Options and autocomplete](/commands/options/) |
 | `FlagScope` | A scope for reading/writing a flag. | [Feature flags](/data/flags/) |
 | `FrameworkMessages` | The overridable message table accepted by `defineBot({ messages })`. | [Wording and theme](/basics/wording-and-theme/) |
@@ -232,6 +233,7 @@ import { /* ... */ } from "@ix-xs/djs-bot";
 | `ModalContext` | Context passed to modal handlers. | [Modals](/components/modals/) |
 | `ModalDefinition` | A registered modal with typed fields and optional customId params. | [Modals](/components/modals/) |
 | `ModalInput` | Input accepted by `defineModal`. | [Modals](/components/modals/) |
+| `ModalTextOptions` | Text given when a modal is built, in place of what was declared. | [Modals](/components/modals/) |
 | `NativeSelectVisualOptions` | Visual configuration for a native (user/role/channel/mentionable) select. | [Select menus](/components/select-menus/) |
 | `NormalizedChoices` | What `toAutocompleteChoices` produced, and what it had to leave out. | [Options and autocomplete](/commands/options/) |
 | `OptionDef` | Internal descriptor for a single option. | [Options and autocomplete](/commands/options/) |
@@ -335,4 +337,4 @@ import { /* ... */ } from "@ix-xs/djs-bot/testing";
 | `Harness` | A harness bound to an optional `Bot` (for its services). | [Testing](/production/testing/) |
 | `HarnessResult` | The result of running a handler through the harness. | [Testing](/production/testing/) |
 
-254 symbols are declared by the framework.
+256 symbols are declared by the framework.

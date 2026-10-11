@@ -53,7 +53,7 @@ import {
   type ParamMap,
 } from "./schema.js";
 import { encodeCustomId } from "./customId.js";
-import { assertModalFields, buildModal } from "./modal.js";
+import { assertModalFields, buildModal, withModalText, type ModalTextOptions } from "./modal.js";
 import { parseSchedule } from "./scheduler.js";
 import { BotError } from "./errors.js";
 import { assertChatName, assertCommandShape, assertComponentId, assertMenuName } from "./validate.js";
@@ -1012,8 +1012,11 @@ export interface ModalDefinition<F extends FieldMap = FieldMap, P extends ParamM
   readonly defer?: DeferOption;
   /** The handler, called when the user submits the dialog. */
   run(ctx: ModalContext<InferFields<F>> & { params: InferParams<P> }): unknown | Promise<unknown>;
-  /** Builds a discord.js modal from the declared fields. */
-  build(params?: InferParams<P>): ModalBuilder;
+  /**
+   * Builds a discord.js modal from the declared fields. `text` replaces the
+   * title and the text of the fields it names: a translation, usually.
+   */
+  build(params?: InferParams<P>, text?: ModalTextOptions<F>): ModalBuilder;
 }
 
 /** Input accepted by {@link defineModal}. */
@@ -1060,12 +1063,14 @@ export function defineModal<F extends FieldMap, P extends ParamMap = Record<stri
     guards: input.guards ?? [],
     defer: input.defer,
     run: input.run,
-    build(values) {
-      return buildModal(
-        encodeCustomId(input.id, params, values as Record<string, unknown>),
-        input.title,
-        input.fields,
-      );
+    build(values, text) {
+      const customId = encodeCustomId(input.id, params, values as Record<string, unknown>);
+      if (!text) return buildModal(customId, input.title, input.fields);
+      // Text given now goes through the checks the declared text went through.
+      const fields = withModalText(input.id, input.fields, text);
+      const title = text.title ?? input.title;
+      assertModalFields(input.id, fields, title);
+      return buildModal(customId, title, fields);
     },
   };
 }

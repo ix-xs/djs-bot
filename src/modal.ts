@@ -72,6 +72,58 @@ const OPTION_LIMITS: Partial<Record<FieldDef["kind"], readonly [number, number]>
   checkboxes: [1, 10],
 };
 
+/** The text of one field of a modal, given when the modal is built. */
+export interface FieldText {
+  /** The label shown above the component (the content itself for `field.text`). */
+  label?: string;
+  /** The line under the label. */
+  description?: string;
+  /** The greyed-out hint shown while the field is empty. */
+  placeholder?: string;
+}
+
+/**
+ * Text given when a modal is built, in place of what was declared. A modal is
+ * declared once; this is how it is shown in the language of whoever opens it.
+ * @example
+ * ctx.showModal(Report, undefined, {
+ *   title: ctx.t("report.title"),
+ *   fields: { details: { label: ctx.t("report.details") } },
+ * });
+ */
+export interface ModalTextOptions<F extends FieldMap = FieldMap> {
+  /** The title of the dialog (up to 45 characters). */
+  title?: string;
+  /** The text of each field, by the name it has in `fields`. Fields left out keep theirs. */
+  fields?: { readonly [K in keyof F]?: FieldText };
+}
+
+/**
+ * The declared fields, with the text given at build time in place of their own.
+ * @throws {BotError} `DJSBOT_E014` when the text names a field the modal does not have.
+ */
+export function withModalText(modalId: string, fields: FieldMap, text: ModalTextOptions): FieldMap {
+  const given: Record<string, FieldText | undefined> = text.fields ?? {};
+  for (const name of Object.keys(given)) {
+    if (!(name in fields)) {
+      throw new BotError("DJSBOT_E014", {
+        detail: `modal "${modalId}": text was given for "${name}", which is not one of its fields`,
+        hint: `Its fields are: ${Object.keys(fields).join(", ")}.`,
+      });
+    }
+  }
+  return Object.fromEntries(
+    Object.entries(fields).map(([name, def]) => {
+      const { label, description, placeholder } = given[name] ?? {};
+      if (label === undefined && description === undefined && placeholder === undefined) return [name, def];
+      const config = { ...def.config };
+      if (description !== undefined) config.description = description;
+      if (placeholder !== undefined) config.placeholder = placeholder;
+      return [name, { ...def, label: label ?? def.label, config }];
+    }),
+  );
+}
+
 /**
  * Checks a modal's fields against Discord's rules when the modal is defined,
  * so a mistake fails at startup with a coded error instead of an HTTP 400 the

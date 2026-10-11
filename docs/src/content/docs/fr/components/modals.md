@@ -215,6 +215,39 @@ Les champs sont figés quand la modale est définie. Une `value` préremplie, un
 `default` ou des `defaultValues` sont donc identiques pour tous ceux qui
 l'ouvrent.
 
+## Traduire une modale
+
+Une modale est déclarée une seule fois, dans une seule langue. Pour l'afficher
+dans la langue de la personne qui l'ouvre, donnez ses textes au moment de
+l'ouvrir : le troisième argument de `ctx.showModal` remplace le titre et les
+textes des champs qu'il nomme.
+
+```ts title="features/report/report.command.ts"
+import { defineCommand } from "@ix-xs/djs-bot";
+import { Report } from "./report.modal.js";
+
+export default defineCommand({
+  name: "report",
+  description: "Report a problem",
+  run: (ctx) =>
+    ctx.showModal(Report, undefined, {
+      title: ctx.t("report.title"),
+      fields: {
+        details: { label: ctx.t("report.details"), placeholder: ctx.t("report.hint") },
+      },
+    }),
+});
+```
+
+Les champs qui ne sont pas nommés gardent le texte de leur déclaration : une
+modale peut donc être traduite champ par champ. Ces textes passent les mêmes
+contrôles que ceux de la déclaration : un titre ou un libellé trop long lève
+`DJSBOT_E014` à l'ouverture de la modale. Les libellés des options d'un
+`field.select`, d'un `field.radio` ou d'un `field.checkboxes` restent ceux
+de la déclaration.
+
+`ctx.t` est décrit dans [Internationalisation](/data/i18n/).
+
 ## Référence
 
 ### `defineModal(input)`
@@ -239,10 +272,23 @@ Le gestionnaire reçoit un `ModalContext<Fields>`, qui ajoute `fields` au
 ### `build(params?)`
 
 Renvoie un `ModalBuilder` de discord.js construit à partir des champs déclarés,
-avec un customId qui encode `params`. `ctx.showModal(Modal, params)` l'appelle
-pour vous. Ne l'utilisez directement que si vous avez besoin du builder brut, et
+avec un customId qui encode `params`. Un deuxième argument, un
+[`ModalTextOptions`](#modaltextoptions), remplace le titre et les textes des
+champs qu'il nomme. `ctx.showModal(Modal, params, text)` l'appelle pour vous. Ne l'utilisez directement que si vous avez besoin du builder brut, et
 notez que `showModal` accepte n'importe quel objet doté d'un `build()`
 compatible.
+
+### `ModalTextOptions`
+
+Le deuxième argument de `build`, et le troisième de `ctx.showModal`.
+
+| Champ | Type | Description |
+| --- | --- | --- |
+| `title` | `string` | Affiché en haut de la fenêtre à la place du titre déclaré. 1-45 caractères. |
+| `fields` | `Record<name, FieldText>` | Le texte de chaque champ, sous le nom qu'il porte dans `fields`. Nommer un champ que la modale n'a pas lève `DJSBOT_E014`. |
+
+Un `FieldText` contient au choix `label`, `description` et `placeholder`.
+Pour un `field.text`, `label` est le texte lui-même.
 
 ### `field`
 
