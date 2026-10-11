@@ -25,18 +25,23 @@ invoked.
 
 ## Built-in guards
 
-| Guard | Passes when | Fails with |
+| Guard | Passes when | Message key |
 | --- | --- | --- |
-| `inGuild()` | Used inside a server | "This can only be used in a server." |
-| `dmOnly()` | Used in DMs | "This can only be used in DMs." |
-| `hasPermission(...perms)` | The **member** has every permission | Names the missing permission |
-| `botHasPermission(...perms)` | The **bot** has every permission | Names what the bot is missing |
-| `inChannel(...ids)` | Used in one of the listed channels | Points at the allowed channels |
-| `ownerOnly(...ids?)` | The user is an owner | "You can't use this." |
-| `cooldown(duration, opts?)` | The cooldown has elapsed | "Please wait Ns before doing that again." |
-| `featureEnabled(name)` | The flag is on for this guild | "This feature is currently disabled here." |
+| `inGuild()` | Used inside a server | `guildOnly` |
+| `dmOnly()` | Used in DMs | `dmOnly` |
+| `hasPermission(...perms)` | The **member** has every permission, in this channel | `missingPermissions` |
+| `botHasPermission(...perms)` | The **bot** has every permission, in this channel | `botMissingPermissions` |
+| `hasRole(...roleIds)` | The member holds at least one of the roles | `missingRole` |
+| `inChannel(...ids)` | Used in one of the listed channels | `wrongChannel` |
+| `ownerOnly(...ids?)` | The user is a bot owner | `ownerOnly` |
+| `guildOwnerOnly()` | The user owns the server | `guildOwnerOnly` |
+| `cooldown(duration, opts?)` | The cooldown has elapsed | `cooldown` |
+| `rateLimit(opts)` | Under the limit. See [Resilience](/api/resilience/#ratelimit---as-a-guard) | `rateLimited` |
+| `featureEnabled(name)` | The flag is on for this guild. See [Flags](/api/flags/#featureenabled) | `featureDisabled` |
 
-`featureEnabled` lives in the [flags module](/djs-bot/api/flags/#featureenabled).
+The message keys are what you override in
+[`defineBot({ messages })`](/api/configuration/#messages) to reword or translate
+a refusal.
 
 ### `hasPermission` / `botHasPermission`
 
@@ -46,15 +51,28 @@ Accept any `PermissionResolvable` - an enum member, a string, or several:
 guards: [hasPermission(PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ManageThreads)]
 ```
 
-`botHasPermission` is the one people forget: it catches "the command silently
-did nothing" bugs before they reach production, by checking the bot own
-permissions in the current channel.
+Both check the permissions **as Discord computed them for the channel the
+interaction happened in**, channel overwrites included. A member who is a
+moderator server-wide but denied in one channel is refused there, and so is a
+bot whose role lost a permission through an overwrite.
 
-### `ownerOnly`
+The refusal names only what is missing, readably: `You need: Ban Members.`
+
+`botHasPermission` is the one people forget: it catches "the command silently
+did nothing" bugs before they reach production.
+
+### `hasRole`
+
+```ts
+guards: [hasRole(MOD_ROLE_ID, ADMIN_ROLE_ID)]   // either role is enough
+```
+
+### `ownerOnly` / `guildOwnerOnly`
 
 ```ts
 ownerOnly()                 // uses defineBot({ owners: [...] })
 ownerOnly("123", "456")     // explicit ids, ignoring the config
+guildOwnerOnly()            // the owner of the server the command runs in
 ```
 
 ### `cooldown`
@@ -72,11 +90,27 @@ cooldown(duration: string | number, options?: { scope?: CooldownScope }): Guard
 
 Each `cooldown()` call owns its own timer map, so the limit naturally applies
 per command or component it is attached to. Durations accept `"5s"`, `"2m"`,
-`"1h"` or raw milliseconds.
+`"1h"` or raw milliseconds. Expired entries are swept as the guard runs, so a
+long-lived bot does not accumulate one entry per user forever.
 
 ```ts
 guards: [cooldown("10s"), cooldown("1m", { scope: "guild" })]
 ```
+
+## Combining guards
+
+```ts
+import { anyOf, not } from "@ix-xs/djs-bot";
+
+guards: [
+  // Passes when at least one passes. Shows the last reason when all fail.
+  anyOf(ownerOnly(), hasPermission(PermissionFlagsBits.ManageGuild)),
+  // Passes when the inner guard fails; the string is the refusal.
+  not(inChannel(SPAM_CHANNEL_ID), "Not in this channel, please."),
+]
+```
+
+Listing guards in the array is already "all of them", in order.
 
 ## Writing your own
 
@@ -87,7 +121,8 @@ fail(reason: string): GuardResult
 ```
 
 The `reason` you pass to `fail()` is what the user sees, so write it for them,
-not for you:
+not for you. To reuse the framework's wording (and its translations), call
+`ctx.say("guildOnly")`:
 
 ```ts
 import { guard, pass, fail } from "@ix-xs/djs-bot";
@@ -107,11 +142,12 @@ export const modOnly = [inGuild(), hasPermission(PermissionFlagsBits.ModerateMem
 export default defineCommand({ name: "warn", description: "…", guards: [...modOnly, cooldown("3s")], run });
 ```
 
-## Guards and intents
+## Guards and middleware
 
-The intent autopilot inspects your guards too: `hasPermission` and
-`botHasPermission` imply the `Guilds` intent, and member-related checks pull in
-what they need. Nothing to configure when `intents: "auto"`.
+Plugin middleware (`beforeInteraction`) runs **before** the guards. A
+maintenance-mode plugin can therefore stop an interaction ahead of any guard,
+and a logging plugin times guards and handler together. See
+[Plugins](/api/plugins/#middleware).
 
 ## Guards vs `defaultMemberPermissions`
 

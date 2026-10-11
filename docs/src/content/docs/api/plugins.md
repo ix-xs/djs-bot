@@ -35,10 +35,11 @@ guard against interaction spam, applied to every interaction.
 | --- | --- | --- | --- |
 | `max` | `number` | `5` | Interactions allowed per window, per user. |
 | `window` | `number \| string` | `"10s"` | Window length, ms or a duration. |
-| `message` | `string` | "You're doing that too fast…" | Shown to a limited user. |
+| `message` | `string` | the `slowDown` [message](/api/configuration/#messages) | Shown to a limited user. |
+| `allow` | `string[]` | `[]` | User ids that are never limited (owners, staff). |
 
 ```ts
-antiSpam({ max: 10, window: "30s", message: "Slow down a little!" })
+antiSpam({ max: 10, window: "30s", allow: env.list("OWNER_IDS") })
 ```
 
 ### `commandLogger(options?)`
@@ -48,10 +49,10 @@ so every line can be tied back to a single interaction.
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `timing` | `boolean` | `true` | Also log the handler duration in ms. |
+| `timing` | `boolean` | `true` | Also log the duration in ms (guards included). |
 
 ```
-14:22:07 INFO  interaction handled correlationId=8f3a type=2 ms=143
+14:22:07 INFO  interaction handled correlationId=8f3a kind=command name="config set" guildId=123 ms=143
 ```
 
 ### `errorReporter(options)`
@@ -107,9 +108,9 @@ definePlugin({
 | --- | --- |
 | `name` | Unique plugin name, shown in logs and `djs-bot explain`. |
 | `version` | Informational. |
-| `requires` | Capabilities that must exist, else [`DJSBOT_E040`](/djs-bot/api/errors/#djsbot_e040) at boot. |
+| `requires` | Capabilities that must exist, else [`DJSBOT_E040`](/api/errors/#djsbot_e040) at boot. |
 | `provides` | Capabilities this plugin offers to others. |
-| `conflicts` | Capabilities it refuses to coexist with → [`DJSBOT_E041`](/djs-bot/api/errors/#djsbot_e041). |
+| `conflicts` | Capabilities it refuses to coexist with → [`DJSBOT_E041`](/api/errors/#djsbot_e041). |
 | `setup` | Runs once at boot. Register hooks and services here. |
 | `teardown` | Runs during graceful shutdown. Close connections here. |
 
@@ -119,9 +120,9 @@ The restricted façade handed to `setup` and `teardown`:
 
 | Member | Type | Description |
 | --- | --- | --- |
-| `app.logger` | `Logger` | The root logger. |
+| `app.logger` | `Logger` | A logger tagged with the plugin name. |
 | `app.hooks` | `HookRegistrar` | The lifecycle hooks below. |
-| `app.config` | `Readonly<Record<string, unknown>>` | The bot configuration, read-only. |
+| `app.config` | `Readonly<BotConfig>` | The configuration passed to `defineBot()`, read-only. |
 | `app.services.register(token, value)` | `void` | Registers a built value in the container. |
 | `app.services.has(token)` | `boolean` | Whether a token already exists. |
 
@@ -129,31 +130,34 @@ The restricted façade handed to `setup` and `teardown`:
 
 | Hook | Signature | When it runs |
 | --- | --- | --- |
-| `beforeInteraction(fn)` | `(ctx, next) => unknown` | Before **every** interaction handler. Middleware - see below. |
-| `afterInteraction(fn)` | `(ctx) => unknown` | After a handler completes successfully. |
-| `onError(fn)` | `(error, ctx?) => unknown` | Whenever any handler throws. |
+| `beforeInteraction(fn)` | `(ctx, next) => unknown` | Around **every** interaction: before the guards and the handler. Middleware - see below. |
+| `afterInteraction(fn)` | `(ctx, { durationMs }) => unknown` | After a handler completes successfully. Not called when a guard refused or a middleware stopped the interaction. |
+| `onError(fn)` | `(error, ctx?) => unknown` | Whenever something the framework runs throws: an interaction handler (`ctx` is set), an event listener, a trigger or a job (`ctx` is absent). |
 | `onReady(fn)` | `(client) => unknown` | Once the gateway connection is ready. |
 | `onShutdown(fn)` | `() => unknown` | During graceful shutdown. |
 
 ### Middleware
 
 `beforeInteraction` is real middleware: call `next()` to continue, or **do not**
-call it to stop the interaction there.
+call it to stop the interaction there. It wraps the guards as well as the
+handler, so it runs first and sees the whole duration.
 
 ```ts
 app.hooks.beforeInteraction(async (ctx, next) => {
   if (isBanned(ctx.user.id)) {
     await ctx.reply.error("You are banned from using this bot.");
-    return;                       // short-circuit: the handler never runs
+    return;                       // short-circuit: no guard, no handler
   }
-  const started = Date.now();
-  await next();                   // run the rest of the chain + the handler
-  metrics.observe(Date.now() - started);
+  const started = performance.now();
+  await next();                   // guards, then the handler
+  const { kind, name } = describeInteraction(ctx.interaction);
+  metrics.observe(kind, name, performance.now() - started);
 });
 ```
 
 Everything around `await next()` is your before/after logic - timing, metrics,
-transactions, tracing.
+transactions, tracing. Several middlewares nest in the order their plugins are
+listed.
 
 ### A complete example
 
@@ -172,9 +176,8 @@ export function postgres(url: string) {
       await pool.query("select 1");
       app.services.register("db", pool);
       app.logger.info("postgres connected");
-
-      app.hooks.onShutdown(() => pool.end());
     },
+    teardown: () => pool.end(),
   });
 }
 ```
@@ -184,6 +187,12 @@ plugins: [postgres(env("DATABASE_URL"))],
 ```
 
 Any feature can now declare `requires: ["db"]` and use `ctx.services.db`.
+
+:::tip
+For a plain shared resource with nothing cross-cutting about it, a
+[`defineService`](/api/services/) with a `dispose` hook is shorter. Reach for a
+plugin when you also need hooks.
+:::
 
 ## Publishing a plugin
 
@@ -208,7 +217,7 @@ Guidelines that keep third-party plugins pleasant to use:
 - Never let your own error handling throw.
 
 Need commands and events too, not just hooks? Ship a
-[`defineFeature`](/djs-bot/api/definitions/#definefeature) instead - or both,
+[`defineFeature`](/api/definitions/#definefeature) instead - or both,
 with the feature bundling the plugin.
 
 ## Plugins vs guards vs features

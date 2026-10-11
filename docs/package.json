@@ -1,13 +1,14 @@
 {
   "name": "djs-bot-docs",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "generate": "node scripts/generate.mjs",
     "dev": "npm run generate && astro dev",
     "build": "npm run generate && astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "check-links": "node scripts/check-links.mjs"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.30.0",

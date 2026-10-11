@@ -13,7 +13,7 @@ jobs or anywhere else.
 
 ### `rateLimit()` - as a guard
 
-More expressive than [`cooldown`](/djs-bot/api/guards/#cooldown), which is one
+More expressive than [`cooldown`](/api/guards/#cooldown), which is one
 use per duration:
 
 ```ts
@@ -27,7 +27,8 @@ guards: [rateLimit({ limit: 100, window: "1h", scope: "guild" })]  // 100 per ho
 | `window` | `number \| string` | **Required.** Window length, ms or a duration. |
 | `scope` | `"user" \| "guild" \| "channel" \| "global"` | What to count by. Default `"user"`. |
 
-The failure message tells the user exactly how long to wait.
+The failure message tells the user exactly how long to wait. Reword it through
+the `rateLimited` [message](/api/configuration/#messages).
 
 ### `createRateLimiter()` - programmatic
 
@@ -42,9 +43,13 @@ if (!result.allowed) return ctx.reply.error(`Wait ${Math.ceil(result.resetMs / 1
 | --- | --- |
 | `consume(key, cost?)` | Records a hit and returns a `RateLimitResult`. |
 | `reset(key)` | Clears the window for a key. |
+| `size` | How many keys currently have an open window. |
 
 `RateLimitResult`: `allowed` (`boolean`), `remaining` (`number`), `resetMs`
 (milliseconds until the window resets).
+
+Finished windows are swept as the limiter is used, so keys that never come
+back (one-off users, guilds the bot left) do not accumulate.
 
 A `cost` above 1 lets expensive operations count for more:
 
@@ -59,7 +64,7 @@ Stops hammering a service that is already failing, and gives it room to recover.
 ```ts
 const breaker = createCircuitBreaker({ failureThreshold: 5, resetTimeout: "30s" });
 
-const data = await breaker.run(() => externalApi.fetch(id));
+const data = await breaker.execute(() => externalApi.fetch(id));
 ```
 
 | Option | Type | Default | Description |
@@ -83,7 +88,7 @@ const data = await breaker.run(() => externalApi.fetch(id));
 import { CircuitOpenError } from "@ix-xs/djs-bot";
 
 try {
-  const data = await breaker.run(() => api.fetch());
+  const data = await breaker.execute(() => api.fetch());
   return ctx.reply.info(data.title);
 } catch (error) {
   if (error instanceof CircuitOpenError) {
@@ -93,7 +98,7 @@ try {
 }
 ```
 
-Read the current state with `breaker.state`.
+Read the current state with `breaker.status`.
 
 Ignore expected errors so they do not trip the breaker:
 
@@ -155,7 +160,7 @@ before a deferral and 15 minutes afterwards.
 The usual production stack, outermost first:
 
 ```ts
-const result = await breaker.run(() =>
+const result = await breaker.execute(() =>
   retry(() => timeout(api.fetch(id), 3000), {
     attempts: 3,
     shouldRetry: (error) => !(error instanceof NotFoundError),
@@ -175,7 +180,7 @@ export default defineService("api", {
     const breaker = createCircuitBreaker({ failureThreshold: 5 });
     return {
       fetch: (id: string) =>
-        breaker.run(() => retry(() => timeout(rawFetch(id), 3000), { attempts: 3 })),
+        breaker.execute(() => retry(() => timeout(rawFetch(id), 3000), { attempts: 3 })),
     };
   },
 });

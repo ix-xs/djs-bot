@@ -6,11 +6,11 @@ hero:
   tagline: Write features, not plumbing. Your bot is production-ready on day one - and you can always read exactly what the framework does.
   actions:
     - text: Build your first bot
-      link: /djs-bot/tutorial/what-you-need/
+      link: /tutorial/what-you-need/
       icon: rocket
       variant: primary
     - text: Browse the guide
-      link: /djs-bot/guide/basics/install-project-layout/
+      link: /guide/basics/install-project-layout/
       icon: open-book
       variant: minimal
     - text: GitHub
@@ -74,6 +74,29 @@ import DiscordButtons from '../../components/DiscordButtons.astro';
     ```
     <DiscordMessage author="djs-bot" content="Welcome @NewUser! 👋" />
   </TabItem>
+  <TabItem label="A form">
+    ```ts
+    import { defineModal, field } from "@ix-xs/djs-bot";
+
+    export const Report = defineModal({
+      id: "report",
+      title: "Report a problem",
+      fields: {
+        kind: field.select({ label: "Kind", required: true, options: [{ label: "Bug", value: "bug" }] }),
+        details: field.paragraph({ label: "Details", maxLength: 1000 }),
+        proof: field.files({ label: "Screenshots", maxValues: 3 }),
+        urgent: field.checkbox({ label: "This is urgent" }),
+      },
+      // ctx.fields: { kind: string[]; details: string; proof: Collection<...>; urgent: boolean }
+      run: (ctx) => ctx.reply.success(`Reported (${ctx.fields.proof.size} file(s)).`),
+    });
+
+    // from any command or button:  await ctx.showModal(Report);
+    ```
+    <DiscordMessage author="djs-bot">
+      <DiscordEmbed color="#23a55a" description="✅ Reported (2 file(s))." />
+    </DiscordMessage>
+  </TabItem>
 </Tabs>
 
 ## Why djs-bot
@@ -86,10 +109,16 @@ import DiscordButtons from '../../components/DiscordButtons.astro';
     Files export `define*()` objects; nothing registers by importing. `djs-bot explain` shows exactly what's loaded and why.
   </Card>
   <Card title="Production-ready" icon="rocket">
-    Error boundaries, graceful shutdown, structured logs, sharding, health checks, i18n, persistence and rate limiting - built in.
+    Error boundaries, graceful shutdown, structured logs, sharding, health checks and Prometheus metrics, persistence with atomic counters, rate limiting - built in.
   </Card>
   <Card title="Batteries included" icon="puzzle">
-    Subcommands, context menus, autocomplete, native selects, triggers, pagination, `confirm()`, presence, assets, voice - and official plugins.
+    Subcommands, context menus, autocomplete, native selects, modern modals, triggers, pagination, `confirm()`, polls, presence, assets, voice - and official plugins.
+  </Card>
+  <Card title="Never 'interaction failed'" icon="seti:clock">
+    Turn on automatic deferral once and slow handlers are acknowledged for you, without ever colliding with your own reply.
+  </Card>
+  <Card title="Speaks your language" icon="translate">
+    Localized command names, per-user translations with `ctx.t()`, and every sentence the framework itself says can be reworded or translated.
   </Card>
 </CardGrid>
 
@@ -102,7 +131,7 @@ npx djs-bot dev       # watch + instant deploy to your test server
 ```
 
 <Aside type="tip" title="Never built a bot before?">
-The [tutorial](/djs-bot/tutorial/what-you-need/) walks you through everything -
+The [tutorial](/tutorial/what-you-need/) walks you through everything -
 creating the app on Discord, getting your token, inviting the bot, your first
 command, buttons, and putting it online. No prior experience assumed.
 </Aside>
@@ -110,12 +139,12 @@ command, buttons, and putting it online. No prior experience assumed.
 ## Explore
 
 <CardGrid>
-  <LinkCard title="Tutorial" description="Zero to a deployed bot, step by step." href="/djs-bot/tutorial/what-you-need/" />
-  <LinkCard title="Commands & options" description="Typed options, subcommands, context menus, guards." href="/djs-bot/guide/commands/slash-commands-typed-options/" />
-  <LinkCard title="Components" description="Typed buttons, selects, modals, Components V2, pagination." href="/djs-bot/guide/components/typed-buttons-the-customid-router/" />
-  <LinkCard title="Architecture" description="Services & DI, jobs, plugins, reusable features." href="/djs-bot/guide/architecture/services-dependency-injection/" />
-  <LinkCard title="Data & state" description="Cache, i18n, key-value persistence, feature flags." href="/djs-bot/guide/data/persistence-key-value-stores/" />
-  <LinkCard title="Production" description="Deploy, CLI, sharding, resilience, audit, health checks." href="/djs-bot/guide/ops/deploying-global-specific-guilds/" />
+  <LinkCard title="Tutorial" description="Zero to a deployed bot, step by step." href="/tutorial/what-you-need/" />
+  <LinkCard title="Commands & options" description="Typed options, subcommands, context menus, guards." href="/guide/commands/slash-commands-typed-options/" />
+  <LinkCard title="Components" description="Typed buttons, selects, modals, Components V2, pagination." href="/guide/components/typed-buttons-the-customid-router/" />
+  <LinkCard title="Architecture" description="Services & DI, jobs, plugins, reusable features." href="/guide/architecture/services-dependency-injection/" />
+  <LinkCard title="Data & state" description="Cache, i18n, key-value persistence, feature flags." href="/guide/data/persistence-key-value-stores/" />
+  <LinkCard title="Production" description="Deploy, CLI, sharding, resilience, audit, health checks." href="/guide/ops/deploying-global-specific-guilds/" />
 </CardGrid>
 
 ## Complete API reference
@@ -123,28 +152,28 @@ command, buttons, and putting it online. No prior experience assumed.
 Every export, every option, every error code - written by hand, not generated.
 
 <CardGrid>
-  <LinkCard title="API overview" description="The full export map: what exists and where it is documented." href="/djs-bot/api/overview/" />
-  <LinkCard title="Configuration & env" description="defineBot, every BotConfig field, env() and env.optional()." href="/djs-bot/api/configuration/" />
-  <LinkCard title="The ctx object" description="reply, update, options, params, fields, services, logger, t, audit." href="/djs-bot/api/context/" />
-  <LinkCard title="Plugins & hooks" description="Official plugins, every lifecycle hook, writing your own." href="/djs-bot/api/plugins/" />
-  <LinkCard title="Store, i18n, flags, audit" description="The runtime services, method by method." href="/djs-bot/api/store/" />
-  <LinkCard title="Error codes" description="Every DJSBOT_Exxx: what causes it, how to fix it." href="/djs-bot/api/errors/" />
+  <LinkCard title="API overview" description="The full export map: what exists and where it is documented." href="/api/overview/" />
+  <LinkCard title="Configuration & env" description="defineBot, every BotConfig field, env() and env.optional()." href="/api/configuration/" />
+  <LinkCard title="The ctx object" description="reply, update, options, params, fields, services, logger, t, audit." href="/api/context/" />
+  <LinkCard title="Plugins & hooks" description="Official plugins, every lifecycle hook, writing your own." href="/api/plugins/" />
+  <LinkCard title="Store, i18n, flags, audit" description="The runtime services, method by method." href="/api/store/" />
+  <LinkCard title="Error codes" description="Every DJSBOT_Exxx: what causes it, how to fix it." href="/api/errors/" />
 </CardGrid>
 
 ## Recipes: real features, copy-pasteable
 
 <CardGrid>
-  <LinkCard title="A moderation bot" description="Ban, kick, timeout, warn and a paginated warning history." href="/djs-bot/recipes/moderation/" />
-  <LinkCard title="A ticket system" description="Panel button, modal, private channel, close and archive." href="/djs-bot/recipes/ticket-system/" />
-  <LinkCard title="A role menu" description="Self-assign roles with a select menu, plus a native role picker." href="/djs-bot/recipes/role-menu/" />
-  <LinkCard title="Levelling & leaderboard" description="XP from messages, a rank card and a cached leaderboard." href="/djs-bot/recipes/levelling/" />
-  <LinkCard title="Hosting in production" description="systemd, pm2, Docker, CI deploys, health checks and backups." href="/djs-bot/recipes/hosting/" />
+  <LinkCard title="A moderation bot" description="Ban, kick, timeout, warn and a paginated warning history." href="/recipes/moderation/" />
+  <LinkCard title="A ticket system" description="Panel button, modal, private channel, close and archive." href="/recipes/ticket-system/" />
+  <LinkCard title="A role menu" description="Self-assign roles with a select menu, plus a native role picker." href="/recipes/role-menu/" />
+  <LinkCard title="Levelling & leaderboard" description="XP from messages, a rank card and a cached leaderboard." href="/recipes/levelling/" />
+  <LinkCard title="Hosting in production" description="systemd, pm2, Docker, CI deploys, health checks and backups." href="/recipes/hosting/" />
 </CardGrid>
 
 ## Stuck on something?
 
 <CardGrid>
-  <LinkCard title="Troubleshooting" description="Every symptom you will actually hit, with the fix." href="/djs-bot/help/troubleshooting/" />
-  <LinkCard title="FAQ" description="Short answers to the questions that come up first." href="/djs-bot/help/faq/" />
-  <LinkCard title="Glossary" description="Every Discord and framework term, in plain language." href="/djs-bot/help/glossary/" />
+  <LinkCard title="Troubleshooting" description="Every symptom you will actually hit, with the fix." href="/help/troubleshooting/" />
+  <LinkCard title="FAQ" description="Short answers to the questions that come up first." href="/help/faq/" />
+  <LinkCard title="Glossary" description="Every Discord and framework term, in plain language." href="/help/glossary/" />
 </CardGrid>

@@ -13,6 +13,8 @@ const bot = defineBot({
   intents: "auto",
   plugins: [requestLogger],
   deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
+  // A handler that has not answered after 2 s is acknowledged for you.
+  defaults: { defer: true },
   logger: { level: "debug" },
 });
 

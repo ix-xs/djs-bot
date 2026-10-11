@@ -6,13 +6,17 @@ import {
   featureEnabled,
   rateLimit,
   paginate,
-  type KVStore,
 } from "@ix-xs/djs-bot";
 import { EmbedBuilder } from "discord.js";
+import type { KVStore } from "@ix-xs/djs-bot";
+
+/** Balances live in their own namespace, away from flags and audit entries. */
+const coins = (store: KVStore): KVStore<number> => store.namespace<number>("coins");
 
 /**
  * A feature that combines everything: a per-guild feature flag, a rate limit,
- * a persistent store, i18n replies, an audit entry, and pagination.
+ * a persistent store with an atomic counter, i18n replies, an audit entry, and
+ * pagination.
  *
  *   /economy balance
  *   /economy daily
@@ -26,8 +30,7 @@ export default defineCommand({
     balance: subcommand({
       description: "Check your balance",
       run: async (ctx) => {
-        const store = ctx.services.store as KVStore<number>;
-        const n = (await store.get(ctx.user.id)) ?? 0;
+        const n = (await coins(ctx.services.store).get(ctx.user.id)) ?? 0;
         await ctx.reply.info(ctx.t("economy.balance", { n }));
       },
     }),
@@ -35,9 +38,8 @@ export default defineCommand({
       description: "Claim your daily coins",
       guards: [rateLimit({ limit: 1, window: "24h" })],
       run: async (ctx) => {
-        const store = ctx.services.store as KVStore<number>;
-        const balance = ((await store.get(ctx.user.id)) ?? 0) + 100;
-        await store.set(ctx.user.id, balance);
+        // increment() cannot lose an update, even if two claims race.
+        const balance = await coins(ctx.services.store).increment(ctx.user.id, 100);
         await ctx.audit("economy.daily", { metadata: { balance } });
         await ctx.reply.success(ctx.t("economy.claimed", { n: 100 }));
       },
@@ -45,10 +47,10 @@ export default defineCommand({
     leaderboard: subcommand({
       description: "Top balances",
       run: async (ctx) => {
-        const store = ctx.services.store as KVStore<number>;
-        const keys = await store.keys();
-        const rows = await Promise.all(keys.map(async (k) => ({ id: k, n: (await store.get(k)) ?? 0 })));
-        rows.sort((a, b) => b.n - a.n);
+        // entries() reads the whole namespace at once.
+        const rows = (await coins(ctx.services.store).entries())
+          .map(([id, n]) => ({ id, n }))
+          .sort((a, b) => b.n - a.n);
         const pageSize = 10;
         const pages: EmbedBuilder[] = [];
         for (let i = 0; i < Math.max(rows.length, 1); i += pageSize) {

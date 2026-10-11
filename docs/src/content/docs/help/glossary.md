@@ -65,7 +65,7 @@ If a word in the docs is unfamiliar, it is defined here.
 
 **Defer**
 : Telling Discord "I am working on it", which stops the 3 second clock and shows
-  a loading state. Use it whenever a handler might be slow.
+  a loading state. The framework can do it for you: see **automatic deferral**.
 
 **customId**
 : The string attached to a button, select or modal. It is the only state Discord
@@ -80,7 +80,8 @@ If a word in the docs is unfamiliar, it is defined here.
   embeds. Opt in per message with the `IsComponentsV2` flag.
 
 **Modal**
-: A pop-up form with up to 5 text inputs.
+: A pop-up form with up to 5 components: text inputs, dropdowns, pickers, file
+  uploads, radio buttons, checkboxes.
 
 **Permission**
 : What a member or bot is allowed to do. Server roles grant them, and **channel
@@ -150,6 +151,10 @@ If a word in the docs is unfamiliar, it is defined here.
 : `requires` and `provides` on a feature or plugin, verified at boot so a
   missing dependency fails immediately instead of on the first interaction.
 
+**Automatic deferral**
+: Letting the framework acknowledge a handler that has not answered after 2
+  seconds, so it never hits Discord's 3 second limit. Enabled with `defer`.
+
 **Intent autopilot**
 : Deriving the minimum intent set from the events, triggers and guards you
   registered. Enabled with `intents: "auto"`.
@@ -176,7 +181,7 @@ If a word in the docs is unfamiliar, it is defined here.
 
 **Error code**
 : A stable `DJSBOT_Exxx` identifier on every framework error, with a hint and a
-  docs link. See [the catalogue](/djs-bot/api/errors/).
+  docs link. See [the catalogue](/api/errors/).
 
 **Trigger**
 : A message auto-responder, matched on `messageCreate` by keyword, regex or

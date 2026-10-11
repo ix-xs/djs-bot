@@ -1,6 +1,6 @@
 ---
 title: "Testing"
-description: "createHarness: run handlers with no Discord connection, assert replies and guards."
+description: "createHarness: run commands, components, modals, autocomplete and jobs with no Discord connection."
 sidebar:
   order: 20
 ---
@@ -15,11 +15,11 @@ import { createHarness } from "@ix-xs/djs-bot/testing";
 
 ## `createHarness(bot?)`
 
-Pass a loaded `Bot` to reuse its real services, or omit it and inject fakes per
-call:
+Pass a loaded `Bot` to reuse its real services, owners and message overrides, or
+omit it and inject fakes per call:
 
 ```ts
-import { describe, it, expect } from "vitest";
+import { it, expect } from "vitest";
 import { createHarness } from "@ix-xs/djs-bot/testing";
 import Ban from "../features/moderation/ban.command.js";
 
@@ -39,12 +39,16 @@ it("bans a member", async () => {
 
 ## Invoking handlers
 
-| Method | Extra input |
+| Method | Specific input |
 | --- | --- |
-| `harness.command(def, input?)` | `options` - matching the command schema |
+| `harness.command(def, input?)` | `options`; `subcommand` and `group` to target one leaf |
+| `harness.userCommand(def, input?)` | `targetUser`, `targetMember` |
+| `harness.messageCommand(def, input?)` | `targetMessage` |
 | `harness.button(def, input?)` | `params` |
-| `harness.select(def, input?)` | `params`, `values` |
+| `harness.select(def, input?)` | `params`, `values`, and `users` / `members` / `roles` / `channels` for native selects |
 | `harness.modal(def, input?)` | `fields`, `params` |
+| `harness.autocomplete(def, input)` | `option`, `value`, `subcommand`, `group`; resolves to the choices |
+| `harness.job(def, input?)` | `services`, `signal`; runs the job once |
 
 ### Shared input
 
@@ -52,9 +56,15 @@ it("bans a member", async () => {
 | --- | --- | --- | --- |
 | `userId` | `string` | `"test-user"` | The invoking user id. |
 | `guildId` | `string` | none (DM) | Fake guild id - needed to test `inGuild()`. |
-| `services` | `Partial<ServiceMap>` | the bot services | Injected services. Overrides the bot ones. |
-| `locale` | `string` | `"en"` | For `ctx.locale` and `ctx.t()`. |
-| `owners` | `string[]` | `[]` | For `ctx.owners`, so `ownerOnly()` is testable. |
+| `channelId` | `string` | none | Fake channel id - needed to test `inChannel()`. |
+| `services` | `Partial<ServiceMap>` | the bot's | Injected services. Overrides the bot's. |
+| `locale` | `string` | `"en"` | For `ctx.locale`. |
+| `owners` | `string[]` | the bot's, or `[]` | For `ctx.owners`, so `ownerOnly()` is testable. |
+| `permissions` | `PermissionResolvable[]` | every permission | What the member holds, for `hasPermission()`. |
+| `botPermissions` | `PermissionResolvable[]` | every permission | What the bot holds, for `botHasPermission()`. |
+| `roles` | `string[]` | `[]` | Role ids the member holds, for `hasRole()`. |
+| `messages` | `FrameworkMessages` | the bot's | Message overrides, as in `defineBot({ messages })`. |
+| `interaction` | `Record<string, unknown>` | `{}` | Extra fields merged into the fake `ctx.interaction`. |
 | `runGuards` | `boolean` | `true` | Set `false` to test a handler in isolation. |
 
 ## `HarnessResult`
@@ -65,9 +75,14 @@ it("bans a member", async () => {
 | `passedGuards` | `boolean` | Whether every guard passed. The handler only runs when it did. |
 | `rejectionReason` | `string?` | The message from the guard that rejected. |
 
-A `CapturedReply` has a `type` - `reply`, `success`, `error`, `info`, `defer`,
-`followUp`, `editReply`, `update`, `update:disable` - and the `content` that was
-passed.
+A `CapturedReply` has a `type` and, when there is one, the `content` that was
+passed:
+
+`reply` `success` `error` `info` `warn` `ephemeral` `defer` `followUp`
+`editReply` `delete` `update` `update:disable` `modal`
+
+A `modal` entry holds the built `ModalBuilder`, so you can assert on its title
+or components.
 
 ## Testing guards
 
@@ -80,15 +95,39 @@ it("refuses outside a guild", async () => {
   expect(result.replies).toHaveLength(0);      // the handler never ran
 });
 
+it("requires the Ban Members permission", async () => {
+  const result = await harness.command(Ban, { guildId: "g", permissions: [] });
+  expect(result.rejectionReason).toBe("You need: Ban Members.");
+});
+
+it("explains what the bot is missing", async () => {
+  const result = await harness.command(Purge, { guildId: "g", botPermissions: [] });
+  expect(result.rejectionReason).toBe("I need: Manage Messages.");
+});
+
 it("refuses on cooldown", async () => {
   await harness.command(Daily, { userId: "u1", guildId: "g1" });
   const second = await harness.command(Daily, { userId: "u1", guildId: "g1" });
-
   expect(second.passedGuards).toBe(false);
 });
 ```
 
-## Testing components
+## Testing subcommands
+
+```ts
+it("sets a config key", async () => {
+  const result = await harness.command(Config, {
+    subcommand: "set",              // add group: "role" for a grouped subcommand
+    guildId: "g",
+    options: { key: "prefix", value: "!" },
+  });
+  expect(result.replies[0]?.type).toBe("success");
+});
+```
+
+The parent command's guards run first, then the subcommand's, as in production.
+
+## Testing components and modals
 
 ```ts
 it("closes the right ticket", async () => {
@@ -101,12 +140,44 @@ it("closes the right ticket", async () => {
   expect(result.replies[0]?.type).toBe("success");
 });
 
-it("reads submitted modal fields", async () => {
-  const result = await harness.modal(Feedback, {
-    fields: { subject: "Bug", body: "It broke" },
-  });
+it("opens the feedback form", async () => {
+  const result = await harness.command(FeedbackCommand);
+  expect(result.replies[0]?.type).toBe("modal");
+});
 
-  expect(result.replies[0]?.content).toMatchObject({ embeds: expect.anything() });
+it("reads the submitted fields", async () => {
+  const result = await harness.modal(Feedback, {
+    fields: { subject: "Bug", kind: ["bug"], body: "It broke", shots: new Collection() },
+  });
+  expect(result.replies[0]?.type).toBe("success");
+});
+```
+
+Pass each modal field in the shape the handler will read: a string for text, an
+array for selects, a `Collection` for pickers and uploads, a boolean for a
+checkbox.
+
+## Testing autocomplete
+
+```ts
+it("suggests matching songs", async () => {
+  const choices = await harness.autocomplete(Play, {
+    option: "song",
+    value: "bo",
+    services: { music: fakeMusic },
+  });
+  expect(choices).toEqual([{ name: "Bohemian Rhapsody", value: "s1" }]);
+});
+```
+
+The result is mapped and capped at 25, exactly as the router does it.
+
+## Testing jobs
+
+```ts
+it("purges old rows", async () => {
+  await harness.job(NightlyCleanup, { services: { db: fakeDb } });
+  expect(fakeDb.purged).toBe(true);
 });
 ```
 
@@ -136,23 +207,11 @@ const store = memoryStore();               // fast, isolated per test
 const durable = sqliteStore(":memory:");   // same code path as production
 ```
 
-## Testing services and jobs directly
-
-They are ordinary values - no harness required:
-
-```ts
-const service = new TicketService(fakeDb);
-await service.open("user-1");
-expect(await service.count()).toBe(1);
-
-await MyJob.run({ client: fakeClient, services: { db: fakeDb }, logger, correlationId: "t" } as never);
-```
-
 ## Integration checks without a connection
 
 `bot.load()` performs discovery, service resolution and contract validation
 **without** connecting to Discord - so a single test catches duplicate names,
-missing services and broken contracts:
+missing services, invalid schedules and broken contracts:
 
 ```ts
 import bot from "../src/index.js";
@@ -161,7 +220,7 @@ it("loads cleanly", async () => {
   await expect(bot.load()).resolves.not.toThrow();
 
   const description = await bot.describe();
-  expect(description.commands.map((c) => c.name)).toContain("ban");
+  expect(description.commands).toContain("ban");
 });
 ```
 

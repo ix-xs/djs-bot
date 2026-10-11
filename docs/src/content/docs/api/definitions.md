@@ -27,7 +27,8 @@ A slash command, with typed options **or** subcommands.
 | `subcommands` | `Record<string, SubcommandDefinition>` | Subcommands keyed by name. |
 | `groups` | `Record<string, SubcommandGroupDefinition>` | Subcommand groups keyed by name. |
 | `nsfw` | `boolean` | Mark the command NSFW. |
-| `dmPermission` | `boolean` | Allow use in DMs (global commands only). |
+| `defer` | `DeferOption` | Acknowledge the interaction for you. See [automatic deferral](/api/context/#automatic-deferral). |
+| `dmPermission` | `boolean` | **Deprecated** by Discord in favour of `contexts`. Use `contexts: ["guild"]` to keep a command out of DMs. |
 | `defaultMemberPermissions` | `PermissionResolvable` | Permissions a member needs to even see the command. |
 | `integrationTypes` | `("guild" \| "user")[]` | Where it can be **installed**: on servers, on a user account, or both. |
 | `contexts` | `("guild" \| "botDm" \| "privateChannel")[]` | Where it can be **used**. |
@@ -57,7 +58,7 @@ export default defineCommand({
 
 :::note[Localization vs translation]
 `nameLocalizations` changes what the **command picker** shows. `ctx.t()` changes
-what your **replies** say. They are independent - see [i18n](/djs-bot/api/i18n/).
+what your **replies** say. They are independent - see [i18n](/api/i18n/).
 :::
 
 ## `subcommand`
@@ -71,6 +72,7 @@ precisely typed.
 | `options` | `OptionMap` | Options for this leaf only. |
 | `guards` | `Guard[]` | Runs after the parent guards. |
 | `nameLocalizations`, `descriptionLocalizations` | `LocalizationMap` | Per-locale text. |
+| `defer` | `DeferOption` | Overrides the parent command's `defer`. |
 | `run` | `(ctx) => unknown` | The handler. |
 
 ```ts
@@ -144,9 +146,20 @@ defineEvent(event, run, options?)
 export default defineEvent("guildMemberAdd", (member, ctx) => {
   ctx.logger.info({ id: member.id }, "member joined");
 });
+
+export const boot = defineEvent("clientReady", (client, ctx) => {
+  ctx.logger.info({ tag: client.user.tag }, "online");
+}, { once: true });
 ```
 
 The required gateway intent is derived automatically when `intents: "auto"`.
+A listener that throws is logged and reported to `onError`; it never takes the
+process down.
+
+:::note
+discord.js renamed the `ready` event to `clientReady`. The old name still
+works in v14 but prints a deprecation warning.
+:::
 
 ## `defineTrigger`
 
@@ -191,6 +204,7 @@ message text.
 | `style` | `ButtonStyle` | Default visual used by `build()`. |
 | `label` | `string` | Default label. |
 | `emoji` | `string` | Default emoji. |
+| `defer` | `DeferOption` | Acknowledge the click for you. `"update"` suits a button that edits its message. |
 | `run` | `(ctx: ButtonContext) => unknown` | `ctx.params` is decoded and typed. |
 
 The definition exposes `build(params?, visual?)`, which returns a
@@ -268,9 +282,10 @@ export const Assign = defineRoleSelect({
 | --- | --- | --- |
 | `id` | `string` | Routing key. |
 | `title` | `string` | The modal window title. |
-| `fields` | `FieldMap` | Text inputs - see [`field`](/djs-bot/api/options/#field--modal-inputs). Max 5. |
+| `fields` | `FieldMap` | 1 to 5 components: text inputs, selects, pickers, file uploads, radio groups, checkboxes, text blocks. See [`field`](/api/options/#field---modal-components). |
 | `params` | `ParamMap` | Params round-tripped through the customId. |
 | `guards` | `Guard[]` | Preconditions. |
+| `defer` | `DeferOption` | Acknowledge the submission for you. |
 | `run` | `(ctx: ModalContext) => unknown` | `ctx.fields` holds typed values; `ctx.params` the decoded params. |
 
 ```ts
@@ -279,14 +294,27 @@ export const Feedback = defineModal({
   title: "Send feedback",
   fields: {
     subject: field.short({ label: "Subject", required: true, maxLength: 80 }),
+    kind: field.select({
+      label: "Kind",
+      required: true,
+      options: [
+        { label: "Bug", value: "bug" },
+        { label: "Idea", value: "idea" },
+      ],
+    }),
     body: field.paragraph({ label: "Your feedback", required: true }),
+    shots: field.files({ label: "Screenshots", maxValues: 3 }),
   },
-  run: (ctx) => ctx.reply.success(`Thanks! (${ctx.fields.subject})`),
+  run: (ctx) => ctx.reply.success(`Thanks! (${ctx.fields.kind[0]}: ${ctx.fields.subject})`),
 });
 
-// open it from a button handler
-await ctx.interaction.showModal(Feedback.build());
+// open it from a command, a context menu, a button or a select
+await ctx.showModal(Feedback);
 ```
+
+A modal with no component, more than five, or a choice field with the wrong
+number of options fails when it is defined
+([`DJSBOT_E014`](/api/errors/#djsbot_e014)), not the first time a user opens it.
 
 :::caution
 A modal must be the **first** response to an interaction - you cannot `defer()`
@@ -298,28 +326,64 @@ and then show one.
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `name` | `string` | - | Unique name, used in logs. |
-| `schedule` | `string` | - | A cron expression (`"0 3 * * *"`) **or** a plain duration (`"30s"`, `"1h"`) for a simple interval. |
-| `timezone` | `string` | system | IANA zone, e.g. `"Europe/Paris"`. |
-| `concurrency` | `number` | `1` | Max simultaneous runs. |
+| `schedule` | `string` | - | A duration, a cron expression or a macro (see below). |
+| `timezone` | `string` | system | IANA zone a cron expression is evaluated in, e.g. `"Europe/Paris"`. |
+| `concurrency` | `number` | `1` | Max simultaneous runs. A run is skipped while that many are active. |
 | `runOnStart` | `boolean` | `false` | Also run immediately at boot. |
+| `shard` | `"all" \| "first"` | `"all"` | On a sharded bot: every shard, or shard 0 only. |
 | `run` | `(ctx: JobContext) => unknown` | - | The handler. |
 
 ```ts
 export default defineJob({
-  name: "daily-purge",
-  schedule: "0 3 * * *",
+  name: "daily-digest",
+  schedule: "0 9 * * MON-FRI",
   timezone: "Europe/Paris",
-  run: (ctx) => ctx.services.db.purgeOldRows(),
+  shard: "first",                       // one digest, not one per shard
+  run: async (ctx) => {
+    if (ctx.signal.aborted) return;
+    await ctx.services.digest.send();
+  },
 });
 ```
 
+### Schedule syntax
+
+| Syntax | Examples |
+| --- | --- |
+| Duration | `"30s"`, `"5m"`, `"1h"`, `"1d"` |
+| Cron, 5 fields | `"0 3 * * *"`, `"*/15 * * * *"`, `"0 9 * * MON-FRI"`, `"0 0 1 JAN,JUL *"` |
+| Macro | `"@hourly"`, `"@daily"`, `"@weekly"`, `"@monthly"`, `"@yearly"` |
+
+Cron fields are minute, hour, day of month, month, day of week. Each accepts
+`*`, a value, a list (`1,15`), a range (`1-5`), a step (`*/10`, `5/15`) and,
+for months and weekdays, three-letter names. Sunday is `0` or `7`.
+
+As in standard cron, when **both** the day of month and the day of week are
+restricted, the job runs when either matches: `"0 0 1 * MON"` means "the 1st of
+the month, and every Monday".
+
+An invalid schedule throws [`DJSBOT_E080`](/api/errors/#djsbot_e080) when the
+job is defined. Cron jobs fire at the top of the minute.
+
+### Which shard?
+
+On a sharded bot, every shard process runs your code. `"all"` suits a job that
+walks `client.guilds.cache` (each shard handles its own guilds); `"first"` is
+for work that must happen once, such as a daily announcement.
+
+### Failures
+
+A job that throws is logged with its `correlationId`, reported to `onError` and
+to every plugin `onError` hook, and the schedule carries on. On shutdown,
+running jobs get `ctx.signal` aborted and up to 10 seconds to finish.
+
 ## `defineService`
 
-See [Services & dependency injection](/djs-bot/api/services/).
+See [Services & dependency injection](/api/services/).
 
 ## `definePlugin`
 
-See [Plugins](/djs-bot/api/plugins/).
+See [Plugins](/api/plugins/).
 
 ## `defineFeature`
 
@@ -329,7 +393,7 @@ sharing a "tickets" or "levelling" pack between bots.
 | Field | Type | Description |
 | --- | --- | --- |
 | `name` | `string` | Feature name. |
-| `requires` | `string[]` | Capabilities that must exist, or startup fails with [`DJSBOT_E040`](/djs-bot/api/errors/#djsbot_e040). |
+| `requires` | `string[]` | Capabilities that must exist, or startup fails with [`DJSBOT_E040`](/api/errors/#djsbot_e040). |
 | `provides` | `string[]` | Capabilities this feature offers. |
 | `config` | `Record<string, unknown>` | Arbitrary feature configuration. |
 | `commands`, `userCommands`, `messageCommands`, `events`, `triggers`, `buttons`, `selectMenus`, `modals`, `services`, `jobs`, `plugins` | arrays | The definitions to register. |
@@ -346,8 +410,11 @@ export default defineFeature({
 
 ## File naming
 
-When you point `features` at a directory, any file is scanned - the suffix is
-only a convention that keeps things readable, and `djs-bot generate` follows it:
+When you point `features` at a directory, the loader imports the files whose
+name carries one of these suffixes, and nothing else:
+
+`.command` `.user` `.message` `.event` `.trigger` `.button` `.select`
+`.modal` `.service` `.job` `.plugin` `.feature`
 
 ```
 features/
@@ -355,5 +422,17 @@ features/
     open.command.ts
     close.button.ts
     tickets.service.ts
-    index.ts          ← optional defineFeature() bundle
+    tickets.feature.ts   <- optional defineFeature() bundle
+    helpers.ts           <- no suffix: never imported by the loader
 ```
+
+The suffix decides **whether** a file is loaded, never **what** it registers:
+routing follows the `kind` of each exported definition. A file may therefore
+export several definitions of different kinds.
+
+Files are imported concurrently and registered in alphabetical order, so startup
+is fast and still deterministic. A matched file that exports no definition is
+treated as a mistake and fails with [`DJSBOT_E060`](/api/errors/#djsbot_e060).
+
+Registering the same definition twice is harmless: a command can live in its
+own `*.command.ts` **and** be listed in a `*.feature.ts` bundle.

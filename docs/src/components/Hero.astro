@@ -1,0 +1,15 @@
+---
+// Starlight reads the hero's action links from frontmatter, which the remark
+// plugin never sees. This thin override gives them the same treatment as every
+// other internal link: written root-relative, prefixed with the base at build.
+import Default from "@astrojs/starlight/components/Hero.astro";
+import { withBase } from "../../plugins/base-links.mjs";
+
+const props = Astro.props;
+const hero = props.entry.data.hero;
+if (hero?.actions) {
+  for (const action of hero.actions) action.link = withBase(action.link, import.meta.env.BASE_URL);
+}
+---
+
+<Default {...props}><slot /></Default>

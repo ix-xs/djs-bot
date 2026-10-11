@@ -5,7 +5,8 @@ import { FeedbackModal } from "./feedback.modal.js";
 export default defineCommand({
   name: "feedback",
   description: "Send feedback to the team",
-  run: async (ctx) => {
-    await ctx.interaction.showModal(FeedbackModal.build());
-  },
+  // A modal must be the first response, so this command opts out of the
+  // bot-wide automatic deferral.
+  defer: false,
+  run: (ctx) => ctx.showModal(FeedbackModal),
 });

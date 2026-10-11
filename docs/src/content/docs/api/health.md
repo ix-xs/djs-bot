@@ -21,11 +21,71 @@ export default defineBot({
 | --- | --- | --- | --- |
 | `GET /healthz` | always `200` | `{ status, uptimeMs }` | **Liveness** - the process is running. A failure here means "restart me". |
 | `GET /readyz` | `200` / `503` | `{ ready }` | **Readiness** - the gateway is connected. `503` while starting or reconnecting. |
-| `GET /metrics` | `200` | full status | Uptime, counters and shard info as JSON. |
+| `GET /metrics` | `200` | full status, JSON | Uptime, counters, latency and shard info. |
+| `GET /metrics?format=prometheus` | `200` | Prometheus text | The same numbers, ready to scrape. Also served for `Accept: text/plain`. |
 | anything else | `404` | `{ error }` | |
 
 ```bash
 curl localhost:3000/healthz
+# {"status":"ok","uptimeMs":128374}
+
+curl localhost:3000/metrics
+# {"ready":true,"uptimeMs":128374,
+#  "metrics":{"interactions":842,"commands":611,"components":207,"modals":9,
+#             "autocompletes":15,"guardRejections":12,"errors":3,
+#             "handlerAvgMs":41.7,"handlerMaxMs":912.4,
+#             "guilds":17,"wsPingMs":38,"memoryRssMb":142},
+#  "shard":{"id":0,"count":2}}
+```
+
+:::note[Liveness vs readiness]
+Use `/healthz` to decide whether to **restart** the container, and `/readyz` to
+decide whether to **send it traffic**. Restarting a bot that is merely
+reconnecting turns a blip into an outage.
+:::
+
+## Metrics
+
+| Metric | Meaning |
+| --- | --- |
+| `interactions` | Interactions received, of every kind. |
+| `commands` | Slash and context-menu commands routed to a handler. |
+| `components` | Button and select interactions routed to a handler. |
+| `modals` | Modal submissions routed to a handler. |
+| `autocompletes` | Autocomplete requests answered. |
+| `guardRejections` | Interactions refused by a guard. |
+| `errors` | Handlers, events, triggers and jobs that threw. |
+| `handlerAvgMs`, `handlerMaxMs` | Handler duration, guards and middleware included. |
+| `guilds` | Guilds in this process's cache. |
+| `wsPingMs` | Gateway heartbeat latency. |
+| `memoryRssMb` | Resident memory of the process. |
+
+The same counters are available in code through `bot.stats()`.
+
+### Prometheus
+
+```bash
+curl "localhost:3000/metrics?format=prometheus"
+# # TYPE djsbot_ready gauge
+# djsbot_ready{shard="0"} 1
+# # TYPE djsbot_interactions gauge
+# djsbot_interactions{shard="0"} 842
+# # TYPE djsbot_handler_avg_ms gauge
+# djsbot_handler_avg_ms{shard="0"} 41.7
+```
+
+```yaml title="prometheus.yml"
+scrape_configs:
+  - job_name: discord-bot
+    metrics_path: /metrics
+    params: { format: [prometheus] }
+    static_configs: [{ targets: ["bot:3000"] }]
+```
+
+Metric names are the JSON keys in snake case with a `djsbot_` prefix. On a
+sharded bot each series carries a `shard` label. `toPrometheus(status)` is
+exported if you serve metrics from your own HTTP server.
+
 # {"status":"ok","uptimeMs":128374}
 
 curl localhost:3000/metrics
@@ -69,8 +129,8 @@ The shape returned by `/metrics`:
 | Field | Type | Description |
 | --- | --- | --- |
 | `ready` | `boolean` | Whether the gateway is connected. |
-| `uptimeMs` | `number` | Milliseconds since the process started. |
-| `metrics` | `Record<string, number>` | Counters - interactions, errors, guilds, and anything you add. |
+| `uptimeMs` | `number` | Milliseconds since the bot was created. |
+| `metrics` | `Record<string, number>` | The counters above, and anything you add in standalone mode. |
 | `shard` | `{ id, count }?` | Present when sharded. |
 
 ## Standalone

@@ -131,11 +131,19 @@ export const FeedbackModal = defineModal({
   title: "Send feedback",
   fields: {
     subject: field.short({ label: "Subject", required: true, maxLength: 80 }),
+    kind: field.select({
+      label: "What is it about?",
+      required: true,
+      options: [
+        { label: "A bug", value: "bug" },
+        { label: "An idea", value: "idea" },
+      ],
+    }),
     body: field.paragraph({ label: "Details", maxLength: 1000 }),
   },
   run: (ctx) => {
-    // ctx.fields is typed: { subject: string; body: string }
-    return ctx.reply.success(`Thanks for the feedback on **${ctx.fields.subject}**!`, { ephemeral: true });
+    // ctx.fields is typed: { subject: string; kind: string[]; body: string }
+    return ctx.reply.success(`Thanks for the ${ctx.fields.kind[0]} report on **${ctx.fields.subject}**!`, { ephemeral: true });
   },
 });
 ```
@@ -143,8 +151,12 @@ export const FeedbackModal = defineModal({
 Open it from a command:
 
 ```ts
-run: (ctx) => ctx.interaction.showModal(FeedbackModal.build()),
+run: (ctx) => ctx.showModal(FeedbackModal),
 ```
+
+A form is not limited to text. A modal can hold dropdowns, user, role and
+channel pickers, file uploads, radio buttons and checkboxes - see
+[every modal component](/api/options/#field---modal-components).
 
 <Aside type="caution" title="A modal must be the first response">
 Discord requires `showModal` to be the **first** reply to an interaction. If you

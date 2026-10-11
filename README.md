@@ -26,7 +26,7 @@ _Write features, not plumbing._
 npm install @ix-xs/djs-bot discord.js
 ```
 
-Requires **Node 22+** (a dependency uses the built-in `node:sqlite`).
+Requires **Node 22.13+** and **discord.js 14.27+**.
 
 ---
 
@@ -59,7 +59,10 @@ export default defineBot({
 | `customId` strings you `split("_")` and pray | **Typed customId router** - declare params, `Button.build({ ... })` is type-checked, `ctx.params` is decoded and typed |
 | "My event never fires" (forgot an intent) | **Intent autopilot** - `intents: "auto"` derives intents & partials from your events, and warns about privileged ones |
 | Copy-pasted `deploy-commands.js`, ghost commands, 429s | **Diff deployer** - declarative: adds/updates/**removes** to match your code; mix **global + per-server** commands (`guilds: [...]`), with `--dry-run` |
-| "This application did not respond" | **Error boundaries** - every interaction is wrapped; failures are logged with a correlation id and answered |
+| "This application did not respond" | **Automatic deferral + error boundaries** - `defaults: { defer: true }` acknowledges slow handlers for you; every interaction is wrapped, logged with a correlation id and answered |
+| A bot that only speaks English | **Your wording** - localized command names, `ctx.t()` for your replies, and `messages` to reword or translate everything the framework itself says |
+| Modals limited to text boxes | **Modern modals** - dropdowns, user/role/channel pickers, file uploads, radio buttons and checkboxes, all typed in `ctx.fields` |
+| Counters that lose updates under load | **Atomic store** - `store.increment()` and `store.update()` never lose a write; SQLite or memory built in, anything else in four methods |
 | Decorator magic you can't debug | **No side-effect loading** - files export `define*()` objects; nothing registers by importing. `djs-bot explain` shows it all |
 | Bots are impossible to unit-test | **Test harness** - invoke handlers with no token, no network |
 | "Frameworks are slow" | **~1.4 µs** per-interaction routing overhead - see [benchmarks](./benchmarks) |
@@ -67,7 +70,8 @@ export default defineBot({
 
 ## Install
 
-Requires **Node 22 or newer** (a dependency uses the built-in `node:sqlite`).
+Requires **Node 22.13 or newer** (the SQLite store uses the built-in
+`node:sqlite`) and **discord.js 14.27 or newer**.
 
 ```bash
 npm install @ix-xs/djs-bot discord.js
@@ -238,9 +242,17 @@ await ctx.reply("plain text or InteractionReplyOptions");
 await ctx.reply.success("Done!");            // green embed
 await ctx.reply.error("Nope.");              // red embed, ephemeral by default
 await ctx.reply.info("FYI", { ephemeral: true });
-await ctx.reply.defer({ ephemeral: true });  // for slow handlers
+await ctx.reply.warn("Careful.");            // amber embed
+await ctx.reply.ephemeral("Only you see this.");
 await ctx.reply.followUp("more");
 await ctx.reply.editReply("updated");
+await ctx.showModal(FeedbackModal);          // answer with a form
+```
+
+Slow handler? Do not sprinkle `defer()` calls around - turn it on once:
+
+```ts
+defineBot({ defaults: { defer: true } });    // deferred only if still working after 2 s
 ```
 
 ## Typed buttons & the customId router
@@ -296,14 +308,21 @@ export const Feedback = defineModal({
   title: "Feedback",
   fields: {
     subject: field.short({ label: "Subject", required: true, maxLength: 80 }),
+    kind:    field.select({ label: "Kind", required: true, options: [{ label: "Bug", value: "bug" }] }),
     body:    field.paragraph({ label: "Details", maxLength: 1000 }),
+    shots:   field.files({ label: "Screenshots", maxValues: 3 }),
+    urgent:  field.checkbox({ label: "This is urgent" }),
   },
-  run: (ctx) => ctx.reply.success(`Thanks: ${ctx.fields.subject}`), // ctx.fields typed
+  // ctx.fields: { subject: string; kind: string[]; body: string; shots: Collection<…>; urgent: boolean }
+  run: (ctx) => ctx.reply.success(`Thanks: ${ctx.fields.subject}`),
 });
 
 // Open the modal from a command/button:
-await ctx.interaction.showModal(Feedback.build());
+await ctx.showModal(Feedback);
 ```
+
+`field` also has `users`, `roles`, `channels`, `mentionables`, `radio`,
+`checkboxes` and `text`.
 
 ## Events & intent autopilot
 
@@ -347,11 +366,14 @@ as tokens; they're resolved in order at boot and available as `ctx.services`.
 ```ts
 import { defineService } from "@ix-xs/djs-bot";
 
-export const Db = defineService("db", { factory: () => createDb() });
+export const Db = defineService("db", {
+  factory: () => createPool(),
+  dispose: (pool) => pool.end(),        // on graceful shutdown
+});
 
 export const Tickets = defineService("tickets", {
-  deps: ["db"],
-  factory: ({ db }) => new TicketsService(db as Db),
+  deps: ["db", "store"],
+  factory: ({ db, store }) => new TicketsService(db, store),   // typed from ServiceMap
 });
 
 // Type ctx.services end to end by augmenting ServiceMap:
@@ -430,24 +452,31 @@ export default defineFeature({
 Everything is configured in the object you pass to `defineBot` - fully typed:
 
 ```ts
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot, env, sqliteStore } from "@ix-xs/djs-bot";
 
 export default defineBot({
   token: env("DISCORD_TOKEN"),
   clientId: env.optional("DISCORD_CLIENT_ID"),
+  owners: env.list("OWNER_IDS"),
   features: "./src/features",
-  intents: "auto",
+  intents: "auto",                              // or { add: [...], remove: [...] }
+  defaults: { defer: true },                    // acknowledge slow handlers
+  messages: { cooldown: "Patiente {seconds}s." }, // reword / translate the framework
+  theme: { success: 0x57f287 },
+  client: { allowedMentions: { parse: ["users"] } },   // any discord.js Client option
+  store: sqliteStore("data/bot.sqlite"),
   plugins: [],
   deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD"), autoDeploy: true },
   logger: { level: "info", pretty: process.env.NODE_ENV !== "production" },
+  health: env.number("PORT", 3000),             // /healthz /readyz /metrics (+ Prometheus)
   presence: { activities: [{ name: "/help" }] },
   onError: (err, ctx) => ctx?.reply.error("Something broke - we're on it."),
 });
 ```
 
 `env(name, fallback?)` reads from the environment **and** a `.env` file, throwing
-a clear error when a required variable is missing. `env.optional(name)` returns
-`undefined` instead.
+a clear error when a required variable is missing. `env.optional`, `env.number`,
+`env.boolean` and `env.list` cover the rest.
 
 ## The CLI
 
@@ -456,10 +485,10 @@ djs-bot dev [entry]            Start with watch + instant guild deploy
 djs-bot start [entry]          Start in production mode
 djs-bot deploy [entry]         Diff & deploy commands (adds/updates/removes)  (--dry-run, --guild <id>)
 djs-bot clear [entry]          Remove all commands from a scope  (--global | --guild <id>)
-djs-bot doctor [entry]         Diagnose config, intents & permissions
-djs-bot explain [entry]        Print what's loaded and why (incl. deployment plan)
-djs-bot generate <type> <name> Scaffold a command/event/button/modal/select/service/job/feature/trigger
-djs-bot init                   Scaffold a minimal starter
+djs-bot doctor [entry]         Check Node, discord.js, token, ids, .gitignore, intents
+djs-bot explain [entry]        Print what's loaded and why (incl. deployment plan)  (--json)
+djs-bot generate <type> <name> Scaffold a command/event/button/modal/select/service/job/plugin/feature/trigger
+djs-bot init                   Scaffold a ready-to-run project
 ```
 
 `dev`/`start` run your entry (using `tsx` automatically if installed, so raw
@@ -499,15 +528,18 @@ Prod-readiness is built in, not an afterthought:
   `correlationId` on every interaction.
 - **Error boundaries** - a handler that throws is logged and answered; the
   process stays alive (via `node-comfort`'s `dontCrash`).
-- **Graceful shutdown** - `SIGTERM`/`SIGINT` stop the scheduler, run
-  `onShutdown` hooks, tear down plugins and destroy the client.
+- **Graceful shutdown** - `SIGTERM`/`SIGINT` wait for running jobs, run
+  `onShutdown` hooks, tear down plugins, dispose services, close the store and
+  destroy the client.
 - **Diff deploys** - commands are only pushed when they actually change.
+- **Bounded memory** - cooldowns, rate limiters and TTL'd store keys are swept,
+  so a long-running bot does not grow with every user it ever saw.
 - **Cooldowns, rate limits & permissions** - first-class guards (`cooldown`,
   `rateLimit`, `hasPermission`, …).
 - **Resilience primitives** - `retry`, `timeout`, `createCircuitBreaker` and
   `createRateLimiter` for hardening calls to databases and third-party APIs.
 - **Health & metrics** - a zero-dependency `/healthz` `/readyz` `/metrics` server
-  for Docker/Kubernetes.
+  for Docker/Kubernetes, with handler latency and a Prometheus endpoint.
 - **Persistence, audit & flags** - a pluggable `KVStore`, a queryable audit trail,
   and per-guild feature flags - all optional, all typed.
 
@@ -516,9 +548,10 @@ Prod-readiness is built in, not an afterthought:
 Every framework error carries a stable `DJSBOT_Exxx` code, an actionable hint,
 and is grep-able in your logs. Highlights: `E001` missing token, `E010`
 duplicate command, `E011` duplicate component id, `E012` invalid command/option
-name, `E013` invalid component id, `E020` customId too long, `E030` service
-cycle, `E040` unmet feature/plugin contract, `E070` privileged intent required.
-The full table is in [USAGE.md](./USAGE.md#27-error-handling--codes).
+name, `E013` invalid component id, `E014` invalid modal, `E020` customId too
+long, `E030` service cycle, `E040` unmet feature/plugin contract, `E070`
+privileged intent required, `E080` invalid job schedule. Each one is explained,
+with its fix, in the [error reference](https://ix-xs.github.io/djs-bot/api/errors/).
 
 ---
 

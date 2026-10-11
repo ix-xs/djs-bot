@@ -229,10 +229,9 @@ export class Warnings {
 
   async add(warning: Omit<Warning, "id" | "at">): Promise<Warning> {
     const entry: Warning = { ...warning, id: crypto.randomUUID().slice(0, 8), at: Date.now() };
-    const key = this.key(warning.guildId, warning.userId);
-    const all = (await this.ns.get(key)) ?? [];
-    all.push(entry);
-    await this.ns.set(key, all);
+    // update() queues writes per key, so two moderators warning the same
+    // member at once cannot lose one of the warnings.
+    await this.ns.update(this.key(warning.guildId, warning.userId), (all = []) => [...all, entry]);
     return entry;
   }
 
@@ -247,7 +246,7 @@ export class Warnings {
 
 export default defineService("warnings", {
   deps: ["store"],
-  factory: ({ store }) => new Warnings(store as KVStore),
+  factory: ({ store }) => new Warnings(store),   // typed, no cast needed
 });
 ```
 
@@ -368,14 +367,26 @@ export default defineBot({
 });
 ```
 
-`intents: "auto"` adds `GuildMembers` for you because `s.member` and the
-moderation calls need it. Remember to enable the **Server Members Intent** in
-the Developer Portal.
+No privileged intent is needed here: Discord delivers the member picked in an
+`s.member` option together with the interaction, and banning, kicking or timing
+out goes through the REST API. `intents: "auto"` therefore requests `Guilds`
+only.
+
+To speak French (or anything else) in the guard refusals above, set
+[`messages`](/api/configuration/#messages) once:
+
+```ts
+messages: {
+  missingPermissions: "Il te manque : {permissions}.",
+  botMissingPermissions: "Il me manque : {permissions}.",
+  guildOnly: "Cette commande s'utilise sur un serveur.",
+}
+```
 
 ## Going further
 
 - Add `cooldown("3s")` to every command so a moderator cannot spam-ban.
 - Add a `/unban` with an `autocomplete` option listing the ban list.
-- Log actions to a channel by adding a custom [audit sink](/djs-bot/api/audit/#a-custom-sink).
-- Gate the whole feature with a [feature flag](/djs-bot/api/flags/) so a server
+- Log actions to a channel by adding a custom [audit sink](/api/audit/#a-custom-sink).
+- Gate the whole feature with a [feature flag](/api/flags/) so a server
   can turn it off.

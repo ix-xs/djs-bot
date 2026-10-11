@@ -1,6 +1,6 @@
 ---
 title: "Levelling and a leaderboard"
-description: "XP from messages with a cooldown, a rank card, a paginated leaderboard and a nightly job."
+description: "XP from messages with a cooldown, atomic updates, a rank card, a paginated leaderboard and a weekly job."
 sidebar:
   order: 4
 ---
@@ -37,43 +37,42 @@ export class Levels {
     this.ns = store.namespace<Profile>("levels");
   }
 
-  private key(guildId: string, userId: string) {
-    return `${guildId}:${userId}`;
+  /** One namespace per guild: listing a leaderboard never reads another server. */
+  private guild(guildId: string): KVStore<Profile> {
+    return this.ns.namespace<Profile>(guildId);
   }
 
   async get(guildId: string, userId: string): Promise<Profile> {
-    return (await this.ns.get(this.key(guildId, userId))) ?? EMPTY;
+    return (await this.guild(guildId).get(userId)) ?? EMPTY;
   }
 
   /** Adds XP and returns the new profile plus whether the member levelled up. */
   async addXp(guildId: string, userId: string, amount: number): Promise<{ profile: Profile; levelledUp: boolean }> {
-    const current = await this.get(guildId, userId);
-    const xp = current.xp + amount;
-
-    let level = current.level;
-    while (xp >= xpForLevel(level + 1)) level += 1;
-
-    const profile: Profile = { xp, level, messages: current.messages + 1 };
-    await this.ns.set(this.key(guildId, userId), profile);
-
-    return { profile, levelledUp: level > current.level };
+    let levelledUp = false;
+    // update() queues writes per key: two messages arriving together cannot
+    // both read the old XP and overwrite each other.
+    const profile = await this.guild(guildId).update(userId, (current = EMPTY) => {
+      const xp = current.xp + amount;
+      let level = current.level;
+      while (xp >= xpForLevel(level + 1)) level += 1;
+      levelledUp = level > current.level;
+      return { xp, level, messages: current.messages + 1 };
+    });
+    return { profile, levelledUp };
   }
 
   async top(guildId: string, limit = 100): Promise<Array<{ userId: string; profile: Profile }>> {
-    return this.board.getOrFetch(guildId, async () => {
-      const keys = (await this.ns.keys()).filter((key) => key.startsWith(`${guildId}:`));
-      const rows = await Promise.all(
-        keys.map(async (key) => ({
-          userId: key.slice(guildId.length + 1),
-          profile: (await this.ns.get(key)) ?? EMPTY,
-        })),
-      );
-      return rows.sort((a, b) => b.profile.xp - a.profile.xp).slice(0, limit);
+    const board = await this.board.getOrFetch(guildId, async () => {
+      const rows = await this.guild(guildId).entries();     // one read, this guild only
+      return rows
+        .map(([userId, profile]) => ({ userId, profile }))
+        .sort((a, b) => b.profile.xp - a.profile.xp);
     });
+    return board.slice(0, limit);
   }
 
   async rank(guildId: string, userId: string): Promise<number> {
-    const board = await this.top(guildId, 1000);
+    const board = await this.top(guildId, Number.POSITIVE_INFINITY);
     const index = board.findIndex((row) => row.userId === userId);
     return index === -1 ? board.length + 1 : index + 1;
   }
@@ -81,7 +80,7 @@ export class Levels {
 
 export default defineService("levels", {
   deps: ["store"],
-  factory: ({ store }) => new Levels(store as KVStore),
+  factory: ({ store }) => new Levels(store),   // `store` is typed, no cast needed
 });
 ```
 
@@ -253,7 +252,7 @@ export default defineJob({
 
 ## Bundling it
 
-```ts title="features/levels/index.ts"
+```ts title="features/levels/levels.feature.ts"
 import { defineFeature } from "@ix-xs/djs-bot";
 import LevelsService from "./levels.service.js";
 import MessageEvent from "./message.event.js";
@@ -271,14 +270,19 @@ export default defineFeature({
 });
 ```
 
+The bundle is optional: every file above already carries a suffix the loader
+discovers. What it adds is the `requires: ["store"]` contract, checked at
+startup. Listing a definition here and having its file discovered too is fine -
+the same object is registered once.
+
 ## Scaling notes
 
-- **Keys grow.** `top()` reads every key in the namespace. Past a few thousand
-  members, move to a real database with an index on `xp` and keep the same
-  service interface, so nothing else changes.
+- **Keys grow.** `top()` reads every profile of one guild. Past a few thousand
+  members per server, move to a real database with an index on `xp` and keep
+  the same service interface, so nothing else changes.
 - **Sharding.** The in-process cache is per shard, so each shard keeps its own
   copy of the board. That is fine for a 60 second TTL. Shared state must live in
   the store, not in the cache.
-- **A store is not a transaction.** Two messages arriving in the same
-  millisecond can race on `addXp`. The per-user rate limiter makes that
-  essentially impossible here, but a busier counter deserves a real database.
+- **Atomic within a process.** `update()` serialises writes per key inside one
+  process. Shards sharing a backend need that backend's own atomic operation;
+  here each member only ever talks to one shard, so it holds.

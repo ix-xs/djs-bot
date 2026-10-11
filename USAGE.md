@@ -4,7 +4,8 @@ Everything you need to build and run a real Discord bot end to end. The framewor
 never hides discord.js - `ctx.interaction` and `ctx.client` are always right
 there - so anything not shown here still works the plain discord.js way.
 
-> All examples are TypeScript and compile against **discord.js v14**.
+> All examples are TypeScript and compile against **discord.js 14.27+** on
+> **Node 22.13+**.
 
 ## Table of contents
 
@@ -21,7 +22,7 @@ there - so anything not shown here still works the plain discord.js way.
 11. [Message triggers (auto-responders)](#11-message-triggers-auto-responders)
 12. [Typed buttons & the customId router](#12-typed-buttons--the-customid-router)
 13. [Select menus](#13-select-menus)
-14. [Modals & text inputs](#14-modals--text-inputs)
+14. [Modals: text, selects, uploads, choices](#14-modals-text-selects-uploads-choices)
 15. [Building embeds](#15-building-embeds)
 16. [Components V2 (`ui` builders)](#16-components-v2-ui-builders)
 17. [Attachments & images](#17-attachments--images)
@@ -48,6 +49,8 @@ there - so anything not shown here still works the plain discord.js way.
 38. [Audit trail (`ctx.audit`)](#38-audit-trail-ctxaudit)
 39. [Feature flags per guild](#39-feature-flags-per-guild)
 40. [Health checks & metrics](#40-health-checks--metrics)
+41. [Automatic deferral](#41-automatic-deferral)
+42. [Wording & theme](#42-wording--theme)
 
 ---
 
@@ -81,7 +84,9 @@ src/
 ```
 
 Recognised suffixes: `.command`, `.user`, `.message`, `.event`, `.trigger`,
-`.button`, `.select`, `.modal`, `.service`, `.job`, `.feature`.
+`.button`, `.select`, `.modal`, `.service`, `.job`, `.plugin`, `.feature`.
+Only files carrying one of them are imported, so helpers (`utils.ts`,
+`guards.ts`, `types.ts`) can sit right next to your definitions.
 
 > **No import side effects.** Importing a file registers nothing. Each file
 > *exports* a `define*()` object; the loader collects it and routes by its
@@ -99,10 +104,12 @@ import { requestLogger } from "./plugins/request-logger.js";
 const bot = defineBot({
   token: env("DISCORD_TOKEN"),                   // reads env + .env, throws if missing
   clientId: env.optional("DISCORD_CLIENT_ID"),   // needed to deploy
+  owners: env.list("OWNER_IDS"),                 // "1,2,3" → ["1", "2", "3"]
   features: `${import.meta.dirname}/features`,    // auto-discovered folder
   intents: "auto",                               // derived from your events/triggers
   plugins: [requestLogger],
   deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
+  defaults: { defer: true },                     // never miss Discord's 3 s window (§41)
   logger: { level: "info", pretty: process.env.NODE_ENV !== "production" },
   presence: { activities: [{ name: "/help" }] },
   onError: (err, ctx) => ctx?.reply.error("Something went wrong."),
@@ -114,8 +121,36 @@ export default bot;
 if (!process.env.DJSBOT_CLI) void bot.start();
 ```
 
-`env(name, fallback?)` reads env vars **and** a `.env` file, throwing a clear
-error if a required one is missing. `env.optional(name)` returns `undefined`.
+### Environment helpers
+
+| Helper | Returns | When the variable is missing |
+| --- | --- | --- |
+| `env(name, fallback?)` | `string` | throws a clear error (or returns the fallback) |
+| `env.optional(name)` | `string \| undefined` | `undefined` |
+| `env.number(name, fallback?)` | `number` | throws, also when the value is not a number |
+| `env.boolean(name, fallback?)` | `boolean` | `fallback` (default `false`); accepts `true/1/yes/on` |
+| `env.list(name)` | `string[]` | `[]`; splits on commas and trims |
+
+All of them read real environment variables first, then a `.env` file. An empty
+value (`DISCORD_TOKEN=`) counts as missing.
+
+### More configuration
+
+```ts
+defineBot({
+  // Tune the automatic intent selection instead of replacing it:
+  intents: { add: [GatewayIntentBits.DirectMessages], remove: [GatewayIntentBits.MessageContent] },
+
+  // Anything discord.js's Client accepts (except intents, which are computed):
+  client: {
+    allowedMentions: { parse: ["users"], repliedUser: true },
+    sweepers: { messages: { interval: 3600, lifetime: 1800 } },
+  },
+
+  messages: { cooldown: "Patiente {seconds}s." },   // reword the framework (§42)
+  theme: { success: 0x57f287 },                     // ctx.reply.success colour (§42)
+});
+```
 
 You can also register definitions explicitly, without a folder:
 
@@ -140,8 +175,9 @@ configure → discover (loader) → validate (requires/provides contracts)
 - **validate** - every `feature.requires` / `plugin.requires` must be provided,
   or the bot fails loudly (`DJSBOT_E040`) *before* connecting.
 - **ready** - starts scheduled jobs and auto-deploys commands in development.
-- **shutdown** (Ctrl+C / SIGTERM) - stops jobs, runs `onShutdown` hooks, tears
-  down plugins, destroys the client. No crash, no orphaned work.
+- **shutdown** (Ctrl+C / SIGTERM) - waits for running jobs (up to 10 s), runs
+  `onShutdown` hooks, tears down plugins, calls each service's `dispose`, closes
+  the store, destroys the client. No crash, no orphaned work.
 
 Inspect everything without connecting:
 
@@ -163,10 +199,14 @@ convenient shortcuts:
 | `ctx.client` | `Client<true>` | the connected client |
 | `ctx.user` | `User` | who triggered it |
 | `ctx.guild` / `ctx.guildId` | `Guild \| null` | |
-| `ctx.member` | `GuildMember \| null` | |
-| `ctx.channel` | `TextBasedChannel \| null` | |
+| `ctx.member` | `GuildMember \| null` | `null` outside a server the bot is in |
+| `ctx.channel` / `ctx.channelId` | `TextBasedChannel \| null` | |
 | `ctx.services` | `ServiceMap` | injected services |
 | `ctx.logger` | `Logger` | carries a `correlationId` |
+| `ctx.locale` | `string` | the user's Discord language |
+| `ctx.t(key, vars?)` | `string` | your translations (§35) |
+| `ctx.say(key, vars?)` | `string` | the framework's own wording (§42) |
+| `ctx.audit(action, details?)` | `Promise<void>` | audit trail (§38) |
 | `ctx.options` | typed | slash commands |
 | `ctx.params` | typed | buttons / selects (decoded from customId) |
 | `ctx.fields` | typed | modals |
@@ -180,23 +220,38 @@ convenient shortcuts:
 await ctx.reply("text, or a full InteractionReplyOptions object");
 await ctx.reply.success("Done ✅");                 // green embed
 await ctx.reply.error("Not allowed.");              // red embed, ephemeral by default
-await ctx.reply.info("FYI", { ephemeral: true });
-await ctx.reply.defer({ ephemeral: true });         // for slow handlers (> 2.5s)
+await ctx.reply.info("FYI", { ephemeral: true });   // blue embed
+await ctx.reply.warn("Careful.", { title: "Heads up" });   // amber embed
+await ctx.reply.ephemeral("Only you can see this."); // any content, only-you
+await ctx.reply.defer({ ephemeral: true });         // for slow handlers (or use §41)
 await ctx.reply.followUp("another message");
 await ctx.reply.editReply("updated");
+const message = await ctx.reply.fetch();            // the Message that was sent
+await ctx.reply.delete();
 ```
 
 `reply` is state-aware: if the interaction was deferred it edits; if already
 replied it follows up; otherwise it replies - you don't track that yourself.
 
 On **components** (buttons/selects) you also get `ctx.update` to edit the source
-message:
+message. It works before **and** after a defer:
 
 ```ts
 await ctx.update("new content");   // edit the message the component is on
 await ctx.update.disable();        // disable every component on that message
 await ctx.update.defer();          // acknowledge without changing anything
 ```
+
+### Opening a modal
+
+Commands, context menus, buttons and selects can answer with a modal:
+
+```ts
+await ctx.showModal(FeedbackModal);                    // a defineModal() definition
+await ctx.showModal(EditModal, { ticketId: "42" });    // its params are type-checked
+```
+
+A modal has to be the **first** response, so call it before any reply or defer.
 
 ---
 
@@ -453,7 +508,7 @@ export default defineEvent("guildMemberAdd", async (member, ctx) => {
 });
 
 // once: fires a single time
-export const boot = defineEvent("ready", (client, ctx) => {
+export const boot = defineEvent("clientReady", (client, ctx) => {
   ctx.logger.info({ tag: client.user.tag }, "up");
 }, { once: true });
 ```
@@ -478,12 +533,26 @@ triggers) you registered:
 `Guilds` is always included. Privileged intents trigger a startup warning telling
 you to enable them in the Developer Portal (`djs-bot doctor` reminds you too).
 
-Prefer manual control? Pass an array:
+Keep the autopilot but adjust it - add what it cannot guess, drop what you do
+not need:
 
 ```ts
 import { GatewayIntentBits } from "@ix-xs/djs-bot";
+
+intents: {
+  add: [GatewayIntentBits.DirectMessages],       // also receive DMs
+  remove: [GatewayIntentBits.MessageContent],    // I only react to mentions
+},
+```
+
+Or take full control with an array:
+
+```ts
 intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 ```
+
+A listener that throws never crashes the bot: the error is logged and forwarded
+to `onError` and to every plugin's `onError` hook.
 
 ---
 
@@ -640,44 +709,75 @@ carry typed customId `params` just like buttons.
 
 ---
 
-## 14. Modals & text inputs
+## 14. Modals: text, selects, uploads, choices
 
-Text inputs are declared with `field`; `ctx.fields` is typed.
+A modal holds up to 5 components. Declare them with `field`; `ctx.fields` is
+typed from what you declared.
 
 ```ts
-// features/feedback/feedback.modal.ts
+// features/report/report.modal.ts
 import { defineModal, field } from "@ix-xs/djs-bot";
 
-export const FeedbackModal = defineModal({
-  id: "feedback:submit",
-  title: "Send feedback",
+export const ReportModal = defineModal({
+  id: "report:submit",
+  title: "Report a problem",
   fields: {
-    subject: field.short({ label: "Subject", required: true, maxLength: 80, placeholder: "Short summary" }),
-    body:    field.paragraph({ label: "Details", maxLength: 1000, minLength: 10 }),
+    intro:    field.text("Tell us what happened. Screenshots help a lot."),
+    category: field.select({
+      label: "Category",
+      required: true,
+      options: [
+        { label: "Bug", value: "bug", emoji: "🐛" },
+        { label: "Abuse", value: "abuse", description: "Someone broke the rules" },
+      ],
+    }),
+    details:  field.paragraph({ label: "Details", description: "Be specific", maxLength: 1000 }),
+    proof:    field.files({ label: "Screenshots", maxValues: 3 }),
+    urgent:   field.checkbox({ label: "This is urgent" }),
   },
   run: async (ctx) => {
-    // ctx.fields: { subject: string; body: string }
-    await ctx.reply.success(`Thanks for your feedback on **${ctx.fields.subject}**!`, { ephemeral: true });
+    ctx.fields.category;   // string[]
+    ctx.fields.details;    // string
+    ctx.fields.proof;      // Collection<string, Attachment>
+    ctx.fields.urgent;     // boolean
+    await ctx.reply.success(`Reported as ${ctx.fields.category[0]}.`, { ephemeral: true });
   },
 });
 ```
 
-`field.short()` is a single-line input, `field.paragraph()` a multi-line one;
-both accept `{ label, required, placeholder, minLength, maxLength, value }`.
+| Builder | `ctx.fields.x` | Notes |
+| --- | --- | --- |
+| `field.short(cfg)` | `string` | single-line input |
+| `field.paragraph(cfg)` | `string` | multi-line input |
+| `field.select(cfg)` | `string[]` | your own options (1-25) |
+| `field.users(cfg)` | `Collection<string, User>` | native user picker |
+| `field.roles(cfg)` | `Collection<string, Role>` | native role picker |
+| `field.channels(cfg)` | `Collection<string, GuildBasedChannel>` | `channelTypes` to filter |
+| `field.mentionables(cfg)` | `{ users, members, roles }` | users and roles together |
+| `field.files(cfg)` | `Collection<string, Attachment>` | file upload |
+| `field.radio(cfg)` | `string` (`\| undefined` when optional) | pick one of 2-10 |
+| `field.checkboxes(cfg)` | `string[]` | pick several of 1-10 |
+| `field.checkbox(cfg)` | `boolean` | a single tick box |
+| `field.text(markdown)` | *(not in `ctx.fields`)* | a block of text between fields |
 
-Open a modal from a command or button (never after a `reply`/`defer` - Discord
-requires the modal to be the first response):
+Every labelled field takes `{ label, description?, required? }`. Text inputs add
+`placeholder`, `minLength`, `maxLength`, `value`; pickers add `placeholder`,
+`minValues`, `maxValues` (and `defaultValues` for users, roles and channels).
+
+Open it with `ctx.showModal` from a command, a context menu, a button or a select
+(never after a `reply`/`defer` - Discord requires the modal to be the first
+response):
 
 ```ts
 export default defineCommand({
-  name: "feedback",
-  description: "Send feedback",
-  run: (ctx) => ctx.interaction.showModal(FeedbackModal.build()),
+  name: "report",
+  description: "Report a problem",
+  run: (ctx) => ctx.showModal(ReportModal),
 });
 ```
 
-Modals can carry typed customId params too (like buttons) via `params` +
-`FeedbackModal.build({ … })`.
+Modals can carry typed customId params too (like buttons) via `params`, and
+`ctx.showModal(EditModal, { ticketId })` checks them at compile time.
 
 ---
 
@@ -752,12 +852,19 @@ export default defineCommand({
 | `ui.row(...components)` | an action row (buttons / select) |
 | `ui.linkButton(label, url, emoji?)` | a link button |
 | `ui.container(...)` | a V2 container (accepts the display components below) |
+| `ui.container({ accent, spoiler }, ...)` | the same, with an accent colour or behind a spoiler |
 | `ui.text(markdown)` | a text block |
 | `ui.separator({ divider?, spacing? })` | a separator |
 | `ui.section({ text, accessory })` | text + a thumbnail or button accessory |
 | `ui.thumbnail(url, description?)` | a section thumbnail |
 | `ui.gallery(...urls)` | a media gallery (supports `attachment://name`) |
 | `ui.file(attachmentUrl)` | a file display component |
+| `ui.poll(question, answers, { hours?, multiple? })` | a native poll, for the `poll` field of a message |
+| `ui.premiumButton(skuId)` | a button opening the purchase flow of one of your SKUs |
+
+```ts
+await ctx.reply({ poll: ui.poll("Pizza tonight?", ["Yes", { text: "No", emoji: "🥗" }], { hours: 12 }) });
+```
 
 ---
 
@@ -933,9 +1040,33 @@ export default defineCommand({
 ```
 
 Cooldown scope: `cooldown("1m", { scope: "guild" })` - `"user"` (default),
-`"guild"`, `"channel"`, or `"global"`. Built-ins: `inGuild`, `dmOnly`,
-`hasPermission`, `botHasPermission`, `inChannel(...ids)`, `ownerOnly(...ids)`,
-`cooldown`.
+`"guild"`, `"channel"`, or `"global"`.
+
+| Guard | Passes when |
+| --- | --- |
+| `inGuild()` / `dmOnly()` | used in a server / in DMs |
+| `hasPermission(...perms)` | the member has them **in this channel** (overwrites included) |
+| `botHasPermission(...perms)` | the bot has them **in this channel** |
+| `hasRole(...roleIds)` | the member holds at least one of the roles |
+| `inChannel(...ids)` | used in one of the channels |
+| `ownerOnly(...ids?)` | the user is a bot owner (`defineBot({ owners })` by default) |
+| `guildOwnerOnly()` | the user owns the server |
+| `cooldown(duration, { scope? })` | the cooldown elapsed |
+| `rateLimit({ limit, window, scope? })` | under the limit (§37) |
+| `featureEnabled(name)` | the flag is on here (§39) |
+
+Combine them:
+
+```ts
+import { anyOf, not } from "@ix-xs/djs-bot";
+
+guards: [
+  anyOf(ownerOnly(), hasPermission(PermissionFlagsBits.ManageGuild)),   // either one
+  not(inChannel(SPAM_CHANNEL), "Not in this channel, please."),         // inverted
+]
+```
+
+The refusal messages are yours to reword or translate (§42).
 
 ---
 
@@ -947,31 +1078,40 @@ tokens resolved in order at boot, exposed as `ctx.services`.
 ```ts
 import { defineService } from "@ix-xs/djs-bot";
 
-export const Db = defineService("db", { factory: () => createDb() });
+export const Db = defineService("db", {
+  factory: () => createPool(env("DATABASE_URL")),
+  dispose: (pool) => pool.end(),          // called on graceful shutdown
+});
 
 export const Tickets = defineService("tickets", {
-  deps: ["db"],
-  factory: ({ db }) => new TicketsService(db as Db),
+  deps: ["db", "store"],
+  factory: ({ db, store }) => new TicketsService(db, store),   // both typed, see below
 });
 ```
 
-Type `ctx.services` end to end by augmenting `ServiceMap`:
+Type `ctx.services` end to end by augmenting `ServiceMap` once:
 
 ```ts
 declare module "@ix-xs/djs-bot" {
   interface ServiceMap {
-    db: Db;
+    db: Pool;
     tickets: TicketsService;
   }
 }
-// ctx.services.tickets is now fully typed everywhere
+// ctx.services.tickets is typed everywhere, and so are the `deps` a factory receives
 ```
+
+The three services the framework registers itself - `store`, `audit`, `flags` -
+are typed out of the box, with nothing to declare.
+
+Services are disposed in reverse order of creation, so a service is always
+released before the ones it depends on.
 
 ---
 
 ## 23. Scheduled jobs
 
-Cron **and** durations. Each job gets an `AbortSignal` (fired on shutdown) and a
+Each job gets an `AbortSignal` (fired on shutdown), a correlated logger and a
 concurrency limit (1 by default - no overlap).
 
 ```ts
@@ -979,17 +1119,30 @@ import { defineJob } from "@ix-xs/djs-bot";
 
 export default defineJob({
   name: "nightly-cleanup",
-  schedule: "0 3 * * *",        // 5-field cron, or "30s" / "5m" / "1h"
+  schedule: "0 3 * * *",
   timezone: "Europe/Paris",     // optional (cron)
   concurrency: 1,
   runOnStart: false,
+  shard: "first",               // on a sharded bot, run it once instead of per shard
   run: async (ctx) => {
     if (ctx.signal.aborted) return;
     await ctx.services.db.purgeExpired();
-    ctx.logger.info({}, "cleanup done");
+    ctx.logger.info({}, "cleanup done");   // carries ctx.correlationId
   },
 });
 ```
+
+`schedule` accepts three syntaxes:
+
+| Syntax | Examples |
+| --- | --- |
+| A duration | `"30s"`, `"5m"`, `"1h"`, `"1d"` |
+| A 5-field cron | `"0 3 * * *"`, `"*/15 * * * *"`, `"0 9 * * MON-FRI"`, `"0 0 1 JAN,JUL *"` |
+| A macro | `"@hourly"`, `"@daily"`, `"@weekly"`, `"@monthly"`, `"@yearly"` |
+
+An invalid schedule fails when the job is defined (`DJSBOT_E080`), not at 3 am.
+Cron jobs fire at the top of the minute. A job that throws is logged and
+reported to `onError`, and the schedule carries on.
 
 ---
 
@@ -999,7 +1152,7 @@ A plugin adds cross-cutting behaviour (middleware, hooks) through an `app` faça
 - it never patches the core.
 
 ```ts
-import { definePlugin } from "@ix-xs/djs-bot";
+import { definePlugin, describeInteraction } from "@ix-xs/djs-bot";
 
 export const requestLogger = definePlugin({
   name: "request-logger",
@@ -1007,26 +1160,33 @@ export const requestLogger = definePlugin({
   requires: [],           // capabilities it needs
   provides: [],           // capabilities it exposes
   setup(app) {
-    app.hooks.beforeInteraction(async (ctx, next) => {   // runs around every interaction
-      const start = Date.now();
-      await next();
-      ctx.logger.info({ ms: Date.now() - start }, "interaction handled");
+    app.hooks.beforeInteraction(async (ctx, next) => {   // wraps guards + handler
+      const { kind, name } = describeInteraction(ctx.interaction);   // "command", "config set"
+      await next();                                      // skip it to stop the interaction
+      ctx.logger.info({ kind, name }, "interaction handled");
     });
-    app.hooks.afterInteraction((ctx) => {/* on success */});
-    app.hooks.onError((err, ctx) => {/* any handler error */});
+    app.hooks.afterInteraction((ctx, { durationMs }) => {/* handler succeeded */});
+    app.hooks.onError((err, ctx) => {/* a handler (ctx set), event, trigger or job threw */});
     app.hooks.onReady((client) => {/* client ready */});
     app.hooks.onShutdown(() => {/* cleanup */});
 
     app.services.register("rateLimiter", createLimiter());  // expose a service
+    app.config.owners;                                       // the defineBot() config, read-only
   },
 });
 
 // defineBot({ plugins: [requestLogger] })
 ```
 
+Middleware runs **before the guards**, so a plugin can stop an interaction
+ahead of everything else (maintenance mode) and time the whole thing.
+
 The framework validates the **capability graph**: an unmet `requires` →
 `DJSBOT_E040`; two plugins providing the same capability → `DJSBOT_E041`. Failures
 happen at boot, never silently.
+
+Four plugins ship with the framework, at `@ix-xs/djs-bot/plugins`: `antiSpam`,
+`commandLogger`, `errorReporter` and `maintenance`.
 
 ---
 
@@ -1054,6 +1214,10 @@ export default defineFeature({
 ```
 
 You can publish a feature as its own npm package and drop it into any bot.
+
+Inside an auto-discovered folder, name the bundle `tickets.feature.ts`. Listing a
+definition in a feature **and** having its own file discovered is fine: the same
+object is only ever registered once.
 
 ---
 
@@ -1249,8 +1413,30 @@ test("button params are decoded", async () => {
 });
 ```
 
-Methods: `h.command`, `h.button`, `h.select`, `h.modal`. Options: `userId`,
-`guildId`, `services` (injection), `runGuards` (default `true`).
+| Method | Runs |
+| --- | --- |
+| `h.command(def, { options, subcommand?, group? })` | a slash command, or one of its subcommands |
+| `h.userCommand(def, { targetUser? })` / `h.messageCommand(def, { targetMessage? })` | a context-menu command |
+| `h.button(def, { params })` / `h.select(def, { params, values })` | a component |
+| `h.modal(def, { fields, params })` | a modal submission |
+| `h.autocomplete(def, { option, value })` | an option's autocomplete handler; returns the choices |
+| `h.job(def)` | a scheduled job, once |
+
+Shared options: `userId`, `guildId`, `channelId`, `services` (injection),
+`locale`, `owners`, `permissions` and `botPermissions` (to exercise the
+permission guards), `roles`, `messages`, `runGuards` (default `true`).
+
+```ts
+test("moderators only", async () => {
+  const denied = await h.command(Ban, { guildId: "g", permissions: [] });
+  expect(denied.rejectionReason).toBe("You need: Ban Members.");
+});
+
+test("opens the form", async () => {
+  const { replies } = await h.command(Report);
+  expect(replies[0].type).toBe("modal");
+});
+```
 
 ---
 
@@ -1261,10 +1447,10 @@ djs-bot dev [entry]              # watch + instant guild deploy (uses tsx if pre
 djs-bot start [entry]            # production mode
 djs-bot deploy [entry]           # diff & deploy: adds/updates/removes  (--dry-run, --guild <id>)
 djs-bot clear [entry]            # remove all commands from a scope     (--global | --guild <id>)
-djs-bot doctor [entry]           # diagnose config, intents, permissions
-djs-bot explain [entry]          # print what's loaded, incl. the deployment plan
-djs-bot generate <type> <name>   # scaffold (command|user|message|event|trigger|button|modal|select|service|job|feature)
-djs-bot init                     # minimal starter
+djs-bot doctor [entry]           # check Node, discord.js, token shape, ids, .gitignore, intents
+djs-bot explain [entry]          # print what's loaded, incl. the deployment plan  (--json)
+djs-bot generate <type> <name>   # scaffold (command|user|message|event|trigger|button|modal|select|service|job|plugin|feature)
+djs-bot init                     # ready-to-run starter: entry, command, tsconfig, .env, .gitignore, package.json
 djs-bot help | version
 ```
 
@@ -1501,36 +1687,62 @@ const bot = defineBot({
 });
 ```
 
-The `store` config is auto-registered as the `store` service:
+The `store` config is auto-registered as the `store` service, already typed:
 
 ```ts
 run: async (ctx) => {
-  const store = ctx.services.store as KVStore<number>;
-  const balance = (await store.get(ctx.user.id)) ?? 0;
-  await store.set(ctx.user.id, balance + 100);            // set(key, value, ttl?)
-  await ctx.reply.success(`Balance: ${balance + 100}`);
+  const balance = await ctx.services.store.increment(`coins:${ctx.user.id}`, 100);
+  await ctx.reply.success(`Balance: ${balance}`);
 }
 ```
 
-`KVStore` API: `get` · `set(key, value, ttl?)` · `has` · `delete` · `keys` ·
-`clear` · `namespace(prefix)` · `getOrSet(key, factory, ttl?)`. TTL accepts ms or
-a duration (`"10m"`). Namespaces isolate keys without a second backend:
+| Method | What it does |
+| --- | --- |
+| `get(key)` / `set(key, value, ttl?)` / `has(key)` / `delete(key)` | the basics; TTL is ms or a duration (`"10m"`) |
+| `getOrSet(key, factory, ttl?)` | read, or compute and store on a miss (one factory call for concurrent readers) |
+| `increment(key, by = 1, ttl?)` | a counter that never loses an update |
+| `update(key, fn, ttl?)` | read, transform, write back as one step (calls for one key are queued) |
+| `getMany(keys)` / `setMany(entries, ttl?)` | bulk read (a `Map`) and bulk write |
+| `keys()` / `entries()` / `size()` | everything live in this store, in one read |
+| `clear()` | remove everything in this store |
+| `namespace(prefix)` | a view scoped under `prefix:` |
+| `close()` | release the file handle or connection (done for you on shutdown) |
+
+Namespaces isolate keys without a second backend, and `keys()`, `entries()`,
+`size()` and `clear()` only ever see their own:
 
 ```ts
-const guildStore = store.namespace(ctx.guildId!);   // keys scoped to this guild
-await guildStore.set("prefix", "!");
+const economy = ctx.services.store.namespace<number>("economy");
+await economy.update(ctx.user.id, (coins = 0) => coins + 100);
+const richest = (await economy.entries()).sort((a, b) => b[1] - a[1]).slice(0, 10);
+```
 
-// Type your store end to end by augmenting ServiceMap:
-declare module "@ix-xs/djs-bot" {
-  interface ServiceMap { store: KVStore<number> }
-}
+Expired keys are purged in the background, so a TTL never leaks memory or disk.
+
+### Your own backend
+
+Implement four methods and `createStore` derives the rest (namespaces, counters,
+bulk reads, single-flight):
+
+```ts
+import { createStore } from "@ix-xs/djs-bot";
+
+export const redisStore = (client: RedisClient) =>
+  createStore({
+    get: async (key) => JSON.parse((await client.get(key)) ?? "null") ?? undefined,
+    set: async (key, value, ttlMs) => {
+      await client.set(key, JSON.stringify(value), ttlMs ? { PX: ttlMs } : undefined);
+    },
+    delete: async (key) => (await client.del(key)) > 0,
+    keys: (prefix) => client.keys(`${prefix}*`),
+  });
 ```
 
 You can also register a store from a `*.service.ts` file with `defineStore`:
 
 ```ts
 import { defineStore, sqliteStore } from "@ix-xs/djs-bot";
-export const Store = defineStore("store", sqliteStore("data/bot.sqlite"));
+export const Store = defineStore("cache", sqliteStore("data/cache.sqlite"));
 ```
 
 ## 37. Resilience (rate limits, circuit breakers, retry)
@@ -1692,17 +1904,25 @@ Endpoints:
 | --- | --- |
 | `GET /healthz` | `200` while the process is alive (liveness) |
 | `GET /readyz` | `200` when the gateway is connected, else `503` (readiness) |
-| `GET /metrics` | `200` JSON: uptime, interaction/command/error counts, guilds, shard |
+| `GET /metrics` | `200` JSON: uptime, counters, latency, guilds, shard |
+| `GET /metrics?format=prometheus` | the same in the Prometheus text format, ready to scrape |
 
 ```jsonc
 // GET /metrics
 {
   "ready": true,
   "uptimeMs": 84213,
-  "metrics": { "interactions": 1240, "commands": 830, "errors": 3, "guilds": 57 },
+  "metrics": {
+    "interactions": 1240, "commands": 830, "components": 390, "modals": 20,
+    "autocompletes": 64, "guardRejections": 12, "errors": 3,
+    "handlerAvgMs": 41.7, "handlerMaxMs": 912.4,
+    "guilds": 57, "wsPingMs": 38, "memoryRssMb": 142
+  },
   "shard": { "id": 0, "count": 4 }
 }
 ```
+
+The same numbers are available in code through `bot.stats()`.
 
 Kubernetes probes:
 
@@ -1712,6 +1932,106 @@ readinessProbe: { httpGet: { path: /readyz,  port: 3000 } }
 ```
 
 Need the server standalone? `startHealthServer(() => status, { port })`.
+
+---
+
+## 41. Automatic deferral
+
+Discord drops an interaction that is not answered within **3 seconds**. Rather
+than sprinkling `ctx.reply.defer()` everywhere, let the framework acknowledge for
+you:
+
+```ts
+defineBot({ defaults: { defer: true } });   // for every handler
+```
+
+With `true`, a handler that has not answered after 2 seconds is deferred behind
+the scenes; the reply it sends afterwards edits that deferred response. A handler
+that answers quickly is never deferred, so nothing changes for it.
+
+Each definition can set its own `defer`, which wins over the default:
+
+| Value | Behaviour |
+| --- | --- |
+| `true` | defer publicly if there is no answer after 2 s |
+| `"ephemeral"` | the same, with an only-you loading state |
+| `"update"` | for buttons/selects: acknowledge with no loading message, then `ctx.update(...)` |
+| `{ after: 0 }` | defer immediately |
+| `{ after: "1s", ephemeral: true }` | choose the delay and the visibility |
+| `false` | never defer this one (required for a handler that opens a modal late) |
+
+```ts
+export default defineCommand({
+  name: "report",
+  description: "Build a report",
+  defer: "ephemeral",
+  run: async (ctx) => {
+    const report = await buildSlowReport();     // 8 seconds: no problem
+    await ctx.reply.success(report.summary);    // edits the deferred reply
+  },
+});
+```
+
+Two things to know:
+
+- A reply is public or ephemeral from the moment it is deferred. After a public
+  deferral, `ctx.reply.error()` cannot be ephemeral any more.
+- A modal must be the first response. `ctx.showModal()` cancels the pending
+  deferral, but only if you call it within the delay - open modals first.
+
+Use `ctx.reply` and `ctx.update` rather than `ctx.interaction.reply()`: they
+share one queue with the deferral, so the two can never collide.
+
+---
+
+## 42. Wording & theme
+
+Everything the framework itself says to a user - guard refusals, the generic
+error, the confirm dialog buttons - goes through one table you can override:
+
+```ts
+defineBot({
+  messages: {
+    error: "Une erreur est survenue. L'équipe a été prévenue.",
+    guildOnly: "Cette commande s'utilise sur un serveur.",
+    missingPermissions: "Il te manque : {permissions}.",
+    cooldown: "Patiente {seconds}s avant de recommencer.",
+    confirm: "Confirmer",
+    cancel: "Annuler",
+  },
+});
+```
+
+A value is a template with `{placeholders}`, or a function when you want to
+translate per user:
+
+```ts
+messages: {
+  cooldown: ({ seconds }, ctx) => ctx?.t("errors.cooldown", { seconds }) ?? `Wait ${seconds}s.`,
+}
+```
+
+| Key | Placeholders | Shown when |
+| --- | --- | --- |
+| `error` | | a handler threw and nothing handled it |
+| `unknownCommand` / `unknownSubcommand` | `{name}` | a command is no longer registered |
+| `guardDenied` | | a guard failed without a reason |
+| `guildOnly` / `dmOnly` | | `inGuild()` / `dmOnly()` |
+| `missingPermissions` / `botMissingPermissions` | `{permissions}` | the permission guards |
+| `missingRole` | | `hasRole()` |
+| `wrongChannel` | | `inChannel()` |
+| `ownerOnly` / `guildOwnerOnly` | | the owner guards |
+| `cooldown` / `rateLimited` / `slowDown` | `{seconds}` | `cooldown()`, `rateLimit()`, the `antiSpam` plugin |
+| `featureDisabled` | `{feature}` | `featureEnabled()` |
+| `confirm` / `cancel` | | the buttons of `confirm()` |
+
+Your own guards can reuse the wording with `ctx.say("guildOnly")`.
+
+The colours of `ctx.reply.success/error/info/warn` are configurable too:
+
+```ts
+defineBot({ theme: { success: 0x57f287, error: 0xed4245, info: 0x5865f2, warn: 0xfee75c } });
+```
 
 ---
 

@@ -6,7 +6,7 @@ sidebar:
 ---
 
 A working bot in five steps. If you have never created a Discord application
-before, take the [tutorial](/djs-bot/tutorial/what-you-need/) instead: it covers
+before, take the [tutorial](/tutorial/what-you-need/) instead: it covers
 the Discord side too, with screenshots and no assumed knowledge.
 
 ## Requirements
@@ -137,7 +137,7 @@ npx djs-bot deploy --dry-run  # what a real deploy would change
 
 :::tip[Command not showing up?]
 Invite the bot with **both** the `bot` and `applications.commands` scopes, and
-check [Troubleshooting](/djs-bot/help/troubleshooting/#commands) for the other
+check [Troubleshooting](/help/troubleshooting/#commands) for the other
 four common causes.
 :::
 
@@ -145,9 +145,9 @@ four common causes.
 
 | You want | Go to |
 | --- | --- |
-| A guided path from zero to a deployed bot | [Tutorial](/djs-bot/tutorial/what-you-need/) |
-| To learn one topic properly | [Guides](/djs-bot/guide/basics/install-project-layout/) |
-| Exact signatures and every option | [API reference](/djs-bot/api/overview/) |
-| A finished feature to copy | [Recipes](/djs-bot/recipes/moderation/) |
-| To fix something that is broken | [Troubleshooting](/djs-bot/help/troubleshooting/) |
-| A word you do not recognise | [Glossary](/djs-bot/help/glossary/) |
+| A guided path from zero to a deployed bot | [Tutorial](/tutorial/what-you-need/) |
+| To learn one topic properly | [Guides](/guide/basics/install-project-layout/) |
+| Exact signatures and every option | [API reference](/api/overview/) |
+| A finished feature to copy | [Recipes](/recipes/moderation/) |
+| To fix something that is broken | [Troubleshooting](/help/troubleshooting/) |
+| A word you do not recognise | [Glossary](/help/glossary/) |

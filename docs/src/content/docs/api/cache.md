@@ -55,7 +55,7 @@ must be exact.
 
 ## Cache vs store
 
-| | `createCache` | [`KVStore`](/djs-bot/api/store/) |
+| | `createCache` | [`KVStore`](/api/store/) |
 | --- | --- | --- |
 | Reads | Synchronous | `async` |
 | Survives a restart | No | With `sqliteStore` |

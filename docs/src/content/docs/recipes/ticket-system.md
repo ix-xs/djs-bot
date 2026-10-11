@@ -51,22 +51,22 @@ export class Tickets {
   }
 
   async close(id: string): Promise<void> {
-    const ticket = await this.ns.get(id);
-    if (ticket) await this.ns.set(id, { ...ticket, closedAt: Date.now() });
+    if (await this.ns.has(id)) {
+      await this.ns.update(id, (ticket) => ({ ...ticket!, closedAt: Date.now() }));
+    }
   }
 
   async openFor(guildId: string, ownerId: string): Promise<Ticket[]> {
-    const keys = await this.ns.keys();
-    const all = await Promise.all(keys.map((key) => this.ns.get(key)));
-    return all.filter(
-      (t): t is Ticket => Boolean(t) && t!.guildId === guildId && t!.ownerId === ownerId && !t!.closedAt,
-    );
+    const all = await this.ns.entries();          // every ticket, in one read
+    return all
+      .map(([, ticket]) => ticket)
+      .filter((t) => t.guildId === guildId && t.ownerId === ownerId && !t.closedAt);
   }
 }
 
 export default defineService("tickets", {
   deps: ["store"],
-  factory: ({ store }) => new Tickets(store as KVStore),
+  factory: ({ store }) => new Tickets(store),   // typed, no cast needed
 });
 ```
 
@@ -164,7 +164,7 @@ export const PanelButton = defineButton({
   label: "Open a ticket",
   emoji: "🎫",
   style: ButtonStyle.Primary,
-  run: (ctx) => ctx.interaction.showModal(OpenModal.build()),
+  run: (ctx) => ctx.showModal(OpenModal),
 });
 ```
 
@@ -253,10 +253,10 @@ export default defineCommand({
 ## Bundling it as a feature
 
 Declaring `requires: ["store"]` means the bot refuses to start with a clear
-[`DJSBOT_E040`](/djs-bot/api/errors/#djsbot_e040) if you forget to configure a
+[`DJSBOT_E040`](/api/errors/#djsbot_e040) if you forget to configure a
 store, rather than crashing on the first click.
 
-```ts title="features/tickets/index.ts"
+```ts title="features/tickets/tickets.feature.ts"
 import { defineFeature } from "@ix-xs/djs-bot";
 import TicketCommand from "./ticket.command.js";
 import TicketsService from "./tickets.service.js";

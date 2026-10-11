@@ -1,6 +1,6 @@
 ---
 title: "Options & schemas (s, p, field)"
-description: "Every command option type, every customId param codec, and modal text inputs."
+description: "Every command option type, every customId param codec, and every modal component."
 sidebar:
   order: 5
 ---
@@ -11,7 +11,7 @@ Three tiny builder objects describe the three kinds of typed input:
 | --- | --- | --- |
 | `s` | Slash-command options | `ctx.options` |
 | `p` | customId parameters | `ctx.params` |
-| `field` | Modal text inputs | `ctx.fields` |
+| `field` | Modal components | `ctx.fields` |
 
 All three are **type-driven**: what you declare is exactly what the handler
 receives, with no casting and no `as`.
@@ -102,7 +102,7 @@ options: {
 }
 ```
 
-The handler receives an [`AutocompleteContext`](/djs-bot/api/context/#autocompletecontext)
+The handler receives an [`AutocompleteContext`](/api/context/#autocompletecontext)
 and may return `{ name, value }[]`, `string[]` or `number[]` - plain arrays are
 mapped to choices for you. Discord accepts at most **25** suggestions.
 
@@ -117,6 +117,7 @@ fragile `split("_")`.
 | `p.string` | `string` | as-is |
 | `p.number` | `number` | decimal string |
 | `p.boolean` | `boolean` | `"1"` / `"0"` |
+| `p.oneOf("a", "b")` | `"a" \| "b"` | as-is |
 
 ```ts
 export const Close = defineButton({
@@ -131,8 +132,24 @@ export const Close = defineButton({
 Close.build({ ticketId: "42", notify: true });   // typed - a typo will not compile
 ```
 
+`p.oneOf` narrows a string to a fixed set, so one handler can serve several
+buttons and stay exhaustive:
+
+```ts
+export const Decide = defineButton({
+  id: "request:decide",
+  params: { requestId: p.string, action: p.oneOf("approve", "reject") },
+  run: (ctx) => {
+    ctx.params.action;   // "approve" | "reject"
+  },
+});
+```
+
+A customId is client-supplied data. If a tampered value does not belong to the
+set, it decodes to the first one rather than to something unexpected.
+
 :::caution[The 100-character limit]
-Exceeding it throws [`DJSBOT_E020`](/djs-bot/api/errors/#djsbot_e020) at build
+Exceeding it throws [`DJSBOT_E020`](/api/errors/#djsbot_e020) at build
 time, not silently at runtime. For large state, store it and keep only a short
 key in the customId:
 
@@ -153,30 +170,94 @@ const date: ParamCodec<Date> = {
 };
 ```
 
-## `field` - modal inputs
+## `field` - modal components
 
-| Builder | Renders |
-| --- | --- |
-| `field.short(config)` | A single-line input |
-| `field.paragraph(config)` | A multi-line textarea |
+A modal holds 1 to 5 components. Every interactive one is rendered inside a
+labelled block, so each takes a `label` and an optional `description`.
+
+| Builder | `ctx.fields.x` | Renders |
+| --- | --- | --- |
+| `field.short(cfg)` | `string` | A single-line text input |
+| `field.paragraph(cfg)` | `string` | A multi-line textarea |
+| `field.select(cfg)` | `string[]` | A dropdown of your own options (1-25) |
+| `field.users(cfg)` | `Collection<string, User>` | A user picker |
+| `field.roles(cfg)` | `Collection<string, Role>` | A role picker |
+| `field.channels(cfg)` | `Collection<string, GuildBasedChannel>` | A channel picker |
+| `field.mentionables(cfg)` | `{ users, members, roles }` | A picker for users and roles together |
+| `field.files(cfg)` | `Collection<string, Attachment>` | A file upload |
+| `field.radio(cfg)` | `string`, or `string \| undefined` when optional | Radio buttons, pick one of 2-10 |
+| `field.checkboxes(cfg)` | `string[]` | Checkboxes, pick several of 1-10 |
+| `field.checkbox(cfg)` | `boolean` | A single tick box |
+| `field.text(markdown)` | *absent* | A block of text between fields |
+
+```ts
+export const Apply = defineModal({
+  id: "staff:apply",
+  title: "Staff application",
+  fields: {
+    why: field.paragraph({ label: "Why you?", required: true, maxLength: 800 }),
+    timezone: field.select({
+      label: "Timezone",
+      required: true,
+      options: [
+        { label: "Europe", value: "eu", emoji: "🇪🇺" },
+        { label: "Americas", value: "am" },
+      ],
+    }),
+    availability: field.radio({
+      label: "Availability",
+      required: true,
+      options: [
+        { label: "Weekdays", value: "week" },
+        { label: "Weekends", value: "weekend" },
+      ],
+    }),
+    cv: field.files({ label: "CV", description: "PDF or image", maxValues: 1 }),
+    rules: field.checkbox({ label: "I have read the rules" }),
+  },
+  run: (ctx) => {
+    ctx.fields.why;            // string
+    ctx.fields.timezone;       // string[]
+    ctx.fields.availability;   // string (required, so never undefined)
+    ctx.fields.cv;             // Collection<string, Attachment>
+    ctx.fields.rules;          // boolean
+  },
+});
+```
+
+### Options shared by labelled fields
 
 | Config | Type | Default | Description |
 | --- | --- | --- | --- |
-| `label` | `string` | - | **Required.** Shown above the input. |
-| `required` | `boolean` | `false` | Whether it must be filled. |
-| `placeholder` | `string` | - | Greyed-out hint. |
-| `minLength`, `maxLength` | `number` | - | Length bounds. |
-| `value` | `string` | - | Pre-filled value. |
+| `label` | `string` | - | **Required.** Shown above the component. |
+| `description` | `string` | - | Smaller help text under the label. |
+| `required` | `boolean` | `false` | Whether it must be filled. Not available on `checkbox`. |
 
-```ts
-fields: {
-  title: field.short({ label: "Title", required: true, maxLength: 80 }),
-  body: field.paragraph({ label: "Details", placeholder: "What happened?", maxLength: 1000 }),
-}
-```
+### Per-kind options
 
-A modal accepts at most **5** fields, and every submitted value is a `string` -
-parse and validate it yourself in the handler.
+| Kind | Extra options |
+| --- | --- |
+| `short`, `paragraph` | `placeholder`, `minLength`, `maxLength`, `value` (pre-filled) |
+| `select` | `options`, `placeholder`, `minValues`, `maxValues` |
+| `users`, `roles` | `placeholder`, `minValues`, `maxValues`, `defaultValues` (ids) |
+| `channels` | the same, plus `channelTypes` |
+| `mentionables` | `placeholder`, `minValues`, `maxValues` |
+| `files` | `minValues`, `maxValues` |
+| `radio` | `options` |
+| `checkboxes` | `options`, `minValues`, `maxValues` |
+| `checkbox` | `default` (ticked when the modal opens) |
+
+A choice (`FieldChoice`) is `{ label, value, description?, default?, emoji? }`;
+`emoji` applies to `select` only.
+
+### Things to know
+
+- Pickers and uploads always resolve to a collection, **empty** when nothing was
+  chosen: no `null` to check.
+- Text values are plain strings. Parse and validate them yourself.
+- A modal that breaks Discord's limits fails at definition time with
+  [`DJSBOT_E014`](/api/errors/#djsbot_e014).
+- These components need discord.js 14.27 or newer.
 
 ## Type helpers
 
@@ -187,6 +268,7 @@ Rarely needed directly, but exported for building your own abstractions:
 | `InferOptions<M>` | The `ctx.options` shape for an option map. |
 | `InferParams<M>` | The `ctx.params` shape for a param map. |
 | `InferFields<M>` | The `ctx.fields` shape for a field map. |
+| `FieldKind`, `FieldChoice`, `FieldOutput` | Modal component kinds, a choice entry, and the value each kind resolves to. |
 | `OptionKind`, `OptionDef`, `OptionMap` | Option descriptors. |
 | `ParamCodec`, `ParamMap` | Param codecs. |
 | `FieldDef`, `FieldMap` | Field descriptors. |

@@ -59,6 +59,17 @@ Discord client is caching: press `Ctrl+R` in the app.
 Fixed in 1.0.0: the diff compares nested options recursively. If you are on an
 older version, upgrade.
 
+### Every start redeploys commands that did not change
+
+Fixed in 1.1: the diff no longer mistakes Discord's defaults, or a localized
+name, for a change. `npx djs-bot deploy` twice in a row now prints
+`no changes` the second time.
+
+### Deploy fails with "cannot remove this app's Entry Point command"
+
+Your app has Activities enabled, which gives it a command Discord manages
+itself. Fixed in 1.1: that command is carried over untouched.
+
 ## Interactions
 
 ### "This interaction failed"
@@ -66,12 +77,12 @@ older version, upgrade.
 The single most common Discord error. Causes, in order:
 
 1. **You took longer than 3 seconds.** Discord invalidates an unanswered
-   interaction after 3 seconds. Defer first:
+   interaction after 3 seconds. Let the framework acknowledge slow handlers for
+   you, once and for all:
    ```ts
-   await ctx.reply.defer();
-   const data = await slowWork();
-   await ctx.reply.success("Done");
+   defineBot({ defaults: { defer: true } });
    ```
+   or defer by hand in one handler with `await ctx.reply.defer()`.
 2. **Your handler threw before replying.** Check the logs: the error boundary
    logs it with a `correlationId`.
 3. **You replied twice.** Use `ctx.reply(...)` rather than
@@ -82,6 +93,19 @@ The single most common Discord error. Causes, in order:
 
 The interaction token expired before you answered. Same fix as above: defer
 within 3 seconds. A deferred interaction then gives you 15 minutes.
+
+### My modal will not open
+
+A modal must be the **first** response to an interaction. If the handler
+replied or deferred before `ctx.showModal(...)`, or if
+[automatic deferral](/api/context/#automatic-deferral) fired first because the
+handler did slow work before opening it, Discord refuses. Open the modal first,
+or set `defer: false` on that definition.
+
+### `ctx.update` throws after `ctx.update.defer()`
+
+Fixed in 1.1: `ctx.update` and `ctx.update.disable` now edit the message when
+the interaction was already acknowledged. Upgrade.
 
 ### My button does nothing
 
@@ -95,7 +119,7 @@ within 3 seconds. A deferred interaction then gives you 15 minutes.
 ### `DJSBOT_E020` when building a button
 
 Your encoded customId exceeded 100 characters. Store the payload and keep a
-short key. See [the customId codec](/djs-bot/api/ui/#when-100-characters-is-not-enough).
+short key. See [the customId codec](/api/ui/#when-100-characters-is-not-enough).
 
 ## Startup
 
@@ -137,6 +161,16 @@ An event needs a **privileged intent** you have not enabled. Turn it on under
 | `Presence Intent` | presence updates |
 
 Bots in 100 or more servers must be verified to use these.
+
+### `DJSBOT_E080`: invalid job schedule
+
+A `defineJob` schedule is not a duration, a 5-field cron expression or a macro.
+The error names the job and the part that is wrong.
+
+### `DJSBOT_E014`: invalid modal
+
+A modal has no component, more than five, or a choice field with too few or too
+many options (a radio group needs 2 to 10).
 
 ### `DJSBOT_E040`: contract not satisfied
 
@@ -182,8 +216,18 @@ manages), the channel overwrites, and whether the target is the server owner
 
 ### `node:sqlite` is not available
 
-The framework requires **Node 22 or newer**. Check with `node -v` and upgrade.
-`memoryStore()` has no such requirement if you cannot upgrade yet.
+The framework requires **Node 22.13 or newer**. Check with `node -v` and
+upgrade.
+
+### A counter loses updates under load
+
+Reading a value, changing it and writing it back in three steps races when two
+interactions arrive together. Use the atomic helpers:
+
+```ts
+await store.increment(`xp:${id}`, 25);
+await store.update(`profile:${id}`, (p = { wins: 0 }) => ({ ...p, wins: p.wins + 1 }));
+```
 
 ### One feature wiped another feature keys
 
@@ -212,7 +256,7 @@ declare module "@ix-xs/djs-bot" {
 }
 ```
 
-See [typing ctx.services](/djs-bot/api/services/#typing-ctxservices).
+See [typing ctx.services](/api/services/#typing-ctxservices).
 
 ### `ctx.options.x` is possibly undefined
 

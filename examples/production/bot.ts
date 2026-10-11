@@ -6,7 +6,7 @@
  *   Build & run:  npm run build && node dist/bot.js
  *   Deploy once:  npx djs-bot deploy --global
  */
-import { defineBot, env, sqliteStore, memoryAuditSink, loggerAuditSink, createLogger, ActivityType } from "@ix-xs/djs-bot";
+import { defineBot, env, sqliteStore, storeAuditSink, loggerAuditSink, createLogger, ActivityType } from "@ix-xs/djs-bot";
 
 const store = sqliteStore("data/bot.sqlite");
 const logger = createLogger({ level: "info", pretty: process.env.NODE_ENV !== "production" });
@@ -15,15 +15,20 @@ const bot = defineBot({
   token: env("DISCORD_TOKEN"),
   clientId: env.optional("DISCORD_CLIENT_ID"),
   features: `${import.meta.dirname}/features`,
+  owners: env.list("OWNER_IDS"),
   intents: "auto",
 
+  // Never miss Discord's 3 second window, and never let the bot mass-ping.
+  defaults: { defer: true },
+  client: { allowedMentions: { parse: ["users"], repliedUser: true } },
+
   // Scale out across shards in production.
-  sharding: env.optional("SHARDING") === "true" ? "auto" : undefined,
+  sharding: env.boolean("SHARDING") ? "auto" : undefined,
 
   // Durable persistence, reused by flags + audit.
   store,
-  flags: { store, defaults: { economy: true } },
-  audit: { sinks: [loggerAuditSink(logger), { record: (e) => void store.namespace("audit").set(e.id, e) }], autoRecordCommands: true },
+  flags: { defaults: { economy: true } },
+  audit: { sinks: [loggerAuditSink(logger), storeAuditSink(store, { ttl: "90d" })], autoRecordCommands: true },
 
   // Translate replies per user locale.
   i18n: {
@@ -34,8 +39,14 @@ const bot = defineBot({
     },
   },
 
-  // Ops.
-  health: Number(env.optional("HEALTH_PORT") ?? 3000),
+  // What the framework itself says, in the user's language when we have it.
+  messages: {
+    cooldown: ({ seconds }, ctx) =>
+      ctx?.locale.startsWith("fr") ? `Patiente ${seconds}s.` : `Please wait ${seconds}s.`,
+  },
+
+  // Ops: /healthz, /readyz, /metrics (JSON or ?format=prometheus).
+  health: env.number("HEALTH_PORT", 3000),
   presenceRotation: {
     interval: "1m",
     items: [

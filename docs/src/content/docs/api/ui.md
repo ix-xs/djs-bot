@@ -16,6 +16,7 @@ about `ButtonBuilder` still applies.
 | --- | --- | --- |
 | `ui.row(...components)` | `ActionRowBuilder` | A row of buttons, or a single select menu. |
 | `ui.linkButton(label, url, emoji?)` | `ButtonBuilder` | A URL button - no handler, no customId. |
+| `ui.premiumButton(skuId)` | `ButtonBuilder` | Opens the purchase flow of one of your app's SKUs. Discord supplies the label. |
 
 ```ts
 const row = ui.row(
@@ -28,7 +29,7 @@ await ctx.reply({ content: "Ticket #42", components: [row] });
 
 A message allows at most **5 rows**, each holding 5 buttons or 1 select menu.
 
-Routed buttons come from [`defineButton`](/djs-bot/api/definitions/#definebutton)
+Routed buttons come from [`defineButton`](/api/definitions/#definebutton)
 and its typed `build(params?, visual?)`, where `visual` overrides the defaults
 declared on the definition:
 
@@ -51,6 +52,7 @@ per message with the `IsComponentsV2` flag.
 | Helper | Returns | Description |
 | --- | --- | --- |
 | `ui.container(...children)` | `ContainerBuilder` | Groups display components into one visual block. |
+| `ui.container(options, ...children)` | `ContainerBuilder` | The same with `{ accent?: number; spoiler?: boolean }`: a coloured edge, or hidden behind a spoiler. |
 | `ui.text(content)` | `TextDisplayBuilder` | A markdown text block. |
 | `ui.separator(options?)` | `SeparatorBuilder` | A gap, optionally with a divider line. `{ divider?, spacing?: "small" \| "large" }`. |
 | `ui.section(options)` | `SectionBuilder` | `{ text: string \| string[]; accessory: ButtonBuilder \| ThumbnailBuilder }` - text on the left, a button or thumbnail on the right. |
@@ -59,12 +61,13 @@ per message with the `IsComponentsV2` flag.
 | `ui.file(attachmentUrl)` | `FileBuilder` | A file display component. |
 
 ```ts
-import { ui, MessageFlags } from "@ix-xs/djs-bot";
+import { ui, MessageFlags, Colors } from "@ix-xs/djs-bot";
 
 await ctx.reply({
   flags: MessageFlags.IsComponentsV2,
   components: [
     ui.container(
+      { accent: Colors.Blurple },
       ui.text("## Ticket #42\nOpened by <@123>"),
       ui.separator({ divider: true }),
       ui.section({
@@ -82,6 +85,28 @@ A message using `IsComponentsV2` **cannot** carry `content` or `embeds` - every
 piece of text has to be a `ui.text` or a `ui.section`. Attachments must be
 referenced as `attachment://filename`.
 :::
+
+## Polls
+
+```ts
+ui.poll(question, answers, options?): PollData
+```
+
+A native Discord poll, to pass as the `poll` of a message.
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `hours` | `number` | `24` | How long the poll stays open (1 to 768). |
+| `multiple` | `boolean` | `false` | Let people pick several answers. |
+
+```ts
+await ctx.reply({
+  poll: ui.poll("Next event?", ["Game night", { text: "Movie", emoji: "🎬" }], { hours: 48 }),
+});
+```
+
+To react to votes, listen to `messagePollVoteAdd` / `messagePollVoteRemove`; the
+intent autopilot adds `GuildMessagePolls` for you.
 
 ## `paginate()`
 
@@ -144,8 +169,8 @@ if (await confirm(ctx, { content: "Delete every message in this channel?" })) {
 | --- | --- | --- | --- |
 | `content` | `string` | - | The question. |
 | `embed` | `EmbedBuilder` | - | An embed instead of, or alongside, the text. |
-| `confirmLabel` | `string` | `"Confirm"` | Confirm button label. |
-| `cancelLabel` | `string` | `"Cancel"` | Cancel button label. |
+| `confirmLabel` | `string` | the `confirm` [message](/api/configuration/#messages) | Confirm button label. |
+| `cancelLabel` | `string` | the `cancel` message | Cancel button label. |
 | `timeout` | `string \| number` | `"1m"` | How long to wait. |
 | `ephemeral` | `boolean` | `true` | Only the invoker sees it. |
 
@@ -166,15 +191,15 @@ ticket:close$WyI0MiIsIjEiXQ
 
 The `$` separator never appears in a routing key or in base64url output, so
 parsing is unambiguous. That is why component ids may not contain `$`
-([`DJSBOT_E013`](/djs-bot/api/errors/#djsbot_e013)).
+([`DJSBOT_E013`](/api/errors/#djsbot_e013)).
 
 You normally never call these - `Button.build()` and `ctx.params` do - but they
 are exported:
 
 | Function | Description |
 | --- | --- |
-| `encodeCustomId(key, schema, values)` | Builds a customId. Throws [`DJSBOT_E020`](/djs-bot/api/errors/#djsbot_e020) past 100 chars. |
-| `decodeCustomId(raw, schema)` | Returns `{ key, params }`. Throws [`DJSBOT_E021`](/djs-bot/api/errors/#djsbot_e021) on a bad payload. |
+| `encodeCustomId(key, schema, values)` | Builds a customId. Throws [`DJSBOT_E020`](/api/errors/#djsbot_e020) past 100 chars. |
+| `decodeCustomId(raw, schema)` | Returns `{ key, params }`. Throws [`DJSBOT_E021`](/api/errors/#djsbot_e021) on a bad payload. |
 | `customIdKey(raw)` | Just the routing key, without decoding params. |
 | `CUSTOM_ID_MAX_LENGTH` | `100`. |
 
@@ -214,4 +239,4 @@ const embed = new EmbedBuilder()
 ```
 
 For the built-in coloured embeds, `ctx.reply.success/error/info` already do this
-- see [the ctx object](/djs-bot/api/context/#ctxreply--answering-the-user).
+- see [the ctx object](/api/context/#ctxreply---answering-the-user).

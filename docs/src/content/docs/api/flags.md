@@ -6,7 +6,7 @@ sidebar:
 ---
 
 Feature flags turn parts of your bot on and off **at runtime**, globally or per
-server, without a redeploy. Backed by a [`KVStore`](/djs-bot/api/store/), so
+server, without a redeploy. Backed by a [`KVStore`](/api/store/), so
 toggles survive restarts.
 
 ```ts title="src/index.ts"
@@ -161,6 +161,6 @@ await flags.isEnabled("economy", { guildId: "456" });   // true
 | Need | Reach for |
 | --- | --- |
 | Disable **one** feature, maybe in one server | A feature flag |
-| Disable the **whole bot** during a migration | The [`maintenance`](/djs-bot/api/plugins/#maintenanceoptions) plugin |
+| Disable the **whole bot** during a migration | The [`maintenance`](/api/plugins/#maintenanceoptions) plugin |
 
 They compose: `maintenance({ enabled: () => downForMigration })`.

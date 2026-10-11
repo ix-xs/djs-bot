@@ -30,8 +30,8 @@ Move one command at a time. Nothing forces a big-bang rewrite.
 
 ### What do I need installed?
 
-Node **22 or newer** (the SQLite store uses `node:sqlite`), plus
-`@ix-xs/djs-bot` and `discord.js`. `tsx` is optional and lets `dev` and `start`
+Node **22.13 or newer** (the SQLite store uses `node:sqlite`), plus
+`@ix-xs/djs-bot` and `discord.js` **14.27 or newer**. `tsx` is optional and lets `dev` and `start`
 run TypeScript with no build step.
 
 ### Is TypeScript required?
@@ -72,6 +72,19 @@ Server Settings. The guard cannot be overridden.
 framework orders them for you). A command can hold 25 subcommands, and a group
 can hold 25 subcommands.
 
+### Can the bot answer in my language?
+
+Yes, at three levels. Command names are localized with `nameLocalizations`,
+your own replies with `ctx.t()`, and what the framework says itself (guard
+refusals, the generic error) with
+[`defineBot({ messages })`](/api/configuration/#messages).
+
+### Do I still have to call `defer()`?
+
+No. `defineBot({ defaults: { defer: true } })` acknowledges any handler that has
+not answered after 2 seconds, and leaves fast handlers alone. See
+[automatic deferral](/api/context/#automatic-deferral).
+
 ### Choices or autocomplete?
 
 `choices` for a fixed list of at most 25 values, rendered by Discord itself.
@@ -103,8 +116,8 @@ Pick one per message.
 ### Which store should I use?
 
 `memoryStore()` for tests and ephemeral state, `sqliteStore()` for anything that
-must survive a restart. Write a `KVStore` adapter when you outgrow those; the
-interface is eight methods.
+must survive a restart. When you outgrow those, `createStore()` turns four
+methods over any backend into a full store.
 
 ### Do I have to use the built-in store?
 
@@ -128,7 +141,7 @@ Anywhere outside your source tree, for example `data/bot.sqlite`, and add
 ### How do I host it?
 
 Anything that runs Node 22: a VPS with systemd or pm2, Docker, Fly, Railway,
-Render. See [Going live](/djs-bot/tutorial/going-live/) for a complete walk
+Render. See [Going live](/tutorial/going-live/) for a complete walk
 through.
 
 ### When do I need sharding?
@@ -145,7 +158,7 @@ health: 3000,
 ```
 
 `/healthz` for liveness, `/readyz` for readiness, `/metrics` for counters. See
-[Health checks](/djs-bot/api/health/).
+[Health checks](/api/health/).
 
 ### Should I run deploy on every start?
 

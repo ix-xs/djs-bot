@@ -11,7 +11,7 @@ No anonymous `throw new Error("something went wrong")`.
 ```
 BotError [DJSBOT_E020]: customId too long: key "ticket:close" produced 128 chars
   ↳ Shorten params or move large state into a store keyed by a short id. Limit is 100.
-  ↳ https://ix-xs.github.io/djs-bot/#djsbot_e020
+  ↳ https://ix-xs.github.io/djs-bot/api/errors/#djsbot_e020
 ```
 
 ## The error boundary
@@ -45,6 +45,23 @@ async onError(error, ctx) {
 
 The boundary means an exception can never take the process down or leave an
 interaction hanging with "the application did not respond".
+
+### Outside interactions
+
+Event listeners, message triggers and scheduled jobs are protected the same way.
+When one throws, the error is logged, then passed to every plugin `onError` hook
+and to `defineBot({ onError })` - this time **without** a `ctx`, since there is
+no interaction to answer:
+
+```ts
+onError(error, ctx) {
+  Sentry.captureException(error, { tags: { source: ctx ? "interaction" : "background" } });
+}
+```
+
+The default reply to the user is one of the framework's
+[messages](/api/configuration/#messages) (`error`), so it can be reworded or
+translated.
 
 ## `BotError`
 
@@ -130,6 +147,13 @@ they may use spaces and capitals.
 **Invalid component id.** Ids must be non-empty and must not contain `$`, which
 is reserved as the customId separator. Use `:` or `-`.
 
+#### `DJSBOT_E014`
+
+**Invalid modal definition.** A modal holds 1 to 5 components, a `field.select`
+takes 1-25 options, a `field.radio` 2-10 and a `field.checkboxes` 1-10. The
+detail names the modal and the offending field. Raised when the modal is
+defined, so it never reaches a user.
+
 ### Components
 
 #### `DJSBOT_E020`
@@ -214,6 +238,22 @@ Portal:
 | `GuildPresences` | Presence updates |
 
 Bots in 100+ servers must be verified to use these.
+
+If a listener does not actually need one - a `messageCreate` handler that only
+reacts to mentions, say - drop it instead of enabling it:
+
+```ts
+intents: { remove: [GatewayIntentBits.MessageContent] }
+```
+
+### Jobs
+
+#### `DJSBOT_E080`
+
+**Invalid job schedule.** `schedule` must be a duration (`"30s"`, `"1h"`), a
+5-field cron expression (`"0 3 * * *"`) or a macro (`"@daily"`). The underlying
+cause says exactly which part is wrong (`"61" is not a valid minute`). Raised by
+`defineJob`, at startup rather than when the job was due.
 
 ## Handling errors in your own code
 

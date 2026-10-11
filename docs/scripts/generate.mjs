@@ -15,7 +15,7 @@ const guideDir = path.resolve(here, "..", "src", "content", "docs", "guide");
  * in astro.config.mjs (both are generated from CATEGORIES below).
  */
 export const CATEGORIES = [
-  { label: "Basics", slug: "basics", sections: [1, 2, 3, 4] },
+  { label: "Basics", slug: "basics", sections: [1, 2, 3, 4, 41, 42] },
   { label: "Commands & options", slug: "commands", sections: [5, 6, 7, 8, 9, 21] },
   { label: "Components & interactions", slug: "components", sections: [12, 13, 14, 16, 30] },
   { label: "Messages & formatting", slug: "messages", sections: [15, 17, 18, 19, 32, 33] },
@@ -73,7 +73,7 @@ const REFERENCE = {
   11: ["definitions"],
   12: ["definitions", "ui"],
   13: ["definitions"],
-  14: ["definitions", "options"],
+  14: ["options", "definitions"],
   15: ["ui"],
   16: ["ui"],
   17: ["formatting"],
@@ -100,6 +100,8 @@ const REFERENCE = {
   38: ["audit"],
   39: ["flags"],
   40: ["health"],
+  41: ["context", "definitions"],
+  42: ["configuration"],
 };
 
 /**
@@ -161,8 +163,45 @@ function referenceFooter(num) {
   const slugs = (REFERENCE[num] ?? []).filter((slug) => slug in API_PAGES);
   if (slugs.length === 0) return "";
 
-  const links = slugs.map((slug) => `- [${API_PAGES[slug]}](/djs-bot/api/${slug}/)`).join("\n");
+  const links = slugs.map((slug) => `- [${API_PAGES[slug]}](/api/${slug}/)`).join("\n");
   return `\n\n## Full reference\n\nEvery option, signature and edge case for this topic:\n\n${links}\n`;
+}
+
+/**
+ * USAGE.md is one long file, so its sections point at each other with in-page
+ * anchors ("#17-attachments--images") and section numbers ("§41"). On the site
+ * every section is its own page: both forms are rewritten to a real link.
+ *
+ * @param {string} body  The section's markdown.
+ * @param {Map<number, { title: string, url: string }>} pagesByNumber
+ */
+function crossLink(body, pagesByNumber) {
+  let inFence = false;
+  return body
+    .split("\n")
+    .map((line) => {
+      if (line.startsWith("```")) {
+        inFence = !inFence;
+        return line;
+      }
+      // Inside a code sample a link cannot render: name the page instead.
+      if (inFence) {
+        return line.replace(/§(\d+)/g, (whole, n) => {
+          const page = pagesByNumber.get(Number(n));
+          return page ? `see "${page.title.replace(/`/g, "")}"` : whole;
+        });
+      }
+      return line
+        .replace(/\]\(#(\d+)-[^)]*\)/g, (whole, n) => {
+          const page = pagesByNumber.get(Number(n));
+          return page ? `](${page.url})` : whole;
+        })
+        .replace(/§(\d+)/g, (whole, n) => {
+          const page = pagesByNumber.get(Number(n));
+          return page ? `[${page.title}](${page.url})` : whole;
+        });
+    })
+    .join("\n");
 }
 
 async function main() {
@@ -188,6 +227,17 @@ async function main() {
   await rm(guideDir, { recursive: true, force: true });
   for (const category of CATEGORIES) await mkdir(path.join(guideDir, category.slug), { recursive: true });
 
+  // First pass: where each numbered section ends up, so sections can link to
+  // one another.
+  const pagesByNumber = new Map();
+  for (const section of sections) {
+    const num = Number.parseInt(section.heading, 10);
+    const title = section.heading.replace(/^\d+\.\s*/, "").trim();
+    if (Number.isNaN(num)) continue;
+    const slug = slugify(title) || `section-${num}`;
+    pagesByNumber.set(num, { title, url: `/guide/${categoryOf(num).slug}/${slug}/` });
+  }
+
   let count = 0;
   for (const section of sections) {
     const num = Number.parseInt(section.heading, 10);
@@ -196,7 +246,10 @@ async function main() {
 
     const category = categoryOf(num);
     const slug = slugify(title) || `section-${num}`;
-    const body = section.body.join("\n").replace(/^\n+/, "").replace(/\n+$/, "").trim();
+    const body = crossLink(
+      section.body.join("\n").replace(/^\n+/, "").replace(/\n+$/, "").trim(),
+      pagesByNumber,
+    );
     const frontmatter =
       `---\ntitle: ${JSON.stringify(title)}\n` +
       `description: ${JSON.stringify(describe(body, title))}\n` +
