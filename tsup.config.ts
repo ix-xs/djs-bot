@@ -13,7 +13,9 @@ export default defineConfig([
       plugins: "src/plugins/index.ts",
     },
     format: ["esm", "cjs"],
-    dts: true,
+    // tsup passes `baseUrl` to the declaration build, which TypeScript 6
+    // reports as deprecated. The option silences that one report.
+    dts: { compilerOptions: { ignoreDeprecations: "6.0" } },
     clean: true,
     // No source maps in the published package: src/ isn't shipped, so maps would
     // only bloat it (esbuild inlines the full source into them).

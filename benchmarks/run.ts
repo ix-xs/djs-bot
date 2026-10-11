@@ -46,12 +46,16 @@ function header(title: string): void {
 }
 
 function printTable(bench: Bench): void {
-  const rows = bench.tasks.map((t) => ({
-    task: t.name,
-    "ops/sec": Math.round(t.result?.hz ?? 0).toLocaleString("en-US"),
-    "avg (µs)": ((t.result?.mean ?? 0) * 1000).toFixed(3),
-    samples: t.result?.samples.length ?? 0,
-  }));
+  const rows = bench.tasks.map((t) => {
+    // Only a task that ran carries statistics.
+    const stats = "latency" in t.result ? t.result : undefined;
+    return {
+      task: t.name,
+      "ops/sec": Math.round(stats?.throughput.mean ?? 0).toLocaleString("en-US"),
+      "avg (µs)": ((stats?.latency.mean ?? 0) * 1000).toFixed(3),
+      samples: stats?.latency.samplesCount ?? 0,
+    };
+  });
   console.table(rows);
 }
 

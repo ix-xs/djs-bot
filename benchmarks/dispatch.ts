@@ -136,12 +136,16 @@ async function main(): Promise<void> {
   await bench.run();
   console.log(`\ndispatch, end to end (framework overhead per interaction) - Node ${process.version}`);
   console.table(
-    bench.tasks.map((t) => ({
-      task: t.name,
-      "ops/sec": Math.round(t.result?.hz ?? 0).toLocaleString("en-US"),
-      "avg (µs)": ((t.result?.mean ?? 0) * 1000).toFixed(2),
-      "p99 (µs)": ((t.result?.p99 ?? 0) * 1000).toFixed(2),
-    })),
+    bench.tasks.map((t) => {
+      // Only a task that ran carries statistics.
+      const stats = "latency" in t.result ? t.result : undefined;
+      return {
+        task: t.name,
+        "ops/sec": Math.round(stats?.throughput.mean ?? 0).toLocaleString("en-US"),
+        "avg (µs)": ((stats?.latency.mean ?? 0) * 1000).toFixed(2),
+        "p99 (µs)": ((stats?.latency.p99 ?? 0) * 1000).toFixed(2),
+      };
+    }),
   );
 }
 
