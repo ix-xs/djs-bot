@@ -1,70 +1,56 @@
 ---
 /**
- * A faithful mock of a Discord message, so a code sample can sit next to the
- * output it actually produces. Put embeds/buttons in the default slot.
+ * A mock of a Discord message, so a code sample can sit next to what it
+ * produces. The colours are Discord's own on purpose: this depicts Discord,
+ * it is not part of the site's palette. Put embeds and buttons in the slot.
  */
 interface Props {
   author?: string;
+  /** Shows the APP tag next to the name. */
   bot?: boolean;
   time?: string;
-  /** Avatar background colour (a Discord-ish accent by default). */
+  /** Avatar background. */
   color?: string;
-  /** Plain message content rendered above any embed. */
+  /** Message text shown above any embed. May contain inline HTML. */
   content?: string;
+  /** Renders the "X used /command" line Discord shows above a command reply. */
+  used?: { user: string; command: string };
+  /** A small label above the frame, for example "Result in Discord". */
+  caption?: string;
 }
-const {
-  author = "djs-bot",
-  bot = true,
-  time = "today at 12:00",
-  color = "#5865f2",
-  content,
-} = Astro.props;
-const initials = author.slice(0, 1).toUpperCase();
+const { author = "djs-bot", bot = true, time = "Today at 14:02", color = "#5865f2", content, used, caption } = Astro.props;
+// The first grapheme, so that an emoji-first name does not yield half a character.
+const first = [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(author.trim())][0]?.segment ?? "?";
 ---
 
-<div class="dc-msg" role="figure" aria-label={`Discord message from ${author}`}>
-  <div class="dc-avatar" style={`background:${color}`} aria-hidden="true">{initials}</div>
-  <div class="dc-body">
-    <div class="dc-head">
-      <span class="dc-name">{author}</span>
-      {bot && <span class="dc-tag">APP</span>}
-      <span class="dc-time">{time}</span>
+<figure class="dc not-content" aria-label={`Discord message from ${author}`}>
+  {caption && <figcaption class="dc-cap">{caption}</figcaption>}
+  <div class="dc-msg">
+    <div class="dc-av" style={`background:${color}`} aria-hidden="true">{first.toUpperCase()}</div>
+    <div class="dc-main">
+      {used && <div class="dc-used">{used.user} used <b>/{used.command}</b></div>}
+      <div class="dc-meta">
+        <b>{author}</b>
+        {bot && <span class="dc-app">APP</span>}
+        <time>{time}</time>
+      </div>
+      {content && <p set:html={content} />}
+      <slot />
     </div>
-    {content && <p class="dc-content" set:html={content} />}
-    <slot />
   </div>
-</div>
+</figure>
 
-<style>
-  .dc-msg {
-    display: flex;
-    gap: 0.85rem;
-    padding: 0.85rem 1rem;
-    margin: 1.2rem 0;
-    border-radius: 10px;
-    background: var(--sl-color-gray-6);
-    border: 1px solid var(--sl-color-hairline);
-    font-family: var(--sl-font);
-    line-height: 1.4;
-    transition: box-shadow 200ms var(--dc-ease, ease);
-  }
-  .dc-msg:hover { box-shadow: 0 8px 24px -16px rgba(0, 0, 0, 0.7); }
-  .dc-avatar {
-    flex: 0 0 40px; width: 40px; height: 40px;
-    border-radius: 50%;
-    display: grid; place-items: center;
-    color: #fff; font-weight: 700; font-size: 1rem;
-    user-select: none;
-  }
-  .dc-body { min-width: 0; flex: 1; }
-  .dc-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-  .dc-name { font-weight: 600; color: var(--sl-color-white); }
-  .dc-tag {
-    background: var(--dc-blurple, #5865f2);
-    color: #fff; font-size: 0.62rem; font-weight: 700;
-    padding: 0.05rem 0.28rem; border-radius: 3px;
-    letter-spacing: 0.02em; text-transform: uppercase;
-  }
-  .dc-time { font-size: 0.72rem; color: var(--sl-color-gray-3); }
-  .dc-content { margin: 0.35rem 0 0; color: var(--sl-color-gray-1); }
+<style is:global>
+  .dc { --dc-bg: #313338; --dc-fg: #dbdee1; --dc-name: #f2f3f5; --dc-muted: #949ba4; margin: 1.25rem 0 0; color: var(--dc-fg); font-family: "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 0.9375rem; line-height: 1.375; }
+  .dc-cap { margin-bottom: 0.6rem; font-family: var(--sl-font-mono); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--at-faint); }
+  .dc-msg { display: flex; gap: 0.875rem; padding: 0.875rem 1rem; border: 1px solid var(--at-line); border-radius: var(--at-radius); background: var(--dc-bg); }
+  .dc-av { flex-shrink: 0; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; color: #fff; font-weight: 700; user-select: none; }
+  .dc-main { min-width: 0; flex: 1; }
+  .dc-main > p { margin: 0; color: var(--dc-fg); overflow-wrap: anywhere; }
+  .dc-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.4rem; }
+  .dc-meta b { color: var(--dc-name); font-weight: 600; overflow-wrap: anywhere; }
+  .dc-app { align-self: center; padding: 0.05rem 0.3rem; border-radius: 4px; background: #5865f2; color: #fff; font-size: 0.625rem; font-weight: 700; letter-spacing: 0.02em; }
+  .dc-meta time { color: var(--dc-muted); font-size: 0.75rem; }
+  .dc-used { margin-bottom: 0.25rem; color: var(--dc-muted); font-size: 0.8125rem; overflow-wrap: anywhere; }
+  .dc-used b { color: #c9cdfb; font-weight: 500; }
 </style>

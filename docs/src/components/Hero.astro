@@ -1,15 +1,88 @@
 ---
-// Starlight reads the hero's action links from frontmatter, which the remark
-// plugin never sees. This thin override gives them the same treatment as every
-// other internal link: written root-relative, prefixed with the base at build.
-import Default from "@astrojs/starlight/components/Hero.astro";
+// The landing page's opening: a statement, the install line, two ways in, and
+// next to them the smallest real example with what it does in Discord.
+import type { Props } from "@astrojs/starlight/props";
+import { Code, LinkButton, TabItem, Tabs } from "@astrojs/starlight/components";
+import DiscordButtons from "./DiscordButtons.astro";
+import DiscordMessage from "./DiscordMessage.astro";
 import { withBase } from "../../plugins/base-links.mjs";
 
-const props = Astro.props;
-const hero = props.entry.data.hero;
-if (hero?.actions) {
-  for (const action of hero.actions) action.link = withBase(action.link, import.meta.env.BASE_URL);
-}
+const { data } = Astro.props.entry;
+const { title = data.title, tagline, actions = [] } = data.hero ?? {};
+const install = "npm i @ix-xs/djs-bot discord.js";
+
+const button = `import { defineButton, p, ButtonStyle } from "@ix-xs/djs-bot";
+
+export const CloseTicket = defineButton({
+  id: "ticket:close",
+  params: { ticketId: p.string, ownerId: p.string },
+  label: "Close ticket",
+  emoji: "🔒",
+  style: ButtonStyle.Danger,
+  run: async (ctx) => {
+    // ctx.params is decoded and typed: no split("_")
+    if (ctx.user.id !== ctx.params.ownerId) {
+      return ctx.reply.error("Not your ticket.");
+    }
+    await ctx.update.disable();
+  },
+});`;
+
+const command = `import { defineCommand, ui } from "@ix-xs/djs-bot";
+import { CloseTicket } from "./ticket.button.js";
+
+export default defineCommand({
+  name: "ticket",
+  description: "Open a ticket",
+  run: async (ctx) => {
+    const button = CloseTicket.build({ ticketId: "T-1042", ownerId: ctx.user.id });
+    await ctx.reply({ content: "🎫 Printer is on fire", components: [ui.row(button)] });
+  },
+});`;
 ---
 
-<Default {...props}><slot /></Default>
+<div class="at-hero">
+  <div class="at-hero-copy">
+    <p class="at-eyebrow">A TypeScript framework for discord.js</p>
+    <h1 id="_top" data-page-title set:html={title} />
+    {tagline && <p class="at-lead" set:html={tagline} />}
+    <div class="at-install">
+      <code>{install}</code>
+      <button class="at-copy at-press" type="button" data-copy={install} aria-label="Copy the install command">
+        <span class="at-copy-idle"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg></span>
+        <span class="at-copy-done"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg></span>
+      </button>
+    </div>
+    {actions.length > 0 && (
+      <div class="at-hero-actions">
+        {actions.map(({ link, text, variant }) => (
+          <LinkButton href={withBase(link, import.meta.env.BASE_URL)} variant={variant}>{text}</LinkButton>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <div class="at-hero-demo">
+    <Tabs>
+      <TabItem label="ticket.button.ts"><Code code={button} lang="ts" /></TabItem>
+      <TabItem label="ticket.command.ts"><Code code={command} lang="ts" /></TabItem>
+    </Tabs>
+    <DiscordMessage caption="Result in Discord: press the button" used={{ user: "Aleksandra", command: "ticket" }} content="🎫 Printer is on fire">
+      <DiscordButtons
+        buttons={[{ label: "Close ticket", emoji: "🔒", style: "danger" }]}
+        trace={[
+          "Click received, acknowledged at once",
+          'customId decoded: <code>ticketId "T-1042"</code>',
+          "<code>run(ctx)</code> called, owner check passed",
+          "<code>ctx.update.disable()</code> greyed the button out",
+        ]}
+      />
+    </DiscordMessage>
+  </div>
+</div>
+
+<style>
+  .at-hero-demo { min-width: 0; }
+  .at-hero-demo :global(.expressive-code) { margin-top: 0; }
+  .at-hero-demo :global(starlight-tabs [role="tabpanel"]) { margin-top: 0; }
+</style>

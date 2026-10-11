@@ -5,13 +5,20 @@ An [Astro Starlight](https://starlight.astro.build) site for `@ix-xs/djs-bot`.
 | Section | Source | Tracked |
 | --- | --- | --- |
 | Tutorial | `src/content/docs/tutorial/*.mdx`, written by hand | yes |
-| Guides | generated from [`USAGE.md`](../USAGE.md) into `src/content/docs/guide/` | no (gitignored) |
-| API reference | `src/content/docs/api/*.md`, written by hand | yes |
+| Topic pages | `src/content/docs/{basics,commands,components,events,architecture,data,messages,production}/`, one page per topic, written by hand | yes |
+| Errors, CLI | `src/content/docs/api/errors.md`, `api/cli.md`, written by hand | yes |
 | All exports | `src/content/docs/api/exports.md`, generated from the source code | yes |
 | Recipes, Help | `src/content/docs/recipes/`, `src/content/docs/help/` | yes |
 
-To change a guide, edit `USAGE.md`: the pages are rebuilt from it by
-[`scripts/generate.mjs`](./scripts/generate.mjs) on every `dev` and `build`.
+Each topic has exactly one page, and each fact has one home: a page links to
+the page that owns something instead of explaining it again. A page has the
+same shape everywhere: a first example, one section per need, a `Reference`
+section, limits and errors, then `See also`. The `description` in the
+frontmatter is shown as the lead paragraph under the title.
+
+When a page moves, add its old address to [`redirects.mjs`](./redirects.mjs).
+`/api/errors/` must never move: published versions of the package print links
+to its anchors.
 
 The "All exports" page lists every symbol with the first sentence of its doc
 comment. After adding or documenting an export, run `npm run docs:api` from the
@@ -23,7 +30,7 @@ out of date.
 ```bash
 cd docs
 npm install
-npm run dev        # regenerates the guides, then serves http://localhost:4321/djs-bot
+npm run dev        # serves http://localhost:4321/djs-bot
 ```
 
 ## Build and check
@@ -41,7 +48,7 @@ the build instead of shipping.
 Write internal links **root-relative, without the base path**:
 
 ```md
-[the store](/api/store/#namespaces)
+[the store](/data/store/#namespaces-and-bulk-access)
 ```
 
 [`plugins/base-links.mjs`](./plugins/base-links.mjs) prepends the base at build

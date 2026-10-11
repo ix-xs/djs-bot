@@ -98,7 +98,7 @@ within 3 seconds. A deferred interaction then gives you 15 minutes.
 
 A modal must be the **first** response to an interaction. If the handler
 replied or deferred before `ctx.showModal(...)`, or if
-[automatic deferral](/api/context/#automatic-deferral) fired first because the
+[automatic deferral](/basics/automatic-deferral/) fired first because the
 handler did slow work before opening it, Discord refuses. Open the modal first,
 or set `defer: false` on that definition.
 
@@ -119,7 +119,7 @@ the interaction was already acknowledged. Upgrade.
 ### `DJSBOT_E020` when building a button
 
 Your encoded customId exceeded 100 characters. Store the payload and keep a
-short key. See [the customId codec](/api/ui/#when-100-characters-is-not-enough).
+short key. See [the customId codec](/components/buttons/#when-100-characters-is-not-enough).
 
 ## Startup
 
@@ -278,7 +278,7 @@ declare module "@ix-xs/djs-bot" {
 }
 ```
 
-See [typing ctx.services](/api/services/#typing-ctxservices).
+See [typing ctx.services](C:/Program Files/Git/architecture/services/#type-your-services).
 
 ### `ctx.options.x` is possibly undefined
 

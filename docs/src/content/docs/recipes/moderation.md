@@ -373,7 +373,7 @@ out goes through the REST API. `intents: "auto"` therefore requests `Guilds`
 only.
 
 To speak French (or anything else) in the guard refusals above, set
-[`messages`](/api/configuration/#messages) once:
+[`messages`](/basics/wording-and-theme/) once:
 
 ```ts
 messages: {
@@ -387,6 +387,6 @@ messages: {
 
 - Add `cooldown("3s")` to every command so a moderator cannot spam-ban.
 - Add a `/unban` with an `autocomplete` option listing the ban list.
-- Log actions to a channel by adding a custom [audit sink](/api/audit/#a-custom-sink).
-- Gate the whole feature with a [feature flag](/api/flags/) so a server
+- Log actions to a channel by adding a custom [audit sink](C:/Program Files/Git/data/audit/#choosing-sinks).
+- Gate the whole feature with a [feature flag](/data/flags/) so a server
   can turn it off.

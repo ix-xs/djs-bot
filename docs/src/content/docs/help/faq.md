@@ -77,13 +77,13 @@ can hold 25 subcommands.
 Yes, at three levels. Command names are localized with `nameLocalizations`,
 your own replies with `ctx.t()`, and what the framework says itself (guard
 refusals, the generic error) with
-[`defineBot({ messages })`](/api/configuration/#messages).
+[`defineBot({ messages })`](/basics/wording-and-theme/).
 
 ### Do I still have to call `defer()`?
 
 No. `defineBot({ defaults: { defer: true } })` acknowledges any handler that has
 not answered after 2 seconds, and leaves fast handlers alone. See
-[automatic deferral](/api/context/#automatic-deferral).
+[automatic deferral](/basics/automatic-deferral/).
 
 ### Choices or autocomplete?
 
@@ -158,7 +158,7 @@ health: 3000,
 ```
 
 `/healthz` for liveness, `/readyz` for readiness, `/metrics` for counters. See
-[Health checks](/api/health/).
+[Health checks](/production/health/).
 
 ### Should I run deploy on every start?
 

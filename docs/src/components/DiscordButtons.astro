@@ -1,35 +1,112 @@
 ---
 /**
- * A row of Discord component buttons.
- * Usage: <DiscordButtons buttons={[{ label: "Close", style: "danger", emoji: "🔒" }]} />
+ * A row of Discord buttons.
+ *
+ * Static by default. Give it `trace` (what the framework does when the first
+ * button is pressed) and it becomes a small demonstration: pressing the button
+ * greys it out and lists those steps, as `ctx.update.disable()` would.
  */
-interface Button { label: string; style?: "primary" | "secondary" | "success" | "danger" | "link"; emoji?: string; disabled?: boolean }
-interface Props { buttons: Button[] }
-const { buttons } = Astro.props;
+interface Button {
+  label: string;
+  style?: "primary" | "secondary" | "success" | "danger";
+  emoji?: string;
+  disabled?: boolean;
+}
+interface Props {
+  buttons: Button[];
+  /** Steps shown after the press. May contain inline HTML. */
+  trace?: string[];
+}
+const { buttons, trace } = Astro.props;
 ---
 
-<div class="dc-row">
-  {buttons.map((b) => (
-    <button class:list={["dc-btn", `is-${b.style ?? "secondary"}`, b.disabled && "is-disabled"]} type="button" disabled={b.disabled}>
-      {b.emoji && <span class="dc-btn-emoji">{b.emoji}</span>}{b.label}
-    </button>
-  ))}
-</div>
+<dc-buttons data-live={trace ? "" : undefined}>
+  <div class="dc-row">
+    {buttons.map((button, index) => (
+      <button
+        type="button"
+        class:list={["dc-btn", `is-${button.style ?? "secondary"}`]}
+        disabled={button.disabled}
+        title={button.label}
+        data-press={trace && index === 0 ? "" : undefined}
+        tabindex={trace && index === 0 ? undefined : -1}
+      >
+        {button.emoji && <i aria-hidden="true">{button.emoji}</i>}
+        <span>{button.label}</span>
+      </button>
+    ))}
+  </div>
+  {trace && (
+    <>
+      <ol class="dc-trace" hidden>
+        {trace.map((step) => (
+          <li><i aria-hidden="true">✓</i><span set:html={step} /></li>
+        ))}
+      </ol>
+      <button type="button" class="dc-reset" hidden>Reset</button>
+    </>
+  )}
+</dc-buttons>
 
-<style>
-  .dc-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
-  .dc-btn {
-    display: inline-flex; align-items: center; gap: 0.35rem;
-    font-family: var(--sl-font); font-size: 0.85rem; font-weight: 600;
-    padding: 0.42rem 0.85rem; border-radius: 4px; border: 0; color: #fff;
-    cursor: pointer; transition: filter 140ms ease, transform 140ms ease;
+<script>
+  class DiscordButtons extends HTMLElement {
+    constructor() {
+      super();
+      const press = this.querySelector<HTMLButtonElement>("[data-press]");
+      const trace = this.querySelector<HTMLElement>(".dc-trace");
+      const reset = this.querySelector<HTMLButtonElement>(".dc-reset");
+      if (!press || !trace || !reset) return;
+      press.addEventListener("click", () => {
+        press.disabled = true;
+        trace.hidden = false;
+        reset.hidden = false;
+      });
+      reset.addEventListener("click", () => {
+        press.disabled = false;
+        trace.hidden = true;
+        reset.hidden = true;
+        press.focus();
+      });
+    }
   }
-  .dc-btn:hover:not(.is-disabled) { filter: brightness(1.12); transform: translateY(-1px); }
-  .is-primary { background: #5865f2; }
-  .is-secondary { background: #4e5058; }
-  .is-success { background: #23a55a; }
-  .is-danger { background: #da373c; }
-  .is-link { background: transparent; color: #00a8fc; text-decoration: underline; padding-inline: 0.2rem; }
-  .is-disabled { opacity: 0.5; cursor: not-allowed; }
-  .dc-btn-emoji { font-size: 0.95em; }
+  customElements.define("dc-buttons", DiscordButtons);
+</script>
+
+<style is:global>
+  dc-buttons { display: block; }
+  .dc-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+  .dc-btn { display: inline-flex; align-items: center; gap: 0.4rem; max-width: 100%; min-height: 2rem; padding: 0 1rem; border: 0; border-radius: 8px; color: #fff; font: inherit; font-size: 0.875rem; font-weight: 500; white-space: nowrap; cursor: default; }
+  .dc-btn i { font-style: normal; }
+  .dc-btn span { overflow: hidden; text-overflow: ellipsis; }
+  .dc-btn.is-primary { background: #5865f2; }
+  .dc-btn.is-secondary { background: #4e5058; }
+  .dc-btn.is-success { background: #248046; }
+  .dc-btn.is-danger { background: #da373c; }
+  .dc-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  [data-live] .dc-btn[data-press] { cursor: pointer; transition: transform 160ms var(--ease-out), opacity 200ms ease; }
+  [data-live] .dc-btn[data-press]:active:not(:disabled) { transform: scale(0.97); }
+
+  .dc-trace { margin: 0.75rem 0 0; padding: 0.75rem 0 0; list-style: none; border-top: 1px solid rgb(255 255 255 / 0.08); }
+  .dc-trace[hidden], .dc-reset[hidden] { display: none; }
+  .dc-trace li { display: flex; align-items: baseline; gap: 0.6rem; padding: 0.15rem 0; color: #949ba4; font-size: 0.8125rem; opacity: 0; transform: translateY(6px); animation: dc-trace-in 300ms var(--ease-out) forwards; }
+  .dc-trace li:nth-child(2) { animation-delay: 60ms; }
+  .dc-trace li:nth-child(3) { animation-delay: 120ms; }
+  .dc-trace li:nth-child(4) { animation-delay: 180ms; }
+  .dc-trace li:nth-child(5) { animation-delay: 240ms; }
+  .dc-trace li i { flex-shrink: 0; width: 1.1rem; font-style: normal; font-family: var(--sl-font-mono); color: #23a55a; }
+  .dc-trace code { padding: 0; background: none; font-family: var(--sl-font-mono); font-size: 1em; color: #dbdee1; white-space: nowrap; }
+  .dc-reset { margin-top: 0.5rem; padding: 0; border: 0; background: none; color: #949ba4; font: inherit; font-size: 0.8125rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  @keyframes dc-trace-in { to { opacity: 1; transform: none; } }
+
+  @media (hover: hover) and (pointer: fine) {
+    [data-live] .dc-btn.is-danger[data-press]:hover:not(:disabled) { background: #a12828; }
+    [data-live] .dc-btn.is-primary[data-press]:hover:not(:disabled) { background: #4752c4; }
+    .dc-reset:hover { color: #dbdee1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-live] .dc-btn[data-press] { transition: opacity 200ms ease; }
+    [data-live] .dc-btn[data-press]:active:not(:disabled) { transform: none; }
+    .dc-trace li { transform: none; animation: dc-trace-fade 200ms ease forwards; animation-delay: 0ms; }
+  }
+  @keyframes dc-trace-fade { to { opacity: 1; } }
 </style>

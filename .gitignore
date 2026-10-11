@@ -6,8 +6,6 @@ dist/
 docs/dist/
 docs/.astro/
 
-# Generated docs guide (produced from USAGE.md by docs/scripts/generate.mjs)
-docs/src/content/docs/guide/
 
 # djs-bot deploy state (tracks deployed guilds for auto-prune)
 .djs-bot/

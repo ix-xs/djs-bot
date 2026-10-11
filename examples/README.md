@@ -76,4 +76,4 @@ if (!process.env.DJSBOT_CLI) bot.start();
 The package ships `.d.ts` declarations, so JS editors still give you full
 autocomplete and inline docs - no TypeScript required.
 
-See [`../USAGE.md`](../USAGE.md) for the complete guide.
+See the [documentation](https://ix-xs.github.io/djs-bot/) for the complete guide.

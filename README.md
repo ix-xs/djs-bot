@@ -16,7 +16,7 @@ _Write features, not plumbing._
 
 **[Documentation](https://ix-xs.github.io/djs-bot/)** ·
 [Tutorial](https://ix-xs.github.io/djs-bot/tutorial/what-you-need/) ·
-[API reference](https://ix-xs.github.io/djs-bot/api/overview/) ·
+[API reference](https://ix-xs.github.io/djs-bot/api/exports/) ·
 [Recipes](https://ix-xs.github.io/djs-bot/recipes/moderation/) ·
 [Troubleshooting](https://ix-xs.github.io/djs-bot/help/troubleshooting/)
 
@@ -95,16 +95,16 @@ Everything lives at **[ix-xs.github.io/djs-bot](https://ix-xs.github.io/djs-bot/
 
 | Section | For |
 | --- | --- |
-| [Quick start](https://ix-xs.github.io/djs-bot/getting-started/) | A working bot in five steps |
+| [Quick start](https://ix-xs.github.io/djs-bot/quick-start/) | A working bot in five steps |
 | [Tutorial](https://ix-xs.github.io/djs-bot/tutorial/what-you-need/) | Zero to a deployed bot, no prior experience assumed |
-| [Guides](https://ix-xs.github.io/djs-bot/guide/basics/install-project-layout/) | One topic at a time: commands, components, events, data, ops |
-| [API reference](https://ix-xs.github.io/djs-bot/api/overview/) | Every export, option and error code |
+| [Guides](https://ix-xs.github.io/djs-bot/basics/project-layout/) | One topic at a time: commands, components, events, data, ops |
+| [API reference](https://ix-xs.github.io/djs-bot/api/exports/) | Every export, option and error code |
 | [Recipes](https://ix-xs.github.io/djs-bot/recipes/moderation/) | Complete features to copy: moderation, tickets, role menus, levelling, hosting |
 | [Troubleshooting](https://ix-xs.github.io/djs-bot/help/troubleshooting/) | Symptom, cause, fix |
 | [Glossary](https://ix-xs.github.io/djs-bot/help/glossary/) | Every Discord and framework term in plain language |
 
-The guides are generated from [USAGE.md](./USAGE.md), which is also readable on
-its own if you prefer a single file.
+Each topic has one page. [USAGE.md](./USAGE.md) lists them all, and ships with the
+package.
 
 > Also in this repo: official plugins ([`@ix-xs/djs-bot/plugins`](./src/plugins)),
 > [VS Code snippets](./editors/vscode), and the [docs site](./docs) itself.

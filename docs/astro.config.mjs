@@ -1,7 +1,9 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
-import { CATEGORIES } from "./scripts/generate.mjs";
-import { normalizeBase, remarkBaseLinks } from "./plugins/base-links.mjs";
+import { normalizeBase, remarkBaseLinks, withBase } from "./plugins/base-links.mjs";
+import { rehypeWrapTables } from "./plugins/wrap-tables.mjs";
+import { MOVED } from "./redirects.mjs";
+import { atelierDark, atelierLight } from "./src/styles/code-themes.mjs";
 
 // Where the site is served from. Both are overridable from the environment, so
 // hosting it elsewhere (a custom domain at the root, for instance) is a matter
@@ -17,12 +19,18 @@ import { normalizeBase, remarkBaseLinks } from "./plugins/base-links.mjs";
 const site = process.env.DOCS_SITE || "https://ix-xs.github.io";
 const base = normalizeBase(process.env.DOCS_BASE || "/djs-bot");
 
+/** One section of the sidebar, listing every page of a folder in its own order. */
+const section = (label, directory, collapsed = true) => ({ label, collapsed, autogenerate: { directory } });
+
 // https://starlight.astro.build/reference/configuration/
 export default defineConfig({
   site,
   base: base || "/",
+  // Addresses of the previous structure, each pointing at its new home.
+  redirects: Object.fromEntries(Object.entries(MOVED).map(([from, to]) => [from, withBase(to, base)])),
   markdown: {
     remarkPlugins: [[remarkBaseLinks, { base }]],
+    rehypePlugins: [rehypeWrapTables],
   },
   integrations: [
     starlight({
@@ -35,55 +43,83 @@ export default defineConfig({
       editLink: {
         baseUrl: "https://github.com/ix-xs/djs-bot/edit/main/docs/",
       },
-      customCss: ["./src/styles/discord.css"],
+      head: [
+        // Lets the page paint under the notch; the header pads itself back out.
+        { tag: "meta", attrs: { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" } },
+        // Kept in step with the theme by the theme toggle.
+        { tag: "meta", attrs: { name: "theme-color", content: "#121211" } },
+      ],
+      customCss: [
+        "@fontsource-variable/bricolage-grotesque/opsz.css",
+        "@fontsource/fragment-mono/400.css",
+        "@fontsource/fragment-mono/400-italic.css",
+        "./src/styles/atelier.css",
+      ],
       components: {
-        // Applies the base path to the hero's action links (see the component).
+        Header: "./src/components/Header.astro",
+        ThemeSelect: "./src/components/ThemeSelect.astro",
+        PageTitle: "./src/components/PageTitle.astro",
         Hero: "./src/components/Hero.astro",
+      },
+      expressiveCode: {
+        themes: [atelierDark, atelierLight],
+        styleOverrides: {
+          borderRadius: "6px",
+          borderWidth: "1px",
+          borderColor: "var(--at-line)",
+          codeFontFamily: "var(--sl-font-mono)",
+          codeFontSize: "0.84rem",
+          codeLineHeight: "1.75",
+          codePaddingBlock: "1.25rem",
+          codePaddingInline: "1.25rem",
+          uiFontFamily: "var(--sl-font-mono)",
+          uiFontSize: "0.75rem",
+          frames: {
+            frameBoxShadowCssValue: "none",
+            editorTabBarBackground: "var(--at-surface)",
+            editorTabBarBorderBottomColor: "var(--at-line)",
+            editorActiveTabBackground: "var(--at-surface)",
+            editorActiveTabIndicatorTopColor: "transparent",
+            editorActiveTabIndicatorBottomColor: "var(--at-accent)",
+            terminalBackground: "var(--at-surface)",
+            terminalTitlebarBackground: "var(--at-surface)",
+            terminalTitlebarBorderBottomColor: "var(--at-line)",
+            terminalTitlebarDotsOpacity: "0",
+          },
+        },
       },
       tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
       lastUpdated: false,
+      // One page per topic, grouped by what you are trying to do.
       sidebar: [
         {
-          label: "Start here",
+          label: "Start",
           items: [
             { label: "Introduction", slug: "index" },
-            { label: "Quick start", slug: "getting-started" },
+            { slug: "quick-start" },
+            section("Tutorial", "tutorial"),
           ],
         },
+        section("Basics", "basics", false),
+        section("Commands", "commands"),
+        section("Components", "components"),
+        section("Events", "events"),
+        section("Architecture", "architecture"),
+        section("Data", "data"),
+        section("Messages", "messages"),
+        section("Production", "production"),
+        section("Recipes", "recipes"),
         {
-          // The guided path for newcomers: zero to a deployed bot.
-          label: "Tutorial: build a bot",
-          badge: { text: "Start here", variant: "success" },
-          autogenerate: { directory: "tutorial" },
-        },
-        {
-          // Task-oriented guides, one nested group per category (scripts/generate.mjs).
-          label: "Guides",
+          label: "Reference",
           collapsed: true,
-          items: CATEGORIES.map((category) => ({
-            label: category.label,
-            collapsed: true,
-            autogenerate: { directory: `guide/${category.slug}` },
-          })),
-        },
-        {
-          // Hand-written, exhaustive reference: every export, option and error code.
-          label: "API reference",
-          badge: { text: "Complete", variant: "tip" },
-          collapsed: true,
-          autogenerate: { directory: "api" },
-        },
-        {
-          // Full, copy-pasteable features built from the primitives.
-          label: "Recipes",
-          collapsed: true,
-          autogenerate: { directory: "recipes" },
-        },
-        {
-          // Troubleshooting, FAQ and vocabulary.
-          label: "Help",
-          collapsed: true,
-          autogenerate: { directory: "help" },
+          items: [
+            { slug: "api/exports" },
+            { slug: "api/errors" },
+            { slug: "api/cli" },
+            { slug: "help/troubleshooting" },
+            { slug: "help/faq" },
+            { slug: "help/glossary" },
+          ],
         },
       ],
     }),

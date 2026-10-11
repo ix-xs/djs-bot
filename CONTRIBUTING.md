@@ -36,7 +36,7 @@ So end users interact with just three things: the **CLI** (`npx djs-bot …`), t
 | `npm run live` | Check the framework against the real Discord API (needs a test bot in `.env`) |
 | `npm run playground` | Run the self-checking playground bot |
 | `npm run example` | Run the minimal example bot (needs `DISCORD_TOKEN` in `.env`) |
-| `npm run docs` | Generate docs from `USAGE.md` and serve the site locally |
+| `npm run docs` | Serve the docs site locally |
 | `npm run docs:build` | Build the static docs site into `docs/dist/` |
 
 `npm run docs` / `docs:build` transparently install the docs' own dependencies
@@ -48,15 +48,17 @@ So end users interact with just three things: the **CLI** (`npx djs-bot …`), t
 src/            framework source (published as dist/)
 test/           unit + type-level tests
 examples/       minimal (TS), javascript (CJS), production - reference bots
-docs/           Astro Starlight site; Guide pages generated from USAGE.md
+docs/           Astro Starlight site, one Markdown page per topic
 benchmarks/     tinybench performance suites
 editors/vscode  VS Code snippets + extension manifest
 .github/        CI (test + attw) and docs-deploy workflows
 ```
 
-- **Docs content** lives in `USAGE.md` (single source of truth). The website's
-  Guide is generated from it by `docs/scripts/generate.mjs` - never edit the
-  generated `docs/src/content/docs/guide/` files (they're gitignored).
+- **Docs content** lives in `docs/src/content/docs/`, one page per topic. A fact
+  has one home: link to the page that owns it rather than explaining it twice.
+  `USAGE.md` is only the table of contents shipped with the package; update it
+  when a page is added, renamed or removed (and add the old address to
+  `docs/redirects.mjs`).
 - **Public API** is guarded by type-level tests in `test/types.test-d.ts`; if you
   change typings, update those assertions.
 - **Every export needs a doc comment**, and so does every property a user can

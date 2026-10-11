@@ -23,42 +23,70 @@ const ENTRIES = [
 
 /** Which page documents what a source file declares. */
 const PAGES = {
-  "bot.ts": ["Configuration", "/api/configuration/"],
-  "config.ts": ["Configuration", "/api/configuration/"],
-  "intents.ts": ["Configuration", "/api/configuration/"],
-  "deploy.ts": ["Configuration", "/api/configuration/"],
-  "sharding.ts": ["Configuration", "/api/configuration/"],
-  "messages.ts": ["Configuration", "/api/configuration/"],
-  "constants.ts": ["API overview", "/api/overview/"],
-  "registry.ts": ["API overview", "/api/overview/"],
-  "loader.ts": ["API overview", "/api/overview/"],
-  "context.ts": ["Context", "/api/context/"],
-  "definitions.ts": ["Definitions", "/api/definitions/"],
-  "modal.ts": ["Definitions", "/api/definitions/"],
-  "scheduler.ts": ["Definitions", "/api/definitions/"],
-  "schema.ts": ["Options, params and fields", "/api/options/"],
-  "customId.ts": ["Options, params and fields", "/api/options/"],
-  "guards.ts": ["Guards", "/api/guards/"],
-  "container.ts": ["Services", "/api/services/"],
-  "store.ts": ["Store", "/api/store/"],
-  "i18n.ts": ["i18n", "/api/i18n/"],
-  "flags.ts": ["Feature flags", "/api/flags/"],
-  "audit.ts": ["Audit", "/api/audit/"],
-  "logger.ts": ["Logger", "/api/logger/"],
-  "health.ts": ["Health", "/api/health/"],
-  "resilience.ts": ["Resilience", "/api/resilience/"],
-  "cache.ts": ["Cache", "/api/cache/"],
-  "ui.ts": ["UI", "/api/ui/"],
-  "pagination.ts": ["UI", "/api/ui/"],
-  "format.ts": ["Formatting", "/api/formatting/"],
-  "assets.ts": ["Formatting", "/api/formatting/"],
-  "voice.ts": ["Formatting", "/api/formatting/"],
+  "bot.ts": ["Configuration", "/basics/configuration/"],
+  "config.ts": ["Configuration", "/basics/configuration/"],
+  "constants.ts": ["Project layout", "/basics/project-layout/"],
+  "registry.ts": ["Project layout", "/basics/project-layout/"],
+  "loader.ts": ["Project layout", "/basics/project-layout/"],
+  "ids.ts": ["The ctx object", "/basics/context/"],
+  "context.ts": ["The ctx object", "/basics/context/"],
+  "messages.ts": ["Wording and theme", "/basics/wording-and-theme/"],
+  "definitions.ts": ["Slash commands", "/commands/slash-commands/"],
+  "validate.ts": ["Slash commands", "/commands/slash-commands/"],
+  "schema.ts": ["Options and autocomplete", "/commands/options/"],
+  "guards.ts": ["Guards", "/commands/guards/"],
+  "customId.ts": ["Buttons", "/components/buttons/"],
+  "modal.ts": ["Modals", "/components/modals/"],
+  "ui.ts": ["Components V2", "/components/components-v2/"],
+  "pagination.ts": ["Pagination and confirmation", "/components/pagination/"],
+  "intents.ts": ["Events and intents", "/events/events-and-intents/"],
+  "scheduler.ts": ["Scheduled jobs", "/events/jobs/"],
+  "container.ts": ["Services", "/architecture/services/"],
+  "index.ts": ["Plugins and hooks", "/architecture/plugins/"],
+  "store.ts": ["Store", "/data/store/"],
+  "cache.ts": ["Cache and entity resolution", "/data/cache/"],
+  "i18n.ts": ["Internationalisation", "/data/i18n/"],
+  "flags.ts": ["Feature flags", "/data/flags/"],
+  "audit.ts": ["Audit trail", "/data/audit/"],
+  "format.ts": ["Mentions, timestamps and safe pings", "/messages/formatting/"],
+  "assets.ts": ["Assets and voice", "/messages/assets-and-voice/"],
+  "voice.ts": ["Assets and voice", "/messages/assets-and-voice/"],
+  "deploy.ts": ["Deploying commands", "/production/deploying/"],
+  "sharding.ts": ["Sharding", "/production/sharding/"],
+  "health.ts": ["Health and metrics", "/production/health/"],
+  "resilience.ts": ["Resilience", "/production/resilience/"],
+  "logger.ts": ["Logging", "/production/logging/"],
+  "testing.ts": ["Testing", "/production/testing/"],
   "errors.ts": ["Errors", "/api/errors/"],
-  "validate.ts": ["Errors", "/api/errors/"],
-  "ids.ts": ["API overview", "/api/overview/"],
-  "index.ts": ["Plugins", "/api/plugins/"],
-  "testing.ts": ["Testing", "/api/testing/"],
 };
+
+/** Symbols of a shared source file that are documented on a page of their own. */
+const BY_NAME = [
+  [/^(subcommand|Subcommand)/, ["Subcommands", "/commands/subcommands/"]],
+  [/(UserCommand|MessageCommand|InstallContext|InteractionContext)/, ["Context menus", "/commands/context-menus/"]],
+  [/^(defineButton|Button)/, ["Buttons", "/components/buttons/"]],
+  [/Select/, ["Select menus", "/components/select-menus/"]],
+  [/^(defineModal|Modal|field|Field|InferFields)/, ["Modals", "/components/modals/"]],
+  [/^(ParamCodec|ParamMap|InferParams|p|oneOf)$/, ["Buttons", "/components/buttons/"]],
+  [/^(defineEvent|Event)/, ["Events and intents", "/events/events-and-intents/"]],
+  [/^(defineTrigger|Trigger)/, ["Message triggers", "/events/triggers/"]],
+  [/^(defineJob|Job)/, ["Scheduled jobs", "/events/jobs/"]],
+  [/^(defineService|Service)/, ["Services", "/architecture/services/"]],
+  [/^(definePlugin|Plugin|HookRegistrar|MiddlewareFn)/, ["Plugins and hooks", "/architecture/plugins/"]],
+  [/^(defineFeature|Feature)/, ["Features", "/architecture/features/"]],
+  [/^(Autocomplete|toAutocompleteChoices|NormalizedChoices)/, ["Options and autocomplete", "/commands/options/"]],
+  [/^(DeferOption|ResolvedDefer|resolveDefer)/, ["Automatic deferral", "/basics/automatic-deferral/"]],
+  [/^(BotError|ERROR_CATALOGUE|ErrorCode)/, ["Errors", "/api/errors/"]],
+  [/^(env|loadEnvFile)$/, ["Configuration", "/basics/configuration/"]],
+  [/^(Theme|DEFAULT_THEME)$/, ["Wording and theme", "/basics/wording-and-theme/"]],
+];
+
+function pageFor(name, file) {
+  if (file === "definitions.ts" || file === "schema.ts" || file === "context.ts" || file === "config.ts" || file === "messages.ts" || file === "errors.ts") {
+    for (const [pattern, page] of BY_NAME) if (pattern.test(name)) return page;
+  }
+  return PAGES[file];
+}
 
 const KINDS = [
   ["function", "Functions"],
@@ -96,7 +124,7 @@ export function generate() {
     'title: "All exports"',
     'description: "Every function, object, class and type the package exports, with what it is for and where it is documented."',
     "sidebar:",
-    "  order: 22",
+    "  order: 1",
     "---",
     "",
     "<!-- Generated by docs/scripts/api-index.mjs from the source. Do not edit by hand: run `npm run docs:api`. -->",
@@ -129,7 +157,7 @@ export function generate() {
         kind = checker.getTypeOfSymbolAtLocation(symbol, decl).getCallSignatures().length ? "function" : "object";
       }
       const doc = ts.displayPartsToString(symbol.getDocumentationComment(checker));
-      const page = PAGES[path.basename(decl.getSourceFile().fileName)];
+      const page = pageFor(exported.name, path.basename(decl.getSourceFile().fileName));
       if (!page) throw new Error(`No page mapped for ${decl.getSourceFile().fileName} (export ${exported.name})`);
       if (!doc.trim()) throw new Error(`Export ${exported.name} has no doc comment`);
       groups.get(kind).push({ name: exported.name, summary: summarise(doc), page });

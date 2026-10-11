@@ -8,6 +8,6 @@
 
 - [ ] `npm run check` passes (typecheck + type-tests + build + unit tests)
 - [ ] Added/updated tests for the change
-- [ ] Updated `USAGE.md` (the docs site is generated from it) if behaviour changed
+- [ ] Updated the matching page in `docs/src/content/docs/` if behaviour changed
 - [ ] Added a `CHANGELOG.md` entry under the unreleased/next version
 - [ ] No em dashes in new text (repo style)

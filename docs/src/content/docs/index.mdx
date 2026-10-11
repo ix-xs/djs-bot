@@ -3,177 +3,118 @@ title: djs-bot
 description: A TypeScript-first, production-ready framework for Discord bots built on discord.js.
 template: splash
 hero:
-  tagline: Write features, not plumbing. Your bot is production-ready on day one - and you can always read exactly what the framework does.
+  title: Write features, <em>not plumbing.</em>
+  tagline: djs-bot is a TypeScript-first framework on top of discord.js. Typed commands, typed buttons and forms, intents and deferral handled for you, a store, jobs and a CLI. Ready for production on day one, with nothing hidden.
   actions:
+    - text: Quick start
+      link: /quick-start/
+      variant: primary
     - text: Build your first bot
       link: /tutorial/what-you-need/
-      icon: rocket
-      variant: primary
-    - text: Browse the guide
-      link: /guide/basics/install-project-layout/
-      icon: open-book
-      variant: minimal
-    - text: GitHub
-      link: https://github.com/ix-xs/djs-bot
-      icon: github
-      variant: minimal
+      variant: secondary
 ---
 
-import { Card, CardGrid, LinkCard, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
 import DiscordMessage from '../../components/DiscordMessage.astro';
 import DiscordEmbed from '../../components/DiscordEmbed.astro';
-import DiscordButtons from '../../components/DiscordButtons.astro';
 
-## From this, to this
+<div class="at-landing not-content">
 
-<Tabs>
-  <TabItem label="A command">
-    ```ts
-    import { defineCommand, s } from "@ix-xs/djs-bot";
+<section class="at-section">
+  <header><span>01</span><h2>One file, one feature</h2></header>
+  <p>A file exports a definition. The framework finds it, registers it with Discord, routes the interaction to it and hands you typed values. There is no registration code to write and nothing to keep in sync.</p>
 
-    export default defineCommand({
-      name: "profile",
-      description: "Show a player profile",
-      options: {
-        user: s.user({ description: "Whose profile", required: true }),
-      },
-      run: (ctx) => ctx.reply.success(`Profile of ${ctx.options.user}`),
-      //                                   ctx.options.user is a User, never undefined
-    });
-    ```
-    <DiscordMessage author="djs-bot">
-      <DiscordEmbed color="#23a55a" description="✅ Profile of @Alice" />
-    </DiscordMessage>
-  </TabItem>
-  <TabItem label="A button">
-    ```ts
-    import { defineButton, p, ButtonStyle } from "@ix-xs/djs-bot";
+  <Tabs>
+    <TabItem label="A command">
+      ```ts title="features/profile/profile.command.ts"
+      import { defineCommand, s } from "@ix-xs/djs-bot";
 
-    export const CloseTicket = defineButton({
-      id: "ticket:close",
-      params: { ticketId: p.string, ownerId: p.string },
-      run: async (ctx) => {
-        // ctx.params is decoded and fully typed - no split("_")
-        if (ctx.user.id !== ctx.params.ownerId) return void ctx.reply.error("Not your ticket.");
-        await ctx.update.disable();
-      },
-    });
-    ```
-    <DiscordMessage author="djs-bot" content="🎫 <strong>Printer is on fire</strong>">
-      <DiscordButtons buttons={[{ label: "Close ticket", style: "danger", emoji: "🔒" }]} />
-    </DiscordMessage>
-  </TabItem>
-  <TabItem label="An event">
-    ```ts
-    import { defineEvent } from "@ix-xs/djs-bot";
+      export default defineCommand({
+        name: "profile",
+        description: "Show a player profile",
+        options: {
+          user: s.user({ description: "Whose profile", required: true }),
+        },
+        // ctx.options.user is a User, never undefined
+        run: (ctx) => ctx.reply.success(`Profile of ${ctx.options.user}`),
+      });
+      ```
+      <DiscordMessage caption="Result in Discord" used={{ user: "Jo", command: "profile" }}>
+        <DiscordEmbed color="#23a55a" description="✅ Profile of @Aleksandra" />
+      </DiscordMessage>
+    </TabItem>
+    <TabItem label="An event">
+      ```ts title="features/welcome/welcome.event.ts"
+      import { defineEvent } from "@ix-xs/djs-bot";
 
-    export default defineEvent("guildMemberAdd", async (member, ctx) => {
-      // The GuildMembers intent is enabled automatically because of this line
-      await member.guild.systemChannel?.send(`Welcome ${member}! 👋`);
-    });
-    ```
-    <DiscordMessage author="djs-bot" content="Welcome @NewUser! 👋" />
-  </TabItem>
-  <TabItem label="A form">
-    ```ts
-    import { defineModal, field } from "@ix-xs/djs-bot";
+      // The GuildMembers intent is switched on because this listener exists.
+      export default defineEvent("guildMemberAdd", async (member) => {
+        await member.guild.systemChannel?.send(`Welcome ${member}!`);
+      });
+      ```
+      <DiscordMessage caption="Result in Discord" content="Welcome @Jo!" />
+    </TabItem>
+    <TabItem label="A form">
+      ```ts title="features/report/report.modal.ts"
+      import { defineModal, field } from "@ix-xs/djs-bot";
 
-    export const Report = defineModal({
-      id: "report",
-      title: "Report a problem",
-      fields: {
-        kind: field.select({ label: "Kind", required: true, options: [{ label: "Bug", value: "bug" }] }),
-        details: field.paragraph({ label: "Details", maxLength: 1000 }),
-        proof: field.files({ label: "Screenshots", maxValues: 3 }),
-        urgent: field.checkbox({ label: "This is urgent" }),
-      },
-      // ctx.fields: { kind: string[]; details: string; proof: Collection<...>; urgent: boolean }
-      run: (ctx) => ctx.reply.success(`Reported (${ctx.fields.proof.size} file(s)).`),
-    });
+      export const Report = defineModal({
+        id: "report",
+        title: "Report a problem",
+        fields: {
+          kind: field.select({ label: "Kind", required: true, options: [{ label: "Bug", value: "bug" }] }),
+          details: field.paragraph({ label: "Details", maxLength: 1000 }),
+          proof: field.files({ label: "Screenshots", maxValues: 3 }),
+          urgent: field.checkbox({ label: "This is urgent" }),
+        },
+        // ctx.fields: { kind: string[]; details: string; proof: Collection<...>; urgent: boolean }
+        run: (ctx) => ctx.reply.success(`Reported, with ${ctx.fields.proof.size} file(s).`),
+      });
+      ```
+      <DiscordMessage caption="Result in Discord">
+        <DiscordEmbed color="#23a55a" description="✅ Reported, with 2 file(s)." />
+      </DiscordMessage>
+    </TabItem>
+    <TabItem label="A job">
+      ```ts title="features/stats/daily-stats.job.ts"
+      import { defineJob } from "@ix-xs/djs-bot";
 
-    // from any command or button:  await ctx.showModal(Report);
-    ```
-    <DiscordMessage author="djs-bot">
-      <DiscordEmbed color="#23a55a" description="✅ Reported (2 file(s))." />
-    </DiscordMessage>
-  </TabItem>
-</Tabs>
+      export default defineJob({
+        name: "daily-stats",
+        schedule: "@daily",
+        run: async (ctx) => {
+          const guilds = ctx.client.guilds.cache.size;
+          await ctx.services.store.set("stats:guilds", guilds);
+          ctx.logger.info({ guilds }, "daily stats saved");
+        },
+      });
+      ```
+    </TabItem>
+  </Tabs>
+</section>
 
-## Why djs-bot
+<section class="at-section">
+  <header><span>02</span><h2>What you stop writing</h2></header>
+  <ul class="at-points">
+    <li><h3>Casts and null checks</h3><p>Options, customId params, modal fields, services and config are typed from their declaration. <code>required: true</code> makes the value non-optional.</p></li>
+    <li><h3>Registration and intents</h3><p>Commands are diffed and deployed for you, and the gateway intents are derived from the events you listen to.</p></li>
+    <li><h3>"The application did not respond"</h3><p>Turn on automatic deferral once. A slow handler is acknowledged for you, and it never collides with your own reply.</p></li>
+    <li><h3>String parsing in buttons</h3><p>A button carries typed data in its customId. The click comes back to your handler decoded, with no <code>split("_")</code>.</p></li>
+    <li><h3>The production checklist</h3><p>Error boundary, graceful shutdown, structured logs, sharding, health checks, metrics, rate limits and a store with atomic counters are built in.</p></li>
+    <li><h3>A test server for every change</h3><p>Handlers are plain functions. The harness runs a command, a button or a form and captures the reply, with no token and no network.</p></li>
+  </ul>
+</section>
 
-<CardGrid stagger>
-  <Card title="Type-safe end to end" icon="approve-check">
-    Typed slash options, typed `customId` params, typed services and config. `required: true` makes an option non-optional - no casts, no `any`.
-  </Card>
-  <Card title="No magic" icon="setting">
-    Files export `define*()` objects; nothing registers by importing. `djs-bot explain` shows exactly what's loaded and why.
-  </Card>
-  <Card title="Production-ready" icon="rocket">
-    Error boundaries, graceful shutdown, structured logs, sharding, health checks and Prometheus metrics, persistence with atomic counters, rate limiting - built in.
-  </Card>
-  <Card title="Batteries included" icon="puzzle">
-    Subcommands, context menus, autocomplete, native selects, modern modals, triggers, pagination, `confirm()`, polls, presence, assets, voice - and official plugins.
-  </Card>
-  <Card title="Never 'interaction failed'" icon="seti:clock">
-    Turn on automatic deferral once and slow handlers are acknowledged for you, without ever colliding with your own reply.
-  </Card>
-  <Card title="Speaks your language" icon="translate">
-    Localized command names, per-user translations with `ctx.t()`, and every sentence the framework itself says can be reworded or translated.
-  </Card>
-</CardGrid>
+<section class="at-section">
+  <header><span>03</span><h2>Where to go next</h2></header>
+  <ul class="at-paths">
+    <li><a href="/tutorial/what-you-need/"><span>01</span><div><strong>Tutorial</strong><small>From nothing to a bot that is online, step by step. No prior experience assumed.</small></div></a></li>
+    <li><a href="/quick-start/"><span>02</span><div><strong>Quick start</strong><small>Install, scaffold and run, in five minutes, if you already know Node.</small></div></a></li>
+    <li><a href="/commands/slash-commands/"><span>03</span><div><strong>Commands</strong><small>Slash commands, typed options, autocomplete, subcommands, guards.</small></div></a></li>
+    <li><a href="/components/buttons/"><span>04</span><div><strong>Components</strong><small>Buttons, select menus, modals, Components V2, pagination.</small></div></a></li>
+    <li><a href="/recipes/moderation/"><span>05</span><div><strong>Recipes</strong><small>Complete features to copy: moderation, tickets, role menu, levelling, hosting.</small></div></a></li>
+    <li><a href="/api/exports/"><span>06</span><div><strong>Reference</strong><small>Every export, every error code, the CLI, troubleshooting.</small></div></a></li>
+  </ul>
+</section>
 
-## Get started in 60 seconds
-
-```bash
-npm install @ix-xs/djs-bot discord.js
-npx djs-bot init      # scaffold a working starter
-npx djs-bot dev       # watch + instant deploy to your test server
-```
-
-<Aside type="tip" title="Never built a bot before?">
-The [tutorial](/tutorial/what-you-need/) walks you through everything -
-creating the app on Discord, getting your token, inviting the bot, your first
-command, buttons, and putting it online. No prior experience assumed.
-</Aside>
-
-## Explore
-
-<CardGrid>
-  <LinkCard title="Tutorial" description="Zero to a deployed bot, step by step." href="/tutorial/what-you-need/" />
-  <LinkCard title="Commands & options" description="Typed options, subcommands, context menus, guards." href="/guide/commands/slash-commands-typed-options/" />
-  <LinkCard title="Components" description="Typed buttons, selects, modals, Components V2, pagination." href="/guide/components/typed-buttons-the-customid-router/" />
-  <LinkCard title="Architecture" description="Services & DI, jobs, plugins, reusable features." href="/guide/architecture/services-dependency-injection/" />
-  <LinkCard title="Data & state" description="Cache, i18n, key-value persistence, feature flags." href="/guide/data/persistence-key-value-stores/" />
-  <LinkCard title="Production" description="Deploy, CLI, sharding, resilience, audit, health checks." href="/guide/ops/deploying-global-specific-guilds/" />
-</CardGrid>
-
-## Complete API reference
-
-Every export, every option, every error code - written by hand, not generated.
-
-<CardGrid>
-  <LinkCard title="API overview" description="The full export map: what exists and where it is documented." href="/api/overview/" />
-  <LinkCard title="Configuration & env" description="defineBot, every BotConfig field, env() and env.optional()." href="/api/configuration/" />
-  <LinkCard title="The ctx object" description="reply, update, options, params, fields, services, logger, t, audit." href="/api/context/" />
-  <LinkCard title="Plugins & hooks" description="Official plugins, every lifecycle hook, writing your own." href="/api/plugins/" />
-  <LinkCard title="Store, i18n, flags, audit" description="The runtime services, method by method." href="/api/store/" />
-  <LinkCard title="Error codes" description="Every DJSBOT_Exxx: what causes it, how to fix it." href="/api/errors/" />
-</CardGrid>
-
-## Recipes: real features, copy-pasteable
-
-<CardGrid>
-  <LinkCard title="A moderation bot" description="Ban, kick, timeout, warn and a paginated warning history." href="/recipes/moderation/" />
-  <LinkCard title="A ticket system" description="Panel button, modal, private channel, close and archive." href="/recipes/ticket-system/" />
-  <LinkCard title="A role menu" description="Self-assign roles with a select menu, plus a native role picker." href="/recipes/role-menu/" />
-  <LinkCard title="Levelling & leaderboard" description="XP from messages, a rank card and a cached leaderboard." href="/recipes/levelling/" />
-  <LinkCard title="Hosting in production" description="systemd, pm2, Docker, CI deploys, health checks and backups." href="/recipes/hosting/" />
-</CardGrid>
-
-## Stuck on something?
-
-<CardGrid>
-  <LinkCard title="Troubleshooting" description="Every symptom you will actually hit, with the fix." href="/help/troubleshooting/" />
-  <LinkCard title="FAQ" description="Short answers to the questions that come up first." href="/help/faq/" />
-  <LinkCard title="Glossary" description="Every Discord and framework term, in plain language." href="/help/glossary/" />
-</CardGrid>
+</div>

@@ -2,6 +2,3 @@
 dist/
 .astro/
 node_modules/
-
-# Generated from ../USAGE.md by scripts/generate.mjs
-src/content/docs/guide/

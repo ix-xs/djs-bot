@@ -112,7 +112,7 @@ pm2 logs mybot
 
 :::caution
 Do **not** set `instances: "max"` or cluster mode. Two processes on one token
-means every command runs twice. Use [sharding](/guide/ops/sharding-scaling/)
+means every command runs twice. Use [sharding](/production/sharding/)
 instead when you outgrow one process.
 :::
 

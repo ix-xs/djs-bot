@@ -3,6 +3,25 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+### Documentation
+
+- **One page per topic.** The site documented everything twice, once as a guide
+  and once as a reference. Both are merged: 58 pages instead of 82, grouped by
+  what you are trying to do (Basics, Commands, Components, Events,
+  Architecture, Data, Messages, Production). Every page has the same shape: a
+  first example, one section per need, a reference, limits and errors.
+- Every old address redirects to its new page. `/api/errors/` did not move.
+- The pages were checked against the source while merging, which corrected a
+  number of statements (how `.env` is read, who calls `bot.start()`, the
+  defaults of `retry()`, when `DJSBOT_E041` is raised, and more).
+- **A new design**: graphite and gold, editorial type, the section a page
+  belongs to above its title, numbered sections, tables that scroll on a
+  phone instead of breaking words, and motion only where it explains something.
+- `USAGE.md` is now the table of contents of the site rather than a second
+  copy of it.
+
 ## 1.1.0
 
 A large, backwards-compatible release: the new modal components of discord.js
