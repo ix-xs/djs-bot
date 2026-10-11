@@ -31,6 +31,7 @@ export interface AuditEntry {
 
 /** A destination audit entries are written to. */
 export interface AuditSink {
+  /** Stores one entry. May be async. */
   record(entry: AuditEntry): void | Promise<void>;
   /** Optional read support, enabling {@link AuditLog.query}. */
   query?(): AuditEntry[] | Promise<AuditEntry[]>;
@@ -38,8 +39,11 @@ export interface AuditSink {
 
 /** Filter for {@link AuditLog.query}. */
 export interface AuditFilter {
+  /** Only entries with this exact action name. */
   action?: string;
+  /** Only entries triggered by this user id. */
   actorId?: string;
+  /** Only entries recorded in this guild. */
   guildId?: string;
   /** Only entries at/after this Unix ms. */
   since?: number;
@@ -80,7 +84,15 @@ export function memoryAuditSink(max = 5000): AuditSink {
 }
 
 /** A sink that persists entries in a {@link KVStore} (one key per entry). */
-export function storeAuditSink(store: KVStore, options: { namespace?: string; ttl?: number | string } = {}): AuditSink {
+export function storeAuditSink(
+  store: KVStore,
+  options: {
+    /** The key prefix entries are stored under. Default `"audit"`. */
+    namespace?: string;
+    /** How long an entry is kept, e.g. `"90d"`. Default: forever. */
+    ttl?: number | string;
+  } = {},
+): AuditSink {
   const ns = upgradeStore(store).namespace<AuditEntry>(options.namespace ?? "audit");
   return {
     async record(entry) {

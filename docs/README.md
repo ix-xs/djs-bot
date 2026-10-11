@@ -7,10 +7,16 @@ An [Astro Starlight](https://starlight.astro.build) site for `@ix-xs/djs-bot`.
 | Tutorial | `src/content/docs/tutorial/*.mdx`, written by hand | yes |
 | Guides | generated from [`USAGE.md`](../USAGE.md) into `src/content/docs/guide/` | no (gitignored) |
 | API reference | `src/content/docs/api/*.md`, written by hand | yes |
+| All exports | `src/content/docs/api/exports.md`, generated from the source code | yes |
 | Recipes, Help | `src/content/docs/recipes/`, `src/content/docs/help/` | yes |
 
 To change a guide, edit `USAGE.md`: the pages are rebuilt from it by
 [`scripts/generate.mjs`](./scripts/generate.mjs) on every `dev` and `build`.
+
+The "All exports" page lists every symbol with the first sentence of its doc
+comment. After adding or documenting an export, run `npm run docs:api` from the
+repository root and commit the result; the test suite fails when the page is
+out of date.
 
 ## Develop
 

@@ -11,74 +11,92 @@ import { CUSTOM_ID_MAX_LENGTH, DOCS_BASE_URL } from "./constants.js";
 
 /** Catalogue of framework error codes and their default messages/hints. */
 export const ERROR_CATALOGUE = {
+  /** Missing bot token. */
   DJSBOT_E001: {
     title: "Missing bot token",
     hint: "Provide `token` in defineBot() or set the DISCORD_TOKEN env var.",
   },
+  /** Missing application client id. */
   DJSBOT_E002: {
     title: "Missing application client id",
     hint: "Set `clientId` in defineBot() or the DISCORD_CLIENT_ID env var - required to deploy commands.",
   },
+  /** Duplicate command name. */
   DJSBOT_E010: {
     title: "Duplicate command name",
     hint: "Two commands registered under the same name. Command names must be unique.",
   },
+  /** Duplicate component id. */
   DJSBOT_E011: {
     title: "Duplicate component id",
     hint: "Two components share the same id. Button/select/modal ids must be unique per type.",
   },
+  /** Invalid command or option name. */
   DJSBOT_E012: {
     title: "Invalid command or option name",
     hint: "Slash command, subcommand, group and option names must be 1-32 chars, lowercase, and use only letters, numbers, - or _ (no spaces).",
   },
+  /** Invalid component id. */
   DJSBOT_E013: {
     title: "Invalid component id",
     hint: "Button/select/modal ids must be non-empty and must not contain '$' (reserved as the customId separator). Use ':' or '-' to namespace.",
   },
+  /** Invalid modal definition. */
   DJSBOT_E014: {
     title: "Invalid modal definition",
     hint: "A modal holds 1 to 5 components. A select takes 1-25 options, a radio group 2-10, a checkbox group 1-10.",
   },
+  /** Invalid command definition. */
   DJSBOT_E015: {
     title: "Invalid command definition",
     hint: "Discord limits: descriptions of 1-100 characters, 25 options and 25 choices per command, 8000 characters in total, and 100 slash commands (15 of each context-menu type) per scope.",
   },
+  /** customId too long. */
   DJSBOT_E020: {
     title: "customId too long",
     hint: `Encoded customId exceeds Discord's ${CUSTOM_ID_MAX_LENGTH}-char limit. Store the payload out-of-band and keep only a short key.`,
   },
+  /** Invalid customId payload. */
   DJSBOT_E021: {
     title: "Invalid customId payload",
     hint: "The component payload could not be decoded. It may have been produced by an incompatible version.",
   },
+  /** Service resolution failed. */
   DJSBOT_E030: {
     title: "Service resolution failed",
     hint: "A service dependency is missing or forms a cycle. Check the `deps` arrays.",
   },
+  /** Unknown service. */
   DJSBOT_E031: {
     title: "Unknown service",
     hint: "Requested a service that was never registered.",
   },
+  /** Feature contract not satisfied. */
   DJSBOT_E040: {
     title: "Feature contract not satisfied",
     hint: "A feature/plugin `requires` a capability that nothing `provides`.",
   },
+  /** Capability conflict. */
   DJSBOT_E041: {
     title: "Capability conflict",
     hint: "Two plugins provide the same capability without an explicit override.",
   },
+  /** Invalid option value. */
   DJSBOT_E050: {
     title: "Invalid option value",
     hint: "A command option failed runtime validation at the Discord boundary.",
   },
+  /** Loader error. */
   DJSBOT_E060: {
     title: "Loader error",
     hint: "A discovered file could not be imported or exported no valid definitions.",
   },
+  /** Privileged intent required. */
   DJSBOT_E070: {
     title: "Privileged intent required",
     hint: "An event needs a privileged intent. Enable it in the Developer Portal, or set intents:'auto'.",
   },
+  /** Invalid job schedule. */
   DJSBOT_E080: {
     title: "Invalid job schedule",
     hint: 'Use a duration ("30s", "5m", "1h"), a 5-field cron expression ("0 3 * * *") or a macro ("@daily").',

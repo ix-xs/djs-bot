@@ -91,7 +91,10 @@ export function createRateLimiter(options: RateLimiterOptions): RateLimiter {
  * @example guards: [rateLimit({ limit: 5, window: "1m" })]
  */
 export function rateLimit(
-  options: RateLimiterOptions & { scope?: CooldownScope },
+  options: RateLimiterOptions & {
+    /** What shares one budget: each user, each guild, each channel or everyone. Default `"user"`. */
+    scope?: CooldownScope;
+  },
 ): Guard {
   const limiter = new RateLimiter(options);
   const scope = options.scope ?? "user";

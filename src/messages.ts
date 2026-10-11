@@ -15,9 +15,15 @@ export interface MessageVars {
   /** A handler threw and nothing handled the error. */
   error: Record<string, never>;
   /** A slash command reached the bot that is not registered. */
-  unknownCommand: { name: string };
+  unknownCommand: {
+    /** The name of the command that was received. */
+    name: string;
+  };
   /** A subcommand reached the bot that is not registered. */
-  unknownSubcommand: { name: string };
+  unknownSubcommand: {
+    /** The subcommand that was received, with its group if any. */
+    name: string;
+  };
   /** A guard failed without giving a reason. */
   guardDenied: Record<string, never>;
   /** `inGuild()` failed. */
@@ -25,9 +31,15 @@ export interface MessageVars {
   /** `dmOnly()` failed. */
   dmOnly: Record<string, never>;
   /** `hasPermission()` failed. `permissions` is a readable, comma-separated list. */
-  missingPermissions: { permissions: string };
+  missingPermissions: {
+    /** The missing permissions, readable and comma-separated. */
+    permissions: string;
+  };
   /** `botHasPermission()` failed. */
-  botMissingPermissions: { permissions: string };
+  botMissingPermissions: {
+    /** The permissions the bot lacks, readable and comma-separated. */
+    permissions: string;
+  };
   /** `inChannel()` failed. */
   wrongChannel: Record<string, never>;
   /** `ownerOnly()` failed. */
@@ -37,13 +49,25 @@ export interface MessageVars {
   /** `hasRole()` failed. */
   missingRole: Record<string, never>;
   /** `cooldown()` failed. `seconds` is the remaining wait, rounded up. */
-  cooldown: { seconds: number };
+  cooldown: {
+    /** The remaining wait, in whole seconds. */
+    seconds: number;
+  };
   /** `rateLimit()` failed. */
-  rateLimited: { seconds: number };
+  rateLimited: {
+    /** The remaining wait, in whole seconds. */
+    seconds: number;
+  };
   /** The `antiSpam` plugin refused an interaction. */
-  slowDown: { seconds: number };
+  slowDown: {
+    /** The remaining wait, in whole seconds. */
+    seconds: number;
+  };
   /** `featureEnabled()` failed. */
-  featureDisabled: { feature: string };
+  featureDisabled: {
+    /** The name of the flag that is off. */
+    feature: string;
+  };
   /** Label of the confirm button shown by `confirm()`. */
   confirm: Record<string, never>;
   /** Label of the cancel button shown by `confirm()`. */

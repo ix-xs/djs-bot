@@ -355,8 +355,9 @@ export const isPremium = guard("isPremium", async (ctx) =>
 // guards: [inGuild(), hasPermission("ManageGuild"), cooldown("1m", { scope: "guild" }), isPremium]
 ```
 
-Built-ins: `inGuild`, `dmOnly`, `hasPermission`, `botHasPermission`, `inChannel`,
-`ownerOnly`, `cooldown`.
+Built-ins: `inGuild`, `dmOnly`, `hasPermission`, `botHasPermission`, `hasRole`,
+`inChannel`, `ownerOnly`, `guildOwnerOnly`, `cooldown`, `rateLimit`,
+`featureEnabled`, and `anyOf` / `not` to combine them.
 
 ## Services & dependency injection
 
@@ -379,7 +380,7 @@ export const Tickets = defineService("tickets", {
 // Type ctx.services end to end by augmenting ServiceMap:
 declare module "@ix-xs/djs-bot" {
   interface ServiceMap {
-    db: Db;
+    db: ReturnType<typeof createPool>;
     tickets: TicketsService;
   }
 }

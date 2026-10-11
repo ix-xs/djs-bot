@@ -13,7 +13,9 @@ import { messageFor } from "./messages.js";
 
 /** A scope for reading/writing a flag. */
 export interface FlagScope {
+  /** The guild whose own setting is used; without one, the global value applies. */
   guildId?: string | null;
+  /** Reserved. Flags currently resolve per guild, then globally. */
   userId?: string;
 }
 

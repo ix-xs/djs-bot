@@ -14,14 +14,26 @@ Everything below is exported from the package root:
 import { defineBot, defineCommand, s, guard /* … */ } from "@ix-xs/djs-bot";
 ```
 
-Only the official plugins live on a subpath:
+Two things live on a subpath, the official plugins and the test harness:
 
 ```ts
 import { antiSpam, commandLogger } from "@ix-xs/djs-bot/plugins";
+import { createHarness } from "@ix-xs/djs-bot/testing";
 ```
 
 There is no default export, no side-effectful import and no global state - every
 symbol below is a plain function, class or type.
+
+This page groups the exports by what you do with them. For the exhaustive
+list, every type included, see [All exports](/api/exports/).
+
+:::tip[Your editor knows all of this]
+Every export, every option and every `ctx` property carries a description:
+hover a name, or press <kbd>Ctrl</kbd> + <kbd>Space</kbd> inside `defineCommand({ })`,
+`s.string({ })` or after `ctx.` to list what is available. The repository also
+ships [VS Code snippets](https://github.com/ix-xs/djs-bot/tree/main/editors/vscode)
+(`dcommand`, `dauto`, `dmodal`, `dform`, `dtest`...) that scaffold each building block.
+:::
 
 ## Entry points
 

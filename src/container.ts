@@ -18,6 +18,7 @@ import type { FeatureFlags } from "./flags.js";
  * @typeParam T The shape the factory produces.
  */
 export interface ServiceDefinition<T = unknown> {
+  /** Marks the object as a service for the loader. */
   readonly kind: "service";
   /** Unique token used to resolve and inject the service. */
   readonly name: string;

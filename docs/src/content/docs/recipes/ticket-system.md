@@ -228,7 +228,10 @@ export default defineCommand({
       description: "Post the ticket panel in this channel",
       guards: [hasPermission(PermissionFlagsBits.ManageGuild)],
       async run(ctx) {
-        await ctx.channel!.send({
+        const channel = ctx.channel;
+        if (!channel?.isSendable()) return ctx.reply.error("I cannot post in this channel.");
+
+        await channel.send({
           embeds: [
             new EmbedBuilder()
               .setTitle("Need help?")

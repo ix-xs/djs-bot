@@ -14,6 +14,7 @@ import { messageFor } from "./messages.js";
 
 /** The outcome of a guard check. */
 export interface GuardResult {
+  /** Whether the handler may run. */
   readonly ok: boolean;
   /** User-facing explanation when `ok` is false. */
   readonly reason?: string;
@@ -24,8 +25,11 @@ export type GuardFn = (ctx: BaseContext) => GuardResult | Promise<GuardResult>;
 
 /** A named, composable precondition. */
 export interface Guard {
+  /** Marks the object as a guard. */
   readonly kind: "guard";
+  /** The guard's name, shown in logs and in test results. */
   readonly name: string;
+  /** The check itself. */
   readonly run: GuardFn;
 }
 
@@ -201,7 +205,13 @@ const SWEEP_EVERY = 1000;
  * @param options  `scope` selects what to rate-limit by (default `"user"`).
  * @example guards: [cooldown("10s"), cooldown("1m", { scope: "guild" })]
  */
-export function cooldown(duration: string | number, options: { scope?: CooldownScope } = {}): Guard {
+export function cooldown(
+  duration: string | number,
+  options: {
+    /** What shares one cooldown: each user, each guild, each channel or everyone. Default `"user"`. */
+    scope?: CooldownScope;
+  } = {},
+): Guard {
   const ms = comfort.time.parseDuration(duration) ?? (typeof duration === "number" ? duration : 0);
   const scope = options.scope ?? "user";
   const hits = new Map<string, number>();

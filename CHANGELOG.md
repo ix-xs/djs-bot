@@ -83,6 +83,21 @@ peer range, `^14.16.0`, was wrong: Components V2 already needed 14.19).
   gateway, message payloads), and `examples/playground` is a bot that checks
   itself as you click through it.
 - The antiSpam plugin accepts `allow` (ids that are never limited).
+- **Autocomplete that depends on the other options.** The handler's `ctx` gains
+  `options` (what the user has already filled in, by option name), `guildId` and
+  `channelId`. `harness.autocomplete` takes the same `options`.
+- **Autocomplete answers Discord cannot refuse.** One invalid suggestion used to
+  make Discord reject the whole list. Names over 100 characters are now cut,
+  values take the type of the option (numbers for `s.integer` / `s.number`),
+  and what cannot be made valid is left out, with one warning per option.
+  `toAutocompleteChoices()` exposes that logic.
+- **Every option shows its description in the editor.** Each property you can
+  type in a `define*()` call, in `s.*`, `field.*`, `ui.*` or read on a context
+  now carries a doc comment, so hovering or completing explains it.
+- **The docs list every export.** A new "All exports" page is generated from the
+  source (`npm run docs:api`) and a test keeps it up to date.
+- **VS Code snippets** for the 1.1 building blocks: `dauto`, `dslow`, `dform`,
+  `dselectuser`, `dguard`, `dconfirm`, `dpaginate`, `dtest`.
 
 ### Changed
 
@@ -102,6 +117,10 @@ peer range, `^14.16.0`, was wrong: Components V2 already needed 14.19).
   in a server the bot is not a member of. `ctx.member` is `null` there instead of
   a raw API object typed as a `GuildMember`.
 - `dmPermission` is marked deprecated, as Discord replaced it with `contexts`.
+- **`autocomplete: true` leaves the answer to you.** The framework used to
+  answer such an option with an empty list, which made the documented use (your
+  own `interactionCreate` listener) impossible. Give the option a handler to
+  have the framework answer.
 - **Routing is about twice as fast.** An interaction now costs the framework
   roughly 4 µs end to end, down from 9 (p99 from 40 µs to 10): the reply helpers
   are built once per class rather than as a closure set per interaction, and
@@ -119,6 +138,15 @@ peer range, `^14.16.0`, was wrong: Components V2 already needed 14.19).
 
 ### Fixed
 
+- **Select menu options accept an emoji as text.** `Menu.build(params, { options })`
+  refused `emoji: "💻"` at compile time although it works; the option type now
+  matches what discord.js accepts.
+- A malformed `choices` entry in plain JavaScript raised a raw `TypeError`; it is
+  now a `DJSBOT_E015` that shows the entry.
+- **`djs-bot init` after `npm init` produced a project that did not compile.**
+  The existing `package.json` was left as CommonJS while the starter uses ES
+  modules. `init` now completes it: missing scripts are added, and it is switched
+  to `"type": "module"` when the project has no code yet.
 - **Commands were redeployed on every start.** The diff took Discord's defaults
   (`dm_permission`, `integration_types`) and missing localization maps for
   changes, so untouched and localized commands were pushed again each time.

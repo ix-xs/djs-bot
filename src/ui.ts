@@ -127,7 +127,14 @@ export const ui = {
   },
 
   /** A horizontal separator, optionally with a divider line and spacing. */
-  separator(options: { divider?: boolean; spacing?: "small" | "large" } = {}): SeparatorBuilder {
+  separator(
+    options: {
+      /** Whether a visible line is drawn. Default `true`. */
+      divider?: boolean;
+      /** How much empty space the separator takes. Default `"small"`. */
+      spacing?: "small" | "large";
+    } = {},
+  ): SeparatorBuilder {
     const s = new SeparatorBuilder();
     if (options.divider !== undefined) s.setDivider(options.divider);
     s.setSpacing(options.spacing === "large" ? SeparatorSpacingSize.Large : SeparatorSpacingSize.Small);
@@ -139,7 +146,9 @@ export const ui = {
    * @example ui.section({ text: "Profile", accessory: ui.thumbnail(url) })
    */
   section(options: {
+    /** The text on the left: one block of markdown, or up to three. */
     text: string | string[];
+    /** What sits on the right: `ui.thumbnail(url)` or a button. */
     accessory: ThumbnailBuilder | ButtonBuilder;
   }): SectionBuilder {
     const s = new SectionBuilder();

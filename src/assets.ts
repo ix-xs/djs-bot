@@ -51,7 +51,15 @@ export const assets = {
   },
 
   /** A custom emoji's image URL from its id. */
-  emoji(id: string, options: { animated?: boolean; size?: ImageSize } = {}): string {
+  emoji(
+    id: string,
+    options: {
+      /** Whether the emoji is animated (a GIF is returned). */
+      animated?: boolean;
+      /** The image size in pixels, a power of two from 16 to 4096. */
+      size?: ImageSize;
+    } = {},
+  ): string {
     const ext = options.animated ? "gif" : "png";
     const size = options.size ? `?size=${options.size}` : "";
     return `https://cdn.discordapp.com/emojis/${id}.${ext}${size}`;

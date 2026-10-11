@@ -93,10 +93,11 @@
       "\tid: \"${2:feature:submit}\",",
       "\ttitle: \"${3:Title}\",",
       "\tfields: {",
-      "\t\t${4:body}: field.paragraph({ label: \"${5:Details}\", required: true }),",
+      "\t\t${4:subject}: field.short({ label: \"${5:Subject}\", required: true, maxLength: 100 }),",
+      "\t\t${6:details}: field.paragraph({ label: \"${7:Details}\" }),",
       "\t},",
       "\trun: async (ctx) => {",
-      "\t\tawait ctx.reply.success(`Received: ${ctx.fields.${4:body}}`);$0",
+      "\t\tawait ctx.reply.success(`Received: \\${ctx.fields.${4:subject}}`);$0",
       "\t},",
       "});"
     ]
@@ -219,6 +220,7 @@
       "",
       "const bot = defineBot({",
       "\ttoken: env(\"DISCORD_TOKEN\"),",
+      "\tclientId: env(\"DISCORD_CLIENT_ID\"),",
       "\tfeatures: \"${1:./src/features}\",",
       "\tintents: \"auto\",",
       "});",
@@ -226,6 +228,155 @@
       "export default bot;",
       "",
       "if (!process.env.DJSBOT_CLI) void bot.start();$0"
+    ]
+  },
+  "djs-bot: command with autocomplete": {
+    "scope": "typescript,javascript",
+    "prefix": "dauto",
+    "description": "A djs-bot slash command with an autocomplete option",
+    "body": [
+      "import { defineCommand, s } from \"@ix-xs/djs-bot\";",
+      "",
+      "export default defineCommand({",
+      "\tname: \"${1:name}\",",
+      "\tdescription: \"${2:description}\",",
+      "\toptions: {",
+      "\t\t${3:query}: s.string({",
+      "\t\t\tdescription: \"${4:Search}\",",
+      "\t\t\trequired: true,",
+      "\t\t\tautocomplete: async (ctx) => {",
+      "\t\t\t\t// ctx.value: what was typed. ctx.options: the other options.",
+      "\t\t\t\tconst ${5:results} = [${6:\"first\", \"second\"}];",
+      "\t\t\t\treturn ${5:results}.filter((name) => name.startsWith(ctx.value));",
+      "\t\t\t},",
+      "\t\t}),",
+      "\t},",
+      "\trun: async (ctx) => {",
+      "\t\tawait ctx.reply.success(`You picked \\${ctx.options.${3:query}}`);$0",
+      "\t},",
+      "});"
+    ]
+  },
+  "djs-bot: slow command (automatic deferral)": {
+    "scope": "typescript,javascript",
+    "prefix": "dslow",
+    "description": "A djs-bot command that takes time: deferred for you",
+    "body": [
+      "import { defineCommand } from \"@ix-xs/djs-bot\";",
+      "",
+      "export default defineCommand({",
+      "\tname: \"${1:name}\",",
+      "\tdescription: \"${2:description}\",",
+      "\tdefer: ${3|true,\"ephemeral\"|},",
+      "\trun: async (ctx) => {",
+      "\t\t${4:// slow work}",
+      "\t\tawait ctx.reply.success(\"${5:Done!}\");$0",
+      "\t},",
+      "});"
+    ]
+  },
+  "djs-bot: form (button that opens a modal)": {
+    "scope": "typescript,javascript",
+    "prefix": "dform",
+    "description": "A button opening a modal with a select and a file upload",
+    "body": [
+      "import { defineButton, defineModal, field, ButtonStyle } from \"@ix-xs/djs-bot\";",
+      "",
+      "export const ${1:Report}Form = defineModal({",
+      "\tid: \"${2:report}:submit\",",
+      "\ttitle: \"${3:Report a problem}\",",
+      "\tfields: {",
+      "\t\tkind: field.select({",
+      "\t\t\tlabel: \"${4:Kind}\",",
+      "\t\t\trequired: true,",
+      "\t\t\toptions: [",
+      "\t\t\t\t{ label: \"${5:Bug}\", value: \"${6:bug}\" },",
+      "\t\t\t\t{ label: \"${7:Abuse}\", value: \"${8:abuse}\" },",
+      "\t\t\t],",
+      "\t\t}),",
+      "\t\tdetails: field.paragraph({ label: \"${9:What happened?}\", required: true }),",
+      "\t\tproof: field.files({ label: \"${10:Screenshots}\", maxValues: 3, fileTypes: [\"image\"] }),",
+      "\t},",
+      "\trun: async (ctx) => {",
+      "\t\tawait ctx.reply.success(`\\${ctx.fields.kind[0]}: \\${ctx.fields.proof.size} file(s)`, { ephemeral: true });$0",
+      "\t},",
+      "});",
+      "",
+      "export const Open${1:Report} = defineButton({",
+      "\tid: \"${2:report}:open\",",
+      "\tlabel: \"${3:Report a problem}\",",
+      "\tstyle: ButtonStyle.Secondary,",
+      "\trun: (ctx) => ctx.showModal(${1:Report}Form),",
+      "});"
+    ]
+  },
+  "djs-bot: user select menu": {
+    "scope": "typescript,javascript",
+    "prefix": "dselectuser",
+    "description": "A djs-bot user select menu (also: role, channel, mentionable)",
+    "body": [
+      "import { define${1|User,Role,Channel,Mentionable|}Select } from \"@ix-xs/djs-bot\";",
+      "",
+      "export const ${2:Pick} = define${1}Select({",
+      "\tid: \"${3:feature:pick}\",",
+      "\tdefer: \"update\",",
+      "\trun: async (ctx) => {",
+      "\t\tawait ctx.update(`Picked: \\${ctx.values.join(\", \")}`);$0",
+      "\t},",
+      "});"
+    ]
+  },
+  "djs-bot: guard": {
+    "scope": "typescript,javascript",
+    "prefix": "dguard",
+    "description": "A reusable djs-bot guard (precondition)",
+    "body": [
+      "import { guard, pass, fail } from \"@ix-xs/djs-bot\";",
+      "",
+      "export const ${1:myGuard} = (${2}) =>",
+      "\tguard(\"${3:name}\", async (ctx) => {",
+      "\t\tconst allowed = ${4:true};",
+      "\t\treturn allowed ? pass() : fail(\"${5:You cannot do that.}\");$0",
+      "\t});"
+    ]
+  },
+  "djs-bot: confirmation": {
+    "scope": "typescript,javascript",
+    "prefix": "dconfirm",
+    "description": "Ask for a confirmation before a destructive action",
+    "body": [
+      "const ok = await confirm(ctx, { content: \"${1:Are you sure?}\" });",
+      "if (!ok) return;",
+      "$0"
+    ]
+  },
+  "djs-bot: paginated reply": {
+    "scope": "typescript,javascript",
+    "prefix": "dpaginate",
+    "description": "Reply with pages and previous/next buttons",
+    "body": [
+      "await paginate(ctx, {",
+      "\tpages: ${1:pages},",
+      "\ttimeout: \"${2:5m}\",",
+      "});$0"
+    ]
+  },
+  "djs-bot: test": {
+    "scope": "typescript,javascript",
+    "prefix": "dtest",
+    "description": "A test for a djs-bot command, with no Discord connection",
+    "body": [
+      "import { describe, it, expect } from \"vitest\";",
+      "import { createHarness } from \"@ix-xs/djs-bot/testing\";",
+      "import ${1:Command} from \"${2:./file.command}\";",
+      "",
+      "describe(\"${3:command}\", () => {",
+      "\tit(\"${4:replies}\", async () => {",
+      "\t\tconst harness = createHarness();",
+      "\t\tconst { replies } = await harness.command(${1:Command}, { options: { ${5} } });",
+      "\t\texpect(replies[0]).toMatchObject({ type: \"${6|success,reply,error,info,warn,ephemeral|}\" });$0",
+      "\t});",
+      "});"
     ]
   }
 }

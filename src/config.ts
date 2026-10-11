@@ -95,11 +95,21 @@ export interface BotConfig {
   /** Command deployment settings. */
   deploy?: DeployConfig;
   /** Logger settings. */
-  logger?: { level?: LogLevel; pretty?: boolean };
+  logger?: {
+    /** The least severe level that is written. Default `"info"`. */
+    level?: LogLevel;
+    /** Human-readable, coloured lines instead of JSON. Default: on outside production. */
+    pretty?: boolean;
+  };
   /** Initial gateway presence. */
   presence?: PresenceData;
   /** Rotate the presence on an interval (e.g. cycling status messages). */
-  presenceRotation?: { interval: string | number; items: PresenceData[] };
+  presenceRotation?: {
+    /** How long each presence stays, e.g. `"30s"` or milliseconds. */
+    interval: string | number;
+    /** The presences to cycle through, in order. */
+    items: PresenceData[];
+  };
   /** Enable sharding: `true`/`"auto"`, or fine-grained {@link ShardingOptions}. */
   sharding?: boolean | "auto" | ShardingOptions;
   /** Runtime translations for the messages the bot sends (`ctx.t`). */
@@ -108,7 +118,9 @@ export interface BotConfig {
   store?: KVStore;
   /** Audit trail. Enables `ctx.audit(...)` and the `audit` service. */
   audit?: {
+    /** Where entries are written. Default: an in-memory sink. */
     sink?: AuditSink;
+    /** Several destinations at once; each entry goes to all of them. */
     sinks?: AuditSink[];
     /** Automatically record every command use as `command:<name>`. */
     autoRecordCommands?: boolean;

@@ -59,6 +59,9 @@ editors/vscode  VS Code snippets + extension manifest
   generated `docs/src/content/docs/guide/` files (they're gitignored).
 - **Public API** is guarded by type-level tests in `test/types.test-d.ts`; if you
   change typings, update those assertions.
+- **Every export needs a doc comment**, and so does every property a user can
+  type or read: it is what their editor shows. After adding an export, run
+  `npm run docs:api` to refresh the "All exports" page of the docs.
 
 ## Releasing
 

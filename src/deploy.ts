@@ -242,11 +242,17 @@ export interface DeployOptions {
 
 /** What changed for one deploy target (global, or a specific guild). */
 export interface DeployTargetResult {
+  /** Whether this target is the global scope or one guild. */
   scope: "global" | "guild";
+  /** The guild id, when `scope` is `"guild"`. */
   guildId?: string;
+  /** Commands that did not exist on Discord yet. */
   added: string[];
+  /** Commands that exist on Discord but no longer in the code. */
   removed: string[];
+  /** Commands whose definition differs from what Discord holds. */
   changed: string[];
+  /** Commands already up to date. */
   unchanged: string[];
   /** Whether a write to Discord actually happened for this target. */
   applied: boolean;
@@ -363,7 +369,10 @@ export function canonical(cmd: RESTPostAPIApplicationCommandsJSONBody): string {
 export function commandsEqual(
   desired: RESTPostAPIApplicationCommandsJSONBody,
   existing: unknown,
-  options: { guildScope?: boolean } = {},
+  options: {
+    /** Compare as commands of a guild, where the global-only fields do not exist. */
+    guildScope?: boolean;
+  } = {},
 ): boolean {
   const local = desired as unknown as Json;
   // `contexts`, `integration_types` and `dm_permission` only exist on global
@@ -531,11 +540,15 @@ export async function deployCommands(registry: Registry, options: DeployOptions)
 
 /** Options for {@link clearCommands}. */
 export interface ClearOptions {
+  /** The bot token. */
   token: string;
+  /** The application (client) id. */
   clientId: string;
   /** Clear a specific guild's commands; omit to clear **global** commands. */
   guildId?: string;
+  /** Report what would be removed without writing anything. */
   dryRun?: boolean;
+  /** Where progress is logged. */
   logger?: Logger;
 }
 

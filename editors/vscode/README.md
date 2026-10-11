@@ -7,11 +7,15 @@ block, in TypeScript **or** JavaScript.
 | --- | --- |
 | `dbot` | bot entry (`defineBot`) |
 | `dcommand` | slash command |
+| `dauto` | slash command with an autocomplete option |
+| `dslow` | slow command, deferred automatically |
 | `dsub` | command with subcommands |
 | `devent` | gateway event |
 | `dbutton` | typed button |
 | `dselect` | string select menu |
+| `dselectuser` | user, role, channel or mentionable select menu |
 | `dmodal` | modal |
+| `dform` | button that opens a modal with a select and a file upload |
 | `duser` | user context menu |
 | `dmessage` | message context menu |
 | `dtrigger` | message auto-responder |
@@ -19,6 +23,10 @@ block, in TypeScript **or** JavaScript.
 | `dservice` | injectable service |
 | `dplugin` | plugin |
 | `dfeature` | feature pack |
+| `dguard` | reusable guard |
+| `dconfirm` | confirmation before a destructive action |
+| `dpaginate` | paginated reply |
+| `dtest` | test with the harness, no Discord connection |
 
 ## Use it without installing (per-project)
 
@@ -31,8 +39,8 @@ workspace.
 ```bash
 cd editors/vscode
 npm install -g @vscode/vsce
-vsce package          # produces djs-bot-snippets-1.0.0.vsix
-code --install-extension djs-bot-snippets-1.0.0.vsix
+vsce package          # produces djs-bot-snippets-1.1.0.vsix
+code --install-extension djs-bot-snippets-1.1.0.vsix
 ```
 
 Or publish it to the Marketplace with `vsce publish` (requires a publisher).

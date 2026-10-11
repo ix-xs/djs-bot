@@ -16,6 +16,7 @@ import {
   StringSelectMenuBuilder,
   UserSelectMenuBuilder,
   type APISelectMenuOption,
+  type SelectMenuComponentOptionData,
   type ChannelType,
   type Client,
   type ClientEvents,
@@ -63,15 +64,21 @@ import { assertChatName, assertCommandShape, assertComponentId, assertMenuName }
 
 /** Context passed to gateway event handlers (after the event's own args). */
 export interface EventContext {
+  /** The connected client. */
   readonly client: Client<true>;
+  /** Injected services, typed through `ServiceMap`. */
   readonly services: ServiceMap;
+  /** A logger tagged with the event name. */
   readonly logger: Logger;
 }
 
 /** Context passed to scheduled jobs. */
 export interface JobContext {
+  /** The connected client. */
   readonly client: Client<true>;
+  /** Injected services, typed through `ServiceMap`. */
   readonly services: ServiceMap;
+  /** A logger tagged with the job name and this run's correlation id. */
   readonly logger: Logger;
   /** Aborted when the bot is shutting down; long jobs should observe it. */
   readonly signal: AbortSignal;
@@ -101,10 +108,13 @@ export interface HookRegistrar {
 
 /** The restricted façade handed to plugins in `setup()`. */
 export interface PluginApp {
+  /** A logger tagged with the plugin name. */
   readonly logger: Logger;
+  /** Registers middleware and lifecycle hooks. */
   readonly hooks: HookRegistrar;
   /** The configuration passed to `defineBot()`, read-only. */
   readonly config: Readonly<BotConfig>;
+  /** Registers or reads services in the bot's container. */
   readonly services: {
     /** Registers an already-built value under a token. */
     register(token: string, value: unknown): void;
@@ -124,13 +134,21 @@ export type InteractionContext = "guild" | "botDm" | "privateChannel";
 
 /** A single subcommand (the leaf that actually runs). Create with {@link subcommand}. */
 export interface SubcommandDefinition<M extends OptionMap = OptionMap> {
+  /** Marks the object as a subcommand. */
   readonly kind: "subcommand";
+  /** The description shown under the subcommand in Discord. */
   readonly description: string;
+  /** The option schema; `ctx.options` is typed from it. */
   readonly options: M;
+  /** Preconditions, run after the parent command's guards. */
   readonly guards: readonly Guard[];
+  /** Translated names, by Discord locale. */
   readonly nameLocalizations?: LocalizationMap;
+  /** Translated descriptions, by Discord locale. */
   readonly descriptionLocalizations?: LocalizationMap;
+  /** Automatic deferral for this subcommand; falls back to the parent command's. */
   readonly defer?: DeferOption;
+  /** The handler. */
   // Method signature (not a property) so a precisely-typed subcommand stays
   // assignable to the erased `SubcommandDefinition` stored on a command.
   run(ctx: CommandContext<InferOptions<M>>): unknown | Promise<unknown>;
@@ -138,19 +156,27 @@ export interface SubcommandDefinition<M extends OptionMap = OptionMap> {
 
 /** A subcommand group (a folder of subcommands). */
 export interface SubcommandGroupDefinition {
+  /** The description shown under the group in Discord. */
   readonly description: string;
+  /** The subcommands of the group, by name. */
   readonly subcommands: Record<string, SubcommandDefinition>;
 }
 
 /** Input accepted by {@link subcommand}. */
 export interface SubcommandInput<M extends OptionMap> {
+  /** The description shown under the subcommand in Discord (1 to 100 characters). */
   description: string;
+  /** Typed options, built with `s.*`. `ctx.options` is inferred from them. */
   options?: M;
+  /** Preconditions checked before `run`, after the parent command's guards. */
   guards?: Guard[];
+  /** Translated names, by Discord locale. */
   nameLocalizations?: LocalizationMap;
+  /** Translated descriptions, by Discord locale. */
   descriptionLocalizations?: LocalizationMap;
   /** Acknowledge the interaction for you. Overrides the parent command's setting. */
   defer?: DeferOption;
+  /** The handler. `ctx.options` is typed from `options`. */
   run: (ctx: CommandContext<InferOptions<M>>) => unknown | Promise<unknown>;
 }
 
@@ -181,23 +207,42 @@ export function subcommand<M extends OptionMap = Record<string, never>>(
 
 /** A registered slash command (flat, with subcommands, or with groups). */
 export interface CommandDefinition<M extends OptionMap = OptionMap> {
+  /** Marks the object as a slash command for the loader. */
   readonly kind: "command";
+  /** The command name, as typed after the slash. */
   readonly name: string;
+  /** The description shown in Discord's command picker. */
   readonly description: string;
+  /** The option schema; `ctx.options` is typed from it. */
   readonly options: M;
+  /** Preconditions checked before the handler. */
   readonly guards: readonly Guard[];
+  /** Whether the command is age-restricted. */
   readonly nsfw?: boolean;
+  /**
+   * Whether the command is available in DMs.
+   * @deprecated Discord replaced this with `contexts`.
+   */
   readonly dmPermission?: boolean;
+  /** Permissions a member needs to see the command by default. */
   readonly defaultMemberPermissions?: PermissionResolvable;
+  /** Where the command can be installed: on servers, on user accounts, or both. */
   readonly integrationTypes?: readonly InstallContext[];
+  /** Where the command can be used: servers, the bot's DMs, other private channels. */
   readonly contexts?: readonly InteractionContext[];
+  /** Translated names, by Discord locale. */
   readonly nameLocalizations?: LocalizationMap;
+  /** Translated descriptions, by Discord locale. */
   readonly descriptionLocalizations?: LocalizationMap;
   /** Deploy this command only to these guild ids. Omit for a global command. */
   readonly guilds?: readonly string[];
+  /** Subcommands, by name. A command with subcommands has no handler of its own. */
   readonly subcommands?: Record<string, SubcommandDefinition>;
+  /** Subcommand groups, by name. */
   readonly groups?: Record<string, SubcommandGroupDefinition>;
+  /** Automatic deferral for this command. */
   readonly defer?: DeferOption;
+  /** The handler. Absent on a command that only holds subcommands. */
   run?(ctx: CommandContext<InferOptions<M>>): unknown | Promise<unknown>;
 }
 
@@ -317,31 +362,59 @@ export function defineCommand<M extends OptionMap = Record<string, never>>(
 
 /** A registered user context-menu command (right-click a user → Apps). */
 export interface UserCommandDefinition {
+  /** Marks the object as a user context-menu command for the loader. */
   readonly kind: "userCommand";
+  /** The label shown in the Apps menu of a user. */
   readonly name: string;
+  /** Preconditions checked before the handler. */
   readonly guards: readonly Guard[];
+  /**
+   * Whether the command is available in DMs.
+   * @deprecated Discord replaced this with `contexts`.
+   */
   readonly dmPermission?: boolean;
+  /** Permissions a member needs to see the command by default. */
   readonly defaultMemberPermissions?: PermissionResolvable;
+  /** Where the command can be installed: on servers, on user accounts, or both. */
   readonly integrationTypes?: readonly InstallContext[];
+  /** Where the command can be used: servers, the bot's DMs, other private channels. */
   readonly contexts?: readonly InteractionContext[];
+  /** Translated names, by Discord locale. */
   readonly nameLocalizations?: LocalizationMap;
+  /** Guild ids the command is deployed to, instead of globally. */
   readonly guilds?: readonly string[];
+  /** Automatic deferral for this command. */
   readonly defer?: DeferOption;
+  /** The handler. `ctx.targetUser` is the user that was right-clicked. */
   run(ctx: UserCommandContext): unknown | Promise<unknown>;
 }
 
 /** A registered message context-menu command (right-click a message → Apps). */
 export interface MessageCommandDefinition {
+  /** Marks the object as a message context-menu command for the loader. */
   readonly kind: "messageCommand";
+  /** The label shown in the Apps menu of a message. */
   readonly name: string;
+  /** Preconditions checked before the handler. */
   readonly guards: readonly Guard[];
+  /**
+   * Whether the command is available in DMs.
+   * @deprecated Discord replaced this with `contexts`.
+   */
   readonly dmPermission?: boolean;
+  /** Permissions a member needs to see the command by default. */
   readonly defaultMemberPermissions?: PermissionResolvable;
+  /** Where the command can be installed: on servers, on user accounts, or both. */
   readonly integrationTypes?: readonly InstallContext[];
+  /** Where the command can be used: servers, the bot's DMs, other private channels. */
   readonly contexts?: readonly InteractionContext[];
+  /** Translated names, by Discord locale. */
   readonly nameLocalizations?: LocalizationMap;
+  /** Guild ids the command is deployed to, instead of globally. */
   readonly guilds?: readonly string[];
+  /** Automatic deferral for this command. */
   readonly defer?: DeferOption;
+  /** The handler. `ctx.targetMessage` is the message that was right-clicked. */
   run(ctx: MessageCommandContext): unknown | Promise<unknown>;
 }
 
@@ -349,9 +422,15 @@ export interface MessageCommandDefinition {
 interface ContextCommandCommon {
   /** The label shown in the right-click Apps menu (spaces & capitals allowed). */
   name: string;
+  /** Preconditions checked before `run`, e.g. `[guildOnly(), hasPermission("KickMembers")]`. */
   guards?: Guard[];
-  /** @deprecated Discord replaced this with `contexts`. */
+  /**
+   * Allow use in DMs (global commands only).
+   * @deprecated Discord replaced this with `contexts`. Use
+   * `contexts: ["guild"]` to keep a command out of DMs.
+   */
   dmPermission?: boolean;
+  /** Permissions a member needs to see the command by default, e.g. `"ManageMessages"`. */
   defaultMemberPermissions?: PermissionResolvable;
   /** Where the command can be installed: `["guild"]`, `["user"]`, or both. */
   integrationTypes?: InstallContext[];
@@ -434,9 +513,13 @@ export function defineMessageCommand(input: MessageCommandInput): MessageCommand
 
 /** A registered gateway event listener. */
 export interface EventDefinition<E extends keyof ClientEvents = keyof ClientEvents> {
+  /** Marks the object as an event listener for the loader. */
   readonly kind: "event";
+  /** The discord.js event name, e.g. `"guildMemberAdd"`. */
   readonly event: E;
+  /** Whether the listener is removed after its first call. */
   readonly once: boolean;
+  /** The listener. Receives the event's own arguments, then the context. */
   run(...args: [...ClientEvents[E], EventContext]): unknown | Promise<unknown>;
 }
 
@@ -450,7 +533,10 @@ export interface EventDefinition<E extends keyof ClientEvents = keyof ClientEven
 export function defineEvent<E extends keyof ClientEvents>(
   event: E,
   run: (...args: [...ClientEvents[E], EventContext]) => unknown | Promise<unknown>,
-  options: { once?: boolean } = {},
+  options: {
+    /** Run the listener for the first occurrence only. Default `false`. */
+    once?: boolean;
+  } = {},
 ): EventDefinition<E> {
   return { kind: "event", event, once: options.once ?? false, run };
 }
@@ -461,13 +547,21 @@ export function defineEvent<E extends keyof ClientEvents>(
 
 /** Context passed to a message trigger handler. */
 export interface TriggerContext {
+  /** The message that matched. */
   readonly message: Message;
+  /** The connected client. */
   readonly client: Client<true>;
+  /** Who sent the message. */
   readonly author: User;
+  /** The author as a guild member; `null` in DMs or when not cached. */
   readonly member: GuildMember | null;
+  /** The guild the message was sent in; `null` in DMs. */
   readonly guild: Guild | null;
+  /** The channel the message was sent in. */
   readonly channel: Message["channel"];
+  /** Injected services, typed through `ServiceMap`. */
   readonly services: ServiceMap;
+  /** A logger tagged with the trigger name and this run's correlation id. */
   readonly logger: Logger;
   /** A unique id for this run; every line logged through `logger` carries it. */
   readonly correlationId: string;
@@ -487,13 +581,21 @@ export type TriggerPattern = string | RegExp | ((message: Message) => boolean);
 
 /** A registered message trigger (auto-responder). */
 export interface TriggerDefinition {
+  /** Marks the object as a message trigger for the loader. */
   readonly kind: "trigger";
+  /** A unique name, used in logs. */
   readonly name: string;
+  /** What a message must match: a string, a RegExp or a predicate. */
   readonly pattern: TriggerPattern;
+  /** How a string pattern is compared with the message content. */
   readonly mode: TriggerMode;
+  /** Whether a string pattern ignores case. */
   readonly caseInsensitive: boolean;
+  /** Whether messages sent by bots are skipped. */
   readonly ignoreBots: boolean;
+  /** Minimum delay between two runs for the same user, e.g. `"10s"`. */
   readonly cooldown?: string | number;
+  /** The handler. */
   run(ctx: TriggerContext): unknown | Promise<unknown>;
 }
 
@@ -552,19 +654,29 @@ export function defineTrigger(input: TriggerInput): TriggerDefinition {
 
 /** Visual configuration for a built button. */
 export interface ButtonVisualOptions {
+  /** The text on the button (up to 80 characters). */
   label?: string;
+  /** An emoji shown before the label: a unicode emoji or `<:name:id>`. */
   emoji?: string;
+  /** The colour of the button. Default `ButtonStyle.Primary`. */
   style?: ButtonStyle;
+  /** Whether the button is greyed out and cannot be clicked. */
   disabled?: boolean;
 }
 
 /** A registered button with typed customId params. */
 export interface ButtonDefinition<P extends ParamMap = ParamMap> {
+  /** Marks the object as a button for the loader. */
   readonly kind: "button";
+  /** The routing key, the first part of the customId. */
   readonly id: string;
+  /** The schema of the params encoded in the customId. */
   readonly params: P;
+  /** Preconditions checked before the handler. */
   readonly guards: readonly Guard[];
+  /** Automatic deferral for this button. */
   readonly defer?: DeferOption;
+  /** The handler. `ctx.params` is decoded and typed. */
   run(ctx: ButtonContext<InferParams<P>>): unknown | Promise<unknown>;
   /** Builds a discord.js button whose customId encodes the given params. */
   build(params?: InferParams<P>, visual?: ButtonVisualOptions): ButtonBuilder;
@@ -580,7 +692,9 @@ export interface ButtonInput<P extends ParamMap> {
   guards?: Guard[];
   /** Default visuals used by `build()` when not overridden. */
   style?: ButtonStyle;
+  /** Default text used by `build()` when not overridden. */
   label?: string;
+  /** Default emoji used by `build()` when not overridden. */
   emoji?: string;
   /**
    * Acknowledge the click for you. `"update"` is usually what a button wants:
@@ -638,39 +752,62 @@ export type SelectType = "string" | "user" | "role" | "channel" | "mentionable";
 
 /** The routable shape shared by every select menu (used by the registry/router). */
 export interface SelectRoutable<P extends ParamMap = ParamMap> {
+  /** Marks the object as a select menu for the loader. */
   readonly kind: "select";
+  /** Which of the five kinds of select menu this is. */
   readonly selectType: SelectType;
+  /** The routing key, the first part of the customId. */
   readonly id: string;
+  /** The schema of the params encoded in the customId. */
   readonly params: P;
+  /** Preconditions checked before the handler. */
   readonly guards: readonly Guard[];
+  /** Automatic deferral for this menu. */
   readonly defer?: DeferOption;
+  /** The handler. `ctx.values` holds what was picked, `ctx.params` the decoded params. */
   run(ctx: SelectMenuContext<InferParams<P>>): unknown | Promise<unknown>;
 }
 
 /** Input accepted by every `define*Select` factory. */
 export interface SelectMenuInput<P extends ParamMap> {
+  /** Stable routing key, e.g. `"settings:language"`. */
   id: string;
+  /** Typed params encoded into the customId, built with `p.*`. */
   params?: P;
+  /** Preconditions checked before `run`. */
   guards?: Guard[];
   /** Acknowledge the selection for you. See {@link DeferOption}. */
   defer?: DeferOption;
+  /** The handler. `ctx.values` holds what was picked, `ctx.params` the decoded params. */
   run: (ctx: SelectMenuContext<InferParams<P>>) => unknown | Promise<unknown>;
 }
 
 /** Visual configuration for a built string select menu. */
 export interface SelectVisualOptions {
+  /** Greyed text shown while nothing is picked (up to 150 characters). */
   placeholder?: string;
+  /** Fewest options the user must pick. Default `1`. */
   minValues?: number;
+  /** Most options the user may pick. Default `1`. */
   maxValues?: number;
+  /** Whether the menu is greyed out and cannot be opened. */
   disabled?: boolean;
-  options: APISelectMenuOption[];
+  /**
+   * The choices offered, 1 to 25: `{ label, value, description?, emoji?, default? }`.
+   * `emoji` is a unicode emoji, custom-emoji markup or an `{ id, name }` object.
+   */
+  options: Array<SelectMenuComponentOptionData | APISelectMenuOption>;
 }
 
 /** Visual configuration for a native (user/role/channel/mentionable) select. */
 export interface NativeSelectVisualOptions {
+  /** Greyed text shown while nothing is picked (up to 150 characters). */
   placeholder?: string;
+  /** Fewest entries the user must pick. Default `1`. */
   minValues?: number;
+  /** Most entries the user may pick. Default `1`. */
   maxValues?: number;
+  /** Whether the menu is greyed out and cannot be opened. */
   disabled?: boolean;
   /** Pre-selected default ids (users, roles, or channels depending on the type). */
   defaultValues?: string[];
@@ -680,22 +817,27 @@ export interface NativeSelectVisualOptions {
 
 /** A registered string select menu. */
 export interface SelectMenuDefinition<P extends ParamMap = ParamMap> extends SelectRoutable<P> {
+  /** Builds the discord.js menu. The customId encodes `params`; `visual.options` are the choices. */
   build(params: InferParams<P> | undefined, visual: SelectVisualOptions): StringSelectMenuBuilder;
 }
 /** A registered user select menu. */
 export interface UserSelectDefinition<P extends ParamMap = ParamMap> extends SelectRoutable<P> {
+  /** Builds the discord.js user menu. The customId encodes `params`. */
   build(params?: InferParams<P>, visual?: NativeSelectVisualOptions): UserSelectMenuBuilder;
 }
 /** A registered role select menu. */
 export interface RoleSelectDefinition<P extends ParamMap = ParamMap> extends SelectRoutable<P> {
+  /** Builds the discord.js role menu. The customId encodes `params`. */
   build(params?: InferParams<P>, visual?: NativeSelectVisualOptions): RoleSelectMenuBuilder;
 }
 /** A registered channel select menu. */
 export interface ChannelSelectDefinition<P extends ParamMap = ParamMap> extends SelectRoutable<P> {
+  /** Builds the discord.js channel menu. The customId encodes `params`. */
   build(params?: InferParams<P>, visual?: NativeSelectVisualOptions): ChannelSelectMenuBuilder;
 }
 /** A registered mentionable (users + roles) select menu. */
 export interface MentionableSelectDefinition<P extends ParamMap = ParamMap> extends SelectRoutable<P> {
+  /** Builds the discord.js mentionable menu. The customId encodes `params`. */
   build(params?: InferParams<P>, visual?: NativeSelectVisualOptions): MentionableSelectMenuBuilder;
 }
 
@@ -854,13 +996,21 @@ export function defineMentionableSelect<P extends ParamMap = Record<string, neve
 
 /** A registered modal with typed fields and optional customId params. */
 export interface ModalDefinition<F extends FieldMap = FieldMap, P extends ParamMap = ParamMap> {
+  /** Marks the object as a modal for the loader. */
   readonly kind: "modal";
+  /** The routing key, the first part of the customId. */
   readonly id: string;
+  /** The title shown at the top of the dialog. */
   readonly title: string;
+  /** The components of the dialog; `ctx.fields` is typed from them. */
   readonly fields: F;
+  /** The schema of the params encoded in the customId. */
   readonly params: P;
+  /** Preconditions checked before the handler. */
   readonly guards: readonly Guard[];
+  /** Automatic deferral for the submission. */
   readonly defer?: DeferOption;
+  /** The handler, called when the user submits the dialog. */
   run(ctx: ModalContext<InferFields<F>> & { params: InferParams<P> }): unknown | Promise<unknown>;
   /** Builds a discord.js modal from the declared fields. */
   build(params?: InferParams<P>): ModalBuilder;
@@ -868,14 +1018,19 @@ export interface ModalDefinition<F extends FieldMap = FieldMap, P extends ParamM
 
 /** Input accepted by {@link defineModal}. */
 export interface ModalInput<F extends FieldMap, P extends ParamMap> {
+  /** Stable routing key, e.g. `"feedback"`. */
   id: string;
+  /** The title shown at the top of the dialog (up to 45 characters). */
   title: string;
   /** Up to 5 components, built with `field.*`. */
   fields: F;
+  /** Typed params encoded into the customId, built with `p.*`. */
   params?: P;
+  /** Preconditions checked before `run`. */
   guards?: Guard[];
   /** Acknowledge the submission for you. See {@link DeferOption}. */
   defer?: DeferOption;
+  /** The handler, called on submit. `ctx.fields` and `ctx.params` are typed. */
   run: (ctx: ModalContext<InferFields<F>> & { params: InferParams<P> }) => unknown | Promise<unknown>;
 }
 
@@ -960,7 +1115,9 @@ export function defineService<T, const D extends readonly string[] = readonly st
 
 /** A scheduled job. */
 export interface JobDefinition {
+  /** Marks the object as a scheduled job for the loader. */
   readonly kind: "job";
+  /** A unique name, used in logs. */
   readonly name: string;
   /** A cron expression (`"0 3 * * *"`) or a duration (`"30s"`, `"1h"`). */
   readonly schedule: string;
@@ -972,6 +1129,7 @@ export interface JobDefinition {
   readonly runOnStart: boolean;
   /** Which shards run the job when the bot is sharded. */
   readonly shard: "all" | "first";
+  /** The work to do on each run. */
   readonly run: (ctx: JobContext) => unknown | Promise<unknown>;
 }
 
@@ -997,6 +1155,7 @@ export interface JobInput {
    * for things like a daily announcement.
    */
   shard?: "all" | "first";
+  /** The work to do on each run. Observe `ctx.signal` in long jobs. */
   run: (ctx: JobContext) => unknown | Promise<unknown>;
 }
 
@@ -1030,24 +1189,39 @@ export function defineJob(input: JobInput): JobDefinition {
 
 /** A cross-cutting plugin. */
 export interface PluginDefinition {
+  /** Marks the object as a plugin for the loader. */
   readonly kind: "plugin";
+  /** A unique name, used in logs and in error messages. */
   readonly name: string;
+  /** The plugin's own version, shown by `djs-bot explain`. */
   readonly version?: string;
+  /** Capabilities that another plugin or feature must provide. */
   readonly requires: readonly string[];
+  /** Capabilities this plugin provides to others. */
   readonly provides: readonly string[];
+  /** Capabilities that nothing else may provide while this plugin is loaded. */
   readonly conflicts: readonly string[];
+  /** Called once at startup, before the client logs in. */
   readonly setup: (app: PluginApp) => unknown | Promise<unknown>;
+  /** Called during graceful shutdown. */
   readonly teardown?: (app: PluginApp) => unknown | Promise<unknown>;
 }
 
 /** Input accepted by {@link definePlugin}. */
 export interface PluginInput {
+  /** A unique name, used in logs and in error messages. */
   name: string;
+  /** The plugin's own version, shown by `djs-bot explain`. */
   version?: string;
+  /** Capabilities that another plugin or feature must provide; startup fails with E040 otherwise. */
   requires?: string[];
+  /** Capabilities this plugin provides, which others can list in `requires`. */
   provides?: string[];
+  /** Capabilities that nothing else may provide while this plugin is loaded; startup fails with E041 otherwise. */
   conflicts?: string[];
+  /** Called once at startup, before the client logs in. Register hooks and services here. */
   setup: (app: PluginApp) => unknown | Promise<unknown>;
+  /** Called during graceful shutdown. Release what `setup` opened. */
   teardown?: (app: PluginApp) => unknown | Promise<unknown>;
 }
 
@@ -1081,7 +1255,9 @@ export type AnyDefinition =
 
 /** A self-contained feature: commands, events, components, services, jobs. */
 export interface FeatureDefinition {
+  /** Marks the object as a feature for the loader. */
   readonly kind: "feature";
+  /** A unique name, used in logs and in error messages. */
   readonly name: string;
   /** Service tokens this feature needs the host (or other features) to provide. */
   readonly requires: readonly string[];
@@ -1089,35 +1265,61 @@ export interface FeatureDefinition {
   readonly provides: readonly string[];
   /** Feature-scoped default configuration. */
   readonly config: Readonly<Record<string, unknown>>;
+  /** Slash commands of the feature. */
   readonly commands: readonly CommandDefinition[];
+  /** User context-menu commands of the feature. */
   readonly userCommands: readonly UserCommandDefinition[];
+  /** Message context-menu commands of the feature. */
   readonly messageCommands: readonly MessageCommandDefinition[];
+  /** Event listeners of the feature. */
   readonly events: readonly EventDefinition[];
+  /** Message triggers of the feature. */
   readonly triggers: readonly TriggerDefinition[];
+  /** Buttons of the feature. */
   readonly buttons: readonly ButtonDefinition[];
+  /** Select menus of the feature, of any kind. */
   readonly selectMenus: readonly AnySelectDefinition[];
+  /** Modals of the feature. */
   readonly modals: readonly ModalDefinition[];
+  /** Services of the feature. */
   readonly services: readonly ServiceDefinition[];
+  /** Scheduled jobs of the feature. */
   readonly jobs: readonly JobDefinition[];
+  /** Plugins of the feature. */
   readonly plugins: readonly PluginDefinition[];
 }
 
 /** Input accepted by {@link defineFeature}. */
 export interface FeatureInput {
+  /** A unique name, used in logs and in error messages. */
   name: string;
+  /** Capabilities the host bot (or another feature) must provide; startup fails with E040 otherwise. */
   requires?: string[];
+  /** Capabilities this feature provides, which others can list in `requires`. */
   provides?: string[];
+  /** Default configuration scoped to the feature. */
   config?: Record<string, unknown>;
+  /** Slash commands to register. */
   commands?: CommandDefinition[];
+  /** User context-menu commands to register. */
   userCommands?: UserCommandDefinition[];
+  /** Message context-menu commands to register. */
   messageCommands?: MessageCommandDefinition[];
+  /** Event listeners to register. */
   events?: EventDefinition[];
+  /** Message triggers to register. */
   triggers?: TriggerDefinition[];
+  /** Buttons to register. */
   buttons?: ButtonDefinition[];
+  /** Select menus to register, of any kind. */
   selectMenus?: AnySelectDefinition[];
+  /** Modals to register. */
   modals?: ModalDefinition[];
+  /** Services to register. */
   services?: ServiceDefinition[];
+  /** Scheduled jobs to register. */
   jobs?: JobDefinition[];
+  /** Plugins to register. */
   plugins?: PluginDefinition[];
 }
 

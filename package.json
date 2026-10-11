@@ -100,6 +100,7 @@
     "bench": "tsx benchmarks/run.ts",
     "docs": "npm --prefix docs install && npm --prefix docs run dev",
     "docs:build": "npm --prefix docs install && npm --prefix docs run build",
+    "docs:api": "node docs/scripts/api-index.mjs",
     "lint": "tsc --noEmit",
     "example": "tsx examples/minimal/bot.ts",
     "prepublishOnly": "npm run build",

@@ -86,6 +86,9 @@ export default defineCommand({
   defaultMemberPermissions: PermissionFlagsBits.ManageGuild,
 
   async run(ctx) {
+    const channel = ctx.channel;
+    if (!channel?.isSendable()) return ctx.reply.error("I cannot post in this channel.");
+
     const menu = RolesSelect.build(undefined, {
       placeholder: "Pick your roles",
       minValues: 0,
@@ -98,7 +101,7 @@ export default defineCommand({
       })),
     });
 
-    await ctx.channel!.send({
+    await channel.send({
       embeds: [
         new EmbedBuilder()
           .setTitle("Choose your roles")
