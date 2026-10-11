@@ -3,7 +3,10 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.2.0
+
+Forms that speak the language of whoever opens them, and a documentation
+site in two languages with a new home page.
 
 ### Added
 
