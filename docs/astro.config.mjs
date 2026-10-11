@@ -1,4 +1,5 @@
 import { defineConfig } from "astro/config";
+import { unified } from "@astrojs/markdown-remark";
 import starlight from "@astrojs/starlight";
 import { normalizeBase, remarkBaseLinks, withBase } from "./plugins/base-links.mjs";
 import { rehypeWrapTables } from "./plugins/wrap-tables.mjs";
@@ -20,7 +21,7 @@ const site = process.env.DOCS_SITE || "https://ix-xs.github.io";
 const base = normalizeBase(process.env.DOCS_BASE || "/djs-bot");
 
 /** One section of the sidebar, listing every page of a folder in its own order. */
-const section = (label, directory, collapsed = true) => ({ label, collapsed, autogenerate: { directory } });
+const section = (label, directory, collapsed = true) => ({ label, collapsed, items: [{ autogenerate: { directory } }] });
 
 // https://starlight.astro.build/reference/configuration/
 export default defineConfig({
@@ -29,23 +30,27 @@ export default defineConfig({
   // Addresses of the previous structure, each pointing at its new home.
   redirects: Object.fromEntries(Object.entries(MOVED).map(([from, to]) => [from, withBase(to, base)])),
   markdown: {
-    remarkPlugins: [[remarkBaseLinks, { base }]],
-    rehypePlugins: [rehypeWrapTables],
+    // The two plugins below are written for unified, not for Astro's default processor.
+    processor: unified({
+      remarkPlugins: [[remarkBaseLinks, { base }]],
+      rehypePlugins: [rehypeWrapTables],
+    }),
   },
   integrations: [
     starlight({
       title: "djs-bot",
       description:
         "A TypeScript-first, production-ready framework for Discord bots built on discord.js. Typed commands, typed customId routing, auto intents, DI, plugins, jobs and a batteries-included CLI.",
-      social: {
-        github: "https://github.com/ix-xs/djs-bot",
-      },
+      social: [{ icon: "github", label: "GitHub", href: "https://github.com/ix-xs/djs-bot" }],
       editLink: {
         baseUrl: "https://github.com/ix-xs/djs-bot/edit/main/docs/",
       },
       head: [
         // Lets the page paint under the notch; the header pads itself back out.
         { tag: "meta", attrs: { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" } },
+        // The SVG icon comes from Starlight; these two are for the browsers that want a PNG.
+        { tag: "link", attrs: { rel: "icon", type: "image/png", sizes: "32x32", href: withBase("/favicon-32.png", base) } },
+        { tag: "link", attrs: { rel: "apple-touch-icon", href: withBase("/apple-touch-icon.png", base) } },
         // Kept in step with the theme by the theme toggle.
         { tag: "meta", attrs: { name: "theme-color", content: "#121211" } },
       ],

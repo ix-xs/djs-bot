@@ -4,7 +4,7 @@
 
 **A TypeScript-first, production-ready framework for Discord bots - built on [discord.js](https://discord.js.org).**
 
-_Write features, not plumbing._
+_Discord bots, fully typed._
 
 [![npm version](https://img.shields.io/npm/v/@ix-xs/djs-bot.svg?color=cb3837&logo=npm)](https://www.npmjs.com/package/@ix-xs/djs-bot)
 [![npm downloads](https://img.shields.io/npm/dm/@ix-xs/djs-bot.svg?color=cb3837&logo=npm)](https://www.npmjs.com/package/@ix-xs/djs-bot)

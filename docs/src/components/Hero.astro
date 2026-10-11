@@ -1,13 +1,12 @@
 ---
 // The landing page's opening: a statement, the install line, two ways in, and
 // next to them the smallest real example with what it does in Discord.
-import type { Props } from "@astrojs/starlight/props";
 import { Code, LinkButton, TabItem, Tabs } from "@astrojs/starlight/components";
 import DiscordButtons from "./DiscordButtons.astro";
 import DiscordMessage from "./DiscordMessage.astro";
 import { withBase } from "../../plugins/base-links.mjs";
 
-const { data } = Astro.props.entry;
+const { data } = Astro.locals.starlightRoute.entry;
 const { title = data.title, tagline, actions = [] } = data.hero ?? {};
 const install = "npm i @ix-xs/djs-bot discord.js";
 

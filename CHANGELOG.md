@@ -3,6 +3,32 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+Nothing changes in the published package: its files are byte for byte those of
+1.1.1.
+
+### Documentation
+
+- **Search opens on suggestions** instead of an empty box: the pages you last
+  opened from a search, a few pages to start from, and searches to try. The
+  arrow keys walk through suggestions and results, and typing goes back to the
+  field.
+- **The header lines up.** Search, repository, theme and menu share one box
+  size and one centre line, and the menu button no longer sits on top of the
+  theme switch on wide screens.
+- Every heading has a link to itself.
+- A new site icon, drawn from the name as the header writes it.
+- A new opening line on the home page.
+
+### Internal
+
+- The site runs on Astro 7 and Starlight 0.42.
+- Development toolchain: TypeScript 6, vitest 5, tinybench 6. TypeScript 7 has
+  to wait for the build tool to support it.
+- GitHub Actions: checkout 7, setup-node 7, upload-pages-artifact 5,
+  deploy-pages 5.
+
 ## 1.1.1
 
 Thirteen defects, all found by checking every page of the documentation

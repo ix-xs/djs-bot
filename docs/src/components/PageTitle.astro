@@ -1,9 +1,9 @@
 ---
 // The head of a documentation page: which part of the docs this is, the title,
 // and the page's description as a lead paragraph.
-import type { Props } from "@astrojs/starlight/props";
+import type { StarlightRouteData } from "@astrojs/starlight/route-data";
 
-type Entry = Props["sidebar"][number];
+type Entry = StarlightRouteData["sidebar"][number];
 
 /** The labels of the groups that contain the current page, outermost first. */
 function trail(entries: Entry[], path: string[] = []): string[] | undefined {
@@ -18,7 +18,7 @@ function trail(entries: Entry[], path: string[] = []): string[] | undefined {
   return undefined;
 }
 
-const { entry, sidebar } = Astro.props;
+const { entry, sidebar } = Astro.locals.starlightRoute;
 const groups = trail(sidebar) ?? [];
 const lead = entry.data.description;
 ---

@@ -25,6 +25,9 @@ comment. After adding or documenting an export, run `npm run docs:api` from the
 repository root and commit the result; the test suite fails when the page is
 out of date.
 
+The site icon is drawn in `public/favicon.svg`. After changing it, run
+`node scripts/icons.mjs` and commit the two PNG files it writes.
+
 ## Develop
 
 ```bash
