@@ -10,6 +10,16 @@ Nothing changes in the published package: its files are byte for byte those of
 
 ### Documentation
 
+- **The documentation is available in French.** Every page is translated; the
+  switch in the header keeps you on the same page, and a link to a section
+  works in both languages.
+- **A new home page.** A single centred opening, and under it a showcase to
+  play with: pick a kind of feature (command, autocomplete, button, select
+  menu, form, context menu, event, job), run it in a simulated Discord, and
+  see which lines of the file each step comes from. Its samples are compiled
+  against the package by the type tests.
+- Two links of the English pages pointed at a path of the author's machine.
+  The link checker now refuses anything that is not a link of the site.
 - **Search opens on suggestions** instead of an empty box: the pages you last
   opened from a search, a few pages to start from, and searches to try. The
   arrow keys walk through suggestions and results, and typing goes back to the

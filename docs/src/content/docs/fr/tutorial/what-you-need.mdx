@@ -1,0 +1,93 @@
+---
+title: Ce qu'il vous faut
+description: Les trois choses à installer avant de construire votre premier bot Discord - et ce que fait réellement chacune.
+sidebar:
+  label: "1. Ce qu'il vous faut"
+  order: 1
+---
+
+import { Steps, Aside, Tabs, TabItem, CardGrid, Card } from '@astrojs/starlight/components';
+
+Les bots Discord, c'est nouveau pour vous ? Commencez ici. Ce tutoriel vous mène d'un dossier
+vide à un **bot qui fonctionne et qui est déployé**, en expliquant chaque étape. Aucune
+expérience préalable des bots n'est nécessaire.
+
+## Ce qu'est vraiment un bot Discord
+
+Un bot est simplement **un programme sur votre ordinateur qui se connecte à Discord**, comme
+le ferait un utilisateur. Discord lui envoie des événements (« quelqu'un a tapé `/ping` »),
+votre programme décide quoi faire, puis répond.
+
+<CardGrid>
+  <Card title="Votre code" icon="laptop">
+    Un programme Node.js qui utilise `djs-bot`. Il tourne sur votre machine (ou sur un serveur).
+  </Card>
+  <Card title="L'application" icon="discord">
+    Une entrée dans le Developer Portal de Discord. Elle contient l'identité de votre bot et son **token** (son mot de passe).
+  </Card>
+  <Card title="La connexion" icon="random">
+    Votre programme utilise le token pour se connecter. Discord lui envoie ensuite les événements en temps réel.
+  </Card>
+</CardGrid>
+
+<Aside type="note" title="Vous n'avez pas encore besoin d'un serveur">
+Pendant le développement, votre bot tourne sur votre propre ordinateur. Il apparaît **en
+ligne** dans Discord seulement tant que votre programme est lancé. L'hébergement vient
+plus tard, à l'[étape 7](/tutorial/going-live/).
+</Aside>
+
+## Installer les outils
+
+<Steps>
+
+1. **Node.js 22 ou plus récent**
+
+   `djs-bot` a besoin de Node 22+ (il utilise le module intégré `node:sqlite`). Téléchargez
+   la version **LTS** sur [nodejs.org](https://nodejs.org).
+
+   Vérifiez que l'installation a fonctionné :
+
+   ```bash
+   node --version
+   # v22.x.x ou plus
+   ```
+
+   <Aside type="caution">
+   Si vous voyez `v20` ou moins, `djs-bot` ne démarrera pas. Installez un Node plus récent.
+   </Aside>
+
+2. **Un éditeur de code**
+
+   [VS Code](https://code.visualstudio.com) est le choix habituel, et il est gratuit. Il
+   comprend TypeScript d'office, ce qui veut dire qu'il vous montrera les erreurs de votre
+   bot *avant* que vous le lanciez.
+
+3. **Un compte Discord et un serveur que vous pouvez gérer**
+
+   Il vous faut un serveur où vous avez la permission **Gérer le serveur**, pour y inviter
+   votre bot. En créer un personnel prend 10 secondes : dans Discord, cliquez sur le **+**
+   de la liste des serveurs → *Créer le mien*.
+
+</Steps>
+
+## TypeScript ou JavaScript ?
+
+`djs-bot` fonctionne avec les deux. Ce tutoriel utilise **TypeScript**, parce que tout
+l'intérêt du framework est que votre éditeur repère les erreurs à votre place (un nom
+d'option erroné, un argument manquant) au lieu que votre bot plante à 2 h du matin.
+
+<Tabs>
+  <TabItem label="TypeScript (recommandé)">
+    Vous écrivez des fichiers `.ts`. Votre éditeur complète chaque option et signale les fautes de frappe.
+    Vous n'avez **pas** besoin de compiler quoi que ce soit pendant le développement - `djs-bot dev` exécute
+    directement le TypeScript.
+  </TabItem>
+  <TabItem label="JavaScript">
+    Tout ce tutoriel fonctionne aussi en `.js` - retirez simplement les annotations de type. Vous
+    gardez l'autocomplétion, parce que le paquet fournit toutes ses définitions de types.
+  </TabItem>
+</Tabs>
+
+---
+
+Ensuite : créer l'identité de votre bot sur Discord et récupérer son token.

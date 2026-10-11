@@ -2,6 +2,7 @@ import { defineConfig } from "astro/config";
 import { unified } from "@astrojs/markdown-remark";
 import starlight from "@astrojs/starlight";
 import { normalizeBase, remarkBaseLinks, withBase } from "./plugins/base-links.mjs";
+import { rehypeSharedHeadingIds } from "./plugins/heading-ids.mjs";
 import { rehypeWrapTables } from "./plugins/wrap-tables.mjs";
 import { MOVED } from "./redirects.mjs";
 import { atelierDark, atelierLight } from "./src/styles/code-themes.mjs";
@@ -21,7 +22,7 @@ const site = process.env.DOCS_SITE || "https://ix-xs.github.io";
 const base = normalizeBase(process.env.DOCS_BASE || "/djs-bot");
 
 /** One section of the sidebar, listing every page of a folder in its own order. */
-const section = (label, directory, collapsed = true) => ({ label, collapsed, items: [{ autogenerate: { directory } }] });
+const section = (label, fr, directory, collapsed = true) => ({ label, translations: { fr }, collapsed, items: [{ autogenerate: { directory } }] });
 
 // https://starlight.astro.build/reference/configuration/
 export default defineConfig({
@@ -33,12 +34,20 @@ export default defineConfig({
     // The two plugins below are written for unified, not for Astro's default processor.
     processor: unified({
       remarkPlugins: [[remarkBaseLinks, { base }]],
-      rehypePlugins: [rehypeWrapTables],
+      rehypePlugins: [rehypeSharedHeadingIds, rehypeWrapTables],
     }),
   },
   integrations: [
     starlight({
       title: "djs-bot",
+      // English is the original and keeps the addresses it always had; a
+      // translation lives under its language code. A page that is not
+      // translated yet falls back to English, with a notice.
+      defaultLocale: "root",
+      locales: {
+        root: { label: "English", lang: "en" },
+        fr: { label: "Français", lang: "fr" },
+      },
       description:
         "A TypeScript-first, production-ready framework for Discord bots built on discord.js. Typed commands, typed customId routing, auto intents, DI, plugins, jobs and a batteries-included CLI.",
       social: [{ icon: "github", label: "GitHub", href: "https://github.com/ix-xs/djs-bot" }],
@@ -63,6 +72,7 @@ export default defineConfig({
       components: {
         Header: "./src/components/Header.astro",
         ThemeSelect: "./src/components/ThemeSelect.astro",
+        LanguageSelect: "./src/components/LanguageSelect.astro",
         PageTitle: "./src/components/PageTitle.astro",
         Hero: "./src/components/Hero.astro",
       },
@@ -99,23 +109,25 @@ export default defineConfig({
       sidebar: [
         {
           label: "Start",
+          translations: { fr: "Démarrer" },
           items: [
-            { label: "Introduction", slug: "index" },
+            { label: "Introduction", translations: { fr: "Introduction" }, slug: "index" },
             { slug: "quick-start" },
-            section("Tutorial", "tutorial"),
+            section("Tutorial", "Tutoriel", "tutorial"),
           ],
         },
-        section("Basics", "basics", false),
-        section("Commands", "commands"),
-        section("Components", "components"),
-        section("Events", "events"),
-        section("Architecture", "architecture"),
-        section("Data", "data"),
-        section("Messages", "messages"),
-        section("Production", "production"),
-        section("Recipes", "recipes"),
+        section("Basics", "Bases", "basics", false),
+        section("Commands", "Commandes", "commands"),
+        section("Components", "Composants", "components"),
+        section("Events", "Événements", "events"),
+        section("Architecture", "Architecture", "architecture"),
+        section("Data", "Données", "data"),
+        section("Messages", "Messages", "messages"),
+        section("Production", "Production", "production"),
+        section("Recipes", "Recettes", "recipes"),
         {
           label: "Reference",
+          translations: { fr: "Référence" },
           collapsed: true,
           items: [
             { slug: "api/exports" },

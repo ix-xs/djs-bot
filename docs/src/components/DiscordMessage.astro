@@ -18,17 +18,20 @@ interface Props {
   /** A small label above the frame, for example "Result in Discord". */
   caption?: string;
 }
-const { author = "djs-bot", bot = true, time = "Today at 14:02", color = "#5865f2", content, used, caption } = Astro.props;
+import { useT } from "../i18n";
+
+const t = useT(Astro.locals.starlightRoute?.locale);
+const { author = "djs-bot", bot = true, time = t("discord.today"), color = "#5865f2", content, used, caption } = Astro.props;
 // The first grapheme, so that an emoji-first name does not yield half a character.
 const first = [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(author.trim())][0]?.segment ?? "?";
 ---
 
-<figure class="dc not-content" aria-label={`Discord message from ${author}`}>
+<figure class="dc not-content" aria-label={t("discord.message", { author })}>
   {caption && <figcaption class="dc-cap">{caption}</figcaption>}
   <div class="dc-msg">
     <div class="dc-av" style={`background:${color}`} aria-hidden="true">{first.toUpperCase()}</div>
     <div class="dc-main">
-      {used && <div class="dc-used">{used.user} used <b>/{used.command}</b></div>}
+      {used && <div class="dc-used">{t("discord.used", { user: used.user })} <b>/{used.command}</b></div>}
       <div class="dc-meta">
         <b>{author}</b>
         {bot && <span class="dc-app">APP</span>}

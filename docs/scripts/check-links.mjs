@@ -8,7 +8,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { normalizeBase } from "../plugins/base-links.mjs";
+import { LOCALES, normalizeBase } from "../plugins/base-links.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const dist = path.resolve(here, "..", "dist");
@@ -43,6 +43,21 @@ for (const file of files) {
 }
 
 const problems = [];
+
+// A translated page shares the heading ids of its English page (see
+// plugins/heading-ids.mjs): a link to a section works in every language.
+const headingIds = (html) => [...html.matchAll(/<h[1-6][^>]*\sid="([^"]+)"/g)].map((m) => m[1]).join(" ");
+for (const locale of LOCALES) {
+  const folder = path.join(dist, locale) + path.sep;
+  for (const [file, { html }] of pages) {
+    if (!file.startsWith(folder)) continue;
+    const original = pages.get(path.join(dist, file.slice(folder.length)));
+    if (original && headingIds(original.html) !== headingIds(html)) {
+      problems.push(`${path.relative(dist, file).replaceAll("\\", "/")}: its headings do not have the ids of the English page`);
+    }
+  }
+}
+
 for (const [file, { html }] of pages) {
   const from = path.relative(dist, file).replaceAll("\\", "/");
   for (const [, href] of html.matchAll(/<a\s[^>]*?href="([^"]+)"/g)) {
@@ -56,7 +71,12 @@ for (const [file, { html }] of pages) {
       }
       continue;
     }
-    if (!rawPath.startsWith("/")) continue; // relative links are not used in this site
+    // Relative links are not used in this site: anything else that is not
+    // root-relative is a mistake (a path rewritten by a shell, a typo).
+    if (!rawPath.startsWith("/")) {
+      problems.push(`${from}: not a link of this site nor a full address -> ${href}`);
+      continue;
+    }
 
     if (base && rawPath !== base && !rawPath.startsWith(`${base}/`)) {
       problems.push(`${from}: link without the base path -> ${href}`);

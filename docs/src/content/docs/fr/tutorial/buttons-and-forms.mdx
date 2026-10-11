@@ -1,0 +1,187 @@
+---
+title: Boutons, menus et formulaires
+description: Rendre votre bot interactif - et comprendre le problème du customId que djs-bot résout pour vous.
+sidebar:
+  label: "5. Boutons et formulaires"
+  order: 5
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import DiscordMessage from '../../../../components/DiscordMessage.astro';
+import DiscordEmbed from '../../../../components/DiscordEmbed.astro';
+import DiscordButtons from '../../../../components/DiscordButtons.astro';
+
+Les boutons, les listes déroulantes et les formulaires en fenêtre contextuelle transforment une commande en vraie interface.
+
+## Le problème que tous les tutoriels de bots passent sous silence
+
+Quand un utilisateur clique sur un bouton, Discord transmet à votre bot **une seule chaîne** : le
+`customId` du bouton. C'est la *seule* information d'état que vous récupérez, et elle est plafonnée à
+100 caractères.
+
+Alors chaque bot finit par faire ceci :
+
+```ts
+// Le bricolage habituel
+if (interaction.customId.startsWith("ticket_close_")) {
+  const parts = interaction.customId.split("_");
+  const ticketId = parts[2];        // en espérant que ce soit le bon
+  const ownerId  = parts[3];        // des chaînes, toujours des chaînes
+}
+```
+
+Une faute de frappe et tout casse en silence. `djs-bot` remplace cela par des **paramètres typés**.
+
+## Un bouton, fait correctement
+
+<Steps>
+
+1. **Déclarer le bouton et ce qu'il transporte**
+
+   ```ts title="src/features/tickets/close.button.ts"
+   import { defineButton, p } from "@ix-xs/djs-bot";
+
+   export const CloseTicket = defineButton({
+     id: "ticket:close",
+     params: { ticketId: p.string, ownerId: p.string },
+     run: async (ctx) => {
+       // ctx.params est décodé et typé : { ticketId: string; ownerId: string }
+       if (ctx.user.id !== ctx.params.ownerId) {
+         return void ctx.reply.error("This isn't your ticket.");
+       }
+       await ctx.update.disable();               // grise le bouton
+       await ctx.reply.success(`Ticket ${ctx.params.ticketId} closed 🔒`, { ephemeral: true });
+     },
+   });
+   ```
+
+2. **Le construire ailleurs - avec vérification des types**
+
+   ```ts title="src/features/tickets/open.command.ts"
+   import { defineCommand, s, ui, ButtonStyle } from "@ix-xs/djs-bot";
+   import { CloseTicket } from "./close.button.js";
+
+   export default defineCommand({
+     name: "ticket",
+     description: "Open a support ticket",
+     options: { subject: s.string({ description: "What's wrong?", required: true }) },
+     run: async (ctx) => {
+       const button = CloseTicket.build(
+         { ticketId: "A42", ownerId: ctx.user.id },   // en oublier un -> erreur de compilation
+         { label: "Close ticket", style: ButtonStyle.Danger, emoji: "🔒" },
+       );
+       await ctx.reply({
+         content: `🎫 **${ctx.options.subject}**`,
+         components: [ui.row(button)],
+       });
+     },
+   });
+   ```
+
+</Steps>
+
+Le résultat :
+
+<DiscordMessage author="my-bot" content="🎫 <strong>Printer is on fire</strong>">
+  <DiscordButtons buttons={[{ label: "Close ticket", style: "danger", emoji: "🔒" }]} />
+</DiscordMessage>
+
+<Aside type="tip" title="Pourquoi c'est mieux">
+`CloseTicket.build({ ... })` **ne compilera pas** si vous oubliez `ownerId` ou si vous passez un
+nombre là où une chaîne est attendue. Et si l'identifiant encodé dépasse la limite de
+100 caractères de Discord, vous obtenez une erreur claire (`DJSBOT_E020`) à la construction - pas
+un échec mystérieux en production.
+</Aside>
+
+## Menus déroulants
+
+```ts title="src/features/roles/roles.select.ts"
+import { defineSelectMenu } from "@ix-xs/djs-bot";
+
+export const RolePicker = defineSelectMenu({
+  id: "roles:pick",
+  run: (ctx) => ctx.reply.success(`You picked: ${ctx.values.join(", ")}`),
+});
+```
+
+```ts
+const menu = RolePicker.build(undefined, {
+  placeholder: "Choose your roles",
+  minValues: 0,
+  maxValues: 2,
+  options: [
+    { label: "Developer", value: "dev", emoji: { name: "💻" } },
+    { label: "Designer", value: "design", description: "UI/UX" },
+  ],
+});
+await ctx.reply({ content: "Pick your roles:", components: [ui.row(menu)] });
+```
+
+Il existe aussi des menus **natifs** où c'est Discord qui fait la sélection à votre place -
+`defineUserSelect`, `defineRoleSelect`, `defineChannelSelect` - et qui vous donnent
+`ctx.users`, `ctx.roles`, `ctx.channels` déjà résolus.
+
+## Formulaires en fenêtre contextuelle (modales)
+
+```ts title="src/features/feedback/feedback.modal.ts"
+import { defineModal, field } from "@ix-xs/djs-bot";
+
+export const FeedbackModal = defineModal({
+  id: "feedback:submit",
+  title: "Send feedback",
+  fields: {
+    subject: field.short({ label: "Subject", required: true, maxLength: 80 }),
+    kind: field.select({
+      label: "What is it about?",
+      required: true,
+      options: [
+        { label: "A bug", value: "bug" },
+        { label: "An idea", value: "idea" },
+      ],
+    }),
+    body: field.paragraph({ label: "Details", maxLength: 1000 }),
+  },
+  run: (ctx) => {
+    // ctx.fields est typé : { subject: string; kind: string[]; body: string }
+    return ctx.reply.success(`Thanks for the ${ctx.fields.kind[0]} report on **${ctx.fields.subject}**!`, { ephemeral: true });
+  },
+});
+```
+
+Ouvrez-la depuis une commande :
+
+```ts
+run: (ctx) => ctx.showModal(FeedbackModal),
+```
+
+Un formulaire ne se limite pas au texte. Une modale peut contenir des listes déroulantes, des
+sélecteurs d'utilisateur, de rôle et de salon, des envois de fichiers, des boutons radio et des
+cases à cocher - voir
+[tous les composants de modale](/components/modals/#field-types).
+
+<Aside type="caution" title="Une modale doit être la première réponse">
+Discord exige que `showModal` soit la **première** réponse à une interaction. Si vous appelez
+d'abord `ctx.reply(...)` ou `ctx.reply.defer()`, l'ouverture de la modale échouera.
+</Aside>
+
+## Interactions prêtes à l'emploi
+
+Deux helpers couvrent les cas les plus courants et gèrent eux-mêmes leurs boutons :
+
+```ts
+// Une boîte de dialogue oui/non qui se résout en booléen
+if (await confirm(ctx, { content: "⚠️ Delete everything?", confirmLabel: "Delete" })) {
+  await wipe();
+}
+
+// Des pages avec les contrôles ⏮ ◀ ▶ ⏭
+await paginate(ctx, { pages: embeds, timeout: "5m" });
+```
+
+<DiscordMessage author="my-bot" content="⚠️ Delete everything?">
+  <DiscordButtons buttons={[{ label: "Delete", style: "success" }, { label: "Cancel", style: "danger" }]} />
+</DiscordMessage>
+
+---
+
+Ensuite : organiser votre bot à mesure qu'il grandit.

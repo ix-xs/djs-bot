@@ -1,0 +1,171 @@
+---
+title: Commandes avec options
+description: Recueillir les saisies des utilisateurs avec des options entièrement typées, et répondre avec des embeds riches.
+sidebar:
+  label: "4. Commandes et options"
+  order: 4
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import DiscordMessage from '../../../../components/DiscordMessage.astro';
+import DiscordEmbed from '../../../../components/DiscordEmbed.astro';
+
+Une commande qui dit toujours la même chose n'est pas très utile. Prenons de la **saisie**.
+
+## Ajouter une option
+
+Créez `src/features/greet/greet.command.ts` :
+
+```ts title="src/features/greet/greet.command.ts"
+import { defineCommand, s } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "greet",
+  description: "Say hello to someone",
+  options: {
+    user: s.user({ description: "Who to greet", required: true }),
+    message: s.string({ description: "A custom message", maxLength: 100 }),
+  },
+  run: (ctx) => {
+    // ctx.options.user    -> User        (obligatoire, donc jamais undefined)
+    // ctx.options.message -> string | undefined
+    const text = ctx.options.message ?? "Welcome!";
+    return ctx.reply.success(`${ctx.options.user}, ${text}`);
+  },
+});
+```
+
+Enregistrez le fichier. `djs-bot dev` recharge automatiquement. Dans Discord :
+
+<DiscordMessage author="my-bot">
+  <DiscordEmbed color="#23a55a" description="@Alice, Welcome!" />
+</DiscordMessage>
+
+<Aside type="tip" title="C'est cette partie qui vous sauve">
+Survolez `ctx.options.user` dans votre éditeur. Il indique **`User`**, pas `any`. Comme vous
+avez écrit `required: true`, TypeScript sait que la valeur ne peut pas être undefined. Retirez
+`required` et elle devient aussitôt `User | undefined` - et votre éditeur vous forcera à
+gérer ce cas **avant** que vous lanciez le bot.
+</Aside>
+
+## Tous les types d'options
+
+| Constructeur | Ce que vous recevez dans `ctx.options` | Réglages utiles |
+| --- | --- | --- |
+| `s.string()` | `string` | `minLength`, `maxLength`, `choices`, `autocomplete` |
+| `s.integer()` | `number` (entier) | `min`, `max`, `choices`, `autocomplete` |
+| `s.number()` | `number` (décimaux) | `min`, `max`, `choices` |
+| `s.boolean()` | `boolean` | |
+| `s.user()` | `User` | |
+| `s.member()` | `GuildMember` | membre du serveur, résolu |
+| `s.channel()` | `GuildBasedChannel` | `channelTypes: [ChannelType.GuildText]` |
+| `s.role()` | `Role` | |
+| `s.mentionable()` | `User \| Role \| GuildMember` | |
+| `s.attachment()` | `Attachment` | un fichier envoyé par l'utilisateur |
+
+Toutes acceptent `description` et `required`.
+
+## Donner une liste fixe aux utilisateurs
+
+```ts
+options: {
+  difficulty: s.string({
+    description: "Pick a difficulty",
+    required: true,
+    choices: [
+      { name: "Easy", value: "easy" },
+      { name: "Hard", value: "hard" },
+    ],
+  }),
+}
+```
+
+Discord affiche une liste déroulante - les utilisateurs ne peuvent rien saisir d'invalide.
+
+## Répondre : quatre façons
+
+<Tabs>
+  <TabItem label="Sémantique">
+    ```ts
+    await ctx.reply.success("It worked!");   // embed vert
+    await ctx.reply.error("Not allowed.");   // embed rouge, visible seulement par l'utilisateur
+    await ctx.reply.info("Just so you know");// blue embed
+    ```
+    <DiscordMessage author="my-bot">
+      <DiscordEmbed color="#23a55a" description="✅ It worked!" />
+    </DiscordMessage>
+  </TabItem>
+  <TabItem label="Texte brut">
+    ```ts
+    await ctx.reply("Hello there!");
+    ```
+    <DiscordMessage author="my-bot" content="Hello there!" />
+  </TabItem>
+  <TabItem label="Embed personnalisé">
+    ```ts
+    import { EmbedBuilder } from "@ix-xs/djs-bot";
+
+    const embed = new EmbedBuilder()
+      .setColor(0x5865f2)
+      .setTitle("Player profile")
+      .setDescription("Level 12 · 3400 XP")
+      .setFooter({ text: "Updated just now" });
+
+    await ctx.reply({ embeds: [embed] });
+    ```
+    <DiscordMessage author="my-bot">
+      <DiscordEmbed color="#5865f2" title="Player profile" description="Level 12 · 3400 XP" footer="Updated just now" />
+    </DiscordMessage>
+  </TabItem>
+  <TabItem label="Traitement long">
+    Si votre gestionnaire met plus de 3 secondes, Discord abandonne. Dites-lui que vous
+    travaillez, puis modifiez la réponse :
+
+    ```ts
+    await ctx.reply.defer();            // affiche « Le bot réfléchit… »
+    const data = await slowApiCall();
+    await ctx.reply.editReply(`Done: ${data}`);
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="note" title="Réponses éphémères">
+`ctx.reply.error()` n'est visible que par la personne qui a lancé la commande. Ajoutez
+`{ ephemeral: true }` à n'importe quelle réponse pour obtenir la même chose :
+`ctx.reply.success("Saved", { ephemeral: true })`.
+</Aside>
+
+## Bloquer les mauvais usages avec des gardes
+
+Les gardes (*guards*) s'exécutent **avant** votre gestionnaire. Si l'une échoue, l'utilisateur
+reçoit la raison et votre code ne s'exécute jamais.
+
+```ts
+import { defineCommand, s, inGuild, hasPermission, cooldown, PermissionFlagsBits } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "kick",
+  description: "Kick a member",
+  guards: [
+    inGuild(),                                        // inutilisable en message privé
+    hasPermission(PermissionFlagsBits.KickMembers),   // l'appelant doit en avoir le droit
+    cooldown("10s"),                                  // au plus une fois par 10 s et par utilisateur
+  ],
+  options: { member: s.member({ description: "Who", required: true }) },
+  run: async (ctx) => {
+    await ctx.options.member.kick();
+    await ctx.reply.success(`Kicked ${ctx.options.member.user.tag}.`);
+  },
+});
+```
+
+<DiscordMessage author="my-bot">
+  <DiscordEmbed color="#f23f43" description="❌ You need: Kick Members." />
+</DiscordMessage>
+
+Gardes intégrées : `inGuild`, `dmOnly`, `hasPermission`, `botHasPermission`,
+`inChannel`, `ownerOnly`, `cooldown`, `rateLimit`.
+
+---
+
+Ensuite : les boutons, les menus et les formulaires.

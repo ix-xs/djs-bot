@@ -1,0 +1,181 @@
+---
+title: Organiser votre bot
+description: Événements, tâches planifiées, services partagés et comment garder un bot en croissance bien rangé.
+sidebar:
+  label: "6. Organiser"
+  order: 6
+---
+
+import { Aside, FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
+import DiscordMessage from '../../../../components/DiscordMessage.astro';
+import DiscordEmbed from '../../../../components/DiscordEmbed.astro';
+
+Trois commandes tiennent dans un seul fichier. Trente, non. Voici comment passer à l'échelle.
+
+## La convention de dossiers
+
+Regroupez par **fonctionnalité** (*feature*), pas par type. Tout ce qui concerne les tickets vit ensemble :
+
+<FileTree>
+- src
+  - index.ts
+  - features
+    - tickets
+      - open.command.ts
+      - close.button.ts
+      - tickets.service.ts
+    - welcome
+      - welcome.event.ts
+    - economy
+      - balance.command.ts
+      - daily.command.ts
+      - cleanup.job.ts
+</FileTree>
+
+Le chargeur trouve les fichiers grâce à leur **suffixe** :
+
+| Suffixe | Crée |
+| --- | --- |
+| `*.command.ts` | une commande slash |
+| `*.user.ts` / `*.message.ts` | une commande de clic droit (menu contextuel) |
+| `*.button.ts` / `*.select.ts` / `*.modal.ts` | des composants interactifs |
+| `*.event.ts` | un écouteur d'événement Discord |
+| `*.trigger.ts` | une réponse automatique à un message |
+| `*.job.ts` | une tâche planifiée |
+| `*.service.ts` | de la logique partagée (injection de dépendances) |
+| `*.feature.ts` | un lot regroupant tout ce qui précède |
+
+<Aside type="tip">
+Tout autre fichier (`helpers.ts`, `constants.ts`) est **ignoré** par le chargeur : vous
+pouvez donc garder le code partagé juste à côté de la fonctionnalité qui l'utilise.
+</Aside>
+
+## Réagir aux événements
+
+```ts title="src/features/welcome/welcome.event.ts"
+import { defineEvent } from "@ix-xs/djs-bot";
+
+export default defineEvent("guildMemberAdd", async (member, ctx) => {
+  ctx.logger.info({ id: member.id }, "member joined");
+  const channel = member.guild.systemChannel;
+  if (channel?.isSendable()) {
+    await channel.send(`Welcome ${member}! 👋`);
+  }
+});
+```
+
+<DiscordMessage author="my-bot" content="Welcome @NewUser! 👋" />
+
+<Aside type="note" title="Les intents sont gérés pour vous">
+Comme vous avez enregistré `guildMemberAdd`, `djs-bot` demande automatiquement l'intent
+**Server Members**. Il vous prévient aussi au démarrage que celui-ci est
+*privilégié* et doit être activé dans le Developer Portal (voir
+l'[étape 2](/tutorial/create-your-app/)).
+</Aside>
+
+## Tâches planifiées
+
+```ts title="src/features/economy/cleanup.job.ts"
+import { defineJob } from "@ix-xs/djs-bot";
+
+export default defineJob({
+  name: "nightly-cleanup",
+  schedule: "0 3 * * *",        // cron : 03:00 tous les jours. Ou "30s", "5m", "1h"
+  timezone: "Europe/Paris",
+  run: async (ctx) => {
+    if (ctx.signal.aborted) return;   // déclenché à l'arrêt du bot
+    await ctx.services.db.purgeExpired();
+  },
+});
+```
+
+Par défaut, les tâches ne se chevauchent jamais et s'arrêtent proprement sur `Ctrl+C`.
+
+## Partager la logique avec des services
+
+Au lieu d'importer une connexion à la base de données partout, enregistrez-la **une seule fois** :
+
+<Tabs>
+  <TabItem label="Définir">
+    ```ts title="src/features/core/db.service.ts"
+    import { defineService } from "@ix-xs/djs-bot";
+
+    export const Db = defineService("db", {
+      factory: () => createDatabase(),
+    });
+
+    // Dépend d'un autre service ? Listez-le :
+    export const Tickets = defineService("tickets", {
+      deps: ["db"],
+      factory: ({ db }) => new TicketsService(db),
+    });
+    ```
+  </TabItem>
+  <TabItem label="Utiliser">
+    ```ts
+    run: async (ctx) => {
+      const balance = await ctx.services.db.getBalance(ctx.user.id);
+      await ctx.reply.info(`You have ${balance} coins.`);
+    }
+    ```
+  </TabItem>
+  <TabItem label="Le typer">
+    ```ts title="src/types.ts"
+    declare module "@ix-xs/djs-bot" {
+      interface ServiceMap {
+        db: Database;
+        tickets: TicketsService;
+      }
+    }
+    ```
+    Désormais `ctx.services.db` est complété automatiquement partout, et une faute de frappe est une erreur de compilation.
+  </TabItem>
+</Tabs>
+
+## Enregistrer des données
+
+Vous n'avez pas besoin de configurer une base de données pour stocker des choses simples :
+
+```ts title="src/index.ts"
+import { defineBot, env, sqliteStore } from "@ix-xs/djs-bot";
+
+export default defineBot({
+  token: env("DISCORD_TOKEN"),
+  store: sqliteStore("data/bot.sqlite"),   // durable. Ou memoryStore() pour les tests
+});
+```
+
+```ts
+run: async (ctx) => {
+  const store = ctx.services.store;
+  const count = ((await store.get(ctx.user.id)) as number) ?? 0;
+  await store.set(ctx.user.id, count + 1);
+  await ctx.reply.info(`You've used this ${count + 1} times.`);
+}
+```
+
+Le store prend en charge `get` · `set(key, value, ttl?)` · `has` · `delete` · `keys` ·
+`clear` · `namespace(prefix)` · `getOrSet`. Besoin de Redis ou de Postgres à la place ? Implémentez
+la même petite interface `KVStore` et passez-la - rien d'autre ne change.
+
+## Réponses automatiques
+
+```ts title="src/features/fun/greetings.trigger.ts"
+import { defineTrigger } from "@ix-xs/djs-bot";
+
+export default defineTrigger({
+  name: "good-morning",
+  pattern: /\bgood morning\b/i,
+  cooldown: "5s",                       // par auteur
+  run: (ctx) => ctx.reply("☀️ Good morning!"),
+});
+```
+
+<Aside type="caution">
+Les triggers lisent le texte des messages : ils ont donc besoin de l'intent privilégié **Message Content**.
+`djs-bot` l'active automatiquement et vous rappelle de l'activer dans le portail.
+</Aside>
+
+---
+
+Ensuite : mettre votre bot en ligne pour de vrai.

@@ -387,6 +387,6 @@ messages: {
 
 - Add `cooldown("3s")` to every command so a moderator cannot spam-ban.
 - Add a `/unban` with an `autocomplete` option listing the ban list.
-- Log actions to a channel by adding a custom [audit sink](C:/Program Files/Git/data/audit/#choosing-sinks).
+- Log actions to a channel by adding a custom [audit sink](/data/audit/#choosing-sinks).
 - Gate the whole feature with a [feature flag](/data/flags/) so a server
   can turn it off.

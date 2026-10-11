@@ -1,0 +1,164 @@
+---
+title: Votre premier bot
+description: Créer le projet, brancher votre token et obtenir une commande /ping qui fonctionne en moins de cinq minutes.
+sidebar:
+  label: "3. Votre premier bot"
+  order: 3
+---
+
+import { Steps, Aside, FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
+import DiscordMessage from '../../../../components/DiscordMessage.astro';
+import DiscordEmbed from '../../../../components/DiscordEmbed.astro';
+
+Place au code. À la fin de cette page, votre bot sera **en ligne et répondra à une
+commande**.
+
+<Steps>
+
+1. **Créer le projet**
+
+   ```bash
+   mkdir my-bot && cd my-bot
+   npm init -y
+   npm install @ix-xs/djs-bot discord.js
+   npm install -D tsx typescript
+   ```
+
+   - `@ix-xs/djs-bot` - le framework
+   - `discord.js` - la bibliothèque Discord sur laquelle il s'appuie
+   - `tsx` - permet d'exécuter directement du TypeScript, sans étape de build pendant le développement
+
+2. **Générer le projet de départ**
+
+   ```bash
+   npx djs-bot init
+   ```
+
+   Cela crée un projet minimal qui fonctionne :
+
+   <FileTree>
+   - my-bot
+     - src
+       - index.ts        le point d'entrée du bot
+       - types.d.ts      où vous déclarerez vos services
+       - features
+         - ping
+           - ping.command.ts   votre première commande
+     - .env              vos secrets (ne le commitez jamais)
+     - .env.example      le même fichier sans les valeurs, sans risque à commiter
+     - .gitignore
+     - package.json      complété avec les scripts utilisés plus bas
+     - tsconfig.json
+   </FileTree>
+
+   Rien de ce que vous avez déjà n'est écrasé. Le `package.json` créé par `npm init`
+   est complété : il gagne les scripts `dev`, `start` et `deploy` ainsi que
+   `"type": "module"`.
+
+3. **Renseigner vos secrets**
+
+   Ouvrez `.env` et collez les valeurs de l'étape précédente :
+
+   ```bash title=".env"
+   DISCORD_TOKEN=your-bot-token-here
+   DISCORD_CLIENT_ID=your-application-id
+   DISCORD_DEV_GUILD=your-server-id
+   NODE_ENV=development
+   ```
+
+   <Aside type="danger">
+   Ajoutez `.env` à votre `.gitignore` **avant** votre premier commit. La commande `init`
+   le fait déjà pour vous, mais vérifiez.
+   </Aside>
+
+   <Aside type="tip" title="Ce que fait DISCORD_DEV_GUILD">
+   Les commandes globales mettent **jusqu'à une heure** à apparaître dans Discord. Les
+   commandes enregistrées pour un seul serveur apparaissent **instantanément**. Pendant le
+   développement, `djs-bot` déploie tout sur ce serveur, pour que vous n'attendiez jamais.
+   </Aside>
+
+4. **Le lancer**
+
+   ```bash
+   npx djs-bot dev
+   ```
+
+   Vous devriez voir quelque chose comme :
+
+   ```ansi
+   INFO  Ready user=my-bot#1234 guilds=1
+   INFO  Commands deployed scope=guild added=["ping"]
+   ```
+
+   Votre bot est maintenant **en ligne** sur votre serveur. Tapez `/ping` dans n'importe quel salon :
+
+   <DiscordMessage author="my-bot" content="">
+     <DiscordEmbed color="#23a55a" description="✅ Pong! 🏓" />
+   </DiscordMessage>
+
+   <Aside type="caution" title="La commande n'apparaît pas ?">
+   - Attendez quelques secondes et appuyez sur `Ctrl+R` dans Discord pour actualiser.
+   - Vérifiez que vous avez invité le bot avec le scope **`applications.commands`**.
+   - Vérifiez que `DISCORD_DEV_GUILD` est bien le serveur dans lequel vous tapez.
+   - Lancez `npx djs-bot doctor` - il vérifie votre token, vos intents et vos permissions.
+   </Aside>
+
+</Steps>
+
+## Comprendre ce que vous venez de lancer
+
+Il n'y a que deux fichiers. Voici chaque ligne expliquée.
+
+### Le fichier d'entrée
+
+```ts title="src/index.ts"
+import { defineBot, env } from "@ix-xs/djs-bot";
+
+const bot = defineBot({
+  token: env("DISCORD_TOKEN"),                        // lit .env, échoue avec un message clair s'il manque
+  features: `${import.meta.dirname}/features`,        // charge automatiquement chaque commande de ce dossier
+  intents: "auto",                                    // déduit les intents de votre code
+  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") }, // déploiements instantanés pendant le développement
+});
+
+export default bot;
+
+// Ne démarre que lorsqu'il est lancé directement - la CLI importe ce fichier pour `explain`/`deploy`.
+if (!process.env.DJSBOT_CLI) void bot.start();
+```
+
+| Ligne | Ce qu'elle fait |
+| --- | --- |
+| `env("DISCORD_TOKEN")` | Lit la variable depuis `.env` **ou** depuis l'environnement. Lève une erreur lisible si elle manque, au lieu d'un plantage déroutant plus tard. |
+| `features: ".../features"` | Chaque fichier qui suit une convention de nommage dans ce dossier est chargé automatiquement. Ajoutez un fichier, il fonctionne - aucune liste d'enregistrement à maintenir. |
+| `intents: "auto"` | Discord vous oblige à déclarer les événements que vous voulez. `djs-bot` lit votre code et demande exactement ceux-là. |
+| `export default bot` | Permet à la CLI (`explain`, `deploy`, `doctor`) d'inspecter votre bot **sans se connecter** à Discord. |
+
+### La commande
+
+```ts title="src/features/ping/ping.command.ts"
+import { defineCommand } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "ping",                                  // devient /ping
+  description: "Check the bot is alive",         // affiché dans le sélecteur de commandes de Discord
+  run: (ctx) => ctx.reply.success("Pong! 🏓"),   // ctx contient tout ce dont vous avez besoin
+});
+```
+
+Le fichier s'appelle `ping.command.ts`. Ce suffixe `.command.ts` est ce qui permet au
+chargeur de le trouver - **importer un fichier n'enregistre jamais rien à lui seul**, ce
+qui signifie que vous pouvez toujours savoir ce que fait votre bot en regardant vos dossiers.
+
+<Aside type="tip" title="Voir exactement ce qui est chargé">
+```bash
+npx djs-bot explain
+```
+Affiche chaque commande, chaque événement, chaque intent et le plan de déploiement complet,
+sans se connecter. C'est le moyen le plus rapide de répondre à « pourquoi ma commande
+n'apparaît pas ? ».
+</Aside>
+
+---
+
+Ensuite : faire en sorte que la commande *fasse* vraiment quelque chose, avec des options typées.

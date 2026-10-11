@@ -94,7 +94,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:types": "tsc -p tsconfig.test.json",
+    "test:types": "tsc -p tsconfig.test.json && tsc -p docs/src/showcase/tsconfig.json",
     "attw": "attw --pack .",
     "check": "npm run typecheck && npm run test:types && npm run build && npm test",
     "bench": "tsx benchmarks/run.ts",

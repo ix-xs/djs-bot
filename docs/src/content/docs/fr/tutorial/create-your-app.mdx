@@ -1,0 +1,90 @@
+---
+title: Créer votre bot sur Discord
+description: Enregistrer une application, obtenir votre token, activer les intents et inviter le bot sur votre serveur.
+sidebar:
+  label: "2. Créer votre bot"
+  order: 2
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Avant d'écrire du code, votre bot a besoin d'une **identité** sur Discord. On la crée une
+seule fois, dans le Developer Portal.
+
+<Steps>
+
+1. **Créer l'application**
+
+   Allez sur le [Discord Developer Portal](https://discord.com/developers/applications)
+   → **New Application**. Donnez-lui le nom de votre bot (c'est ce que verront les
+   utilisateurs) et acceptez les conditions.
+
+2. **Copier l'Application ID**
+
+   Sur la page **General Information**, copiez l'**Application ID**. Vous en aurez besoin
+   pour déployer les commandes. C'est un long nombre comme `1234567890123456789`.
+
+   <Aside type="note">
+   L'Application ID est public et sans danger. Le **token** de l'étape suivante, lui, ne l'est pas.
+   </Aside>
+
+3. **Créer le bot et copier son token**
+
+   Ouvrez l'onglet **Bot** → **Reset Token** → **Copy**.
+
+   <Aside type="danger" title="Traitez le token comme un mot de passe">
+   Quiconque possède votre token peut contrôler entièrement votre bot. Ne le commitez **jamais**
+   dans git, ne le collez pas dans Discord, ne le laissez pas apparaître sur une capture d'écran.
+   S'il fuite, revenez ici et cliquez sur **Reset Token** - l'ancien meurt instantanément.
+   </Aside>
+
+4. **Activer les intents privilégiés**
+
+   Toujours dans l'onglet **Bot**, descendez jusqu'à **Privileged Gateway Intents** et
+   activez ce dont votre bot a besoin :
+
+   | Intent | Activez-le si vous voulez… |
+   | --- | --- |
+   | **Server Members** | réagir à l'arrivée ou au départ de membres (messages de bienvenue, rôles automatiques) |
+   | **Message Content** | lire le texte des messages (réponses automatiques, commandes à préfixe) |
+   | **Presence** | voir le statut en ligne des membres |
+
+   <Aside type="tip">
+   `djs-bot` détermine les intents dont votre code a besoin et vous les indique au démarrage.
+   Si vous oubliez d'activer l'un de ces interrupteurs, `npx djs-bot doctor` vous le dira
+   explicitement, au lieu que votre bot échoue silencieusement à se connecter.
+   </Aside>
+
+5. **Inviter le bot sur votre serveur**
+
+   Allez dans **OAuth2 → URL Generator** et cochez :
+
+   - **Scopes :** `bot` et `applications.commands`
+   - **Bot permissions :** commencez par `Send Messages`, `Embed Links`, `Read Message History`
+     (ajoutez-en plus tard - par exemple `Kick Members` seulement si votre bot expulse des gens)
+
+   Copiez l'URL générée en bas, ouvrez-la dans votre navigateur et choisissez votre
+   serveur.
+
+   <Aside type="caution" title="Pourquoi applications.commands compte">
+   Sans le scope `applications.commands`, vos commandes slash n'apparaîtront jamais, même si
+   votre code est parfait. C'est le blocage le plus fréquent chez les débutants.
+   </Aside>
+
+6. **Activer le mode développeur (pour pouvoir copier les identifiants)**
+
+   Dans Discord : **Paramètres utilisateur → Avancé → Mode développeur**. Vous pouvez
+   alors faire un clic droit sur n'importe quel serveur, salon, rôle ou utilisateur et choisir
+   **Copier l'identifiant**. Vous aurez besoin de l'**identifiant de votre serveur** à
+   l'étape suivante.
+
+</Steps>
+
+## Ce que vous devriez avoir maintenant
+
+- ✅ Le **token de votre bot** (secret)
+- ✅ Votre **Application ID**
+- ✅ L'**identifiant de votre serveur**
+- ✅ Le bot visible (hors ligne) dans la liste des membres de votre serveur
+
+Gardez ces trois valeurs sous la main - l'étape suivante les place dans un fichier `.env`.

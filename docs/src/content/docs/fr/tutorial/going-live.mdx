@@ -1,0 +1,167 @@
+---
+title: Passer en production
+description: Déployer vos commandes globalement, faire tourner le bot en production et le garder en bonne santé.
+sidebar:
+  label: "7. Passer en production"
+  order: 7
+---
+
+import { Steps, Aside, Tabs, TabItem, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Votre bot fonctionne sur votre machine. Faisons en sorte qu'il fonctionne pour tout le monde, en permanence.
+
+## Commandes de serveur et commandes globales
+
+Cela piège tous les débutants, alors soyons précis :
+
+| | Commandes de serveur | Commandes globales |
+| --- | --- | --- |
+| **Où** | un serveur précis | chaque serveur où se trouve votre bot |
+| **Apparition** | **instantanée** | **jusqu'à 1 heure** |
+| **Servent à** | le développement, les outils d'administration propres à un serveur | vos vraies commandes, publiques |
+
+Pendant `djs-bot dev`, tout est déployé sur votre `DISCORD_DEV_GUILD` pour que vous
+n'attendiez jamais. En production, vous déployez **globalement**, une fois par version.
+
+<Steps>
+
+1. **Déployer vos commandes globalement**
+
+   ```bash
+   npx djs-bot deploy --dry-run   # aperçu : montre ce qui est ajouté / modifié / supprimé
+   npx djs-bot deploy             # envoie pour de bon
+   ```
+
+   Le déploiement est **déclaratif** : votre code est la source de vérité. Une commande
+   supprimée de votre code est **retirée** de Discord. Vous ne nettoyez jamais à la main.
+
+   <Aside type="caution" title="Des commandes en double ?">
+   Si vous avez testé avec `djs-bot dev`, votre serveur de développement contient encore des
+   copies de chaque commande. Une fois le déploiement global fait, ce serveur affiche **les deux**.
+   Nettoyez le miroir de développement :
+
+   ```bash
+   npx djs-bot clear --guild YOUR_DEV_SERVER_ID
+   ```
+
+   `djs-bot deploy` vous en avertit automatiquement.
+   </Aside>
+
+2. **Limiter les commandes d'administration à un serveur**
+
+   Certaines commandes ne doivent pas être publiques. Ajoutez `guilds` et elles ne se déploient **que** là :
+
+   ```ts
+   export default defineCommand({
+     name: "announce",
+     description: "Post an announcement",
+     guilds: ["123456789012345678"],   // uniquement votre serveur de support
+     run: …,
+   });
+   ```
+
+3. **Lancer en mode production**
+
+   ```bash
+   NODE_ENV=production npx djs-bot start
+   ```
+
+   Cela désactive le déploiement automatique de développement et fait passer les journaux
+   des jolies couleurs à du JSON sur une seule ligne (ce qu'attendent les agrégateurs de journaux).
+
+</Steps>
+
+## L'héberger
+
+Votre bot doit tourner 24 h/24 et 7 j/7 quelque part. Tout hébergeur compatible Node 22+ convient.
+
+<Tabs>
+  <TabItem label="Un VPS (systemd)">
+    ```ini title="/etc/systemd/system/mybot.service"
+    [Unit]
+    Description=My Discord bot
+    After=network.target
+
+    [Service]
+    WorkingDirectory=/srv/my-bot
+    ExecStart=/usr/bin/npx djs-bot start
+    Environment=NODE_ENV=production
+    Restart=always
+    RestartSec=5
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+    ```bash
+    sudo systemctl enable --now mybot
+    sudo journalctl -u mybot -f    # suivre les journaux
+    ```
+  </TabItem>
+  <TabItem label="Docker">
+    ```dockerfile title="Dockerfile"
+    FROM node:22-alpine
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm ci --omit=dev
+    COPY . .
+    ENV NODE_ENV=production
+    CMD ["npx", "djs-bot", "start"]
+    ```
+    Passez les secrets comme variables d'environnement - n'intégrez jamais le token dans l'image.
+  </TabItem>
+  <TabItem label="Plateforme (Railway, Fly…)">
+    Réglez la commande de démarrage sur `npx djs-bot start`, ajoutez `DISCORD_TOKEN` et
+    `DISCORD_CLIENT_ID` comme variables d'environnement, et définissez `NODE_ENV=production`.
+    Déployez vos commandes une fois avec `npx djs-bot deploy` depuis votre machine.
+  </TabItem>
+</Tabs>
+
+<Aside type="danger" title="Les secrets en production">
+Ne commitez jamais `.env`. Sur un serveur, définissez de vraies variables d'environnement
+(`Environment=` de systemd, `-e` de Docker, ou l'interface de secrets de votre plateforme).
+Si un token fuite un jour, réinitialisez-le immédiatement dans le Developer Portal.
+</Aside>
+
+## Le garder en bonne santé
+
+```ts title="src/index.ts"
+export default defineBot({
+  token: env("DISCORD_TOKEN"),
+  health: 3000,                     // GET /healthz /readyz /metrics
+  logger: { level: "info", pretty: false },
+  onError: (err, ctx) => {
+    // envoyer à Sentry, à un webhook, où vous voulez
+    return ctx?.reply.error("Something went wrong - we're on it.");
+  },
+});
+```
+
+- `/healthz` - le processus est-il vivant ? (liveness)
+- `/readyz` - est-il connecté à Discord ? (readiness)
+- `/metrics` - JSON : durée de fonctionnement, nombres d'interactions, de commandes et d'erreurs, nombre de serveurs
+
+Chaque interaction est déjà enveloppée dans une barrière d'erreurs : un gestionnaire qui lève une
+exception est journalisé avec un identifiant de corrélation et l'utilisateur reçoit tout de même une
+réponse. Votre bot **ne plante pas**.
+
+## Voir plus grand
+
+<CardGrid>
+  <LinkCard title="Sharding" description="Au-delà d'environ 2500 serveurs, Discord impose le sharding. Réglez sharding: 'auto' - votre code ne change pas." href="/production/sharding/" />
+  <LinkCard title="Limites de débit et nouvelles tentatives" description="Disjoncteurs, nouvelles tentatives et limiteurs de débit pour les appels à votre base de données ou à des API tierces." href="/production/resilience/" />
+  <LinkCard title="Traductions" description="Répondre dans la langue Discord de chaque utilisateur avec ctx.t()." href="/data/i18n/" />
+  <LinkCard title="Tests" description="Tester vos gestionnaires unitairement, sans token et sans réseau." href="/production/testing/" />
+</CardGrid>
+
+## C'est terminé 🎉
+
+Vous savez maintenant construire, lancer et livrer un bot Discord. À partir de là, le
+[Guide](/basics/project-layout/) documente chaque fonctionnalité en
+détail - journaux d'audit, feature flags, Components V2, menus contextuels, autocomplétion et
+bien plus.
+
+<Aside type="tip" title="Bloqué ?">
+`npx djs-bot doctor` vérifie votre token, vos intents et vos permissions.
+`npx djs-bot explain` montre tout ce qui est chargé et le plan de déploiement exact.
+À eux deux, ils répondent à la plupart des questions du type « pourquoi ça ne marche pas ? ».
+</Aside>

@@ -1,0 +1,15 @@
+{
+  // The samples of the landing page are real files: this checks them against
+  // the source of the package, so a sample cannot drift from the API.
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "rootDir": "../../..",
+    "paths": { "@ix-xs/djs-bot": ["../../../src/index.ts"] }
+  },
+  "include": ["samples/*.ts"],
+  "exclude": []
+}

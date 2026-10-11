@@ -6,7 +6,10 @@
 // Starlight owns the dialog and has no slot in it, so this renders a template
 // that the script below moves into place.
 import { getEntry } from "astro:content";
-import { withBase } from "../../plugins/base-links.mjs";
+import { href, useT, type UiKey } from "../i18n";
+
+const { locale } = Astro.locals.starlightRoute;
+const t = useT(locale);
 
 /** Pages offered first, in this order. Titles come from the pages themselves. */
 const STARTING_POINTS = [
@@ -24,16 +27,17 @@ const QUERIES = ["defineCommand", "customId", "autocomplete", "cooldown", "deplo
 /** The part of the documentation a page belongs to, as the sidebar names it. */
 function area(slug: string): string {
   const folder = slug.includes("/") ? slug.slice(0, slug.indexOf("/")) : "";
-  if (folder === "") return "Start";
-  if (folder === "api" || folder === "help") return "Reference";
-  return folder.charAt(0).toUpperCase() + folder.slice(1);
+  if (folder === "") return t("area.start");
+  if (folder === "api" || folder === "help") return t("area.reference");
+  return t(`area.${folder}` as UiKey);
 }
 
 const pages = (
   await Promise.all(
     STARTING_POINTS.map(async (slug) => {
-      const entry = await getEntry("docs", slug);
-      return entry ? { title: entry.data.title, area: area(slug), href: withBase(`/${slug}/`, import.meta.env.BASE_URL) } : undefined;
+      // The page in this language when it is translated, the English one otherwise.
+      const entry = (locale && (await getEntry("docs", `${locale}/${slug}`))) || (await getEntry("docs", slug));
+      return entry ? { title: entry.data.title, area: area(slug), href: href(`/${slug}/`, locale) } : undefined;
     }),
   )
 ).filter((page) => page !== undefined);
@@ -43,13 +47,13 @@ const pages = (
   <div class="at-suggest">
     <section data-at-recent hidden>
       <header>
-        <h2>Recently opened</h2>
-        <button type="button" data-at-forget>Clear</button>
+        <h2>{t("search.recent")}</h2>
+        <button type="button" data-at-forget>{t("search.clear")}</button>
       </header>
       <ul></ul>
     </section>
     <section>
-      <header><h2>Start here</h2></header>
+      <header><h2>{t("search.start")}</h2></header>
       <ul>
         {pages.map((page) => (
           <li>
@@ -59,7 +63,7 @@ const pages = (
       </ul>
     </section>
     <section>
-      <header><h2>Try a search</h2></header>
+      <header><h2>{t("search.try")}</h2></header>
       <div class="at-queries">
         {QUERIES.map((query) => (
           <button class="at-press" type="button" data-at-query={query}>{query}</button>
@@ -68,9 +72,9 @@ const pages = (
     </section>
   </div>
   <footer class="at-search-keys" aria-hidden="true">
-    <span><kbd>↑</kbd><kbd>↓</kbd>move</span>
-    <span><kbd>↵</kbd>open</span>
-    <span><kbd>esc</kbd>close</span>
+    <span><kbd>↑</kbd><kbd>↓</kbd>{t("search.move")}</span>
+    <span><kbd>↵</kbd>{t("search.open")}</span>
+    <span><kbd>esc</kbd>{t("search.close")}</span>
   </footer>
 </template>
 

@@ -1,0 +1,51 @@
+---
+title: djs-bot
+description: Un framework TypeScript pour bots Discord, prêt pour la production, construit sur discord.js.
+template: splash
+hero:
+  title: Bots Discord, <em>100&nbsp;%&nbsp;typés.</em>
+  tagline: djs-bot est un framework pensé pour TypeScript, au-dessus de discord.js. Commandes, boutons et formulaires typés, intents et réponses différées gérés pour vous, un store, des tâches planifiées et une CLI. Prêt pour la production dès le premier jour, sans rien de caché.
+  actions:
+    - text: Démarrage rapide
+      link: /quick-start/
+      variant: primary
+    - text: Créer votre premier bot
+      link: /tutorial/what-you-need/
+      variant: secondary
+---
+
+import Showcase from '../../../components/showcase/Showcase.astro';
+
+<div class="at-landing not-content">
+
+<section class="at-section">
+  <header data-reveal><span>01</span><h2>Un fichier, une fonctionnalité</h2></header>
+  <p data-reveal>Un fichier exporte une définition. Le framework le trouve, l'enregistre auprès de Discord, lui achemine l'interaction et vous remet des valeurs typées. Choisissez un type de fonctionnalité, puis jouez la scène : chaque action du framework éclaire les lignes qui l'ont demandée.</p>
+  <div data-reveal><Showcase /></div>
+</section>
+
+<section class="at-section">
+  <header data-reveal><span>02</span><h2>Ce que vous n'écrivez plus</h2></header>
+  <ul class="at-points">
+    <li data-reveal><h3>Les casts et les vérifications de null</h3><p>Options, paramètres de customId, champs de formulaire, services et configuration sont typés d'après leur déclaration. <code>required: true</code> rend la valeur obligatoire dans le type.</p></li>
+    <li data-reveal><h3>L'enregistrement et les intents</h3><p>Les commandes sont comparées puis déployées pour vous, et les intents de la passerelle sont déduits des événements que vous écoutez.</p></li>
+    <li data-reveal><h3>« L'application ne répond plus »</h3><p>Activez le différé automatique une fois. Un gestionnaire lent est acquitté pour vous, sans jamais entrer en conflit avec votre propre réponse.</p></li>
+    <li data-reveal><h3>Le découpage de chaînes dans les boutons</h3><p>Un bouton transporte des données typées dans son customId. Le clic revient à votre gestionnaire déjà décodé, sans <code>split("_")</code>.</p></li>
+    <li data-reveal><h3>La liste de contrôle de la production</h3><p>Barrière d'erreurs, arrêt propre, journaux structurés, sharding, contrôles de santé, métriques, limites de débit et store à compteurs atomiques sont intégrés.</p></li>
+    <li data-reveal><h3>Un serveur de test à chaque modification</h3><p>Les gestionnaires sont de simples fonctions. Le harnais de test exécute une commande, un bouton ou un formulaire et capture la réponse, sans token ni réseau.</p></li>
+  </ul>
+</section>
+
+<section class="at-section">
+  <header data-reveal><span>03</span><h2>Par où continuer</h2></header>
+  <ul class="at-paths">
+    <li data-reveal><a href="/tutorial/what-you-need/"><span>01</span><div><strong>Tutoriel</strong><small>De zéro à un bot en ligne, étape par étape. Aucune expérience préalable requise.</small></div></a></li>
+    <li data-reveal><a href="/quick-start/"><span>02</span><div><strong>Démarrage rapide</strong><small>Installer, générer et lancer, en cinq minutes, si vous connaissez déjà Node.</small></div></a></li>
+    <li data-reveal><a href="/commands/slash-commands/"><span>03</span><div><strong>Commandes</strong><small>Commandes slash, options typées, autocomplétion, sous-commandes, gardes.</small></div></a></li>
+    <li data-reveal><a href="/components/buttons/"><span>04</span><div><strong>Composants</strong><small>Boutons, menus de sélection, modales, Components V2, pagination.</small></div></a></li>
+    <li data-reveal><a href="/recipes/moderation/"><span>05</span><div><strong>Recettes</strong><small>Des fonctionnalités complètes à copier : modération, tickets, menu de rôles, niveaux, hébergement.</small></div></a></li>
+    <li data-reveal><a href="/api/exports/"><span>06</span><div><strong>Référence</strong><small>Chaque export, chaque code d'erreur, la CLI, le dépannage.</small></div></a></li>
+  </ul>
+</section>
+
+</div>

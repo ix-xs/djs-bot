@@ -25,6 +25,37 @@ comment. After adding or documenting an export, run `npm run docs:api` from the
 repository root and commit the result; the test suite fails when the page is
 out of date.
 
+## Languages
+
+English is the original and sits at the root of `src/content/docs/`. A
+translation mirrors it in a folder named after its language: the French page of
+`commands/options.md` is `fr/commands/options.md`, served at `/fr/commands/options/`.
+A page that has no translation yet falls back to English, with a notice.
+
+A translation changes the prose and nothing else:
+
+- **Links** are written exactly as in English (`/data/store/#namespaces`). The
+  build adds the language.
+- **Headings** stay in the same number and order. The build gives each one the
+  id of its English counterpart, so anchors are the same in every language.
+- **Code blocks** are copied as they are; only comments are translated.
+- In an `.mdx` page, a relative import gains one `../`.
+
+`npm run check-translation` compares every translated page with its original
+(frontmatter keys, headings, code, link targets) and the deploy workflow runs
+it. After changing an English page, change its translations in the same commit.
+
+The words of the interface (header, search, landing page) are in `src/i18n.ts`
+and `src/showcase/scenes.ts`; Starlight translates its own. To add a language,
+add it to `LOCALES` in `plugins/base-links.mjs`, to `locales` in
+`astro.config.mjs`, to `LANGUAGES` and the dictionary in `src/i18n.ts`, to the
+generator of the exports page (`scripts/api-index.mjs`), then translate the
+pages.
+
+The samples of the landing page's showcase are real files
+(`src/showcase/samples/`), compiled against the package by `npm run test:types`
+at the root.
+
 The site icon is drawn in `public/favicon.svg`. After changing it, run
 `node scripts/icons.mjs` and commit the two PNG files it writes.
 

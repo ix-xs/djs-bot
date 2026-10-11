@@ -5,7 +5,7 @@
  * result is committed, and `test/exports.test.ts` fails when it is out of date.
  */
 import { createRequire } from "node:module";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -13,13 +13,65 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const require = createRequire(path.join(root, "package.json"));
 const ts = require("typescript");
 
-export const OUTPUT = path.join(root, "docs/src/content/docs/api/exports.md");
+const content = path.join(root, "docs/src/content/docs");
+export const OUTPUT = path.join(content, "api/exports.md");
+/** The page of each language: English, then the translations. */
+export const OUTPUTS = { en: OUTPUT, fr: path.join(content, "fr/api/exports.md") };
 
 const ENTRIES = [
-  { specifier: "@ix-xs/djs-bot", file: "src/index.ts", intro: "The framework itself." },
-  { specifier: "@ix-xs/djs-bot/plugins", file: "src/plugins/index.ts", intro: "The official plugins." },
-  { specifier: "@ix-xs/djs-bot/testing", file: "src/testing.ts", intro: "The test harness. Import it from your tests only." },
+  { specifier: "@ix-xs/djs-bot", file: "src/index.ts", intro: { en: "The framework itself.", fr: "Le framework lui-même." } },
+  { specifier: "@ix-xs/djs-bot/plugins", file: "src/plugins/index.ts", intro: { en: "The official plugins.", fr: "Les plugins officiels." } },
+  {
+    specifier: "@ix-xs/djs-bot/testing",
+    file: "src/testing.ts",
+    intro: { en: "The test harness. Import it from your tests only.", fr: "Le harnais de test. À n'importer que depuis vos tests." },
+  },
 ];
+
+/** The words of the page itself. The descriptions of the symbols come from the source, in English. */
+const WORDS = {
+  en: {
+    title: "All exports",
+    description: "Every function, object, class and type the package exports, with what it is for and where it is documented.",
+    intro: [
+      "The complete list of what you can import, built from the source code. The",
+      "description of each symbol is the one your editor shows on hover; the last",
+      "column links to the page that explains it.",
+    ],
+    kinds: { function: "Functions", object: "Objects and constants", class: "Classes", type: "Types" },
+    columns: "| Export | What it is | Documented in |",
+    reexported: "Re-exported from discord.js",
+    convenience: "For convenience, so that a bot rarely needs to import from `discord.js` directly:",
+    total: (count) => `${count} symbols are declared by the framework.`,
+  },
+  fr: {
+    title: "Tous les exports",
+    description: "Chaque fonction, objet, classe et type exporté par le paquet, avec son rôle et la page qui le documente.",
+    intro: [
+      "La liste complète de ce que vous pouvez importer, construite à partir du",
+      "code source. La description de chaque symbole est celle que votre éditeur",
+      "affiche au survol, en anglais comme dans le code ; la dernière colonne mène",
+      "à la page qui l'explique.",
+    ],
+    kinds: { function: "Fonctions", object: "Objets et constantes", class: "Classes", type: "Types" },
+    columns: "| Export | Ce que c'est | Documenté dans |",
+    reexported: "Réexporté depuis discord.js",
+    convenience: "Par commodité, pour qu'un bot ait rarement besoin d'importer directement depuis `discord.js` :",
+    total: (count) => `${count} symboles sont déclarés par le framework.`,
+  },
+};
+
+/** The title of a page in a language: the one of its translation, or the English name given here. */
+function titleOf(address, fallback, language) {
+  if (language === "en") return fallback;
+  for (const extension of [".md", ".mdx"]) {
+    const file = path.join(content, language, address.replace(/^\/|\/$/g, "") + extension);
+    if (!existsSync(file)) continue;
+    const title = /^title:\s*(.+)$/m.exec(readFileSync(file, "utf8"))?.[1];
+    if (title) return title.trim().replace(/^(["'])(.*)\1$/, "$2");
+  }
+  return fallback;
+}
 
 /** Which page documents what a source file declares. */
 const PAGES = {
@@ -88,12 +140,7 @@ function pageFor(name, file) {
   return PAGES[file];
 }
 
-const KINDS = [
-  ["function", "Functions"],
-  ["object", "Objects and constants"],
-  ["class", "Classes"],
-  ["type", "Types"],
-];
+const KINDS = ["function", "object", "class", "type"];
 
 /** The first sentence of a doc comment, as one line of table-safe Markdown. */
 function summarise(text) {
@@ -108,7 +155,9 @@ function summarise(text) {
     .join("`");
 }
 
-export function generate() {
+/** The page in a language ("en" by default), and the names it lists. */
+export function generate(language = "en") {
+  const words = WORDS[language];
   const config = ts.readConfigFile(path.join(root, "tsconfig.json"), ts.sys.readFile);
   const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, root);
   const program = ts.createProgram(
@@ -121,17 +170,15 @@ export function generate() {
 
   const out = [
     "---",
-    'title: "All exports"',
-    'description: "Every function, object, class and type the package exports, with what it is for and where it is documented."',
+    `title: "${words.title}"`,
+    `description: "${words.description}"`,
     "sidebar:",
     "  order: 1",
     "---",
     "",
     "<!-- Generated by docs/scripts/api-index.mjs from the source. Do not edit by hand: run `npm run docs:api`. -->",
     "",
-    "The complete list of what you can import, built from the source code. The",
-    "description of each symbol is the one your editor shows on hover; the last",
-    "column links to the page that explains it.",
+    ...words.intro,
     "",
   ];
   const names = [];
@@ -139,7 +186,7 @@ export function generate() {
 
   for (const entry of ENTRIES) {
     const moduleSymbol = checker.getSymbolAtLocation(program.getSourceFile(path.join(root, entry.file)));
-    const groups = new Map(KINDS.map(([kind]) => [kind, []]));
+    const groups = new Map(KINDS.map((kind) => [kind, []]));
     const reexported = [];
 
     for (const exported of checker.getExportsOfModule(moduleSymbol)) {
@@ -165,22 +212,22 @@ export function generate() {
       total++;
     }
 
-    out.push(`## \`${entry.specifier}\``, "", entry.intro, "", "```ts", `import { /* ... */ } from "${entry.specifier}";`, "```", "");
-    for (const [kind, title] of KINDS) {
+    out.push(`## \`${entry.specifier}\``, "", entry.intro[language], "", "```ts", `import { /* ... */ } from "${entry.specifier}";`, "```", "");
+    for (const kind of KINDS) {
       const rows = groups.get(kind).sort((a, b) => a.name.localeCompare(b.name, "en"));
       if (rows.length === 0) continue;
-      out.push(`### ${title}`, "", "| Export | What it is | Documented in |", "| --- | --- | --- |");
+      out.push(`### ${words.kinds[kind]}`, "", words.columns, "| --- | --- | --- |");
       for (const row of rows) {
         const call = kind === "function" ? "()" : "";
-        out.push(`| \`${row.name}${call}\` | ${row.summary} | [${row.page[0]}](${row.page[1]}) |`);
+        out.push(`| \`${row.name}${call}\` | ${row.summary} | [${titleOf(row.page[1], row.page[0], language)}](${row.page[1]}) |`);
       }
       out.push("");
     }
     if (reexported.length > 0) {
       out.push(
-        "### Re-exported from discord.js",
+        `### ${words.reexported}`,
         "",
-        "For convenience, so that a bot rarely needs to import from `discord.js` directly:",
+        words.convenience,
         "",
         reexported
           .sort((a, b) => a.localeCompare(b, "en"))
@@ -191,21 +238,26 @@ export function generate() {
       names.push(...reexported);
     }
   }
-  out.push(`${total} symbols are declared by the framework.`, "");
+  out.push(words.total(total), "");
   return { markdown: out.join("\n"), names };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const { markdown, names } = generate();
-  if (process.argv.includes("--check")) {
-    const current = readFileSync(OUTPUT, "utf8").replace(/\r\n/g, "\n");
-    if (current !== markdown) {
-      console.error("docs/src/content/docs/api/exports.md is out of date. Run: npm run docs:api");
-      process.exit(1);
+  const check = process.argv.includes("--check");
+  for (const [language, file] of Object.entries(OUTPUTS)) {
+    const { markdown, names } = generate(language);
+    const shown = path.relative(root, file).split(path.sep).join("/");
+    if (check) {
+      const current = existsSync(file) ? readFileSync(file, "utf8").replace(/\r\n/g, "\n") : "";
+      if (current !== markdown) {
+        console.error(`${shown} is out of date. Run: npm run docs:api`);
+        process.exit(1);
+      }
+      console.log(`${shown} up to date (${names.length} exports)`);
+    } else {
+      mkdirSync(path.dirname(file), { recursive: true });
+      writeFileSync(file, markdown);
+      console.log(`${shown} written (${names.length} exports)`);
     }
-    console.log(`api index up to date (${names.length} exports)`);
-  } else {
-    writeFileSync(OUTPUT, markdown);
-    console.log(`api index written (${names.length} exports)`);
   }
 }

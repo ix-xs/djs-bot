@@ -1,0 +1,32 @@
+---
+// One message of the showcase's Discord screen. `at` and `until` say during
+// which steps of the scene it is there (see Showcase.astro).
+interface Props {
+  author?: string;
+  bot?: boolean;
+  /** Avatar colour. */
+  color?: string;
+  time: string;
+  /** The "X used /command" line above a command reply. */
+  used?: { user: string; verb: string; command: string };
+  /** The note under a reply only its recipient sees. */
+  ephemeral?: string;
+  at?: number;
+  until?: number;
+}
+const { author = "djs-bot", bot = true, color = "#5865f2", time, used, ephemeral, at, until } = Astro.props;
+---
+
+<article class="sc-msg" data-at={at} data-until={until}>
+  <div class="sc-av" style={`background:${color}`} aria-hidden="true">{author.charAt(0).toUpperCase()}</div>
+  <div class="sc-body">
+    {used && <p class="sc-used">{used.user} {used.verb} <b>/{used.command}</b></p>}
+    <p class="sc-meta">
+      <b>{author}</b>
+      {bot && <span class="sc-app">APP</span>}
+      <time>{time}</time>
+    </p>
+    <slot />
+    {ephemeral && <p class="sc-eph">{ephemeral}</p>}
+  </div>
+</article>

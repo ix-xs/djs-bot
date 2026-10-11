@@ -279,7 +279,7 @@ declare module "@ix-xs/djs-bot" {
 }
 ```
 
-See [typing ctx.services](C:/Program Files/Git/architecture/services/#type-your-services).
+See [typing ctx.services](/architecture/services/#type-your-services).
 
 ### `ctx.options.x` is possibly undefined
 

@@ -147,6 +147,10 @@ header.header {
 .at-header .at-actions { display: flex; align-items: center; gap: var(--at-icon-gap); margin-inline-end: calc(-1 * var(--at-icon-bleed)); }
 .at-icon-btn { display: grid; place-items: center; flex: none; width: var(--at-icon-btn); height: var(--at-icon-btn); padding: 0; border: 0; border-radius: var(--at-radius); background: none; color: var(--at-muted); cursor: pointer; }
 .at-icon-btn svg { width: var(--at-icon); height: var(--at-icon); }
+/* The language switch: two codes, the current one lit. */
+.at-lang { display: flex; align-items: center; margin-inline-end: 0.25rem; font-family: var(--sl-font-mono); font-size: 0.6875rem; letter-spacing: 0.06em; }
+.at-lang a { display: grid; place-items: center; min-width: 1.875rem; height: var(--at-icon-btn); padding-inline: 0.25rem; border-radius: var(--at-radius); color: var(--at-faint); text-decoration: none; -webkit-touch-callout: none; }
+.at-lang a[aria-current="true"] { color: var(--at-fg); }
 /* Links that act as buttons do not offer the link menu on a long press. */
 a.at-icon-btn, .mobile-preferences .social-icons a { -webkit-touch-callout: none; }
 
@@ -214,6 +218,10 @@ site-search .dialog-frame { scrollbar-width: thin; scrollbar-color: var(--at-lin
 @media (max-width: 49.99rem) {
   :root { --at-icon-btn: 2.75rem; --at-icon-gap: 0rem; }
   .at-toplinks, .at-header .at-actions { display: none; }
+  /* In the header of a small screen there is room for one code: the other language. */
+  .at-header .at-lang a[aria-current="true"] { display: none; }
+  .at-header .at-lang { margin-inline-end: 0; }
+  .at-header .at-lang a { min-width: var(--at-icon-btn); font-size: 0.75rem; color: var(--at-muted); }
   .at-header { gap: var(--at-icon-gap); }
   /* Search becomes one more icon button, in the same box as its neighbours. */
   .at-header site-search button[data-open-modal] { display: grid; place-items: center; flex: none; min-width: 0; width: var(--at-icon-btn); height: var(--at-icon-btn); padding: 0; border: 0; }
@@ -328,8 +336,10 @@ site-search .dialog-frame { scrollbar-width: thin; scrollbar-color: var(--at-lin
 .sl-markdown-content .sl-heading-wrapper.level-h3 { line-height: 1.25; }
 :root .sl-markdown-content a.sl-anchor-link { color: var(--at-faint); text-decoration: none; text-indent: 0; }
 
-.sl-markdown-content :is(p, li, dd) { color: var(--at-muted); }
-.sl-markdown-content :is(strong, b, dt) { color: var(--at-fg); font-weight: 600; }
+/* Prose only: what a component draws inside `.not-content` (a Discord
+   preview, the showcase) has colours of its own. */
+.sl-markdown-content :is(p, li, dd):not(:where(.not-content *)) { color: var(--at-muted); }
+.sl-markdown-content :is(strong, b, dt):not(:where(.not-content *)) { color: var(--at-fg); font-weight: 600; }
 .sl-markdown-content a:not(.sl-link-button, .sl-link-card a, :where(.not-content *)) { color: var(--at-fg); text-decoration: underline; text-decoration-color: var(--at-accent); text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
 .sl-markdown-content code:not(:where(.expressive-code *, .not-content *)) { padding: 0; background: none; font-size: 0.875em; color: var(--at-fg); overflow-wrap: anywhere; }
 /* The margins that blocks set for themselves are for when they open a
@@ -434,19 +444,24 @@ footer .meta { font-size: 0.8125rem; color: var(--at-faint); }
 /* ------------------------------- Landing --------------------------------- */
 /* minmax(0, 1fr): a grid track otherwise grows to its widest line of code. */
 .at-landing { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6rem; padding-block: 1rem 6rem; }
-.at-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 3rem; align-items: start; }
-.at-hero-copy { min-width: 0; }
-.at-hero-copy > * { opacity: 0; transform: translateY(8px); animation: at-rise 300ms var(--ease-out) forwards; }
-.at-hero-copy > :nth-child(2) { animation-delay: 60ms; }
-.at-hero-copy > :nth-child(3) { animation-delay: 120ms; }
-.at-hero-copy > :nth-child(4) { animation-delay: 180ms; }
-.at-hero-copy > :nth-child(5) { animation-delay: 240ms; }
+/* The opening: one centred column, and nothing next to it. */
+.at-hero { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; padding-block: clamp(1.5rem, 7vh, 5rem) clamp(0rem, 3vh, 2rem); text-align: center; }
+/* Each line settles in turn; the title also comes into focus. */
+.at-hero > * { opacity: 0; transform: translateY(10px); animation: at-rise 500ms var(--ease-out) forwards; }
+.at-hero > :nth-child(2) { animation-name: at-focus; animation-duration: 700ms; animation-delay: 60ms; }
+.at-hero > :nth-child(3) { animation-delay: 160ms; }
+.at-hero > :nth-child(4) { animation-delay: 230ms; }
+.at-hero > :nth-child(5) { animation-delay: 300ms; }
+.at-hero > :nth-child(6) { animation-delay: 370ms; }
 @keyframes at-rise { to { opacity: 1; transform: none; } }
-.at-hero h1 { text-wrap: balance; overflow-wrap: anywhere; margin: 1rem 0 0; font-family: var(--at-display); font-weight: 750; font-size: clamp(2.75rem, 8vw, 5.25rem); line-height: 0.98; letter-spacing: -0.035em; font-optical-sizing: auto; color: var(--at-fg); }
+@keyframes at-focus { from { opacity: 0; transform: translateY(14px); filter: blur(10px); } to { opacity: 1; transform: none; filter: none; } }
+.at-hero h1 { max-width: 14ch; text-wrap: balance; overflow-wrap: anywhere; margin: 1.25rem 0 0; font-family: var(--at-display); font-weight: 750; font-size: clamp(2.75rem, 9.5vw, 6.5rem); line-height: 0.96; letter-spacing: -0.04em; font-optical-sizing: auto; color: var(--at-fg); }
 .at-hero h1 em { font-style: normal; color: var(--at-accent); }
-.at-hero .at-lead { max-width: 34rem; }
-.at-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; margin-top: 2rem; }
-.at-install { display: flex; align-items: center; gap: 0.75rem; margin-top: 2rem; padding: 0.75rem 0.75rem 0.75rem 1rem; max-width: 100%; border: 1px solid var(--at-line); border-radius: var(--at-radius); background: var(--at-surface); font-family: var(--sl-font-mono); font-size: 0.8125rem; color: var(--at-fg); }
+.at-hero .at-lead { max-width: 39rem; margin-top: 1.75rem; text-wrap: pretty; }
+.at-hero-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.75rem 1.25rem; margin-top: 1.75rem; }
+.at-facts { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.375rem 1.5rem; margin: 2.5rem 0 0; padding: 0; list-style: none; font-family: var(--sl-font-mono); font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--at-faint); }
+.at-facts li + li::before { content: "/"; margin-inline-end: 1.5rem; color: var(--at-line); }
+.at-install { display: flex; align-items: center; gap: 0.75rem; margin-top: 2.25rem; text-align: start; padding: 0.75rem 0.75rem 0.75rem 1rem; max-width: 100%; border: 1px solid var(--at-line); border-radius: var(--at-radius); background: var(--at-surface); font-family: var(--sl-font-mono); font-size: 0.8125rem; color: var(--at-fg); }
 .at-install code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; background: none; padding: 0; }
 .at-install code::before { content: "$ "; color: var(--at-faint); }
 .at-copy { position: relative; flex-shrink: 0; width: 2rem; height: 2rem; border: 0; border-radius: 4px; background: none; color: var(--at-faint); cursor: pointer; }
@@ -454,8 +469,17 @@ footer .meta { font-size: 0.8125rem; color: var(--at-faint); }
 .at-copy .at-copy-done { opacity: 0; filter: blur(2px); }
 .at-copy[data-copied] .at-copy-idle { opacity: 0; filter: blur(2px); }
 .at-copy[data-copied] .at-copy-done { opacity: 1; filter: none; }
-@media (min-width: 64rem) {
-  .at-hero { grid-template-columns: minmax(0, 11fr) minmax(0, 10fr); gap: 4rem; }
+
+/* Sections come into view once, as they are reached. Only when scripts run
+   (they are what brings them in) and when motion is welcome. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  [data-reveal] { transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out); }
+  [data-reveal]:not([data-revealed]) { opacity: 0; transform: translateY(16px); }
+  :is(.at-points, .at-paths) li:nth-child(2) { transition-delay: 60ms; }
+  :is(.at-points, .at-paths) li:nth-child(3) { transition-delay: 120ms; }
+  :is(.at-points, .at-paths) li:nth-child(4) { transition-delay: 180ms; }
+  :is(.at-points, .at-paths) li:nth-child(5) { transition-delay: 240ms; }
+  :is(.at-points, .at-paths) li:nth-child(6) { transition-delay: 300ms; }
 }
 
 .at-section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--at-line); }
@@ -504,6 +528,8 @@ footer .meta { font-size: 0.8125rem; color: var(--at-faint); }
 /* --------------------------- Pointer and motion -------------------------- */
 @media (hover: hover) and (pointer: fine) {
   .at-toplinks a, .sidebar-content details > ul a, .sidebar-content summary .large, .right-sidebar starlight-toc a, .at-icon-btn, starlight-tabs [role="tab"], .at-copy { transition: color 150ms ease; }
+  .at-lang a { transition: color 150ms ease; }
+  .at-lang a:hover { color: var(--at-fg); }
   .at-toplinks a:hover, .sidebar-content details > ul a:hover, .sidebar-content details details > summary:hover .large, .right-sidebar starlight-toc a:hover, .at-icon-btn:hover, starlight-tabs [role="tab"]:hover, .at-copy:hover, site-search button[data-open-modal]:hover { color: var(--at-fg); }
   .sidebar-content details > ul a:hover, .sidebar-content summary:hover { background: none; }
   .pagination-links a:hover { border: 0; }
@@ -523,7 +549,7 @@ footer .meta { font-size: 0.8125rem; color: var(--at-faint); }
   .at-press, .sl-link-button, site-search button[data-open-modal], .sl-menu-button { transition: none; }
   .at-press:active, .sl-link-button:active, site-search button[data-open-modal]:active, .sl-menu-button:active, .expressive-code .copy button:active { transform: none; }
   [data-at-ready] > .at-tab-indicator { transition: none; }
-  .at-hero-copy > * { transform: none; animation: at-fade 200ms ease forwards; animation-delay: 0ms; }
+  .at-hero > * { transform: none; filter: none; animation: at-fade 200ms ease forwards; animation-delay: 0ms; }
   @media (max-width: 49.99rem) {
     .sidebar-pane, .sidebar-pane:popover-open { transform: none; }
     @starting-style {
