@@ -40,11 +40,20 @@ answering a command**.
    - my-bot
      - src
        - index.ts        the bot's entry point
+       - types.d.ts      where you will declare your services
        - features
          - ping
            - ping.command.ts   your first command
      - .env              your secrets (never commit this)
+     - .env.example      the same file without the values, safe to commit
+     - .gitignore
+     - package.json      completed with the scripts used below
+     - tsconfig.json
    </FileTree>
+
+   Nothing you already have is overwritten. The `package.json` that `npm init`
+   created is completed: it gains the `dev`, `start` and `deploy` scripts and
+   `"type": "module"`.
 
 3. **Fill in your secrets**
 

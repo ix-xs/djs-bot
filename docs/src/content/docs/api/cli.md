@@ -40,7 +40,11 @@ npx djs-bot init
 ```
 
 Creates a project you can run straight away. Existing files are never
-overwritten.
+overwritten, with one exception that only adds to it: a `package.json` that is
+already there (you ran `npm init` first) gets the scripts it is missing, and is
+switched to `"type": "module"` when the project has no code yet. Scripts you
+already have are kept, and a package with existing CommonJS code is left as it
+is, with a note telling you so.
 
 | File | Contents |
 | --- | --- |
@@ -50,7 +54,7 @@ overwritten.
 | `tsconfig.json` | Strict, `NodeNext` |
 | `.env`, `.env.example` | The three variables to fill in, each explained |
 | `.gitignore` | `node_modules`, `dist`, `data`, `.env` |
-| `package.json` | `"type": "module"` and the `dev`, `start`, `deploy`, `doctor` scripts |
+| `package.json` | `"type": "module"` and the `dev`, `start`, `deploy`, `doctor`, `explain`, `typecheck` scripts |
 
 Then:
 

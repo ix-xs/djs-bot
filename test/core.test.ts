@@ -439,6 +439,9 @@ describe("Discord limits, checked when a command is defined", () => {
         }),
       ),
     ).toMatch(/E015.*both choices and autocomplete/);
+    expect(
+      codeOf(() => defineCommand({ ...base, options: { a: s.string({ choices: ["a"] as never }) } })),
+    ).toMatch(/E015.*each choice must be { name, value }, got "a"/);
   });
 
   it("rejects impossible ranges", () => {
@@ -547,5 +550,37 @@ describe("deploy diff in a guild scope", () => {
   it("still compares them in the global scope, where they exist", () => {
     expect(commandsEqual(local, storedInGuild)).toBe(false);
     expect(commandsEqual(local, { ...storedInGuild, contexts: [0], integration_types: [0] })).toBe(true);
+  });
+});
+
+describe("init: an existing package.json", () => {
+  it("switches a package with no code to ES modules and adds the scripts", async () => {
+    const { adoptPackage } = await import("../src/scaffold.js");
+    // What `npm init -y` writes.
+    const fresh = { name: "bot", main: "index.js", type: "commonjs", scripts: { test: "echo none" } };
+    const { pkg, changes, esm } = adoptPackage(fresh, false);
+
+    expect(esm).toBe(true);
+    expect(pkg.type).toBe("module");
+    expect(pkg.scripts).toMatchObject({ test: "echo none", dev: "djs-bot dev", deploy: "djs-bot deploy" });
+    expect(changes).toEqual(['"type": "module"', "scripts dev, start, deploy, doctor, explain, typecheck"]);
+    expect(fresh.type).toBe("commonjs");
+  });
+
+  it("leaves a package with code and its own scripts alone", async () => {
+    const { adoptPackage } = await import("../src/scaffold.js");
+    const existing = { name: "app", main: "index.js", scripts: { dev: "nodemon", start: "node ." } };
+    const { pkg, changes, esm } = adoptPackage(existing, true);
+
+    expect(esm).toBe(false);
+    expect(pkg.type).toBeUndefined();
+    expect(pkg.scripts).toMatchObject({ dev: "nodemon", start: "node ." });
+    expect(changes).toEqual(["scripts deploy, doctor, explain, typecheck"]);
+  });
+
+  it("changes nothing when everything is there", async () => {
+    const { adoptPackage, STARTER_SCRIPTS } = await import("../src/scaffold.js");
+    const done = { type: "module", scripts: { ...STARTER_SCRIPTS } };
+    expect(adoptPackage(done, false)).toMatchObject({ changes: [], esm: true });
   });
 });

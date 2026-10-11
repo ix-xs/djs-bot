@@ -13,6 +13,7 @@
  * @module cli
  */
 import { spawn } from "node:child_process";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
@@ -23,6 +24,7 @@ import { isBot, type Bot } from "./bot.js";
 import { interopDefault } from "./loader.js";
 import { closeRestConnections } from "./deploy.js";
 import { VERSION } from "./constants.js";
+import { adoptPackage, STARTER_SCRIPTS } from "./scaffold.js";
 
 const C = {
   reset: "\x1b[0m",
@@ -369,7 +371,7 @@ async function cmdInit(): Promise<void> {
   write(".env", STARTER.env);
   write(".env.example", STARTER.env);
   write(".gitignore", STARTER.gitignore);
-  write("package.json", STARTER.packageJson(path.basename(process.cwd())));
+  adoptOrWritePackage(write);
   print();
   ok("Starter created. Next:");
   print(`  ${C.gray}1.${C.reset} put your token, client id and test server id in .env`);
@@ -377,6 +379,38 @@ async function cmdInit(): Promise<void> {
   print(`  ${C.gray}3.${C.reset} npx djs-bot doctor`);
   print(`  ${C.gray}4.${C.reset} npx djs-bot dev`);
   process.exit(0);
+}
+
+/**
+ * Creates the starter's `package.json`, or completes the one that is already
+ * there (most people run `npm init` first): its scripts are added, and it is
+ * switched to ES modules when it has no code yet.
+ */
+function adoptOrWritePackage(write: (rel: string, content: string) => void): void {
+  const target = path.resolve("package.json");
+  if (!existsSync(target)) {
+    write("package.json", STARTER.packageJson(path.basename(process.cwd())));
+    return;
+  }
+  let existing: Record<string, unknown>;
+  try {
+    existing = JSON.parse(readFileSync(target, "utf8")) as Record<string, unknown>;
+  } catch {
+    warn("package.json exists but is not valid JSON - skipped");
+    return;
+  }
+  const main = typeof existing.main === "string" ? existing.main : "index.js";
+  const { pkg, changes, esm } = adoptPackage(existing, existsSync(path.resolve(main)));
+  if (changes.length > 0) {
+    writeFileSync(target, `${JSON.stringify(pkg, null, 2)}\n`);
+    ok(`Updated package.json (${changes.join("; ")})`);
+  } else {
+    ok("package.json already has what the starter needs");
+  }
+  if (!esm) {
+    warn('package.json is a CommonJS package with existing code: the starter uses ES modules.');
+    print(`  ${C.gray}↳ once your code is ready for it: npm pkg set type=module${C.reset}`);
+  }
 }
 
 function help(): void {
@@ -677,14 +711,7 @@ data/
   "private": true,
   "type": "module",
   "engines": { "node": ">=${MIN_NODE}" },
-  "scripts": {
-    "dev": "djs-bot dev",
-    "start": "djs-bot start",
-    "deploy": "djs-bot deploy",
-    "doctor": "djs-bot doctor",
-    "explain": "djs-bot explain",
-    "typecheck": "tsc --noEmit"
-  }
+  "scripts": ${JSON.stringify(STARTER_SCRIPTS, null, 2).replace(/\n/g, "\n  ")}
 }
 `,
 };
