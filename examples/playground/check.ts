@@ -9,11 +9,17 @@
  *
  * What it does to your test server, and nothing else:
  *  - replaces the server's commands for the duration of the run, then puts back
- *    exactly what was there (global commands are never touched);
+ *    what was there (global commands are never touched);
  *  - posts messages in DISCORD_TEST_CHANNEL and deletes each of them.
+ *
+ * Before the first write, the server's commands are saved to
+ * `.djs-bot/live-snapshot-<server>.json`. The file is removed once they are
+ * back; if a run is interrupted, the next one restores from it first.
  *
  * Use a server you test in, not a community.
  */
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import path from "node:path";
 import {
   AttachmentBuilder,
   ChannelType,
@@ -83,6 +89,47 @@ function summarise(result: DeployResult): string {
     ? "no changes"
     : `+${added.length} ~${changed.length} -${removed.length}`;
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Saving and restoring the server's own commands                            */
+/* -------------------------------------------------------------------------- */
+
+type StoredCommand = Record<string, unknown> & { name: string; type?: number };
+
+/** The fields Discord assigns itself. Sending them back is refused or meaningless. */
+const SERVER_ASSIGNED = ["id", "application_id", "version", "guild_id", "default_permission", "name_localized", "description_localized"];
+
+/**
+ * Turns a command read from Discord into a body that can be written back. The
+ * `id` in particular must go: once a command was replaced its id no longer
+ * exists, and Discord rejects the whole request.
+ */
+function writable(command: StoredCommand): StoredCommand {
+  const copy = Object.fromEntries(
+    Object.entries(command).filter(([key, value]) => !SERVER_ASSIGNED.includes(key) && value !== null),
+  ) as StoredCommand;
+  const strip = (options: unknown): unknown =>
+    Array.isArray(options)
+      ? options.map((option: Record<string, unknown>) => {
+          const cleaned = Object.fromEntries(Object.entries(option).filter(([, value]) => value !== null));
+          if (cleaned.options) cleaned.options = strip(cleaned.options);
+          if (Array.isArray(cleaned.choices)) {
+            cleaned.choices = cleaned.choices.map((choice: Record<string, unknown>) =>
+              Object.fromEntries(Object.entries(choice).filter(([, value]) => value !== null)),
+            );
+          }
+          return cleaned;
+        })
+      : options;
+  if (copy.options) copy.options = strip(copy.options);
+  return copy;
+}
+
+const names = (commands: readonly StoredCommand[]): string =>
+  commands
+    .map((command) => `${command.type ?? 1}:${command.name}`)
+    .sort()
+    .join(", ");
 
 /* -------------------------------------------------------------------------- */
 /*  The command set: one of everything the deployer has to serialise          */
@@ -181,10 +228,33 @@ async function main(): Promise<void> {
 
   /* ------------------------------ deployment ----------------------------- */
 
-  let snapshot: unknown[] | undefined;
-  await check("snapshot the server's current commands", async () => {
-    snapshot = (await rest.get(guildRoute, { query: new URLSearchParams({ with_localizations: "true" }) })) as unknown[];
-    return `${snapshot.length} command(s) saved`;
+  const snapshotFile = path.resolve(".djs-bot", `live-snapshot-${guildId}.json`);
+  const readLive = async () =>
+    (await rest.get(guildRoute, { query: new URLSearchParams({ with_localizations: "true" }) })) as StoredCommand[];
+  const restore = async (commands: StoredCommand[]): Promise<string> => {
+    await rest.put(guildRoute, { body: commands.map(writable) });
+    const now = await readLive();
+    assert(names(now) === names(commands), `after restoring: [${names(now)}], expected [${names(commands)}]`);
+    rmSync(snapshotFile, { force: true });
+    return `${now.length} command(s) back`;
+  };
+
+  // A previous run that was interrupted left its snapshot behind: put those
+  // commands back before doing anything else.
+  if (existsSync(snapshotFile)) {
+    const recovered = await check("recover the commands saved by an interrupted run", () =>
+      restore(JSON.parse(readFileSync(snapshotFile, "utf8")) as StoredCommand[]),
+    );
+    if (!recovered) return finish();
+  }
+
+  let snapshot: StoredCommand[] | undefined;
+  await check("save the server's current commands to disk", async () => {
+    const live = await readLive();
+    mkdirSync(path.dirname(snapshotFile), { recursive: true });
+    writeFileSync(snapshotFile, JSON.stringify(live, null, 2));
+    snapshot = live;
+    return `${live.length} command(s) saved to ${path.relative(process.cwd(), snapshotFile)}`;
   });
   if (!snapshot) return finish();
 
@@ -218,10 +288,11 @@ async function main(): Promise<void> {
       assert(basic?.options, "lt-basic is missing");
       assert(basic.options[0]!.name === "plan", `the first option is "${basic.options[0]!.name}", expected the required "plan"`);
       const proof = basic.options.find((option) => option.name === "proof");
-      assert(
-        JSON.stringify(proof?.file_types) === JSON.stringify(["image", ".pdf"]),
-        `file_types came back as ${JSON.stringify(proof?.file_types)}`,
-      );
+      // Discord treats the filter as a set: the order it returns is not stable.
+      const fileTypes = [...((proof?.file_types as string[] | undefined) ?? [])].sort();
+      assert(fileTypes.join() === [".pdf", "image"].join(), `file_types came back as ${JSON.stringify(proof?.file_types)}`);
+      const contexts = (basic as Record<string, unknown>).contexts;
+      return `contexts on a server command: ${contexts === undefined ? "dropped by Discord" : JSON.stringify(contexts)}`;
     });
 
     await check("dry run: reports a nested change without pushing it", async () => {
@@ -242,12 +313,10 @@ async function main(): Promise<void> {
       return summarise(result);
     });
   } finally {
-    await check("restore the server's commands exactly as they were", async () => {
-      await rest.put(guildRoute, { body: snapshot });
-      const now = (await rest.get(guildRoute)) as unknown[];
-      assert(now.length === snapshot!.length, `${now.length} command(s) now, ${snapshot!.length} before`);
-      return `${now.length} command(s) back`;
-    });
+    const restored = await check("restore the server's commands as they were", () => restore(snapshot!));
+    if (!restored) {
+      console.log(`${C.yellow}!${C.reset} Your commands are saved in ${snapshotFile}; the next run restores them first.`);
+    }
   }
 
   /* ------------------------------- gateway ------------------------------- */

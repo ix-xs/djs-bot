@@ -513,3 +513,39 @@ describe("isHiddenChannel", () => {
     expect(isHiddenChannel(null)).toBe(false);
   });
 });
+
+describe("deploy diff in a guild scope", () => {
+  // Shapes captured from the live API: a guild command never carries
+  // `contexts`, `integration_types` or `dm_permission`, whatever was sent.
+  const local = commandToJSON(
+    defineCommand({
+      name: "scoped",
+      description: "Scoped",
+      contexts: ["guild"],
+      integrationTypes: ["guild"],
+      run: () => undefined,
+    }),
+  );
+  const storedInGuild = {
+    id: "1",
+    application_id: "2",
+    version: "3",
+    guild_id: "4",
+    default_member_permissions: null,
+    type: 1,
+    name: "scoped",
+    name_localizations: null,
+    description: "Scoped",
+    description_localizations: null,
+    nsfw: false,
+  };
+
+  it("ignores the global-only fields Discord drops from guild commands", () => {
+    expect(commandsEqual(local, storedInGuild, { guildScope: true })).toBe(true);
+  });
+
+  it("still compares them in the global scope, where they exist", () => {
+    expect(commandsEqual(local, storedInGuild)).toBe(false);
+    expect(commandsEqual(local, { ...storedInGuild, contexts: [0], integration_types: [0] })).toBe(true);
+  });
+});

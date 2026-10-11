@@ -122,6 +122,10 @@ peer range, `^14.16.0`, was wrong: Components V2 already needed 14.19).
 - **Commands were redeployed on every start.** The diff took Discord's defaults
   (`dm_permission`, `integration_types`) and missing localization maps for
   changes, so untouched and localized commands were pushed again each time.
+- **In a guild scope, any command setting `contexts` or `integrationTypes` was
+  redeployed every time**, which is every restart in development. Discord drops
+  those fields from guild commands, so they could never match what came back.
+  Found by running the deployer against the live API.
 - **Deploying failed for apps with Activities**, whose Entry Point command must
   be carried over in a bulk overwrite.
 - **Optional options declared before required ones were rejected by Discord.**

@@ -357,10 +357,23 @@ export function canonical(cmd: RESTPostAPIApplicationCommandsJSONBody): string {
  * comparison would report a change on every deploy. Both sides are normalised
  * (empty values dropped, lists and localization maps ordered), and the
  * server-defaulted fields are ignored unless the local definition sets them.
+ * Pass `guildScope: true` when comparing commands of a guild, where those
+ * fields do not exist at all.
  */
-export function commandsEqual(desired: RESTPostAPIApplicationCommandsJSONBody, existing: unknown): boolean {
+export function commandsEqual(
+  desired: RESTPostAPIApplicationCommandsJSONBody,
+  existing: unknown,
+  options: { guildScope?: boolean } = {},
+): boolean {
   const local = desired as unknown as Json;
-  const specified = new Set<string>(SERVER_DEFAULTED.filter((field) => local[field] !== undefined));
+  // `contexts`, `integration_types` and `dm_permission` only exist on global
+  // commands: Discord accepts them on a guild command and then drops them, so
+  // in a guild scope they can never match what comes back and must be ignored.
+  // (Seen against the live API: without this, any command setting `contexts`
+  // was redeployed to the dev guild on every start.)
+  const specified = new Set<string>(
+    options.guildScope ? [] : SERVER_DEFAULTED.filter((field) => local[field] !== undefined),
+  );
   return (
     JSON.stringify(normalizeCommand(local, specified)) ===
     JSON.stringify(normalizeCommand(existing as Json, specified))
@@ -428,7 +441,7 @@ async function reconcileTarget(
     const prev = existingByKey.get(key);
     const name = (cmd as unknown as { name: string }).name;
     if (!prev) added.push(name);
-    else if (!commandsEqual(cmd, prev)) changed.push(name);
+    else if (!commandsEqual(cmd, prev, { guildScope: guildId !== undefined })) changed.push(name);
     else unchanged.push(name);
   }
   for (const [key, cmd] of existingByKey) {
