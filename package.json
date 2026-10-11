@@ -1,6 +1,6 @@
 {
   "name": "@ix-xs/djs-bot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A TypeScript-first, production-ready framework for building Discord bots on top of discord.js. Typed slash commands, typed customId routing, auto intents, error boundaries, DI, plugins, jobs and a batteries-included CLI - with zero plumbing.",
   "keywords": [
     "discord",
@@ -12,11 +12,15 @@
     "slash-commands",
     "interactions",
     "typescript",
-    "esm"
+    "esm",
+    "components-v2",
+    "modals",
+    "dependency-injection",
+    "cli"
   ],
   "author": "ix-xs.dev <contact@ix-xs.dev>",
   "license": "MIT",
-  "homepage": "https://github.com/ix-xs/djs-bot#readme",
+  "homepage": "https://ix-xs.github.io/djs-bot/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ix-xs/djs-bot.git"
@@ -82,7 +86,7 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=22.13.0"
   },
   "scripts": {
     "build": "tsup",
@@ -101,15 +105,15 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@ix-xs/node-comfort": "^1.2.0"
+    "@ix-xs/node-comfort": "^2.0.0"
   },
   "peerDependencies": {
-    "discord.js": "^14.16.0"
+    "discord.js": "^14.27.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.0",
     "@types/node": "^22.10.0",
-    "discord.js": "^14.16.0",
+    "discord.js": "^14.27.0",
     "tinybench": "^3.1.0",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",

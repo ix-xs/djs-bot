@@ -7,11 +7,21 @@
  * - `p` - customId parameter codecs (`p.string`, `p.number`, …) used by
  *   {@link defineButton}/{@link defineSelectMenu} to encode typed params into a
  *   component's customId and decode them back with the right types.
- * - `field` - modal text-input builders.
+ * - `field` - modal component builders (text inputs, selects, file uploads,
+ *   radio groups, checkboxes).
  *
  * @module schema
  */
-import type { Attachment, GuildBasedChannel, GuildMember, LocalizationMap, Role, User, ChannelType } from "discord.js";
+import type {
+  Attachment,
+  ChannelType,
+  Collection,
+  GuildBasedChannel,
+  GuildMember,
+  LocalizationMap,
+  Role,
+  User,
+} from "discord.js";
 import type { AutocompleteHandler } from "./context.js";
 
 /* -------------------------------------------------------------------------- */
@@ -250,64 +260,222 @@ export const p = {
     encode: (v: boolean) => (v ? "1" : "0"),
     decode: (raw: string) => raw === "1",
   } as ParamCodec<boolean>,
+  /** A parameter restricted to a fixed set of strings (typed as that union). */
+  oneOf,
 };
+
+/**
+ * Builds a codec for a parameter that must be one of a fixed set of strings, so
+ * `ctx.params` is typed as that union instead of a plain `string`.
+ *
+ * @example params: { action: oneOf("approve", "reject") } // "approve" | "reject"
+ */
+export function oneOf<const T extends readonly [string, ...string[]]>(...values: T): ParamCodec<T[number]> {
+  const allowed = new Set<string>(values);
+  return {
+    type: "string",
+    encode: (v) => v,
+    decode: (raw) => (allowed.has(raw) ? raw : values[0]) as T[number],
+  };
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Modal fields                                                               */
 /* -------------------------------------------------------------------------- */
 
-/** Internal descriptor for a modal text input. */
-export interface FieldDef<Req extends boolean = boolean> {
+/** Every kind of component a modal can hold. */
+export type FieldKind =
+  | "short"
+  | "paragraph"
+  | "select"
+  | "users"
+  | "roles"
+  | "channels"
+  | "mentionables"
+  | "files"
+  | "radio"
+  | "checkboxes"
+  | "checkbox"
+  | "text";
+
+/** What `ctx.fields.<name>` holds for each kind of field. */
+export interface FieldOutput<Req extends boolean = boolean> {
+  short: string;
+  paragraph: string;
+  /** The values picked in a string select. */
+  select: string[];
+  users: Collection<string, User>;
+  roles: Collection<string, Role>;
+  channels: Collection<string, GuildBasedChannel>;
+  mentionables: {
+    users: Collection<string, User>;
+    members: Collection<string, GuildMember>;
+    roles: Collection<string, Role>;
+  };
+  /** The uploaded files. */
+  files: Collection<string, Attachment>;
+  /** The chosen value; `undefined` only when the group is optional and left empty. */
+  radio: Req extends true ? string : string | undefined;
+  /** The ticked values of a checkbox group. */
+  checkboxes: string[];
+  /** Whether a single checkbox was ticked. */
+  checkbox: boolean;
+}
+
+/** Internal descriptor for one modal component. */
+export interface FieldDef<Req extends boolean = boolean, K extends FieldKind = FieldKind> {
+  readonly kind: K;
+  /** The label shown above the component (the content itself for `text`). */
   readonly label: string;
-  readonly style: "short" | "paragraph";
+  /** Text-input style. Only set on `short` and `paragraph` fields. */
+  readonly style?: "short" | "paragraph";
   readonly required: Req;
   readonly config: Readonly<Record<string, unknown>>;
 }
 
-interface FieldOpt<R extends boolean> {
-  /** The label shown above the input. */
+/** Options shared by every labelled field. */
+interface LabelOpt<R extends boolean> {
+  /** The label shown above the component. */
   label: string;
+  /** Smaller help text shown under the label. */
+  description?: string;
   /** Whether the field must be filled. */
   required?: R;
+}
+
+interface TextOpt<R extends boolean> extends LabelOpt<R> {
   placeholder?: string;
   minLength?: number;
   maxLength?: number;
+  /** A pre-filled value. */
   value?: string;
+}
+
+/** One entry of a `select`, `radio` or `checkboxes` field. */
+export interface FieldChoice {
+  /** What the user reads. */
+  label: string;
+  /** What your handler receives. */
+  value: string;
+  /** Extra text under the label. */
+  description?: string;
+  /** Pre-selected when the modal opens. */
+  default?: boolean;
+  /** An emoji shown next to the label (string selects only). */
+  emoji?: string;
+}
+
+interface PickOpt<R extends boolean> extends LabelOpt<R> {
+  placeholder?: string;
+  /** Fewest items that must be picked. */
+  minValues?: number;
+  /** Most items that may be picked. */
+  maxValues?: number;
+}
+
+interface ChoiceOpt<R extends boolean> extends PickOpt<R> {
+  /** The choices offered. At least one. */
+  options: readonly FieldChoice[];
+}
+
+interface EntityOpt<R extends boolean> extends PickOpt<R> {
+  /** Ids selected when the modal opens. */
+  defaultValues?: readonly string[];
 }
 
 /** A map of field name → descriptor, as passed to {@link defineModal}. */
 export type FieldMap = Record<string, FieldDef>;
 
-/** Infers the typed `ctx.fields` object from a {@link FieldMap} (all strings). */
+/**
+ * Infers the typed `ctx.fields` object from a {@link FieldMap}. Text inputs are
+ * strings, selects are arrays or collections, a checkbox is a boolean, and
+ * `field.text` blocks (display only) are left out.
+ */
 export type InferFields<M extends FieldMap> = {
-  [K in keyof M]: string;
+  [K in keyof M as M[K] extends FieldDef<boolean, "text"> ? never : K]: M[K] extends FieldDef<infer R, infer Kind>
+    ? FieldOutput<R>[Exclude<Kind, "text">]
+    : never;
 };
 
+function make<K extends FieldKind, R extends boolean>(
+  kind: K,
+  config: LabelOpt<R>,
+  extra: Partial<FieldDef> = {},
+): FieldDef<R, K> {
+  return {
+    kind,
+    label: config.label,
+    required: (config.required ?? false) as R,
+    config: config as unknown as Readonly<Record<string, unknown>>,
+    ...extra,
+  } as FieldDef<R, K>;
+}
+
 /**
- * Modal text-input builders.
+ * Modal component builders. Every field is rendered inside a labelled block, so
+ * each accepts a `label` and an optional `description`.
+ *
  * @example
  * fields: {
- *   title: field.short({ label: "Title", required: true }),
- *   body:  field.paragraph({ label: "Details", maxLength: 1000 }),
+ *   title:    field.short({ label: "Title", required: true }),
+ *   body:     field.paragraph({ label: "Details", maxLength: 1000 }),
+ *   category: field.select({ label: "Category", options: [{ label: "Bug", value: "bug" }] }),
+ *   assignee: field.users({ label: "Assign to", maxValues: 1 }),
+ *   proof:    field.files({ label: "Screenshots", maxValues: 3 }),
+ *   urgent:   field.checkbox({ label: "This is urgent" }),
  * }
  */
 export const field = {
-  /** A single-line text input. */
-  short<R extends boolean = false>(config: FieldOpt<R>): FieldDef<R> {
-    return {
-      label: config.label,
-      style: "short",
-      required: (config.required ?? false) as R,
-      config: config as unknown as Readonly<Record<string, unknown>>,
-    };
+  /** A single-line text input. `ctx.fields.x` is a `string`. */
+  short<R extends boolean = false>(config: TextOpt<R>): FieldDef<R, "short"> {
+    return make("short", config, { style: "short" });
   },
-  /** A multi-line text input. */
-  paragraph<R extends boolean = false>(config: FieldOpt<R>): FieldDef<R> {
-    return {
-      label: config.label,
-      style: "paragraph",
-      required: (config.required ?? false) as R,
-      config: config as unknown as Readonly<Record<string, unknown>>,
-    };
+  /** A multi-line text input. `ctx.fields.x` is a `string`. */
+  paragraph<R extends boolean = false>(config: TextOpt<R>): FieldDef<R, "paragraph"> {
+    return make("paragraph", config, { style: "paragraph" });
+  },
+  /** A dropdown of your own options. `ctx.fields.x` is a `string[]`. */
+  select<R extends boolean = false>(config: ChoiceOpt<R>): FieldDef<R, "select"> {
+    return make("select", config);
+  },
+  /** A user picker. `ctx.fields.x` is a `Collection<string, User>`. */
+  users<R extends boolean = false>(config: EntityOpt<R>): FieldDef<R, "users"> {
+    return make("users", config);
+  },
+  /** A role picker. `ctx.fields.x` is a `Collection<string, Role>`. */
+  roles<R extends boolean = false>(config: EntityOpt<R>): FieldDef<R, "roles"> {
+    return make("roles", config);
+  },
+  /** A channel picker. `ctx.fields.x` is a `Collection<string, GuildBasedChannel>`. */
+  channels<R extends boolean = false>(
+    config: EntityOpt<R> & { channelTypes?: readonly ChannelType[] },
+  ): FieldDef<R, "channels"> {
+    return make("channels", config);
+  },
+  /** A picker for users and roles together. `ctx.fields.x` is `{ users, members, roles }`. */
+  mentionables<R extends boolean = false>(config: PickOpt<R>): FieldDef<R, "mentionables"> {
+    return make("mentionables", config);
+  },
+  /** A file upload. `ctx.fields.x` is a `Collection<string, Attachment>`. */
+  files<R extends boolean = false>(config: Omit<PickOpt<R>, "placeholder">): FieldDef<R, "files"> {
+    return make("files", config);
+  },
+  /** A group of radio buttons (pick one). `ctx.fields.x` is the chosen value. */
+  radio<R extends boolean = false>(
+    config: LabelOpt<R> & { options: readonly FieldChoice[] },
+  ): FieldDef<R, "radio"> {
+    return make("radio", config);
+  },
+  /** A group of checkboxes (pick several). `ctx.fields.x` is a `string[]`. */
+  checkboxes<R extends boolean = false>(config: Omit<ChoiceOpt<R>, "placeholder">): FieldDef<R, "checkboxes"> {
+    return make("checkboxes", config);
+  },
+  /** A single checkbox. `ctx.fields.x` is a `boolean`. */
+  checkbox(config: Omit<LabelOpt<false>, "required"> & { default?: boolean }): FieldDef<false, "checkbox"> {
+    return make("checkbox", config);
+  },
+  /** A block of markdown shown between fields. Display only: absent from `ctx.fields`. */
+  text(content: string): FieldDef<false, "text"> {
+    return make("text", { label: content });
   },
 };

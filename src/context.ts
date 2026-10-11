@@ -24,6 +24,7 @@ import {
   type InteractionReplyOptions,
   type Message,
   type MessageContextMenuCommandInteraction,
+  type ModalBuilder,
   type ModalSubmitInteraction,
   type RepliableInteraction,
   type Role,
@@ -31,11 +32,10 @@ import {
   type User,
   type UserContextMenuCommandInteraction,
 } from "discord.js";
+import comfort from "@ix-xs/node-comfort";
 import type { Logger } from "./logger.js";
 import type { ServiceMap } from "./container.js";
-
-/** Palette used by the built-in reply helpers. */
-const COLOR = { success: 0x22c55e, error: 0xef4444, info: 0x3b82f6 } as const;
+import { DEFAULT_THEME, type MessageKey, type MessageVars, type Theme } from "./messages.js";
 
 /** Content accepted by reply helpers: a plain string or full reply options. */
 export type ReplyContent = string | InteractionReplyOptions;
@@ -58,23 +58,44 @@ export interface ReplyFn {
   error(message: string, options?: SemanticReplyOptions): Promise<void>;
   /** Blue informational embed. */
   info(message: string, options?: SemanticReplyOptions): Promise<void>;
+  /** Amber warning embed. */
+  warn(message: string, options?: SemanticReplyOptions): Promise<void>;
+  /** Replies with content only the invoking user can see. */
+  ephemeral(content: ReplyContent): Promise<void>;
   /** Defers the reply, showing a loading state (use for slow handlers). */
   defer(options?: { ephemeral?: boolean }): Promise<void>;
   /** Sends an additional follow-up message. */
   followUp(content: ReplyContent): Promise<void>;
   /** Edits the current (deferred or sent) reply. */
   editReply(content: ReplyContent): Promise<void>;
+  /** Fetches the message that was sent as the reply. */
+  fetch(): Promise<Message>;
+  /** Deletes the reply. */
+  delete(): Promise<void>;
 }
 
 /** Callable component-update helper (edits the source message). */
 export interface UpdateFn {
-  /** Edits the message the component lives on. */
+  /** Edits the message the component lives on. Works before or after a defer. */
   (content: ReplyContent): Promise<void>;
   /** Disables every component on the source message. */
   disable(): Promise<void>;
   /** Acknowledges the interaction without visibly changing anything. */
   defer(): Promise<void>;
 }
+
+/**
+ * Opens a modal as the response to an interaction. Accepts a
+ * {@link defineModal} definition (with its typed params) or any object exposing
+ * a compatible `build()`.
+ *
+ * A modal has to be the **first** response, so call this before any reply or
+ * defer - which is also why it is unavailable on modal contexts.
+ */
+export type ShowModalFn = <Args extends unknown[]>(
+  modal: { build(...args: Args): ModalBuilder },
+  ...args: Args
+) => Promise<void>;
 
 /** Fields shared by every interaction context. */
 export interface BaseContext<I extends RepliableInteraction = RepliableInteraction> {
@@ -90,7 +111,9 @@ export interface BaseContext<I extends RepliableInteraction = RepliableInteracti
   readonly guildId: string | null;
   /** The originating channel, if resolvable. */
   readonly channel: TextBasedChannel | null;
-  /** The guild member, if in a guild. */
+  /** The originating channel id, if any. */
+  readonly channelId: string | null;
+  /** The guild member, if in a guild the bot is in. */
   readonly member: GuildMember | null;
   /** Injected services (augment {@link ServiceMap} for typing). */
   readonly services: ServiceMap;
@@ -105,6 +128,12 @@ export interface BaseContext<I extends RepliableInteraction = RepliableInteracti
   /** Translates a key for this user's locale (no-op returning the key if i18n is unconfigured). */
   t(key: string, vars?: Record<string, unknown>): string;
   /**
+   * Renders one of the framework's own messages (the ones guards and the error
+   * boundary show), honouring `defineBot({ messages })`. Handy in a custom
+   * guard that wants to reuse the built-in wording.
+   */
+  say<K extends MessageKey>(key: K, vars?: MessageVars[K]): string;
+  /**
    * Records an audit entry (no-op if audit is unconfigured). `actorId` and
    * `guildId` are filled in from the interaction.
    */
@@ -117,6 +146,8 @@ export interface BaseContext<I extends RepliableInteraction = RepliableInteracti
 export interface CommandContext<Options> extends BaseContext<ChatInputCommandInteraction> {
   /** Fully-typed, resolved command options. */
   readonly options: Options;
+  /** Opens a modal as the response. */
+  readonly showModal: ShowModalFn;
 }
 
 /** Context passed to button handlers. `params` is decoded from the customId. */
@@ -125,6 +156,8 @@ export interface ButtonContext<Params> extends BaseContext<ButtonInteraction> {
   readonly params: Params;
   /** Edit-the-source-message helper. */
   readonly update: UpdateFn;
+  /** Opens a modal as the response. */
+  readonly showModal: ShowModalFn;
 }
 
 /** Context passed to select-menu handlers (string and native selects). */
@@ -143,6 +176,8 @@ export interface SelectMenuContext<Params> extends BaseContext<AnySelectMenuInte
   readonly channels?: Collection<string, GuildBasedChannel>;
   /** Edit-the-source-message helper. */
   readonly update: UpdateFn;
+  /** Opens a modal as the response. */
+  readonly showModal: ShowModalFn;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -176,6 +211,10 @@ export interface AutocompleteContext {
   readonly focused: string;
   /** The current (partial) value the user has typed, as a string. */
   readonly value: string;
+  /** The user's Discord client locale. */
+  readonly locale: string;
+  /** Translates a key for this user's locale. */
+  t(key: string, vars?: Record<string, unknown>): string;
 }
 
 /** An option's autocomplete handler. Return up to 25 choices. */
@@ -195,16 +234,106 @@ export interface UserCommandContext extends BaseContext<UserContextMenuCommandIn
   readonly targetUser: User;
   /** The target as a guild member, if in a guild. */
   readonly targetMember: GuildMember | null;
+  /** Opens a modal as the response. */
+  readonly showModal: ShowModalFn;
 }
 
 /** Context passed to message context-menu command handlers. */
 export interface MessageCommandContext extends BaseContext<MessageContextMenuCommandInteraction> {
   /** The message the command was invoked on. */
   readonly targetMessage: Message;
+  /** Opens a modal as the response. */
+  readonly showModal: ShowModalFn;
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Responder factories (runtime)                                             */
+/*  Automatic deferral                                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * When and how an interaction is acknowledged for you.
+ *
+ * - `true` - defer publicly, but only if the handler has not answered after 2 s.
+ * - `"ephemeral"` - the same, with an only-you loading state.
+ * - `"update"` - for components: acknowledge without a loading message, so the
+ *   handler can then edit the source message with `ctx.update(...)`.
+ * - an object - choose the visibility and the delay yourself. `after: 0` defers
+ *   immediately; any duration string (`"1s"`) or number of milliseconds works.
+ * - `false` - never defer automatically.
+ */
+export type DeferOption =
+  | boolean
+  | "ephemeral"
+  | "update"
+  | { ephemeral?: boolean; update?: boolean; after?: number | string };
+
+/** A {@link DeferOption} resolved to concrete values. */
+export interface ResolvedDefer {
+  readonly ephemeral: boolean;
+  readonly update: boolean;
+  /** Milliseconds to wait before deferring. */
+  readonly afterMs: number;
+}
+
+/** A short, log-friendly identity for an interaction. */
+export interface InteractionSummary {
+  /** What kind of interaction it is. */
+  kind: "command" | "userCommand" | "messageCommand" | "button" | "select" | "modal" | "other";
+  /**
+   * The command name (with its subcommand, e.g. `"config set"`), or the routing
+   * id of a component or modal (without its encoded params).
+   */
+  name: string;
+}
+
+/**
+ * Summarises an interaction as a kind plus a readable name - what a logging or
+ * metrics plugin wants to tag its records with.
+ * @example describeInteraction(ctx.interaction) // { kind: "command", name: "config set" }
+ */
+export function describeInteraction(interaction: RepliableInteraction): InteractionSummary {
+  // Tolerate a hand-built interaction (tests, custom gateways): never throw
+  // from what is only a labelling helper.
+  if (typeof interaction?.isChatInputCommand !== "function") return { kind: "other", name: "unknown" };
+  if (interaction.isChatInputCommand()) {
+    const parts = [
+      interaction.commandName,
+      interaction.options.getSubcommandGroup(false),
+      interaction.options.getSubcommand(false),
+    ];
+    return { kind: "command", name: parts.filter(Boolean).join(" ") };
+  }
+  if (interaction.isUserContextMenuCommand()) return { kind: "userCommand", name: interaction.commandName };
+  if (interaction.isMessageContextMenuCommand()) return { kind: "messageCommand", name: interaction.commandName };
+
+  const routingId = (customId: string): string => customId.split("$")[0] ?? customId;
+  if (interaction.isButton()) return { kind: "button", name: routingId(interaction.customId) };
+  if (interaction.isAnySelectMenu()) return { kind: "select", name: routingId(interaction.customId) };
+  if (interaction.isModalSubmit()) return { kind: "modal", name: routingId(interaction.customId) };
+  return { kind: "other", name: "unknown" };
+}
+
+/** How long a handler gets before `defer: true` acknowledges for it. */
+export const DEFAULT_DEFER_AFTER_MS = 2000;
+
+/** Resolves a {@link DeferOption} to concrete values, or `undefined` when off. */
+export function resolveDefer(option: DeferOption | undefined): ResolvedDefer | undefined {
+  if (option === undefined || option === false) return undefined;
+  if (option === true) return { ephemeral: false, update: false, afterMs: DEFAULT_DEFER_AFTER_MS };
+  if (option === "ephemeral") return { ephemeral: true, update: false, afterMs: DEFAULT_DEFER_AFTER_MS };
+  if (option === "update") return { ephemeral: false, update: true, afterMs: DEFAULT_DEFER_AFTER_MS };
+  const after = option.after;
+  const afterMs =
+    typeof after === "number"
+      ? after
+      : typeof after === "string"
+        ? (comfort.time.parseDuration(after) ?? DEFAULT_DEFER_AFTER_MS)
+        : DEFAULT_DEFER_AFTER_MS;
+  return { ephemeral: option.ephemeral ?? false, update: option.update ?? false, afterMs };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Responder (runtime)                                                       */
 /* -------------------------------------------------------------------------- */
 
 function normalize(content: ReplyContent): InteractionReplyOptions {
@@ -217,63 +346,163 @@ function embed(color: number, title: string | undefined, message: string): Embed
   return e;
 }
 
-async function respond(interaction: RepliableInteraction, options: InteractionReplyOptions): Promise<void> {
-  if (interaction.deferred && !interaction.replied) {
-    await interaction.editReply(options as never);
-  } else if (interaction.replied) {
-    await interaction.followUp(options);
-  } else {
-    await interaction.reply(options);
+/** Adds the ephemeral bit to whatever flags a payload already carries. */
+function withEphemeral(options: InteractionReplyOptions): InteractionReplyOptions {
+  const current = typeof options.flags === "number" ? options.flags : 0;
+  return { ...options, flags: (current | MessageFlags.Ephemeral) as InteractionReplyOptions["flags"] };
+}
+
+type ComponentInteraction = ButtonInteraction | AnySelectMenuInteraction;
+
+/** The reply helpers bound to one interaction, plus the hooks the router uses. */
+export interface Responder {
+  readonly reply: ReplyFn;
+  /** Only present for component interactions. */
+  readonly update?: UpdateFn;
+  readonly showModal: ShowModalFn;
+  /** Arms the automatic deferral. Safe to call once per interaction. */
+  armDefer(defer: ResolvedDefer): void;
+  /** Disarms the automatic deferral (handler finished, or a modal was shown). */
+  disarm(): void;
+}
+
+/**
+ * Builds the reply helpers for an interaction.
+ *
+ * Every response goes through one queue, so the automatic deferral and the
+ * handler's own replies can never collide: whichever comes second sees that the
+ * interaction was already acknowledged and edits the reply instead.
+ */
+export function createResponder(interaction: RepliableInteraction, theme: Theme = DEFAULT_THEME): Responder {
+  let queue: Promise<unknown> = Promise.resolve();
+  let timer: NodeJS.Timeout | undefined;
+
+  const enqueue = <T>(task: () => Promise<T>): Promise<T> => {
+    const run = queue.then(task);
+    queue = run.catch(() => undefined);
+    return run;
+  };
+  const acknowledged = (): boolean => interaction.deferred || interaction.replied;
+  const disarm = (): void => {
+    if (timer) clearTimeout(timer);
+    timer = undefined;
+  };
+
+  const respond = (options: InteractionReplyOptions): Promise<void> =>
+    enqueue(async () => {
+      disarm();
+      if (interaction.deferred && !interaction.replied) await interaction.editReply(options as never);
+      else if (interaction.replied) await interaction.followUp(options);
+      else await interaction.reply(options);
+    });
+
+  const reply = ((content: ReplyContent) => respond(normalize(content))) as ReplyFn;
+
+  const semantic =
+    (color: number, ephemeralByDefault: boolean) =>
+    (message: string, options: SemanticReplyOptions = {}): Promise<void> => {
+      const payload: InteractionReplyOptions = { embeds: [embed(color, options.title, message)] };
+      return respond((options.ephemeral ?? ephemeralByDefault) ? withEphemeral(payload) : payload);
+    };
+
+  reply.success = semantic(theme.success, false);
+  reply.info = semantic(theme.info, false);
+  reply.warn = semantic(theme.warn, false);
+  reply.error = semantic(theme.error, true);
+  reply.ephemeral = (content) => respond(withEphemeral(normalize(content)));
+  reply.defer = (options = {}) =>
+    enqueue(async () => {
+      disarm();
+      if (acknowledged()) return;
+      await interaction.deferReply(options.ephemeral ? { flags: MessageFlags.Ephemeral } : {});
+    });
+  reply.followUp = (content) =>
+    enqueue(async () => {
+      disarm();
+      await interaction.followUp(normalize(content));
+    });
+  reply.editReply = (content) =>
+    enqueue(async () => {
+      disarm();
+      await interaction.editReply(normalize(content) as never);
+    });
+  reply.fetch = () => enqueue(() => interaction.fetchReply());
+  reply.delete = () =>
+    enqueue(async () => {
+      await interaction.deleteReply();
+    });
+
+  const showModal: ShowModalFn = (modal, ...args) =>
+    enqueue(async () => {
+      // A modal is only valid as the first response, so the timer must not
+      // sneak a deferral in front of it.
+      disarm();
+      await (interaction as unknown as { showModal(modal: ModalBuilder): Promise<unknown> }).showModal(
+        modal.build(...args),
+      );
+    });
+
+  let update: UpdateFn | undefined;
+  if (interaction.isMessageComponent()) {
+    const component = interaction as ComponentInteraction;
+    update = ((content: ReplyContent) =>
+      enqueue(async () => {
+        disarm();
+        const payload = normalize(content) as never;
+        // After a defer, `update()` is no longer valid: edit the reply instead.
+        if (acknowledged()) await component.editReply(payload);
+        else await component.update(payload);
+      })) as UpdateFn;
+    update.defer = () =>
+      enqueue(async () => {
+        disarm();
+        if (!acknowledged()) await component.deferUpdate();
+      });
+    update.disable = () =>
+      enqueue(async () => {
+        disarm();
+        const rows = component.message.components.map((row) => {
+          const builder = ActionRowBuilder.from(row as never) as ActionRowBuilder;
+          for (const child of builder.components as Array<{ setDisabled?: (v: boolean) => unknown }>) {
+            child.setDisabled?.(true);
+          }
+          return builder;
+        });
+        const payload = { components: rows } as never;
+        if (acknowledged()) await component.editReply(payload);
+        else await component.update(payload);
+      });
   }
+
+  const armDefer = (defer: ResolvedDefer): void => {
+    disarm();
+    const fire = (): void => {
+      timer = undefined;
+      void enqueue(async () => {
+        if (acknowledged()) return;
+        if (defer.update && interaction.isMessageComponent()) {
+          await (interaction as ComponentInteraction).deferUpdate();
+        } else {
+          await interaction.deferReply(defer.ephemeral ? { flags: MessageFlags.Ephemeral } : {});
+        }
+      }).catch(() => undefined); // the interaction may already be gone
+    };
+    if (defer.afterMs <= 0) fire();
+    else {
+      timer = setTimeout(fire, defer.afterMs);
+      timer.unref?.();
+    }
+  };
+
+  return { reply, update, showModal, armDefer, disarm };
 }
 
 /** Builds the {@link ReplyFn} bound to a repliable interaction. */
-export function createReply(interaction: RepliableInteraction): ReplyFn {
-  const fn = ((content: ReplyContent) => respond(interaction, normalize(content))) as ReplyFn;
-
-  const semantic = (color: number) => (message: string, options: SemanticReplyOptions = {}) => {
-    const payload: InteractionReplyOptions = { embeds: [embed(color, options.title, message)] };
-    if (options.ephemeral) payload.flags = MessageFlags.Ephemeral;
-    return respond(interaction, payload);
-  };
-
-  fn.success = semantic(COLOR.success);
-  fn.info = semantic(COLOR.info);
-  fn.error = (message, options = {}) => {
-    const payload: InteractionReplyOptions = { embeds: [embed(COLOR.error, options.title, message)] };
-    if (options.ephemeral !== false) payload.flags = MessageFlags.Ephemeral;
-    return respond(interaction, payload);
-  };
-  fn.defer = async (options = {}) => {
-    await interaction.deferReply(options.ephemeral ? { flags: MessageFlags.Ephemeral } : {});
-  };
-  fn.followUp = async (content) => {
-    await interaction.followUp(normalize(content));
-  };
-  fn.editReply = async (content) => {
-    await interaction.editReply(normalize(content) as never);
-  };
-  return fn;
+export function createReply(interaction: RepliableInteraction, theme?: Theme): ReplyFn {
+  return createResponder(interaction, theme).reply;
 }
 
 /** Builds the {@link UpdateFn} for component interactions. */
-export function createUpdate(interaction: ButtonInteraction | AnySelectMenuInteraction): UpdateFn {
-  const fn = (async (content: ReplyContent) => {
-    await interaction.update(normalize(content) as never);
-  }) as UpdateFn;
-
-  fn.defer = async () => {
-    await interaction.deferUpdate();
-  };
-  fn.disable = async () => {
-    const rows = interaction.message.components.map((row) => {
-      const builder = ActionRowBuilder.from(row as never) as ActionRowBuilder;
-      for (const component of builder.components as Array<{ setDisabled?: (v: boolean) => unknown }>) {
-        component.setDisabled?.(true);
-      }
-      return builder;
-    });
-    await interaction.update({ components: rows as never });
-  };
-  return fn;
+export function createUpdate(interaction: ButtonInteraction | AnySelectMenuInteraction, theme?: Theme): UpdateFn {
+  return createResponder(interaction, theme).update!;
 }

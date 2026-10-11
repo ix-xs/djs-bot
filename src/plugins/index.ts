@@ -17,8 +17,9 @@
  * @module plugins
  */
 import { definePlugin, type PluginDefinition } from "../definitions.js";
-import type { BaseContext } from "../context.js";
+import { describeInteraction, type BaseContext } from "../context.js";
 import { createRateLimiter } from "../resilience.js";
+import { messageFor } from "../messages.js";
 
 /** Options for {@link antiSpam}. */
 export interface AntiSpamOptions {
@@ -26,8 +27,10 @@ export interface AntiSpamOptions {
   max?: number;
   /** The window: ms or a duration like `"10s"`. Default `"10s"`. */
   window?: number | string;
-  /** Message shown when a user is rate-limited. */
+  /** Message shown when a user is rate-limited. Defaults to the `slowDown` framework message. */
   message?: string;
+  /** User ids that are never limited (owners, staff). */
+  allow?: string[];
 }
 
 /**
@@ -36,14 +39,18 @@ export interface AntiSpamOptions {
  */
 export function antiSpam(options: AntiSpamOptions = {}): PluginDefinition {
   const limiter = createRateLimiter({ limit: options.max ?? 5, window: options.window ?? "10s" });
-  const message = options.message ?? "You're doing that too fast - please slow down.";
+  const allow = new Set(options.allow ?? []);
   return definePlugin({
     name: "anti-spam",
     version: "1.0.0",
     setup(app) {
       app.hooks.beforeInteraction(async (ctx, next) => {
-        if (!limiter.consume(ctx.user.id).allowed) {
-          await ctx.reply.error(message);
+        if (allow.has(ctx.user.id)) return next();
+        const result = limiter.consume(ctx.user.id);
+        if (!result.allowed) {
+          await ctx.reply.error(
+            options.message ?? messageFor(ctx, "slowDown", { seconds: Math.ceil(result.resetMs / 1000) }),
+          );
           return;
         }
         await next();
@@ -69,12 +76,12 @@ export function commandLogger(options: CommandLoggerOptions = {}): PluginDefinit
     version: "1.0.0",
     setup(app) {
       app.hooks.beforeInteraction(async (ctx, next) => {
-        const started = Date.now();
+        const started = performance.now();
         await next();
-        ctx.logger.info(
-          timing ? { type: ctx.interaction.type, ms: Date.now() - started } : { type: ctx.interaction.type },
-          "interaction handled",
-        );
+        const { kind, name } = describeInteraction(ctx.interaction);
+        const fields: Record<string, unknown> = { kind, name, guildId: ctx.guildId };
+        if (timing) fields.ms = Math.round(performance.now() - started);
+        ctx.logger.info(fields, "interaction handled");
       });
     },
   });

@@ -7,7 +7,8 @@
  * @module resilience
  */
 import comfort from "@ix-xs/node-comfort";
-import { guard, pass, fail, type Guard, type CooldownScope } from "./guards.js";
+import { guard, pass, fail, scopeKey, type Guard, type CooldownScope } from "./guards.js";
+import { messageFor } from "./messages.js";
 
 function toMs(value: number | string, fallback = 0): number {
   if (typeof value === "number") return value;
@@ -39,6 +40,7 @@ export class RateLimiter {
   private readonly windows = new Map<string, { count: number; resetAt: number }>();
   private readonly limit: number;
   private readonly windowMs: number;
+  private hits = 0;
 
   public constructor(options: RateLimiterOptions) {
     this.limit = options.limit;
@@ -48,6 +50,11 @@ export class RateLimiter {
   /** Records a hit for `key` (cost defaults to 1) and reports whether it's allowed. */
   public consume(key: string, cost = 1): RateLimitResult {
     const now = Date.now();
+    // Drop finished windows now and then, so keys that never come back (one-off
+    // users, deleted guilds) do not accumulate for the lifetime of the process.
+    if (++this.hits % 1000 === 0) {
+      for (const [k, window] of this.windows) if (now >= window.resetAt) this.windows.delete(k);
+    }
     let entry = this.windows.get(key);
     if (!entry || now >= entry.resetAt) {
       entry = { count: 0, resetAt: now + this.windowMs };
@@ -64,6 +71,11 @@ export class RateLimiter {
   /** Clears the window for a key. */
   public reset(key: string): void {
     this.windows.delete(key);
+  }
+
+  /** How many keys currently have an open window. */
+  public get size(): number {
+    return this.windows.size;
   }
 }
 
@@ -84,18 +96,10 @@ export function rateLimit(
   const limiter = new RateLimiter(options);
   const scope = options.scope ?? "user";
   return guard("rateLimit", (ctx) => {
-    const id =
-      scope === "user"
-        ? ctx.user.id
-        : scope === "guild"
-          ? (ctx.guildId ?? ctx.user.id)
-          : scope === "channel"
-            ? (ctx.channel?.id ?? ctx.user.id)
-            : "global";
-    const result = limiter.consume(id);
+    const result = limiter.consume(scopeKey(ctx, scope));
     return result.allowed
       ? pass()
-      : fail(`Rate limit reached. Try again in ${Math.ceil(result.resetMs / 1000)}s.`);
+      : fail(messageFor(ctx, "rateLimited", { seconds: Math.ceil(result.resetMs / 1000) }));
   });
 }
 

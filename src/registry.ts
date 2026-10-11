@@ -55,8 +55,19 @@ export class Registry {
   /** Registered features (metadata). */
   public readonly features: FeatureDefinition[] = [];
 
-  /** Registers any definition or feature, dispatching on `kind`. */
+  /** Every object already registered, to make registration idempotent. */
+  private readonly seen = new Set<Registrable>();
+
+  /**
+   * Registers any definition or feature, dispatching on `kind`.
+   *
+   * Registering the very same object twice is a no-op, so a definition may be
+   * both auto-discovered from its own file and listed in a `defineFeature()`
+   * bundle. Two *different* definitions sharing a name still throw.
+   */
   public add(item: Registrable): void {
+    if (this.seen.has(item)) return;
+    this.seen.add(item);
     switch (item.kind) {
       case "command":
         this.addCommand(item);

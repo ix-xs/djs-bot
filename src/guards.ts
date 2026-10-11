@@ -10,6 +10,7 @@
 import { PermissionsBitField, type PermissionResolvable } from "discord.js";
 import comfort from "@ix-xs/node-comfort";
 import type { BaseContext } from "./context.js";
+import { messageFor } from "./messages.js";
 
 /** The outcome of a guard check. */
 export interface GuardResult {
@@ -49,47 +50,114 @@ export function guard(name: string, run: GuardFn): Guard {
 guard.pass = pass;
 guard.fail = fail;
 
+/* ------------------------------ Combinators ------------------------------ */
+
+/**
+ * Passes when **at least one** of the given guards passes. When they all fail,
+ * the reason of the last one is shown.
+ * @example guards: [anyOf(ownerOnly(), hasPermission(PermissionFlagsBits.ManageGuild))]
+ */
+export function anyOf(...guards: Guard[]): Guard {
+  return guard(`anyOf(${guards.map((g) => g.name).join(", ")})`, async (ctx) => {
+    let last: GuardResult = fail(messageFor(ctx, "guardDenied"));
+    for (const candidate of guards) {
+      last = await candidate.run(ctx);
+      if (last.ok) return last;
+    }
+    return last;
+  });
+}
+
+/**
+ * Inverts a guard: passes when it fails. `reason` is what the user sees when
+ * the inner guard passes (and this one therefore fails).
+ * @example guards: [not(inChannel(spamChannelId), "Not in this channel, please.")]
+ */
+export function not(inner: Guard, reason?: string): Guard {
+  return guard(`not(${inner.name})`, async (ctx) =>
+    (await inner.run(ctx)).ok ? fail(reason ?? messageFor(ctx, "guardDenied")) : pass(),
+  );
+}
+
 /* ------------------------------ Built-in guards --------------------------- */
+
+/** `"BanMembers"` → `"Ban Members"`, so permission lists read naturally. */
+function readable(permissions: readonly string[]): string {
+  return permissions.map((name) => name.replace(/([a-z])([A-Z])/g, "$1 $2")).join(", ");
+}
+
+/** The permissions from `needed` that `held` lacks. */
+function missingFrom(held: unknown, needed: PermissionsBitField): string[] {
+  const bitfield = held as { has?(p: PermissionsBitField): boolean; missing?(p: PermissionsBitField): string[] };
+  if (typeof bitfield.missing === "function") return bitfield.missing(needed);
+  return bitfield.has?.(needed) ? [] : needed.toArray();
+}
 
 /** Requires the interaction to happen inside a guild. */
 export function inGuild(): Guard {
-  return guard("inGuild", (ctx) => (ctx.guild ? pass() : fail("This can only be used in a server.")));
+  return guard("inGuild", (ctx) => (ctx.guildId ? pass() : fail(messageFor(ctx, "guildOnly"))));
 }
 
 /** Requires the interaction to happen in DMs. */
 export function dmOnly(): Guard {
-  return guard("dmOnly", (ctx) => (ctx.guild ? fail("This can only be used in DMs.") : pass()));
+  return guard("dmOnly", (ctx) => (ctx.guildId ? fail(messageFor(ctx, "dmOnly")) : pass()));
 }
 
-/** Requires the invoking member to have all of the given permissions. */
+/**
+ * Requires the invoking member to have all of the given permissions **in the
+ * current channel** (channel overwrites included, as computed by Discord).
+ */
 export function hasPermission(...permissions: PermissionResolvable[]): Guard {
   const needed = new PermissionsBitField(permissions);
   return guard("hasPermission", (ctx) => {
-    if (!ctx.member) return fail("This can only be used in a server.");
-    const perms = ctx.member.permissions;
-    return perms.has(needed)
+    // `memberPermissions` is resolved by Discord for the interaction's channel;
+    // the member's own bitfield only knows the guild-wide roles.
+    const held = ctx.interaction?.memberPermissions ?? ctx.member?.permissions;
+    if (!held) return fail(messageFor(ctx, "guildOnly"));
+    const missing = missingFrom(held, needed);
+    return missing.length === 0
       ? pass()
-      : fail(`You need: ${needed.toArray().join(", ")}.`);
+      : fail(messageFor(ctx, "missingPermissions", { permissions: readable(missing) }));
   });
 }
 
-/** Requires the *bot* to have all of the given permissions in the guild. */
+/**
+ * Requires the *bot* to have all of the given permissions **in the current
+ * channel** (channel overwrites included, as computed by Discord).
+ */
 export function botHasPermission(...permissions: PermissionResolvable[]): Guard {
   const needed = new PermissionsBitField(permissions);
   return guard("botHasPermission", (ctx) => {
-    const me = ctx.guild?.members.me;
-    if (!me) return fail("I can't verify my permissions here.");
-    return me.permissions.has(needed)
+    const held = ctx.interaction?.appPermissions ?? ctx.guild?.members?.me?.permissions;
+    if (!held) return fail(messageFor(ctx, "guildOnly"));
+    const missing = missingFrom(held, needed);
+    return missing.length === 0
       ? pass()
-      : fail(`I need: ${needed.toArray().join(", ")}.`);
+      : fail(messageFor(ctx, "botMissingPermissions", { permissions: readable(missing) }));
   });
 }
 
 /** Restricts usage to specific channel ids. */
 export function inChannel(...channelIds: string[]): Guard {
   const set = new Set(channelIds);
-  return guard("inChannel", (ctx) =>
-    ctx.channel && set.has(ctx.channel.id) ? pass() : fail("This can't be used in this channel."),
+  return guard("inChannel", (ctx) => {
+    const id = ctx.channelId ?? ctx.channel?.id;
+    return id && set.has(id) ? pass() : fail(messageFor(ctx, "wrongChannel"));
+  });
+}
+
+/** Requires the invoking member to hold **at least one** of the given roles. */
+export function hasRole(...roleIds: string[]): Guard {
+  return guard("hasRole", (ctx) => {
+    const roles = ctx.member?.roles?.cache;
+    return roles && roleIds.some((id) => roles.has(id)) ? pass() : fail(messageFor(ctx, "missingRole"));
+  });
+}
+
+/** Restricts usage to the owner of the server the interaction happens in. */
+export function guildOwnerOnly(): Guard {
+  return guard("guildOwnerOnly", (ctx) =>
+    ctx.guild && ctx.guild.ownerId === ctx.user.id ? pass() : fail(messageFor(ctx, "guildOwnerOnly")),
   );
 }
 
@@ -101,12 +169,29 @@ export function ownerOnly(...userIds: string[]): Guard {
   const explicit = new Set(userIds);
   return guard("ownerOnly", (ctx) => {
     const owners = explicit.size > 0 ? explicit : new Set(ctx.owners ?? []);
-    return owners.has(ctx.user.id) ? pass() : fail("You can't use this.");
+    return owners.has(ctx.user.id) ? pass() : fail(messageFor(ctx, "ownerOnly"));
   });
 }
 
 /** Cooldown scope. */
 export type CooldownScope = "user" | "guild" | "channel" | "global";
+
+/** Resolves the key a scoped limiter counts by. */
+export function scopeKey(ctx: BaseContext, scope: CooldownScope): string {
+  switch (scope) {
+    case "user":
+      return ctx.user.id;
+    case "guild":
+      return ctx.guildId ?? ctx.user.id;
+    case "channel":
+      return ctx.channelId ?? ctx.channel?.id ?? ctx.user.id;
+    default:
+      return "global";
+  }
+}
+
+/** How many checks between two sweeps of expired cooldown entries. */
+const SWEEP_EVERY = 1000;
 
 /**
  * Per-invocation cooldown. Each `cooldown()` owns its own timer map, so the
@@ -120,22 +205,20 @@ export function cooldown(duration: string | number, options: { scope?: CooldownS
   const ms = comfort.time.parseDuration(duration) ?? (typeof duration === "number" ? duration : 0);
   const scope = options.scope ?? "user";
   const hits = new Map<string, number>();
+  let checks = 0;
 
   return guard("cooldown", (ctx) => {
-    const id =
-      scope === "user"
-        ? ctx.user.id
-        : scope === "guild"
-          ? (ctx.guildId ?? ctx.user.id)
-          : scope === "channel"
-            ? (ctx.channel?.id ?? ctx.user.id)
-            : "global";
-
     const now = Date.now();
+    // Without this, every user who ever ran the command would stay in the map
+    // for the lifetime of the process.
+    if (++checks % SWEEP_EVERY === 0) {
+      for (const [key, until] of hits) if (now >= until) hits.delete(key);
+    }
+
+    const id = scopeKey(ctx, scope);
     const until = hits.get(id) ?? 0;
     if (now < until) {
-      const remaining = Math.ceil((until - now) / 1000);
-      return fail(`Please wait ${remaining}s before doing that again.`);
+      return fail(messageFor(ctx, "cooldown", { seconds: Math.ceil((until - now) / 1000) }));
     }
     hits.set(id, now + ms);
     return pass();

@@ -12,19 +12,27 @@ import {
   Events,
   GatewayIntentBits,
   Partials,
+  type ActivityType,
   type AnySelectMenuInteraction,
+  type AutocompleteInteraction,
+  type ButtonInteraction,
   type ChatInputCommandInteraction,
   type ClientEvents,
-  type GuildMember,
   type Interaction,
+  type Message,
+  type MessageContextMenuCommandInteraction,
+  type ModalSubmitInteraction,
+  type PresenceData,
+  type PresenceStatusData,
   type RepliableInteraction,
   type TextBasedChannel,
+  type UserContextMenuCommandInteraction,
 } from "discord.js";
 import comfort from "@ix-xs/node-comfort";
 import { createLogger, type Logger } from "./logger.js";
 import { Registry, type Registrable } from "./registry.js";
 import { Container } from "./container.js";
-import { computeIntents, type ComputedIntents } from "./intents.js";
+import { computeIntents, privilegedIn, type ComputedIntents } from "./intents.js";
 import { isShardChild, launchShardManager, normalizeSharding } from "./sharding.js";
 import { loadFromDirectory } from "./loader.js";
 import {
@@ -38,28 +46,34 @@ import { Scheduler } from "./scheduler.js";
 import { BotError } from "./errors.js";
 import { customIdKey, decodeCustomId } from "./customId.js";
 import {
-  createReply,
-  createUpdate,
+  createResponder,
+  resolveDefer,
   type BaseContext,
-  type ButtonContext,
-  type CommandContext,
-  type ModalContext,
-  type SelectMenuContext,
+  type DeferOption,
+  type Responder,
 } from "./context.js";
 import { env, type BotConfig, type FeatureSource } from "./config.js";
 import { createI18n, type I18n } from "./i18n.js";
 import { createAuditLog, type AuditLog } from "./audit.js";
 import { createFeatureFlags } from "./flags.js";
 import { startHealthServer } from "./health.js";
+import { upgradeStore, type KVStore } from "./store.js";
+import { DEFAULT_THEME, renderMessage, type Theme } from "./messages.js";
+import { readModalFields } from "./modal.js";
+import { VERSION } from "./constants.js";
+import type { Guard } from "./guards.js";
 import type { OptionMap } from "./schema.js";
 import type { Server } from "node:http";
 import type {
+  CommandDefinition,
   EventContext,
   HookRegistrar,
   JobContext,
   MiddlewareFn,
   PluginApp,
   PluginDefinition,
+  SubcommandDefinition,
+  TriggerDefinition,
 } from "./definitions.js";
 
 /** Options for {@link Bot.deploy}. */
@@ -72,6 +86,8 @@ export interface DeployCallOptions {
 
 /** A structured description of everything the bot has loaded. */
 export interface BotDescription {
+  /** The framework version. */
+  version: string;
   intents: string[];
   partials: string[];
   privilegedIntents: string[];
@@ -91,6 +107,30 @@ export interface BotDescription {
   deployment: { global: string[]; guilds: Record<string, string[]> };
 }
 
+/** A snapshot of the runtime counters, as returned by {@link Bot.stats}. */
+export interface BotStats {
+  /** Milliseconds since this process created the bot. */
+  uptimeMs: number;
+  /** Interactions received, of every kind. */
+  interactions: number;
+  /** Slash and context-menu commands routed to a handler. */
+  commands: number;
+  /** Button and select-menu interactions routed to a handler. */
+  components: number;
+  /** Modal submissions routed to a handler. */
+  modals: number;
+  /** Autocomplete requests answered. */
+  autocompletes: number;
+  /** Interactions refused by a guard. */
+  guardRejections: number;
+  /** Handlers, events, triggers and jobs that threw. */
+  errors: number;
+  /** Average handler duration, in milliseconds. */
+  handlerAvgMs: number;
+  /** Slowest handler seen, in milliseconds. */
+  handlerMaxMs: number;
+}
+
 /**
  * A cross-realm brand. Because the CLI is CJS and user code is usually ESM, the
  * two load different copies of this module, so `instanceof Bot` is unreliable.
@@ -98,6 +138,18 @@ export interface BotDescription {
  * boundary - see {@link isBot}.
  */
 const BOT_BRAND: unique symbol = Symbol.for("djsbot.bot") as never;
+
+/** How many trigger hits between two sweeps of expired cooldown entries. */
+const TRIGGER_SWEEP_EVERY = 1000;
+
+/** What the router needs to run one handler inside the boundary. */
+interface Dispatch {
+  readonly ctx: BaseContext;
+  readonly responder: Responder;
+  readonly guards: readonly Guard[];
+  readonly defer: DeferOption | undefined;
+  readonly handler: () => unknown;
+}
 
 /**
  * The bot application. Create one with {@link defineBot}.
@@ -119,16 +171,31 @@ export class Bot {
   private scheduler?: Scheduler;
   private computed?: ComputedIntents;
   private loaded = false;
-  private sharded = false;
+  private loading?: Promise<void>;
   private presenceTimer?: NodeJS.Timeout;
   private i18n?: I18n;
   private auditLog?: AuditLog;
+  private store?: KVStore;
   private healthServer?: Server;
-  private readonly metrics = { interactions: 0, errors: 0, commands: 0, startedAt: Date.now() };
+  private signals?: { dispose?: () => void };
+  private readonly theme: Theme;
+  private readonly startedAt = Date.now();
+  private readonly counters = {
+    interactions: 0,
+    commands: 0,
+    components: 0,
+    modals: 0,
+    autocompletes: 0,
+    guardRejections: 0,
+    errors: 0,
+    handled: 0,
+    handlerMsTotal: 0,
+    handlerMsMax: 0,
+  };
   private readonly pending: Registrable[] = [];
 
   private readonly middlewares: MiddlewareFn[] = [];
-  private readonly afterHooks: Array<(ctx: BaseContext) => unknown> = [];
+  private readonly afterHooks: Array<(ctx: BaseContext, info: { durationMs: number }) => unknown> = [];
   private readonly errorHooks: Array<(error: unknown, ctx?: BaseContext) => unknown> = [];
   private readonly readyHooks: Array<(client: Client<true>) => unknown> = [];
   private readonly shutdownHooks: Array<() => unknown> = [];
@@ -136,6 +203,7 @@ export class Bot {
   public constructor(config: BotConfig) {
     this.config = config;
     this.logger = createLogger(config.logger);
+    this.theme = { ...DEFAULT_THEME, ...config.theme };
   }
 
   /** The connected discord.js client. Throws if the bot has not started. */
@@ -155,21 +223,49 @@ export class Bot {
     return this;
   }
 
+  /** A snapshot of the runtime counters (the numbers behind `/metrics`). */
+  public stats(): BotStats {
+    const c = this.counters;
+    return {
+      uptimeMs: Date.now() - this.startedAt,
+      interactions: c.interactions,
+      commands: c.commands,
+      components: c.components,
+      modals: c.modals,
+      autocompletes: c.autocompletes,
+      guardRejections: c.guardRejections,
+      errors: c.errors,
+      handlerAvgMs: c.handled ? Math.round((c.handlerMsTotal / c.handled) * 100) / 100 : 0,
+      handlerMaxMs: Math.round(c.handlerMsMax * 100) / 100,
+    };
+  }
+
   /* ----------------------------- loading ------------------------------- */
 
   /**
    * Discovers features, registers everything, wires plugins, resolves services
    * and computes intents. Idempotent. Called automatically by {@link start}.
    */
-  public async load(): Promise<void> {
-    if (this.loaded) return;
+  public load(): Promise<void> {
+    if (this.loaded) return Promise.resolve();
+    // Share one in-flight load between concurrent callers (start + deploy).
+    this.loading ??= this.doLoad().finally(() => {
+      this.loading = undefined;
+    });
+    return this.loading;
+  }
 
+  private async doLoad(): Promise<void> {
     const registrables = await this.collectRegistrables();
     this.registry.addAll(registrables);
     for (const plugin of this.config.plugins ?? []) this.registry.add(plugin);
 
     for (const service of this.registry.services) this.container.register(service);
-    if (this.config.store) this.container.registerValue("store", this.config.store);
+    if (this.config.store) {
+      // An adapter written against an earlier version gains the newer methods.
+      this.store = upgradeStore(this.config.store);
+      this.container.registerValue("store", this.store);
+    }
     if (this.config.i18n) this.i18n = createI18n(this.config.i18n);
     if (this.config.audit) {
       this.auditLog = createAuditLog(this.config.audit);
@@ -177,7 +273,7 @@ export class Bot {
     }
     if (this.config.flags) {
       // Reuse the bot's configured store by default, so you don't pass it twice.
-      const flagsOptions = { ...this.config.flags, store: this.config.flags.store ?? this.config.store };
+      const flagsOptions = { ...this.config.flags, store: this.config.flags.store ?? this.store };
       this.container.registerValue("flags", createFeatureFlags(flagsOptions));
     }
 
@@ -251,32 +347,36 @@ export class Bot {
     };
   }
 
+  private pluginApp(plugin: PluginDefinition): PluginApp {
+    return {
+      logger: this.logger.child({ plugin: plugin.name }),
+      hooks: this.hookRegistrar(),
+      config: this.config,
+      services: {
+        register: (token, value) => this.container.registerValue(token, value),
+        has: (token) => this.container.has(token),
+      },
+    };
+  }
+
   private async runPluginSetup(): Promise<void> {
     for (const plugin of this.registry.plugins) {
-      const app: PluginApp = {
-        logger: this.logger.child({ plugin: plugin.name }),
-        hooks: this.hookRegistrar(),
-        config: {},
-        services: {
-          register: (token, value) => this.container.registerValue(token, value),
-          has: (token) => this.container.has(token),
-        },
-      };
-      await plugin.setup(app);
+      await plugin.setup(this.pluginApp(plugin));
       this.logger.debug({ plugin: plugin.name, version: plugin.version }, "Plugin loaded");
     }
   }
 
   private resolveIntents(): ComputedIntents {
-    if (this.config.intents && this.config.intents !== "auto") {
-      return {
-        intents: this.config.intents,
-        partials: this.config.partials ?? [],
-        privileged: [],
-      };
+    const setting = this.config.intents;
+
+    if (Array.isArray(setting)) {
+      return { intents: setting, partials: this.config.partials ?? [], privileged: privilegedIn(setting) };
     }
+
+    const adjustments = typeof setting === "object" ? setting : {};
     const computed = computeIntents(this.registry.events, {
       hasTriggers: this.registry.triggers.length > 0,
+      ...adjustments,
     });
     if (this.config.partials) {
       computed.partials = [...new Set([...computed.partials, ...this.config.partials])];
@@ -284,7 +384,7 @@ export class Bot {
     if (computed.privileged.length > 0) {
       this.logger.warn(
         { privileged: computed.privileged },
-        "Auto-enabled privileged intents - enable them in the Developer Portal",
+        "Privileged intents in use - enable them in the Developer Portal (Bot > Privileged Gateway Intents)",
       );
     }
     return computed;
@@ -314,27 +414,51 @@ export class Bot {
     // If sharding is enabled and we're the manager process (not a spawned
     // shard), launch the ShardingManager and stop - children run the bot.
     if (this.config.sharding && !isShardChild()) {
-      this.sharded = true;
       await launchShardManager(process.argv[1] ?? "", token, normalizeSharding(this.config.sharding), this.logger);
       return;
     }
 
     const computed = this.computed!;
+    const extra = this.config.client ?? {};
 
     const client = new Client({
+      ...extra,
       intents: computed.intents,
-      partials: computed.partials,
-      presence: this.config.presence,
+      partials: [...new Set([...computed.partials, ...(extra.partials ?? [])])],
+      presence: this.config.presence ?? extra.presence,
     }) as Client<true>;
     this._client = client;
 
     this.attachEvents(client);
     this.attachTriggers(client);
     client.on(Events.InteractionCreate, (interaction) => void this.handleInteraction(interaction));
-    client.once(Events.ClientReady, (ready) => void this.onReady(ready));
+    client.once(Events.ClientReady, (ready) => {
+      void this.onReady(ready).catch((error) => this.report(error, "Startup hook failed"));
+    });
 
     this.installSignals();
     await client.login(token);
+  }
+
+  /**
+   * Logs an error raised outside an interaction (event, trigger, job, startup)
+   * and forwards it to every error hook and to `config.onError`.
+   */
+  private report(error: unknown, message: string, fields: Record<string, unknown> = {}): void {
+    this.counters.errors++;
+    this.logger.error({ err: error, ...fields }, message);
+    for (const hook of this.errorHooks) {
+      try {
+        void Promise.resolve(hook(error)).catch(() => undefined);
+      } catch {
+        /* an error hook must never throw */
+      }
+    }
+    try {
+      void Promise.resolve(this.config.onError?.(error)).catch(() => undefined);
+    } catch {
+      /* same for the global handler */
+    }
   }
 
   private attachEvents(client: Client<true>): void {
@@ -344,10 +468,13 @@ export class Bot {
         services: this.container.view(),
         logger: this.logger.child({ event: def.event }),
       };
-      const listener = (...args: unknown[]) =>
-        void Promise.resolve(
-          (def.run as (...a: unknown[]) => unknown)(...args, context),
-        ).catch((error) => this.logger.error({ err: error, event: def.event }, "Event handler failed"));
+      const run = def.run as (...args: unknown[]) => unknown;
+      const listener = (...args: unknown[]): void => {
+        // The promise also covers a synchronous throw inside the listener.
+        void new Promise((resolve) => resolve(run(...args, context))).catch((error) =>
+          this.report(error, "Event handler failed", { event: def.event }),
+        );
+      };
       if (def.once) client.once(def.event as keyof ClientEvents, listener as never);
       else client.on(def.event as keyof ClientEvents, listener as never);
     }
@@ -359,16 +486,35 @@ export class Bot {
 
     const cooldowns = new Map<string, Map<string, number>>();
     for (const t of triggers) cooldowns.set(t.name, new Map());
+    const durations = new Map<string, number>(
+      triggers.map((t) => [
+        t.name,
+        t.cooldown === undefined
+          ? 0
+          : typeof t.cooldown === "number"
+            ? t.cooldown
+            : (comfort.time.parseDuration(t.cooldown) ?? 0),
+      ]),
+    );
 
+    let hits = 0;
     client.on(Events.MessageCreate, (message) => {
-      void this.handleTriggers(message, triggers, cooldowns);
+      // Authors that never write again would otherwise stay in the maps forever.
+      if (++hits % TRIGGER_SWEEP_EVERY === 0) {
+        const now = Date.now();
+        for (const map of cooldowns.values()) {
+          for (const [authorId, until] of map) if (now >= until) map.delete(authorId);
+        }
+      }
+      void this.handleTriggers(message, triggers, cooldowns, durations);
     });
   }
 
   private async handleTriggers(
-    message: import("discord.js").Message,
-    triggers: readonly import("./definitions.js").TriggerDefinition[],
+    message: Message,
+    triggers: readonly TriggerDefinition[],
     cooldowns: Map<string, Map<string, number>>,
+    durations: Map<string, number>,
   ): Promise<void> {
     for (const trigger of triggers) {
       try {
@@ -376,14 +522,12 @@ export class Bot {
         const match = matchTrigger(trigger, message);
         if (!match) continue;
 
-        if (trigger.cooldown) {
-          const ms = typeof trigger.cooldown === "number"
-            ? trigger.cooldown
-            : (comfort.time.parseDuration(trigger.cooldown) ?? 0);
+        const cooldownMs = durations.get(trigger.name) ?? 0;
+        if (cooldownMs > 0) {
           const map = cooldowns.get(trigger.name)!;
           const until = map.get(message.author.id) ?? 0;
           if (Date.now() < until) continue;
-          map.set(message.author.id, Date.now() + ms);
+          map.set(message.author.id, Date.now() + cooldownMs);
         }
 
         const correlationId = comfort.id.nano(10);
@@ -396,25 +540,29 @@ export class Bot {
           channel: message.channel,
           services: this.container.view(),
           logger: this.logger.child({ trigger: trigger.name, correlationId }),
+          correlationId,
           match: match === true ? null : match,
           reply: (content: unknown) => message.reply(content as never),
           send: (content: unknown) => (message.channel as { send: (c: unknown) => Promise<unknown> }).send(content),
         };
         await trigger.run(ctx as never);
       } catch (error) {
-        this.logger.error({ err: error, trigger: trigger.name }, "Trigger handler failed");
+        this.report(error, "Trigger handler failed", { trigger: trigger.name });
       }
     }
   }
 
   private async onReady(client: Client<true>): Promise<void> {
-    this.logger.info({ user: client.user.tag, guilds: client.guilds.cache.size }, "Ready");
+    this.logger.info(
+      { user: client.user.tag, guilds: client.guilds.cache.size, version: VERSION },
+      "Ready",
+    );
 
     for (const hook of this.readyHooks) {
       try {
         await hook(client);
       } catch (error) {
-        this.logger.error({ err: error }, "onReady hook failed");
+        this.report(error, "onReady hook failed");
       }
     }
 
@@ -428,20 +576,20 @@ export class Bot {
     if (this.config.health === undefined) return;
     const base = typeof this.config.health === "number" ? { port: this.config.health } : this.config.health;
     const options = { ...base, onError: (error: Error) => this.logger.error({ err: error }, "Health server failed to start") };
-    this.healthServer = startHealthServer(
-      () => ({
+    this.healthServer = startHealthServer(() => {
+      const { uptimeMs, ...metrics } = this.stats();
+      return {
         ready: client.isReady(),
-        uptimeMs: Date.now() - this.metrics.startedAt,
+        uptimeMs,
         metrics: {
-          interactions: this.metrics.interactions,
-          commands: this.metrics.commands,
-          errors: this.metrics.errors,
+          ...metrics,
           guilds: client.guilds.cache.size,
+          wsPingMs: Math.max(0, Math.round(client.ws.ping)),
+          memoryRssMb: Math.round(process.memoryUsage().rss / 1_048_576),
         },
         shard: client.shard ? { id: client.shard.ids[0] ?? 0, count: client.shard.count } : undefined,
-      }),
-      options,
-    );
+      };
+    }, options);
     this.logger.info({ port: options.port ?? 3000 }, "Health server listening");
   }
 
@@ -464,14 +612,14 @@ export class Bot {
   }
 
   /** Updates the bot's gateway presence at runtime. */
-  public setPresence(presence: import("discord.js").PresenceData): void {
+  public setPresence(presence: PresenceData): void {
     this.client.user.setPresence(presence);
   }
 
   /** Shortcut to set a single activity (e.g. `setActivity("/help", { type: ActivityType.Watching })`). */
   public setActivity(
     name: string,
-    options: { type?: import("discord.js").ActivityType; url?: string; status?: import("discord.js").PresenceStatusData } = {},
+    options: { type?: ActivityType; url?: string; status?: PresenceStatusData } = {},
   ): void {
     this.client.user.setPresence({
       activities: [{ name, type: options.type, url: options.url }],
@@ -480,30 +628,56 @@ export class Bot {
   }
 
   private startScheduler(client: Client<true>): void {
-    if (this.registry.jobs.length === 0) return;
+    // On a sharded bot every shard runs this code: jobs marked `shard: "first"`
+    // only start on the shard that owns id 0.
+    const isFirstShard = !client.shard || client.shard.ids.includes(0);
+    const jobs = this.registry.jobs.filter((job) => job.shard === "all" || isFirstShard);
+    if (jobs.length === 0) return;
+
     this.scheduler = new Scheduler(
-      this.registry.jobs,
-      (job, signal): JobContext => ({
+      jobs,
+      (job, signal, correlationId): JobContext => ({
         client,
         services: this.container.view(),
-        logger: this.logger.child({ job: job.name }),
+        logger: this.logger.child({ job: job.name, correlationId }),
         signal,
+        correlationId,
       }),
       this.logger,
+      {
+        // The scheduler already logged it; only forward to the hooks.
+        onError: (error) => {
+          this.counters.errors++;
+          for (const hook of this.errorHooks) {
+            try {
+              void Promise.resolve(hook(error)).catch(() => undefined);
+            } catch {
+              /* ignore */
+            }
+          }
+          try {
+            void Promise.resolve(this.config.onError?.(error)).catch(() => undefined);
+          } catch {
+            /* ignore */
+          }
+        },
+      },
     );
     this.scheduler.start();
-    this.logger.debug({ jobs: this.registry.jobs.length }, "Scheduler started");
+    this.logger.debug({ jobs: jobs.length }, "Scheduler started");
   }
 
   private async maybeAutoDeploy(client: Client<true>): Promise<void> {
     const dev = process.env.NODE_ENV !== "production";
     const auto = this.config.deploy?.autoDeploy ?? dev;
     if (!auto) return;
+    // One deploy per process group is enough: let shard 0 do it.
+    if (client.shard && !client.shard.ids.includes(0)) return;
 
     const token = this.config.token ?? env.optional("DISCORD_TOKEN");
     if (!token) return;
     const clientId = this.config.clientId ?? env.optional("DISCORD_CLIENT_ID") ?? client.application.id;
-    const devGuildId = this.config.deploy?.devGuildId ?? env.optional("DISCORD_DEV_GUILD");
+    const devGuildId = this.devGuildId;
     // In development with a dev guild, mirror everything there for instant
     // testing; otherwise reconcile the real plan (global + per-command guilds).
     const guildId = dev && devGuildId ? devGuildId : undefined;
@@ -516,7 +690,7 @@ export class Bot {
   }
 
   private installSignals(): void {
-    comfort.utils
+    this.signals = comfort.utils
       .dontCrash()
       .on("sig", async () => {
         this.logger.info({}, "Signal received - shutting down");
@@ -524,15 +698,8 @@ export class Bot {
         process.exit(0);
       })
       .on("error", (error: unknown) => {
-        this.logger.error({ err: error }, "Uncaught error (kept alive)");
-        for (const hook of this.errorHooks) {
-          try {
-            void hook(error);
-          } catch {
-            /* ignore */
-          }
-        }
-      });
+        this.report(error, "Uncaught error (kept alive)");
+      }) as { dispose?: () => void };
   }
 
   /**
@@ -592,17 +759,27 @@ export class Bot {
   }
   private writeDeployState(guilds: string[]): void {
     try {
-      comfort.fs.writeJSON(this.deployStatePath, { guilds }, { force: true });
+      comfort.fs.writeJSON(this.deployStatePath, { guilds });
     } catch {
       /* state tracking is best-effort */
     }
   }
 
-  /** Gracefully drains jobs, tears down plugins and disconnects. */
+  /**
+   * Gracefully stops everything: waits for running jobs, runs the shutdown
+   * hooks, tears down plugins, disposes services, closes the store and
+   * disconnects. Safe to call more than once.
+   */
   public async shutdown(): Promise<void> {
-    this.scheduler?.stop();
+    const scheduler = this.scheduler;
+    this.scheduler = undefined;
+    await scheduler?.stop();
+
     if (this.presenceTimer) clearInterval(this.presenceTimer);
+    this.presenceTimer = undefined;
     this.healthServer?.close();
+    this.healthServer = undefined;
+
     for (const hook of this.shutdownHooks) {
       try {
         await hook();
@@ -613,23 +790,27 @@ export class Bot {
     for (const plugin of this.registry.plugins) {
       if (!plugin.teardown) continue;
       try {
-        await plugin.teardown({
-          logger: this.logger.child({ plugin: plugin.name }),
-          hooks: this.hookRegistrar(),
-          config: {},
-          services: {
-            register: (t, v) => this.container.registerValue(t, v),
-            has: (t) => this.container.has(t),
-          },
-        });
+        await plugin.teardown(this.pluginApp(plugin));
       } catch (error) {
         this.logger.error({ err: error, plugin: plugin.name }, "Plugin teardown failed");
       }
     }
+    await this.container.disposeAll((error, token) =>
+      this.logger.error({ err: error, service: token }, "Service dispose failed"),
+    );
+    try {
+      await this.store?.close();
+    } catch (error) {
+      this.logger.error({ err: error }, "Store close failed");
+    }
+    this.store = undefined;
+
     if (this._client) {
       await this._client.destroy();
       this._client = undefined;
     }
+    this.signals?.dispose?.();
+    this.signals = undefined;
     this.logger.info({}, "Shutdown complete");
   }
 
@@ -638,6 +819,7 @@ export class Bot {
     await this.load();
     const c = this.computed!;
     return {
+      version: VERSION,
       intents: c.intents.map((i) => GatewayIntentBits[i] ?? String(i)),
       partials: c.partials.map((p) => Partials[p] ?? String(p)),
       privilegedIntents: c.privileged,
@@ -669,7 +851,7 @@ export class Bot {
 
   private async handleInteraction(interaction: Interaction): Promise<void> {
     const correlationId = comfort.id.nano(10);
-    this.metrics.interactions++;
+    this.counters.interactions++;
     try {
       if (interaction.isChatInputCommand()) await this.routeCommand(interaction, correlationId);
       else if (interaction.isAutocomplete()) await this.routeAutocomplete(interaction, correlationId);
@@ -679,27 +861,34 @@ export class Bot {
       else if (interaction.isAnySelectMenu()) await this.routeSelect(interaction, correlationId);
       else if (interaction.isModalSubmit()) await this.routeModal(interaction, correlationId);
     } catch (error) {
+      this.counters.errors++;
       this.logger.error({ err: error, correlationId }, "Interaction routing failed");
     }
   }
 
-  private baseContext(interaction: RepliableInteraction, correlationId: string): BaseContext {
+  private open(interaction: RepliableInteraction, correlationId: string): { base: BaseContext; responder: Responder } {
+    const responder = createResponder(interaction, this.theme);
     const locale = interaction.locale ?? this.i18n?.defaultLocale ?? "en";
     const i18n = this.i18n;
-    return {
+    const messages = this.config.messages;
+
+    const base: BaseContext = {
       client: this.client,
       interaction,
       user: interaction.user,
       guild: interaction.guild,
       guildId: interaction.guildId,
       channel: interaction.channel as TextBasedChannel | null,
-      member: (interaction.member as GuildMember | null) ?? null,
+      channelId: interaction.channelId,
+      // Outside a cached guild Discord sends a raw API member, not a GuildMember.
+      member: interaction.inCachedGuild() ? interaction.member : null,
       services: this.container.view(),
       logger: this.logger.child({ correlationId, userId: interaction.user.id }),
       correlationId,
       locale,
       owners: this.config.owners ?? [],
       t: (key, vars) => (i18n ? i18n.t(locale, key, vars) : key),
+      say: (key, vars) => renderMessage(messages, key, (vars ?? {}) as never, base),
       audit: async (action, details) => {
         if (!this.auditLog) return;
         await this.auditLog.record(action, {
@@ -709,18 +898,35 @@ export class Bot {
           metadata: details?.metadata,
         });
       },
-      reply: createReply(interaction),
+      reply: responder.reply,
     };
+    return { base, responder };
+  }
+
+  /** Finds the subcommand an interaction targets, if the command uses them. */
+  private subcommandOf(
+    command: CommandDefinition,
+    interaction: ChatInputCommandInteraction | AutocompleteInteraction,
+  ): { sub: SubcommandDefinition | undefined; name: string } | undefined {
+    if (!command.subcommands && !command.groups) return undefined;
+    const groupName = interaction.options.getSubcommandGroup(false);
+    const subName = interaction.options.getSubcommand(false);
+    const sub = groupName
+      ? command.groups?.[groupName]?.subcommands[subName ?? ""]
+      : subName
+        ? command.subcommands?.[subName]
+        : undefined;
+    return { sub, name: [groupName, subName].filter(Boolean).join(" ") };
   }
 
   private async routeCommand(interaction: ChatInputCommandInteraction, cid: string): Promise<void> {
-    const base = this.baseContext(interaction, cid);
+    const { base, responder } = this.open(interaction, cid);
     const command = this.registry.commands.get(interaction.commandName);
     if (!command) {
-      await base.reply.error("Unknown command.");
+      await base.reply.error(base.say("unknownCommand", { name: interaction.commandName }));
       return;
     }
-    this.metrics.commands++;
+    this.counters.commands++;
     if (this.auditLog && this.config.audit?.autoRecordCommands) {
       void this.auditLog.record(`command:${command.name}`, {
         actorId: interaction.user.id,
@@ -728,54 +934,50 @@ export class Bot {
       });
     }
 
-    // Resolve a subcommand (optionally within a group) if the command uses them.
-    if (command.subcommands || command.groups) {
-      const groupName = interaction.options.getSubcommandGroup(false);
-      const subName = interaction.options.getSubcommand(false);
-      const sub = groupName
-        ? command.groups?.[groupName]?.subcommands[subName ?? ""]
-        : subName
-          ? command.subcommands?.[subName]
-          : undefined;
+    const showModal = responder.showModal;
+    const target = this.subcommandOf(command, interaction);
+    if (target) {
+      const { sub } = target;
       if (!sub) {
-        await base.reply.error("Unknown subcommand.");
+        await base.reply.error(base.say("unknownSubcommand", { name: target.name }));
         return;
       }
-      const options = resolveOptions(sub.options, interaction);
-      const ctx = { ...base, options } as unknown as CommandContext<Record<string, unknown>>;
-      await this.runWithBoundary(ctx, [...command.guards, ...sub.guards], () => sub.run(ctx as never));
+      const ctx = { ...base, options: resolveOptions(sub.options, interaction), showModal };
+      await this.dispatch({
+        ctx,
+        responder,
+        guards: [...command.guards, ...sub.guards],
+        defer: sub.defer ?? command.defer,
+        handler: () => sub.run(ctx as never),
+      });
       return;
     }
 
-    const options = resolveOptions(command.options, interaction);
-    const ctx = { ...base, options } as unknown as CommandContext<Record<string, unknown>>;
-    await this.runWithBoundary(ctx, command.guards, () => command.run?.(ctx as never));
+    const ctx = { ...base, options: resolveOptions(command.options, interaction), showModal };
+    await this.dispatch({
+      ctx,
+      responder,
+      guards: command.guards,
+      defer: command.defer,
+      handler: () => command.run?.(ctx as never),
+    });
   }
 
-  private async routeAutocomplete(
-    interaction: import("discord.js").AutocompleteInteraction,
-    cid: string,
-  ): Promise<void> {
+  private async routeAutocomplete(interaction: AutocompleteInteraction, cid: string): Promise<void> {
     const command = this.registry.commands.get(interaction.commandName);
     if (!command) return void (await interaction.respond([]));
 
-    let optionMap: OptionMap = command.options;
-    if (command.subcommands || command.groups) {
-      const groupName = interaction.options.getSubcommandGroup(false);
-      const subName = interaction.options.getSubcommand(false);
-      const sub = groupName
-        ? command.groups?.[groupName]?.subcommands[subName ?? ""]
-        : subName
-          ? command.subcommands?.[subName]
-          : undefined;
-      optionMap = sub?.options ?? {};
-    }
+    const target = this.subcommandOf(command, interaction);
+    const optionMap: OptionMap = target ? (target.sub?.options ?? {}) : command.options;
 
     const focused = interaction.options.getFocused(true);
     const handler = optionMap[focused.name]?.config.autocomplete;
     if (typeof handler !== "function") return void (await interaction.respond([]));
 
+    this.counters.autocompletes++;
     try {
+      const locale = interaction.locale ?? this.i18n?.defaultLocale ?? "en";
+      const i18n = this.i18n;
       const ctx = {
         interaction,
         client: this.client,
@@ -785,10 +987,13 @@ export class Bot {
         logger: this.logger.child({ correlationId: cid, autocomplete: focused.name }),
         focused: focused.name,
         value: String(focused.value ?? ""),
+        locale,
+        t: (key: string, vars?: Record<string, unknown>) => (i18n ? i18n.t(locale, key, vars) : key),
       };
       const result = await (handler as (c: unknown) => unknown)(ctx);
       await interaction.respond(normalizeChoices(result).slice(0, 25));
     } catch (error) {
+      this.counters.errors++;
       this.logger.error({ err: error, correlationId: cid }, "Autocomplete handler failed");
       try {
         await interaction.respond([]);
@@ -798,67 +1003,78 @@ export class Bot {
     }
   }
 
-  private async routeUserCommand(
-    interaction: import("discord.js").UserContextMenuCommandInteraction,
-    cid: string,
-  ): Promise<void> {
-    const base = this.baseContext(interaction, cid);
+  private async routeUserCommand(interaction: UserContextMenuCommandInteraction, cid: string): Promise<void> {
+    const { base, responder } = this.open(interaction, cid);
     const command = this.registry.userCommands.get(interaction.commandName);
     if (!command) {
-      await base.reply.error("Unknown command.");
+      await base.reply.error(base.say("unknownCommand", { name: interaction.commandName }));
       return;
     }
+    this.counters.commands++;
     const ctx = {
       ...base,
       targetUser: interaction.targetUser,
-      targetMember: (interaction.targetMember as GuildMember | null) ?? null,
-    } as unknown as BaseContext;
-    await this.runWithBoundary(ctx, command.guards, () => command.run(ctx as never));
+      targetMember: interaction.inCachedGuild() ? (interaction.targetMember ?? null) : null,
+      showModal: responder.showModal,
+    };
+    await this.dispatch({
+      ctx,
+      responder,
+      guards: command.guards,
+      defer: command.defer,
+      handler: () => command.run(ctx as never),
+    });
   }
 
-  private async routeMessageCommand(
-    interaction: import("discord.js").MessageContextMenuCommandInteraction,
-    cid: string,
-  ): Promise<void> {
-    const base = this.baseContext(interaction, cid);
+  private async routeMessageCommand(interaction: MessageContextMenuCommandInteraction, cid: string): Promise<void> {
+    const { base, responder } = this.open(interaction, cid);
     const command = this.registry.messageCommands.get(interaction.commandName);
     if (!command) {
-      await base.reply.error("Unknown command.");
+      await base.reply.error(base.say("unknownCommand", { name: interaction.commandName }));
       return;
     }
-    const ctx = { ...base, targetMessage: interaction.targetMessage } as unknown as BaseContext;
-    await this.runWithBoundary(ctx, command.guards, () => command.run(ctx as never));
+    this.counters.commands++;
+    const ctx = { ...base, targetMessage: interaction.targetMessage, showModal: responder.showModal };
+    await this.dispatch({
+      ctx,
+      responder,
+      guards: command.guards,
+      defer: command.defer,
+      handler: () => command.run(ctx as never),
+    });
   }
 
-  private async routeButton(interaction: Parameters<typeof createUpdate>[0] & RepliableInteraction, cid: string): Promise<void> {
-    const base = this.baseContext(interaction, cid);
-    const key = customIdKey(interaction.customId);
-    const button = this.registry.buttons.get(key);
+  private async routeButton(interaction: ButtonInteraction, cid: string): Promise<void> {
+    const button = this.registry.buttons.get(customIdKey(interaction.customId));
     if (!button) {
       // Not one of our registered buttons - it may belong to a self-managed
       // collector (paginate/confirm/awaitMessageComponent). Leave it untouched
       // so that collector can respond; acknowledging it here would break them.
-      base.logger.debug({ customId: interaction.customId }, "unrouted button left for any active collector");
+      this.logger.debug({ customId: interaction.customId, correlationId: cid }, "unrouted button left for any active collector");
       return;
     }
+    this.counters.components++;
+    const { base, responder } = this.open(interaction, cid);
     const { params } = decodeCustomId(interaction.customId, button.params);
-    const ctx = {
-      ...base,
-      params,
-      update: createUpdate(interaction as never),
-    } as unknown as ButtonContext<Record<string, unknown>>;
-    await this.runWithBoundary(ctx, button.guards, () => button.run(ctx as never));
+    const ctx = { ...base, params, update: responder.update!, showModal: responder.showModal };
+    await this.dispatch({
+      ctx,
+      responder,
+      guards: button.guards,
+      defer: button.defer,
+      handler: () => button.run(ctx as never),
+    });
   }
 
   private async routeSelect(interaction: AnySelectMenuInteraction, cid: string): Promise<void> {
-    const base = this.baseContext(interaction, cid);
-    const key = customIdKey(interaction.customId);
-    const menu = this.registry.selectMenus.get(key);
+    const menu = this.registry.selectMenus.get(customIdKey(interaction.customId));
     if (!menu) {
       // May belong to a self-managed collector - leave it for that collector.
-      base.logger.debug({ customId: interaction.customId }, "unrouted select left for any active collector");
+      this.logger.debug({ customId: interaction.customId, correlationId: cid }, "unrouted select left for any active collector");
       return;
     }
+    this.counters.components++;
+    const { base, responder } = this.open(interaction, cid);
     const { params } = decodeCustomId(interaction.customId, menu.params);
 
     const resolved: Record<string, unknown> = {};
@@ -880,67 +1096,109 @@ export class Bot {
       params,
       values: interaction.values,
       ...resolved,
-      update: createUpdate(interaction),
-    } as unknown as SelectMenuContext<Record<string, unknown>>;
-    await this.runWithBoundary(ctx, menu.guards, () => menu.run(ctx as never));
+      update: responder.update!,
+      showModal: responder.showModal,
+    };
+    await this.dispatch({
+      ctx,
+      responder,
+      guards: menu.guards,
+      defer: menu.defer,
+      handler: () => menu.run(ctx as never),
+    });
   }
 
-  private async routeModal(interaction: RepliableInteraction & { customId: string; fields: { getTextInputValue(id: string): string } }, cid: string): Promise<void> {
-    const base = this.baseContext(interaction, cid);
-    const key = customIdKey(interaction.customId);
-    const modal = this.registry.modals.get(key);
+  private async routeModal(interaction: ModalSubmitInteraction, cid: string): Promise<void> {
+    const modal = this.registry.modals.get(customIdKey(interaction.customId));
     if (!modal) {
       // May belong to a self-managed awaitModalSubmit - leave it for that waiter.
-      base.logger.debug({ customId: interaction.customId }, "unrouted modal left for any active collector");
+      this.logger.debug({ customId: interaction.customId, correlationId: cid }, "unrouted modal left for any active collector");
       return;
     }
+    this.counters.modals++;
+    const { base, responder } = this.open(interaction, cid);
     const { params } = decodeCustomId(interaction.customId, modal.params);
-    const fields: Record<string, string> = {};
-    for (const name of Object.keys(modal.fields)) {
-      fields[name] = interaction.fields.getTextInputValue(name);
-    }
-    const ctx = { ...base, params, fields } as unknown as ModalContext<Record<string, string>>;
-    await this.runWithBoundary(ctx, modal.guards, () => modal.run(ctx as never));
+    const ctx = { ...base, params, fields: readModalFields(modal.fields, interaction.fields) };
+    await this.dispatch({
+      ctx,
+      responder,
+      guards: modal.guards,
+      defer: modal.defer,
+      handler: () => modal.run(ctx as never),
+    });
   }
 
-  private async runWithBoundary(
-    ctx: BaseContext,
-    guards: readonly { name: string; run: (c: BaseContext) => { ok: boolean; reason?: string } | Promise<{ ok: boolean; reason?: string }> }[],
-    handler: () => unknown,
-  ): Promise<void> {
+  /**
+   * Runs one handler inside the error boundary: automatic deferral, middleware,
+   * guards, the handler itself, then the after hooks.
+   *
+   * Middleware wraps the guards as well as the handler, so a plugin can stop an
+   * interaction before any guard runs (maintenance mode) and time the whole
+   * thing (logging, metrics).
+   */
+  private async dispatch({ ctx, responder, guards, defer, handler }: Dispatch): Promise<void> {
+    const started = performance.now();
+    const deferral = resolveDefer(defer ?? this.config.defaults?.defer);
+    if (deferral) responder.armDefer(deferral);
+
+    let completed = false;
     try {
-      for (const guard of guards) {
-        const result = await guard.run(ctx);
-        if (!result.ok) {
-          ctx.logger.debug({ guard: guard.name }, "Guard rejected interaction");
-          await ctx.reply.error(result.reason ?? "You can't do that.");
-          return;
+      await this.pipeline(ctx, async () => {
+        for (const guard of guards) {
+          const result = await guard.run(ctx);
+          if (!result.ok) {
+            this.counters.guardRejections++;
+            ctx.logger.debug({ guard: guard.name }, "Guard rejected interaction");
+            await ctx.reply.error(result.reason ?? ctx.say("guardDenied"));
+            return;
+          }
+        }
+        await handler();
+        completed = true;
+      });
+      if (completed) {
+        const info = { durationMs: performance.now() - started };
+        for (const after of this.afterHooks) {
+          // The handler already succeeded and answered: a failing hook is
+          // reported, but must not turn into an error message for the user.
+          try {
+            await after(ctx, info);
+          } catch (error) {
+            this.report(error, "afterInteraction hook failed", { correlationId: ctx.correlationId });
+          }
         }
       }
-      await this.pipeline(ctx, handler);
-      for (const after of this.afterHooks) await after(ctx);
     } catch (error) {
       await this.fail(ctx, error);
+    } finally {
+      responder.disarm();
+      const elapsed = performance.now() - started;
+      this.counters.handled++;
+      this.counters.handlerMsTotal += elapsed;
+      if (elapsed > this.counters.handlerMsMax) this.counters.handlerMsMax = elapsed;
     }
   }
 
-  private async pipeline(ctx: BaseContext, handler: () => unknown): Promise<void> {
+  private async pipeline(ctx: BaseContext, handler: () => Promise<void>): Promise<void> {
+    const { middlewares } = this;
+    if (middlewares.length === 0) return handler();
+
     let index = -1;
-    const dispatch = async (i: number): Promise<void> => {
+    const run = async (i: number): Promise<void> => {
       if (i <= index) throw new Error("next() called multiple times");
       index = i;
-      const middleware = this.middlewares[i];
+      const middleware = middlewares[i];
       if (middleware) {
-        await middleware(ctx, () => dispatch(i + 1));
+        await middleware(ctx, () => run(i + 1));
         return;
       }
       await handler();
     };
-    await dispatch(0);
+    await run(0);
   }
 
   private async fail(ctx: BaseContext, error: unknown): Promise<void> {
-    this.metrics.errors++;
+    this.counters.errors++;
     ctx.logger.error({ err: error }, "Interaction handler failed");
     for (const hook of this.errorHooks) {
       try {
@@ -959,7 +1217,7 @@ export class Bot {
     }
     if (!handled) {
       try {
-        await ctx.reply.error("Something went wrong. The team has been notified.");
+        await ctx.reply.error(ctx.say("error"));
       } catch {
         /* the interaction may already be gone */
       }
@@ -978,15 +1236,13 @@ function normalizeChoices(result: unknown): Array<{ name: string; value: string 
 }
 
 /** Evaluates a trigger against a message. Returns `true`, a RegExp match, or `false`. */
-function matchTrigger(
-  trigger: import("./definitions.js").TriggerDefinition,
-  message: import("discord.js").Message,
-): boolean | RegExpMatchArray {
+function matchTrigger(trigger: TriggerDefinition, message: Message): boolean | RegExpMatchArray {
   const { pattern } = trigger;
   if (typeof pattern === "function") return pattern(message);
   if (pattern instanceof RegExp) {
-    const m = message.content.match(pattern);
-    return m ?? false;
+    // A global or sticky RegExp keeps state in `lastIndex` between calls.
+    pattern.lastIndex = 0;
+    return message.content.match(pattern) ?? false;
   }
   const content = trigger.caseInsensitive ? message.content.toLowerCase() : message.content;
   const needle = trigger.caseInsensitive ? pattern.toLowerCase() : pattern;

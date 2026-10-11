@@ -3,7 +3,9 @@
  *
  *   GET /healthz  → 200 while the process is alive (liveness)
  *   GET /readyz   → 200 when the gateway is connected, else 503 (readiness)
- *   GET /metrics  → 200 JSON snapshot (uptime, interaction/error counts, shards)
+ *   GET /metrics  → 200 JSON snapshot (uptime, interaction/error counts, shards),
+ *                   or the Prometheus text format with `?format=prometheus` or an
+ *                   `Accept: text/plain` header
  *
  * @module health
  */
@@ -31,6 +33,27 @@ export interface HealthOptions {
   onError?: (error: Error) => void;
 }
 
+/** `handlerAvgMs` → `djsbot_handler_avg_ms`. */
+function metricName(key: string): string {
+  return `djsbot_${key.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()}`;
+}
+
+/**
+ * Renders a status as the Prometheus text exposition format, so the endpoint
+ * can be scraped directly without an exporter.
+ */
+export function toPrometheus(status: HealthStatus): string {
+  const labels = status.shard ? `{shard="${status.shard.id}"}` : "";
+  const lines: string[] = [];
+  const gauge = (name: string, value: number): void => {
+    lines.push(`# TYPE ${name} gauge`, `${name}${labels} ${value}`);
+  };
+  gauge("djsbot_ready", status.ready ? 1 : 0);
+  gauge("djsbot_uptime_ms", status.uptimeMs);
+  for (const [key, value] of Object.entries(status.metrics)) gauge(metricName(key), value);
+  return lines.join("\n") + "\n";
+}
+
 function send(res: http.ServerResponse, code: number, body: unknown): void {
   const json = JSON.stringify(body);
   res.writeHead(code, { "content-type": "application/json", "content-length": Buffer.byteLength(json) });
@@ -45,15 +68,25 @@ function send(res: http.ServerResponse, code: number, body: unknown): void {
  */
 export function startHealthServer(getStatus: () => HealthStatus, options: HealthOptions = {}): http.Server {
   const server = http.createServer((req, res) => {
-    const path = (req.url ?? "/").split("?")[0];
+    const [path, query = ""] = (req.url ?? "/").split("?");
     const status = getStatus();
+    const wantsText =
+      new URLSearchParams(query).get("format") === "prometheus" ||
+      (req.headers.accept ?? "").startsWith("text/plain");
     switch (path) {
       case "/healthz":
         return send(res, 200, { status: "ok", uptimeMs: status.uptimeMs });
       case "/readyz":
         return send(res, status.ready ? 200 : 503, { ready: status.ready });
-      case "/metrics":
-        return send(res, 200, status);
+      case "/metrics": {
+        if (!wantsText) return send(res, 200, status);
+        const text = toPrometheus(status);
+        res.writeHead(200, {
+          "content-type": "text/plain; version=0.0.4; charset=utf-8",
+          "content-length": Buffer.byteLength(text),
+        });
+        return res.end(text);
+      }
       default:
         return send(res, 404, { error: "not found" });
     }

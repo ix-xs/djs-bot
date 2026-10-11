@@ -3,6 +3,129 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## 1.1.0
+
+A large, backwards-compatible release: the new modal components of discord.js
+14.27, automatic deferral, a framework that can speak your language, a store
+with atomic counters - and a full audit that fixed a dozen real defects.
+
+**Requirements changed:** Node **22.13+** and discord.js **14.27+** (the previous
+peer range, `^14.16.0`, was wrong: Components V2 already needed 14.19).
+
+### Added
+
+- **Modern modals.** `field` now covers every component a modal can hold:
+  `field.select`, `field.users`, `field.roles`, `field.channels`,
+  `field.mentionables`, `field.files` (upload), `field.radio`,
+  `field.checkboxes`, `field.checkbox` and `field.text` (a block of markdown),
+  on top of `short` and `paragraph`. Every field takes a `description`.
+  `ctx.fields` is typed per kind: a string, an array, a `Collection`, a boolean.
+- **`ctx.showModal(Modal, params?)`** on command, context-menu, button and select
+  contexts. The params are checked against the modal's declaration.
+- **Automatic deferral.** `defer: true | "ephemeral" | "update" | { after, ... }`
+  on any definition, or `defineBot({ defaults: { defer: true } })` for all of
+  them. A handler that has not answered after 2 s is acknowledged for you; a fast
+  one is left alone. Deferral and replies share one queue, so they cannot collide.
+- **`defineBot({ messages })`.** Every sentence the framework shows (guard
+  refusals, the generic error, the `confirm()` buttons) can be reworded or
+  translated, with a template string or a function receiving the `ctx`.
+  `ctx.say(key, vars)` renders one from your own code.
+- **`defineBot({ theme })`** sets the colours of the semantic replies.
+- **`ctx.reply.warn`, `ctx.reply.ephemeral`, `ctx.reply.fetch`, `ctx.reply.delete`**,
+  plus `ctx.channelId`.
+- **Store:** `increment`, `update` (both safe under concurrency), `getMany`,
+  `setMany`, `entries`, `size` and `close`. `createStore(backend)` builds a full
+  store from four methods, which is now the way to write an adapter.
+- **Typed services with no setup.** `ctx.services.store`, `.audit` and `.flags`
+  are typed out of the box, and the `deps` a `defineService` factory receives are
+  typed from your `ServiceMap`. `defineService({ dispose })` releases a service
+  on shutdown, in reverse order of creation.
+- **Guards:** `hasRole`, `guildOwnerOnly`, and the combinators `anyOf` and `not`.
+- **Jobs:** macros (`@hourly`, `@daily`, ...), month and weekday names
+  (`0 9 * * MON-FRI`), `7` for Sunday, standard day-of-month/day-of-week
+  semantics, `shard: "first"` to run once on a sharded bot, and
+  `ctx.correlationId`.
+- **Intents:** `intents: { add, remove }` adjusts the automatic selection instead
+  of replacing it. The autopilot now knows polls, auto moderation, soundboard,
+  stage and thread-member events.
+- **`defineBot({ client })`** passes any other option to the discord.js `Client`
+  (`allowedMentions`, `sweepers`, `makeCache`, ...).
+- **`env.number`, `env.boolean`, `env.list`.**
+- **`p.oneOf("a", "b")`** types a customId param as a union.
+- **`ui.poll`, `ui.premiumButton`**, and `ui.container({ accent, spoiler }, ...)`.
+- **Metrics:** components, modals, autocompletes, guard rejections, handler
+  latency, gateway ping and memory. `GET /metrics?format=prometheus` serves the
+  Prometheus text format; `bot.stats()` returns the counters in code.
+- **`describeInteraction(interaction)`** gives a kind and a readable name, for
+  logging and metrics. `afterInteraction` hooks receive `{ durationMs }`.
+- **Test harness:** `subcommand`/`group`, `userCommand`, `messageCommand`,
+  `autocomplete`, `job`, and `permissions`, `botPermissions`, `roles`,
+  `channelId`, `messages` inputs to exercise the guards for real.
+- **CLI:** `init` generates a complete project (tsconfig, `.env.example`,
+  `.gitignore`, `package.json`, a typed `ServiceMap` stub); `doctor` checks the
+  discord.js version, the token's shape, the ids and that `.env` is git-ignored;
+  `explain --json`; `generate plugin`; `version` prints the three versions a bug
+  report needs.
+- Two error codes: `DJSBOT_E014` (invalid modal) and `DJSBOT_E080` (invalid job
+  schedule), both raised when the definition is created.
+- The antiSpam plugin accepts `allow` (ids that are never limited).
+
+### Changed
+
+- **Middleware now wraps the guards.** `beforeInteraction` runs before the guards
+  rather than after them, so a plugin can stop an interaction ahead of everything
+  (maintenance mode) and time the whole of it. `afterInteraction` is no longer
+  called when a guard refused.
+- **`hasPermission` and `botHasPermission` are channel-aware.** They read the
+  permissions Discord computed for the channel of the interaction, overwrites
+  included, and name only what is missing ("Ban Members").
+- **`onError` hooks see everything.** Errors thrown by event listeners, triggers
+  and jobs now reach `defineBot({ onError })` and plugin `onError` hooks (without
+  a `ctx`). They used to be logged only.
+- **Registration is idempotent.** The same definition may be auto-discovered and
+  listed in a `defineFeature` bundle; it is registered once.
+- `inGuild()` relies on `guildId`, so it also passes for user-installed apps used
+  in a server the bot is not a member of. `ctx.member` is `null` there instead of
+  a raw API object typed as a `GuildMember`.
+- `dmPermission` is marked deprecated, as Discord replaced it with `contexts`.
+- Feature files are imported concurrently (registration order stays
+  alphabetical), and per-guild deployments are reconciled a few at a time.
+- Upgraded to `@ix-xs/node-comfort` 2.0 (prototype-pollution fix included).
+- `KVStore` gained required methods. A custom adapter written for 1.0 keeps
+  working at runtime (it is wrapped), but a TypeScript `implements KVStore` needs
+  `createStore()` or the new methods.
+- `BotError.docs` points at the error's entry on the documentation site.
+
+### Fixed
+
+- **Commands were redeployed on every start.** The diff took Discord's defaults
+  (`dm_permission`, `integration_types`) and missing localization maps for
+  changes, so untouched and localized commands were pushed again each time.
+- **Deploying failed for apps with Activities**, whose Entry Point command must
+  be carried over in a bulk overwrite.
+- **Optional options declared before required ones were rejected by Discord.**
+  Required options are now sent first, whatever the declaration order.
+- **Memory grew for the lifetime of the process** in `cooldown()`, in
+  `RateLimiter` (and so in `antiSpam` and `rateLimit`) and in trigger cooldowns:
+  one entry per user, never removed. Expired entries are now swept.
+- **Expired store keys were never purged** unless read again, in memory and in
+  SQLite, and `keys()` returned them.
+- **`ctx.update(...)` threw after `ctx.update.defer()`.** It now edits the
+  message once the interaction was acknowledged.
+- **A `*.guard.ts` file crashed the loader** (`DJSBOT_E060`): the suffix was
+  matched although a guard is not a definition. `.plugin` is now discovered.
+- **An invalid job schedule surfaced as an unhandled rejection** when the bot
+  became ready. It now fails in `defineJob`.
+- **A cron job could fire up to 15 seconds late.** Jobs fire at the top of the
+  minute.
+- **A service factory that threw looked like a dependency cycle** on the next
+  resolution.
+- **`await ctx.services` or logging it threw `DJSBOT_E031`.**
+- **Plugins received an empty `app.config`.** They get the real configuration.
+- A trigger whose RegExp is sticky (`y`) could skip messages, as the pattern kept its position between them.
+- Two concurrent `bot.load()` calls raced and failed with a duplicate-name error.
+- Auto-deploy ran on every shard instead of once.
+
 ## 1.0.0
 
 First **stable** release. The API is now considered stable and follows semver.

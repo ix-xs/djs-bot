@@ -10,7 +10,7 @@
  */
 
 // Core entry points
-export { Bot, defineBot, isBot, type BotDescription, type DeployCallOptions } from "./bot.js";
+export { Bot, defineBot, isBot, type BotDescription, type BotStats, type DeployCallOptions } from "./bot.js";
 export { env, loadEnvFile, type BotConfig, type DeployConfig, type FeatureSource } from "./config.js";
 
 // Definitions (the authoring surface)
@@ -84,6 +84,10 @@ export {
   s,
   p,
   field,
+  oneOf,
+  type FieldKind,
+  type FieldChoice,
+  type FieldOutput,
   type OptionKind,
   type OptionDef,
   type OptionMap,
@@ -106,8 +110,12 @@ export {
   hasPermission,
   botHasPermission,
   inChannel,
+  hasRole,
   ownerOnly,
+  guildOwnerOnly,
   cooldown,
+  anyOf,
+  not,
   type Guard,
   type GuardFn,
   type GuardResult,
@@ -115,7 +123,11 @@ export {
 } from "./guards.js";
 
 // Contexts
+export { describeInteraction } from "./context.js";
 export type {
+  DeferOption,
+  InteractionSummary,
+  ShowModalFn,
   BaseContext,
   CommandContext,
   UserCommandContext,
@@ -140,7 +152,18 @@ export { Container, type ServiceDefinition, type ServiceMap } from "./container.
 export { Registry, type Registrable } from "./registry.js";
 
 // Intents
-export { computeIntents, type ComputedIntents } from "./intents.js";
+export { computeIntents, type ComputedIntents, type IntentAdjustments } from "./intents.js";
+
+// The framework's own user-facing wording and colours
+export {
+  DEFAULT_MESSAGES,
+  DEFAULT_THEME,
+  type FrameworkMessages,
+  type MessageKey,
+  type MessageValue,
+  type MessageVars,
+  type Theme,
+} from "./messages.js";
 
 // Deploy
 export {
@@ -149,6 +172,7 @@ export {
   planDeployment,
   buildCommandTree,
   commandToJSON,
+  commandsEqual,
   type DeployOptions,
   type DeployResult,
   type DeployTargetResult,
@@ -166,13 +190,13 @@ export { BotError, isBotError, ERROR_CATALOGUE, type ErrorCode, type BotErrorOpt
 export { Logger, createLogger, type LogLevel, type LoggerOptions } from "./logger.js";
 
 // Constants
-export { VERSION, FRAMEWORK_NAME, CUSTOM_ID_MAX_LENGTH } from "./constants.js";
+export { VERSION, FRAMEWORK_NAME, CUSTOM_ID_MAX_LENGTH, DOCS_URL } from "./constants.js";
 
 // Formatting helpers (mentions, emojis, timestamps, allowed-mentions)
 export { mention, emoji, timestamp, allowedMentions, TimestampStyles } from "./format.js";
 
 // Component builders (rows + Components V2) and smart caching/resolution
-export { ui, type ContainerChild } from "./ui.js";
+export { ui, type ContainerChild, type ContainerOptions, type PollOptions } from "./ui.js";
 export { TTLCache, createCache, resolve, type TTLCacheOptions } from "./cache.js";
 
 // Interactive helpers
@@ -199,9 +223,14 @@ export { createI18n, type I18n, type I18nOptions, type Messages } from "./i18n.j
 export {
   memoryStore,
   sqliteStore,
+  createStore,
   defineStore,
   type KVStore,
+  type KVBackend,
 } from "./store.js";
+
+// Scheduling
+export { parseSchedule, type ParsedSchedule } from "./scheduler.js";
 
 // Audit trail
 export {
@@ -226,7 +255,7 @@ export {
 } from "./flags.js";
 
 // Health / metrics HTTP server
-export { startHealthServer, type HealthStatus, type HealthOptions } from "./health.js";
+export { startHealthServer, toPrometheus, type HealthStatus, type HealthOptions } from "./health.js";
 
 // Resilience (rate limiting, circuit breaking, retry, timeout)
 export {
@@ -254,6 +283,8 @@ export {
   GatewayIntentBits,
   MessageFlags,
   ActivityType,
+  Partials,
+  Events,
   Colors,
   EmbedBuilder,
   AttachmentBuilder,

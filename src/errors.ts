@@ -35,6 +35,10 @@ export const ERROR_CATALOGUE = {
     title: "Invalid component id",
     hint: "Button/select/modal ids must be non-empty and must not contain '$' (reserved as the customId separator). Use ':' or '-' to namespace.",
   },
+  DJSBOT_E014: {
+    title: "Invalid modal definition",
+    hint: "A modal holds 1 to 5 components. A select takes 1-25 options, a radio group 2-10, a checkbox group 1-10.",
+  },
   DJSBOT_E020: {
     title: "customId too long",
     hint: `Encoded customId exceeds Discord's ${CUSTOM_ID_MAX_LENGTH}-char limit. Store the payload out-of-band and keep only a short key.`,
@@ -70,6 +74,10 @@ export const ERROR_CATALOGUE = {
   DJSBOT_E070: {
     title: "Privileged intent required",
     hint: "An event needs a privileged intent. Enable it in the Developer Portal, or set intents:'auto'.",
+  },
+  DJSBOT_E080: {
+    title: "Invalid job schedule",
+    hint: 'Use a duration ("30s", "5m", "1h"), a 5-field cron expression ("0 3 * * *") or a macro ("@daily").',
   },
 } as const;
 

@@ -3,7 +3,7 @@
  *
  * Instead of blindly PUTting commands on every start (and eating rate limits),
  * this builds the desired command tree from the registry, fetches what Discord
- * currently has, and only pushes when they differ  reporting exactly what was
+ * currently has, and only pushes when they differ, reporting exactly what was
  * added, removed or changed. Supports `--dry-run` and guild vs global targets.
  *
  * @module deploy
@@ -65,7 +65,12 @@ function optionToJSON(name: string, opt: AnyOption): Record<string, unknown> {
 }
 
 function optionsToJSON(options: OptionMap): Record<string, unknown>[] {
-  return Object.entries(options).map(([name, opt]) => optionToJSON(name, opt));
+  // Discord rejects a command whose optional options come before required
+  // ones. Sorting here (stably, so declaration order is otherwise kept) means
+  // the order you write them in never matters.
+  const entries = Object.entries(options);
+  const ordered = [...entries.filter(([, opt]) => opt.required), ...entries.filter(([, opt]) => !opt.required)];
+  return ordered.map(([name, opt]) => optionToJSON(name, opt));
 }
 
 function subcommandToJSON(name: string, sub: SubcommandDefinition): Record<string, unknown> {
@@ -255,46 +260,128 @@ export interface DeployResult {
   deployedGuilds: string[];
 }
 
+/** How many guild scopes are reconciled at the same time. */
+const GUILD_CONCURRENCY = 5;
+
 /** A stable key that distinguishes commands of the same name but different type. */
 function commandKey(cmd: Record<string, unknown>): string {
   return `${(cmd.type as number) ?? ApplicationCommandType.ChatInput}:${cmd.name as string}`;
 }
 
-export function canonical(cmd: RESTPostAPIApplicationCommandsJSONBody): string {
-  // Stable stringify of the fields that matter for equality. Options are picked
-  // *recursively* so nested subcommands / groups (and their options) are part of
-  // the comparison - otherwise a changed subcommand option would look identical
-  // and never deploy.
-  const pickOption = (o: Record<string, unknown>): unknown => ({
+type Json = Record<string, unknown>;
+
+/** Drops `undefined` values so two shapes compare equal regardless of absent keys. */
+function compact(value: Json): Json {
+  return Object.fromEntries(Object.entries(value).filter(([, v]) => v !== undefined));
+}
+
+/** A localization map with stable key order, or `undefined` when empty. */
+function localizations(value: unknown): Json | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const keys = Object.keys(value).sort();
+  return keys.length ? Object.fromEntries(keys.map((k) => [k, (value as Json)[k]])) : undefined;
+}
+
+/** A numeric list in ascending order, or `undefined` when empty. */
+function numbers(value: unknown): number[] | undefined {
+  return Array.isArray(value) && value.length ? [...(value as number[])].sort((a, b) => a - b) : undefined;
+}
+
+function normalizeOption(o: Json): Json {
+  const choices = o.choices as Json[] | undefined;
+  const nested = o.options as Json[] | undefined;
+  return compact({
     type: o.type,
     name: o.name,
-    description: o.description ?? "",
-    required: o.required ?? false,
-    choices: o.choices ?? null,
-    min_value: o.min_value ?? null,
-    max_value: o.max_value ?? null,
-    min_length: o.min_length ?? null,
-    max_length: o.max_length ?? null,
-    channel_types: o.channel_types ?? null,
-    autocomplete: o.autocomplete ?? false,
-    name_localizations: o.name_localizations ?? null,
-    description_localizations: o.description_localizations ?? null,
-    options: ((o.options as Array<Record<string, unknown>>) ?? []).map(pickOption),
+    description: o.description || undefined,
+    required: o.required || undefined,
+    choices: choices?.length
+      ? choices.map((ch) =>
+          compact({ name: ch.name, value: ch.value, name_localizations: localizations(ch.name_localizations) }),
+        )
+      : undefined,
+    min_value: o.min_value ?? undefined,
+    max_value: o.max_value ?? undefined,
+    min_length: o.min_length ?? undefined,
+    max_length: o.max_length ?? undefined,
+    channel_types: numbers(o.channel_types),
+    autocomplete: o.autocomplete || undefined,
+    name_localizations: localizations(o.name_localizations),
+    description_localizations: localizations(o.description_localizations),
+    options: nested?.length ? nested.map(normalizeOption) : undefined,
   });
-  const pick = (c: Record<string, unknown>): unknown => ({
-    type: c.type ?? ApplicationCommandType.ChatInput,
-    name: c.name,
-    description: c.description ?? "",
-    default_member_permissions: c.default_member_permissions ?? null,
-    dm_permission: c.dm_permission ?? null,
-    integration_types: (c.integration_types as unknown[]) ?? null,
-    contexts: (c.contexts as unknown[]) ?? null,
-    name_localizations: c.name_localizations ?? null,
-    description_localizations: c.description_localizations ?? null,
-    nsfw: c.nsfw ?? false,
-    options: ((c.options as Array<Record<string, unknown>>) ?? []).map(pickOption),
+}
+
+/**
+ * The fields whose default is filled in by Discord (and depends on how the app
+ * is installed). They are only compared when the local definition sets them,
+ * otherwise an untouched command would look "changed" on every deploy.
+ */
+const SERVER_DEFAULTED = ["dm_permission", "integration_types", "contexts"] as const;
+
+function normalizeCommand(cmd: Json, only?: ReadonlySet<string>): Json {
+  const nested = cmd.options as Json[] | undefined;
+  const keep = (field: string): boolean => !only || only.has(field);
+  return compact({
+    type: cmd.type ?? ApplicationCommandType.ChatInput,
+    name: cmd.name,
+    description: cmd.description || undefined,
+    default_member_permissions: cmd.default_member_permissions ?? undefined,
+    nsfw: cmd.nsfw || undefined,
+    dm_permission: keep("dm_permission") ? (cmd.dm_permission ?? undefined) : undefined,
+    integration_types: keep("integration_types") ? numbers(cmd.integration_types) : undefined,
+    contexts: keep("contexts") ? numbers(cmd.contexts) : undefined,
+    name_localizations: localizations(cmd.name_localizations),
+    description_localizations: localizations(cmd.description_localizations),
+    options: nested?.length ? nested.map(normalizeOption) : undefined,
   });
-  return JSON.stringify(pick(cmd as unknown as Record<string, unknown>));
+}
+
+/**
+ * A stable string for the fields of a command that matter for equality. Options
+ * are normalised *recursively*, so nested subcommands and groups (and their
+ * options) are part of the comparison.
+ */
+export function canonical(cmd: RESTPostAPIApplicationCommandsJSONBody): string {
+  return JSON.stringify(normalizeCommand(cmd as unknown as Json));
+}
+
+/**
+ * Whether a local command and the one Discord returned describe the same thing.
+ *
+ * Discord fills in defaults and adds bookkeeping fields, so a field-by-field
+ * comparison would report a change on every deploy. Both sides are normalised
+ * (empty values dropped, lists and localization maps ordered), and the
+ * server-defaulted fields are ignored unless the local definition sets them.
+ */
+export function commandsEqual(desired: RESTPostAPIApplicationCommandsJSONBody, existing: unknown): boolean {
+  const local = desired as unknown as Json;
+  const specified = new Set<string>(SERVER_DEFAULTED.filter((field) => local[field] !== undefined));
+  return (
+    JSON.stringify(normalizeCommand(local, specified)) ===
+    JSON.stringify(normalizeCommand(existing as Json, specified))
+  );
+}
+
+/**
+ * The fields of an Entry Point command worth sending back in a bulk overwrite.
+ * Apps with Activities get one automatically, and Discord refuses a bulk
+ * overwrite that leaves it out - so it is carried over untouched.
+ */
+function preserveEntryPoint(cmd: Json): Json {
+  return compact({
+    id: cmd.id,
+    type: cmd.type,
+    name: cmd.name,
+    description: cmd.description,
+    handler: cmd.handler,
+    name_localizations: cmd.name_localizations ?? undefined,
+    description_localizations: cmd.description_localizations ?? undefined,
+    default_member_permissions: cmd.default_member_permissions ?? undefined,
+    integration_types: cmd.integration_types ?? undefined,
+    contexts: cmd.contexts ?? undefined,
+    nsfw: cmd.nsfw ?? undefined,
+  });
 }
 
 /** Reconciles one target (global or a single guild): fetch, diff, and PUT if changed. */
@@ -311,7 +398,20 @@ async function reconcileTarget(
     ? Routes.applicationGuildCommands(clientId, guildId)
     : Routes.applicationCommands(clientId);
 
-  const existing = (await rest.get(route)) as Array<Record<string, unknown> & { name: string }>;
+  // Without `with_localizations`, Discord omits the localization maps and every
+  // localized command would look different from its local definition.
+  const fetched = (await rest.get(route, {
+    query: new URLSearchParams({ with_localizations: "true" }),
+  })) as Array<Record<string, unknown> & { name: string }>;
+
+  // An Entry Point command (apps with Activities) is managed by Discord, not by
+  // your code: never report it as removed, and keep it in what is pushed.
+  const isEntryPoint = (cmd: Record<string, unknown>): boolean =>
+    cmd.type === ApplicationCommandType.PrimaryEntryPoint;
+  const entryPoints = fetched.filter(
+    (cmd) => isEntryPoint(cmd) && !desired.some((d) => commandKey(d as unknown as Json) === commandKey(cmd)),
+  );
+  const existing = fetched.filter((cmd) => !entryPoints.includes(cmd));
   const existingByKey = new Map(existing.map((c) => [commandKey(c), c]));
   const desiredByKey = new Map(desired.map((c) => [commandKey(c as unknown as Record<string, unknown>), c]));
 
@@ -324,7 +424,7 @@ async function reconcileTarget(
     const prev = existingByKey.get(key);
     const name = (cmd as unknown as { name: string }).name;
     if (!prev) added.push(name);
-    else if (canonical(cmd) !== canonical(prev as unknown as RESTPostAPIApplicationCommandsJSONBody)) changed.push(name);
+    else if (!commandsEqual(cmd, prev)) changed.push(name);
     else unchanged.push(name);
   }
   for (const [key, cmd] of existingByKey) {
@@ -339,10 +439,10 @@ async function reconcileTarget(
     return result;
   }
   if (dryRun) {
-    logger?.info({ scope, guildId, added, changed, removed }, "Dry run  no changes pushed");
+    logger?.info({ scope, guildId, added, changed, removed }, "Dry run - no changes pushed");
     return result;
   }
-  await rest.put(route, { body: desired });
+  await rest.put(route, { body: [...desired, ...entryPoints.map(preserveEntryPoint)] });
   result.applied = true;
   logger?.info({ scope, guildId, added, changed, removed }, "Commands deployed");
   return result;
@@ -378,8 +478,18 @@ export async function deployCommands(registry: Registry, options: DeployOptions)
     } else {
       const plan = planDeployment(registry);
       targets.push(await reconcileTarget(rest, options.clientId, undefined, plan.global, dryRun, options.logger));
-      for (const [guildId, commands] of plan.guilds) {
-        targets.push(await reconcileTarget(rest, options.clientId, guildId, commands, dryRun, options.logger));
+      // Guild scopes are independent of each other: reconcile a few at a time.
+      // The REST client still queues per route, so this cannot trip a rate limit.
+      const guildTargets = [...plan.guilds];
+      for (let i = 0; i < guildTargets.length; i += GUILD_CONCURRENCY) {
+        const batch = guildTargets.slice(i, i + GUILD_CONCURRENCY);
+        targets.push(
+          ...(await Promise.all(
+            batch.map(([guildId, commands]) =>
+              reconcileTarget(rest, options.clientId, guildId, commands, dryRun, options.logger),
+            ),
+          )),
+        );
       }
       deployedGuilds = [...plan.guilds.keys()];
 

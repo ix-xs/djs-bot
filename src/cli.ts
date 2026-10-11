@@ -7,8 +7,8 @@
  *   djs-bot clear [entry]      Remove all commands from a scope (--global | --guild <id>)
  *   djs-bot doctor [entry]     Diagnose config, intents & permissions before running
  *   djs-bot explain [entry]    Print the capability graph (what's loaded and why)
- *   djs-bot generate <type> <name>   Scaffold a command/event/button/modal/service/job/feature
- *   djs-bot init               Scaffold a minimal starter in the current directory
+ *   djs-bot generate <type> <name>   Scaffold a definition file
+ *   djs-bot init               Scaffold a ready-to-run starter in the current directory
  *
  * @module cli
  */
@@ -17,6 +17,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 import comfort from "@ix-xs/node-comfort";
+import { version as discordJsVersion } from "discord.js";
 import { loadEnvFile } from "./config.js";
 import { isBot, type Bot } from "./bot.js";
 import { interopDefault } from "./loader.js";
@@ -203,9 +204,14 @@ async function cmdClear(args: string[]): Promise<void> {
   process.exit(0);
 }
 
-async function cmdExplain(entryArg?: string): Promise<void> {
-  const bot = await loadBot(entryArg);
+async function cmdExplain(args: string[]): Promise<void> {
+  const bot = await loadBot(positional(args));
   const d = await bot.describe();
+  if (args.includes("--json")) {
+    // Machine-readable, for scripts and CI checks.
+    print(JSON.stringify(d, null, 2));
+    process.exit(0);
+  }
   const section = (title: string, items: string[]) => {
     print(`${C.bold}${title}${C.reset} ${C.gray}(${items.length})${C.reset}`);
     if (items.length) print(`  ${items.join(", ")}`);
@@ -235,35 +241,86 @@ async function cmdExplain(entryArg?: string): Promise<void> {
   process.exit(0);
 }
 
+/** Compares dotted versions: is `actual` at least `minimum`? */
+function atLeast(actual: string, minimum: string): boolean {
+  const a = actual.split(".").map((n) => Number.parseInt(n, 10) || 0);
+  const m = minimum.split(".").map((n) => Number.parseInt(n, 10) || 0);
+  for (let i = 0; i < m.length; i++) {
+    if ((a[i] ?? 0) !== (m[i] ?? 0)) return (a[i] ?? 0) > (m[i] ?? 0);
+  }
+  return true;
+}
+
+const MIN_NODE = "22.13.0";
+const MIN_DISCORD_JS = "14.27.0";
+
 async function cmdDoctor(entryArg?: string): Promise<void> {
-  print(`${C.bold}djs-bot doctor${C.reset}\n`);
-  const [major] = process.versions.node.split(".").map(Number);
-  if ((major ?? 0) >= 22) ok(`Node ${process.versions.node}`);
-  else bad(`Node ${process.versions.node} - djs-bot needs >= 22`);
+  print(`${C.bold}djs-bot doctor${C.reset} ${C.gray}v${VERSION}${C.reset}\n`);
+  let failed = false;
+  const fail = (msg: string): void => {
+    failed = true;
+    bad(msg);
+  };
+
+  if (atLeast(process.versions.node, MIN_NODE)) ok(`Node ${process.versions.node}`);
+  else fail(`Node ${process.versions.node} - djs-bot needs >= ${MIN_NODE}`);
+
+  if (atLeast(discordJsVersion, MIN_DISCORD_JS)) ok(`discord.js ${discordJsVersion}`);
+  else fail(`discord.js ${discordJsVersion} - djs-bot needs >= ${MIN_DISCORD_JS} (npm i discord.js@latest)`);
 
   loadEnvFile();
-  if (process.env.DISCORD_TOKEN) ok("DISCORD_TOKEN is set");
-  else bad("DISCORD_TOKEN is missing (env or .env)");
-  if (process.env.DISCORD_CLIENT_ID) ok("DISCORD_CLIENT_ID is set");
-  else warn("DISCORD_CLIENT_ID is missing - needed to deploy commands");
+  const token = process.env.DISCORD_TOKEN;
+  if (!token) fail("DISCORD_TOKEN is missing (env or .env)");
+  // A bot token is three base64url parts. Checking the shape catches the usual
+  // mix-up with the client secret or the public key, without ever printing it.
+  else if (token.split(".").length !== 3) fail("DISCORD_TOKEN does not look like a bot token (did you copy the client secret?)");
+  else ok("DISCORD_TOKEN is set");
+
+  const clientId = process.env.DISCORD_CLIENT_ID;
+  if (!clientId) warn("DISCORD_CLIENT_ID is missing - needed to deploy commands");
+  else if (!/^\d{17,20}$/.test(clientId)) fail("DISCORD_CLIENT_ID is not a valid id (expected 17-20 digits)");
+  else ok("DISCORD_CLIENT_ID is set");
+
+  const devGuild = process.env.DISCORD_DEV_GUILD;
+  if (!devGuild) warn("DISCORD_DEV_GUILD is not set - commands will take up to an hour to appear while you develop");
+  else if (!/^\d{17,20}$/.test(devGuild)) fail("DISCORD_DEV_GUILD is not a valid id (expected 17-20 digits)");
+  else ok("DISCORD_DEV_GUILD is set");
+
+  const gitignore = comfort.fs.readFile(".gitignore");
+  if (comfort.fs.exists(path.resolve(".env")) && comfort.fs.exists(path.resolve(".git"))) {
+    const ignored = (gitignore ?? "").split(/\r?\n/).some((line) => /^\/?\.env(\b|$)/.test(line.trim()));
+    if (ignored) ok(".env is git-ignored");
+    else fail(".env is NOT in .gitignore - your token would be committed");
+  }
 
   try {
     const bot = await loadBot(entryArg);
     const d = await bot.describe();
-    ok(`Loaded ${d.commands.length} command(s), ${d.events.length} event(s), ${d.features.length} feature(s)`);
+    const components = d.buttons.length + d.selectMenus.length + d.modals.length;
+    ok(
+      `Loaded ${d.commands.length + d.userCommands.length + d.messageCommands.length} command(s), ` +
+        `${components} component(s), ${d.events.length} event(s), ${d.jobs.length} job(s), ${d.services.length} service(s)`,
+    );
     if (d.privilegedIntents.length) {
       warn(`Enable these privileged intents in the Developer Portal: ${d.privilegedIntents.join(", ")}`);
     } else {
       ok("No privileged intents required");
     }
-    if (d.commands.length === 0) warn("No commands registered - did you point `features` at the right folder?");
-    print();
-    ok("Doctor finished");
+    if (d.commands.length + d.userCommands.length + d.messageCommands.length === 0) {
+      warn("No commands registered - did you point `features` at the right folder?");
+    }
   } catch (error) {
     print();
-    bad(`Failed to load bot: ${(error as Error).message}`);
+    bad(`Failed to load bot: ${error instanceof Error ? error.toString() : String(error)}`);
     process.exit(1);
   }
+
+  print();
+  if (failed) {
+    bad("Doctor found problems");
+    process.exit(1);
+  }
+  ok("Doctor finished - everything looks good");
   process.exit(0);
 }
 
@@ -271,7 +328,7 @@ async function cmdGenerate(args: string[]): Promise<void> {
   const [type, name] = args;
   if (!type || !name) {
     bad(
-      "Usage: djs-bot generate <command|user|message|event|trigger|button|modal|select|service|job|feature> <name>",
+      `Usage: djs-bot generate <${Object.keys(TEMPLATES).join("|")}> <name>`,
     );
     process.exit(1);
   }
@@ -281,7 +338,7 @@ async function cmdGenerate(args: string[]): Promise<void> {
   const dir = path.resolve(featuresDir, kebab);
   const file = TEMPLATES[type as keyof typeof TEMPLATES];
   if (!file) {
-    bad(`Unknown generator "${type}".`);
+    bad(`Unknown generator "${type}". Available: ${Object.keys(TEMPLATES).join(", ")}.`);
     process.exit(1);
   }
   const { filename, content } = file(kebab, pascal);
@@ -307,12 +364,18 @@ async function cmdInit(): Promise<void> {
   };
   write("src/index.ts", STARTER.entry);
   write("src/features/ping/ping.command.ts", STARTER.ping);
+  write("src/types.d.ts", STARTER.types);
+  write("tsconfig.json", STARTER.tsconfig);
   write(".env", STARTER.env);
+  write(".env.example", STARTER.env);
+  write(".gitignore", STARTER.gitignore);
+  write("package.json", STARTER.packageJson(path.basename(process.cwd())));
   print();
   ok("Starter created. Next:");
-  print(`  ${C.gray}1.${C.reset} put your token in .env`);
-  print(`  ${C.gray}2.${C.reset} npm i @ix-xs/djs-bot discord.js`);
-  print(`  ${C.gray}3.${C.reset} npx djs-bot dev`);
+  print(`  ${C.gray}1.${C.reset} put your token, client id and test server id in .env`);
+  print(`  ${C.gray}2.${C.reset} npm i @ix-xs/djs-bot discord.js && npm i -D tsx typescript @types/node`);
+  print(`  ${C.gray}3.${C.reset} npx djs-bot doctor`);
+  print(`  ${C.gray}4.${C.reset} npx djs-bot dev`);
   process.exit(0);
 }
 
@@ -328,7 +391,7 @@ ${C.bold}Commands${C.reset}
   ${C.cyan}deploy${C.reset} [entry]           Diff & deploy commands  ${C.gray}(--dry-run, --guild <id>)${C.reset}
   ${C.cyan}clear${C.reset} [entry]            Remove all commands  ${C.gray}(--global | --guild <id>)${C.reset}
   ${C.cyan}doctor${C.reset} [entry]           Diagnose config, intents & permissions
-  ${C.cyan}explain${C.reset} [entry]          Print what's loaded and why
+  ${C.cyan}explain${C.reset} [entry]          Print what's loaded and why  ${C.gray}(--json)${C.reset}
   ${C.cyan}generate${C.reset} <type> <name>   Scaffold a definition file
   ${C.cyan}init${C.reset}                     Scaffold a minimal starter
   ${C.cyan}help${C.reset}, ${C.cyan}version${C.reset}            Show help / version`);
@@ -356,7 +419,7 @@ async function main(): Promise<void> {
     case "clear":
       return cmdClear(rest);
     case "explain":
-      return cmdExplain(positional(rest));
+      return cmdExplain(rest);
     case "doctor":
       return cmdDoctor(positional(rest));
     case "generate":
@@ -367,7 +430,7 @@ async function main(): Promise<void> {
     case "version":
     case "--version":
     case "-v":
-      print(VERSION);
+      print(`djs-bot ${VERSION}  (discord.js ${discordJsVersion}, node ${process.versions.node})`);
       return;
     case undefined:
     case "help":
@@ -446,11 +509,15 @@ export const ${pascal}Modal = defineModal({
   title: "${pascal}",
   fields: {
     body: field.paragraph({ label: "Your message", required: true }),
+    // also available: field.select, field.users, field.roles, field.channels,
+    // field.files, field.radio, field.checkboxes, field.checkbox, field.text
   },
   run: async (ctx) => {
     await ctx.reply.success(\`Received: \${ctx.fields.body}\`);
   },
 });
+
+// Open it from a command or a button: await ctx.showModal(${pascal}Modal);
 `,
   }),
   select: (kebab: string, pascal: string) => ({
@@ -486,6 +553,21 @@ export default defineJob({
   schedule: "1h",
   run: async (ctx) => {
     ctx.logger.info({}, "${pascal} job ran");
+  },
+});
+`,
+  }),
+  plugin: (kebab: string, pascal: string) => ({
+    filename: `${kebab}.plugin.ts`,
+    content: `import { definePlugin } from "@ix-xs/djs-bot";
+
+export const ${pascal}Plugin = definePlugin({
+  name: "${kebab}",
+  setup(app) {
+    app.hooks.beforeInteraction(async (ctx, next) => {
+      // runs before every interaction; skip next() to stop it here
+      await next();
+    });
   },
 });
 `,
@@ -531,9 +613,12 @@ const STARTER = {
 
 const bot = defineBot({
   token: env("DISCORD_TOKEN"),
-  features: "./src/features",
+  clientId: env.optional("DISCORD_CLIENT_ID"),
+  features: \`\${import.meta.dirname}/features\`,
   intents: "auto",
   deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
+  // Acknowledge slow handlers automatically, so they never hit the 3 s limit.
+  defaults: { defer: true },
 });
 
 export default bot;
@@ -546,13 +631,61 @@ if (!process.env.DJSBOT_CLI) void bot.start();
 export default defineCommand({
   name: "ping",
   description: "Check the bot is alive",
-  run: (ctx) => ctx.reply.success("Pong! 🏓"),
+  run: (ctx) => ctx.reply.success(\`Pong! 🏓 \${Math.round(ctx.client.ws.ping)} ms\`),
 });
 `,
-  env: `DISCORD_TOKEN=
+  types: `// Declare your services here once, and ctx.services is typed everywhere.
+// (store, audit and flags are already typed by the framework.)
+declare module "@ix-xs/djs-bot" {
+  interface ServiceMap {
+    // db: import("./db.js").Database;
+  }
+}
+
+export {};
+`,
+  tsconfig: `{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src"]
+}
+`,
+  env: `# Bot token: Developer Portal > your app > Bot > Reset Token
+DISCORD_TOKEN=
+# Application id: Developer Portal > your app > General Information
 DISCORD_CLIENT_ID=
+# Your test server id (right-click the server > Copy Server ID).
+# Commands appear there instantly while you develop.
 DISCORD_DEV_GUILD=
-NODE_ENV=development
+`,
+  gitignore: `node_modules/
+dist/
+data/
+.env
+.djs-bot/
+`,
+  packageJson: (name: string) => `{
+  "name": "${comfort.str.kebabCase(name) || "my-bot"}",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=${MIN_NODE}" },
+  "scripts": {
+    "dev": "djs-bot dev",
+    "start": "djs-bot start",
+    "deploy": "djs-bot deploy",
+    "doctor": "djs-bot doctor",
+    "explain": "djs-bot explain",
+    "typecheck": "tsc --noEmit"
+  }
+}
 `,
 };
 

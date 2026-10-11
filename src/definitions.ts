@@ -8,16 +8,12 @@
  * @module definitions
  */
 import {
-  ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
   ChannelSelectMenuBuilder,
   MentionableSelectMenuBuilder,
-  ModalBuilder,
   RoleSelectMenuBuilder,
   StringSelectMenuBuilder,
-  TextInputBuilder,
-  TextInputStyle,
   UserSelectMenuBuilder,
   type APISelectMenuOption,
   type ChannelType,
@@ -27,19 +23,21 @@ import {
   type GuildMember,
   type LocalizationMap,
   type Message,
+  type ModalBuilder,
   type MessageCreateOptions,
   type MessageReplyOptions,
   type PermissionResolvable,
   type User,
 } from "discord.js";
 import type { Logger } from "./logger.js";
-import type { ServiceMap } from "./container.js";
-import { type ServiceDefinition } from "./container.js";
+import type { ServiceDefinition, ServiceMap } from "./container.js";
+import type { BotConfig } from "./config.js";
 import type { Guard } from "./guards.js";
 import type {
   BaseContext,
   ButtonContext,
   CommandContext,
+  DeferOption,
   MessageCommandContext,
   ModalContext,
   SelectMenuContext,
@@ -54,6 +52,9 @@ import {
   type ParamMap,
 } from "./schema.js";
 import { encodeCustomId } from "./customId.js";
+import { assertModalFields, buildModal } from "./modal.js";
+import { parseSchedule } from "./scheduler.js";
+import { BotError } from "./errors.js";
 import { assertChatName, assertComponentId, assertMenuName } from "./validate.js";
 
 /* -------------------------------------------------------------------------- */
@@ -74,6 +75,8 @@ export interface JobContext {
   readonly logger: Logger;
   /** Aborted when the bot is shutting down; long jobs should observe it. */
   readonly signal: AbortSignal;
+  /** A unique id for this run; every line logged through `logger` carries it. */
+  readonly correlationId: string;
 }
 
 /** Middleware runs around every interaction; call `next()` to continue. */
@@ -83,9 +86,12 @@ export type MiddlewareFn = (ctx: BaseContext, next: () => Promise<void>) => Prom
 export interface HookRegistrar {
   /** Runs before every interaction handler; short-circuit by not calling `next`. */
   beforeInteraction(fn: MiddlewareFn): void;
-  /** Runs after a successful interaction handler. */
-  afterInteraction(fn: (ctx: BaseContext) => unknown): void;
-  /** Runs when any handler throws. */
+  /** Runs after a successful interaction handler. `info.durationMs` is how long it took. */
+  afterInteraction(fn: (ctx: BaseContext, info: { durationMs: number }) => unknown): void;
+  /**
+   * Runs when anything the framework runs throws: an interaction handler (then
+   * `ctx` is set), an event listener, a trigger or a job.
+   */
   onError(fn: (error: unknown, ctx?: BaseContext) => unknown): void;
   /** Runs once the client is ready. */
   onReady(fn: (client: Client<true>) => unknown): void;
@@ -97,7 +103,8 @@ export interface HookRegistrar {
 export interface PluginApp {
   readonly logger: Logger;
   readonly hooks: HookRegistrar;
-  readonly config: Readonly<Record<string, unknown>>;
+  /** The configuration passed to `defineBot()`, read-only. */
+  readonly config: Readonly<BotConfig>;
   readonly services: {
     /** Registers an already-built value under a token. */
     register(token: string, value: unknown): void;
@@ -123,6 +130,7 @@ export interface SubcommandDefinition<M extends OptionMap = OptionMap> {
   readonly guards: readonly Guard[];
   readonly nameLocalizations?: LocalizationMap;
   readonly descriptionLocalizations?: LocalizationMap;
+  readonly defer?: DeferOption;
   // Method signature (not a property) so a precisely-typed subcommand stays
   // assignable to the erased `SubcommandDefinition` stored on a command.
   run(ctx: CommandContext<InferOptions<M>>): unknown | Promise<unknown>;
@@ -141,6 +149,8 @@ export interface SubcommandInput<M extends OptionMap> {
   guards?: Guard[];
   nameLocalizations?: LocalizationMap;
   descriptionLocalizations?: LocalizationMap;
+  /** Acknowledge the interaction for you. Overrides the parent command's setting. */
+  defer?: DeferOption;
   run: (ctx: CommandContext<InferOptions<M>>) => unknown | Promise<unknown>;
 }
 
@@ -164,6 +174,7 @@ export function subcommand<M extends OptionMap = Record<string, never>>(
     guards: input.guards ?? [],
     nameLocalizations: input.nameLocalizations,
     descriptionLocalizations: input.descriptionLocalizations,
+    defer: input.defer,
     run: input.run,
   };
 }
@@ -186,6 +197,7 @@ export interface CommandDefinition<M extends OptionMap = OptionMap> {
   readonly guilds?: readonly string[];
   readonly subcommands?: Record<string, SubcommandDefinition>;
   readonly groups?: Record<string, SubcommandGroupDefinition>;
+  readonly defer?: DeferOption;
   run?(ctx: CommandContext<InferOptions<M>>): unknown | Promise<unknown>;
 }
 
@@ -201,7 +213,11 @@ export interface CommandInput<M extends OptionMap> {
   guards?: Guard[];
   /** Mark the command NSFW. */
   nsfw?: boolean;
-  /** Allow use in DMs (global commands only). */
+  /**
+   * Allow use in DMs (global commands only).
+   * @deprecated Discord replaced this with `contexts`. Use
+   * `contexts: ["guild"]` to keep a command out of DMs.
+   */
   dmPermission?: boolean;
   /** Default member permissions required to see/use the command. */
   defaultMemberPermissions?: PermissionResolvable;
@@ -222,6 +238,13 @@ export interface CommandInput<M extends OptionMap> {
   subcommands?: Record<string, SubcommandDefinition>;
   /** Subcommand groups, keyed by name. */
   groups?: Record<string, SubcommandGroupDefinition>;
+  /**
+   * Acknowledge the interaction for you, so a slow handler never hits Discord's
+   * 3 second limit. `true` defers only if the handler has not answered after
+   * 2 s; see {@link DeferOption} for the other forms. Falls back to
+   * `defineBot({ defaults: { defer } })`.
+   */
+  defer?: DeferOption;
   /** The handler. `ctx.options` is fully typed from `options`. Optional when using subcommands. */
   run?: (ctx: CommandContext<InferOptions<M>>) => unknown | Promise<unknown>;
 }
@@ -273,6 +296,7 @@ export function defineCommand<M extends OptionMap = Record<string, never>>(
     guilds: input.guilds,
     subcommands: input.subcommands,
     groups: input.groups,
+    defer: input.defer,
     run: input.run,
   };
 }
@@ -292,6 +316,7 @@ export interface UserCommandDefinition {
   readonly contexts?: readonly InteractionContext[];
   readonly nameLocalizations?: LocalizationMap;
   readonly guilds?: readonly string[];
+  readonly defer?: DeferOption;
   run(ctx: UserCommandContext): unknown | Promise<unknown>;
 }
 
@@ -306,6 +331,7 @@ export interface MessageCommandDefinition {
   readonly contexts?: readonly InteractionContext[];
   readonly nameLocalizations?: LocalizationMap;
   readonly guilds?: readonly string[];
+  readonly defer?: DeferOption;
   run(ctx: MessageCommandContext): unknown | Promise<unknown>;
 }
 
@@ -314,6 +340,7 @@ interface ContextCommandCommon {
   /** The label shown in the right-click Apps menu (spaces & capitals allowed). */
   name: string;
   guards?: Guard[];
+  /** @deprecated Discord replaced this with `contexts`. */
   dmPermission?: boolean;
   defaultMemberPermissions?: PermissionResolvable;
   /** Where the command can be installed: `["guild"]`, `["user"]`, or both. */
@@ -324,6 +351,8 @@ interface ContextCommandCommon {
   nameLocalizations?: LocalizationMap;
   /** Deploy only to these guild ids. Omit for a global command. */
   guilds?: string[];
+  /** Acknowledge the interaction for you. See {@link DeferOption}. */
+  defer?: DeferOption;
 }
 
 /** Input accepted by {@link defineUserCommand}. */
@@ -359,6 +388,7 @@ export function defineUserCommand(input: UserCommandInput): UserCommandDefinitio
     contexts: input.contexts,
     nameLocalizations: input.nameLocalizations,
     guilds: input.guilds,
+    defer: input.defer,
     run: input.run,
   };
 }
@@ -383,6 +413,7 @@ export function defineMessageCommand(input: MessageCommandInput): MessageCommand
     contexts: input.contexts,
     nameLocalizations: input.nameLocalizations,
     guilds: input.guilds,
+    defer: input.defer,
     run: input.run,
   };
 }
@@ -428,6 +459,8 @@ export interface TriggerContext {
   readonly channel: Message["channel"];
   readonly services: ServiceMap;
   readonly logger: Logger;
+  /** A unique id for this run; every line logged through `logger` carries it. */
+  readonly correlationId: string;
   /** The regex match array when the trigger's pattern was a RegExp, else `null`. */
   readonly match: RegExpMatchArray | null;
   /** Reply to the triggering message. */
@@ -521,6 +554,7 @@ export interface ButtonDefinition<P extends ParamMap = ParamMap> {
   readonly id: string;
   readonly params: P;
   readonly guards: readonly Guard[];
+  readonly defer?: DeferOption;
   run(ctx: ButtonContext<InferParams<P>>): unknown | Promise<unknown>;
   /** Builds a discord.js button whose customId encodes the given params. */
   build(params?: InferParams<P>, visual?: ButtonVisualOptions): ButtonBuilder;
@@ -538,6 +572,11 @@ export interface ButtonInput<P extends ParamMap> {
   style?: ButtonStyle;
   label?: string;
   emoji?: string;
+  /**
+   * Acknowledge the click for you. `"update"` is usually what a button wants:
+   * no loading message, and the handler then edits the message with `ctx.update`.
+   */
+  defer?: DeferOption;
   /** The handler. `ctx.params` is decoded and typed. */
   run: (ctx: ButtonContext<InferParams<P>>) => unknown | Promise<unknown>;
 }
@@ -563,6 +602,7 @@ export function defineButton<P extends ParamMap = Record<string, never>>(
     id: input.id,
     params,
     guards: input.guards ?? [],
+    defer: input.defer,
     run: input.run,
     build(values, visual = {}) {
       const button = new ButtonBuilder()
@@ -593,6 +633,7 @@ export interface SelectRoutable<P extends ParamMap = ParamMap> {
   readonly id: string;
   readonly params: P;
   readonly guards: readonly Guard[];
+  readonly defer?: DeferOption;
   run(ctx: SelectMenuContext<InferParams<P>>): unknown | Promise<unknown>;
 }
 
@@ -601,6 +642,8 @@ export interface SelectMenuInput<P extends ParamMap> {
   id: string;
   params?: P;
   guards?: Guard[];
+  /** Acknowledge the selection for you. See {@link DeferOption}. */
+  defer?: DeferOption;
   run: (ctx: SelectMenuContext<InferParams<P>>) => unknown | Promise<unknown>;
 }
 
@@ -680,6 +723,7 @@ export function defineSelectMenu<P extends ParamMap = Record<string, never>>(
     id: input.id,
     params,
     guards: input.guards ?? [],
+    defer: input.defer,
     run: input.run,
     build(values, visual) {
       const menu = new StringSelectMenuBuilder()
@@ -706,6 +750,7 @@ export function defineUserSelect<P extends ParamMap = Record<string, never>>(
     id: input.id,
     params,
     guards: input.guards ?? [],
+    defer: input.defer,
     run: input.run,
     build(values, visual = {}) {
       const menu = new UserSelectMenuBuilder().setCustomId(
@@ -730,6 +775,7 @@ export function defineRoleSelect<P extends ParamMap = Record<string, never>>(
     id: input.id,
     params,
     guards: input.guards ?? [],
+    defer: input.defer,
     run: input.run,
     build(values, visual = {}) {
       const menu = new RoleSelectMenuBuilder().setCustomId(
@@ -754,6 +800,7 @@ export function defineChannelSelect<P extends ParamMap = Record<string, never>>(
     id: input.id,
     params,
     guards: input.guards ?? [],
+    defer: input.defer,
     run: input.run,
     build(values, visual = {}) {
       const menu = new ChannelSelectMenuBuilder().setCustomId(
@@ -779,6 +826,7 @@ export function defineMentionableSelect<P extends ParamMap = Record<string, neve
     id: input.id,
     params,
     guards: input.guards ?? [],
+    defer: input.defer,
     run: input.run,
     build(values, visual = {}) {
       const menu = new MentionableSelectMenuBuilder().setCustomId(
@@ -802,6 +850,7 @@ export interface ModalDefinition<F extends FieldMap = FieldMap, P extends ParamM
   readonly fields: F;
   readonly params: P;
   readonly guards: readonly Guard[];
+  readonly defer?: DeferOption;
   run(ctx: ModalContext<InferFields<F>> & { params: InferParams<P> }): unknown | Promise<unknown>;
   /** Builds a discord.js modal from the declared fields. */
   build(params?: InferParams<P>): ModalBuilder;
@@ -811,9 +860,12 @@ export interface ModalDefinition<F extends FieldMap = FieldMap, P extends ParamM
 export interface ModalInput<F extends FieldMap, P extends ParamMap> {
   id: string;
   title: string;
+  /** Up to 5 components, built with `field.*`. */
   fields: F;
   params?: P;
   guards?: Guard[];
+  /** Acknowledge the submission for you. See {@link DeferOption}. */
+  defer?: DeferOption;
   run: (ctx: ModalContext<InferFields<F>> & { params: InferParams<P> }) => unknown | Promise<unknown>;
 }
 
@@ -832,6 +884,7 @@ export function defineModal<F extends FieldMap, P extends ParamMap = Record<stri
   input: ModalInput<F, P>,
 ): ModalDefinition<F, P> {
   assertComponentId("modal", input.id);
+  assertModalFields(input.id, input.fields);
   const params = (input.params ?? {}) as P;
   return {
     kind: "modal",
@@ -840,31 +893,14 @@ export function defineModal<F extends FieldMap, P extends ParamMap = Record<stri
     fields: input.fields,
     params,
     guards: input.guards ?? [],
+    defer: input.defer,
     run: input.run,
     build(values) {
-      const modal = new ModalBuilder()
-        .setCustomId(encodeCustomId(input.id, params, values as Record<string, unknown>))
-        .setTitle(input.title);
-      const rows = Object.entries(input.fields).map(([name, fieldDef]) => {
-        const cfg = fieldDef.config as {
-          placeholder?: string;
-          minLength?: number;
-          maxLength?: number;
-          value?: string;
-        };
-        const textInput = new TextInputBuilder()
-          .setCustomId(name)
-          .setLabel(fieldDef.label)
-          .setStyle(fieldDef.style === "paragraph" ? TextInputStyle.Paragraph : TextInputStyle.Short)
-          .setRequired(fieldDef.required);
-        if (cfg.placeholder) textInput.setPlaceholder(cfg.placeholder);
-        if (cfg.minLength !== undefined) textInput.setMinLength(cfg.minLength);
-        if (cfg.maxLength !== undefined) textInput.setMaxLength(cfg.maxLength);
-        if (cfg.value !== undefined) textInput.setValue(cfg.value);
-        return new ActionRowBuilder<TextInputBuilder>().addComponents(textInput);
-      });
-      modal.addComponents(...rows);
-      return modal;
+      return buildModal(
+        encodeCustomId(input.id, params, values as Record<string, unknown>),
+        input.title,
+        input.fields,
+      );
     },
   };
 }
@@ -882,11 +918,30 @@ export function defineModal<F extends FieldMap, P extends ParamMap = Record<stri
  *   factory: ({ db }) => new TicketsService(db),
  * });
  */
-export function defineService<T>(
+export function defineService<T, const D extends readonly string[] = readonly string[]>(
   name: string,
-  input: { deps?: string[]; factory: (deps: Record<string, unknown>) => T | Promise<T> },
+  input: {
+    /** Tokens of the services this one needs. They are resolved first. */
+    deps?: D;
+    /**
+     * Builds the instance. Receives the resolved dependencies, typed from your
+     * {@link ServiceMap} augmentation (`unknown` for tokens you did not declare).
+     */
+    factory: (deps: { [K in D[number]]: ServiceMap[K] }) => T | Promise<T>;
+    /**
+     * Called with the instance during graceful shutdown, after the services
+     * that depend on it. The place to close a connection pool.
+     */
+    dispose?: (instance: T) => unknown | Promise<unknown>;
+  },
 ): ServiceDefinition<T> {
-  return { kind: "service", name, deps: input.deps ?? [], factory: input.factory };
+  return {
+    kind: "service",
+    name,
+    deps: [...(input.deps ?? [])],
+    factory: input.factory as ServiceDefinition<T>["factory"],
+    dispose: input.dispose as ServiceDefinition<T>["dispose"],
+  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -905,16 +960,33 @@ export interface JobDefinition {
   readonly concurrency: number;
   /** Run once immediately on boot in addition to the schedule. */
   readonly runOnStart: boolean;
+  /** Which shards run the job when the bot is sharded. */
+  readonly shard: "all" | "first";
   readonly run: (ctx: JobContext) => unknown | Promise<unknown>;
 }
 
 /** Input accepted by {@link defineJob}. */
 export interface JobInput {
+  /** A unique name, used in logs. */
   name: string;
+  /**
+   * When to run: a duration (`"30s"`, `"1h"`), a 5-field cron expression
+   * (`"0 3 * * *"`, with names like `MON` or `JAN`) or a macro (`"@hourly"`,
+   * `"@daily"`, `"@weekly"`, `"@monthly"`, `"@yearly"`).
+   */
   schedule: string;
+  /** IANA timezone a cron expression is evaluated in. Default: the server's. */
   timezone?: string;
+  /** How many runs may overlap. Default `1`: a run is skipped while one is active. */
   concurrency?: number;
+  /** Also run once at startup. Default `false`. */
   runOnStart?: boolean;
+  /**
+   * Which shards run the job on a sharded bot. `"all"` (default) suits work
+   * that walks each shard's own guilds; `"first"` runs it once, on shard 0,
+   * for things like a daily announcement.
+   */
+  shard?: "all" | "first";
   run: (ctx: JobContext) => unknown | Promise<unknown>;
 }
 
@@ -924,6 +996,12 @@ export interface JobInput {
  * export default defineJob({ name: "purge", schedule: "0 3 * * *", run: (ctx) => ctx.services.db.purge() });
  */
 export function defineJob(input: JobInput): JobDefinition {
+  // Fail when the job is defined, not minutes later when the scheduler starts.
+  try {
+    parseSchedule(input.schedule);
+  } catch (cause) {
+    throw new BotError("DJSBOT_E080", { detail: `job "${input.name}": "${input.schedule}"`, cause });
+  }
   return {
     kind: "job",
     name: input.name,
@@ -931,6 +1009,7 @@ export function defineJob(input: JobInput): JobDefinition {
     timezone: input.timezone,
     concurrency: input.concurrency ?? 1,
     runOnStart: input.runOnStart ?? false,
+    shard: input.shard ?? "all",
     run: input.run,
   };
 }

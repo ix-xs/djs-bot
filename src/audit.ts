@@ -9,7 +9,7 @@
  */
 import comfort from "@ix-xs/node-comfort";
 import { createLogger, type Logger } from "./logger.js";
-import type { KVStore } from "./store.js";
+import { upgradeStore, type KVStore } from "./store.js";
 
 /** A single audit record. */
 export interface AuditEntry {
@@ -81,15 +81,13 @@ export function memoryAuditSink(max = 5000): AuditSink {
 
 /** A sink that persists entries in a {@link KVStore} (one key per entry). */
 export function storeAuditSink(store: KVStore, options: { namespace?: string; ttl?: number | string } = {}): AuditSink {
-  const ns = store.namespace(options.namespace ?? "audit");
+  const ns = upgradeStore(store).namespace<AuditEntry>(options.namespace ?? "audit");
   return {
     async record(entry) {
-      await ns.set(entry.id, entry as unknown as never, options.ttl);
+      await ns.set(entry.id, entry, options.ttl);
     },
     async query() {
-      const keys = await ns.keys();
-      const rows = await Promise.all(keys.map((k) => ns.get(k)));
-      return rows.filter(Boolean) as unknown as AuditEntry[];
+      return (await ns.entries()).map(([, entry]) => entry);
     },
   };
 }

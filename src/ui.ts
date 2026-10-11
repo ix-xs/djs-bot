@@ -23,6 +23,7 @@ import {
   TextDisplayBuilder,
   ThumbnailBuilder,
   type MessageActionRowComponentBuilder,
+  type PollData,
 } from "discord.js";
 
 /**
@@ -36,6 +37,27 @@ export type ContainerChild =
   | MediaGalleryBuilder
   | FileBuilder
   | ActionRowBuilder<MessageActionRowComponentBuilder>;
+
+/** Appearance options for a {@link ui.container}. */
+export interface ContainerOptions {
+  /** Colour of the bar on the left edge, e.g. `0x5865f2` or `Colors.Blurple`. */
+  accent?: number;
+  /** Hide the whole container behind a spoiler. */
+  spoiler?: boolean;
+}
+
+/** Options for {@link ui.poll}. */
+export interface PollOptions {
+  /** How long the poll stays open, in hours (1 to 768). Default `24`. */
+  hours?: number;
+  /** Let people pick several answers. Default `false`. */
+  multiple?: boolean;
+}
+
+function isContainerOptions(value: unknown): value is ContainerOptions {
+  // A builder is a class instance; the options bag is a plain object literal.
+  return typeof value === "object" && value !== null && Object.getPrototypeOf(value) === Object.prototype;
+}
 
 /** Terse component factories. All return real discord.js builders. */
 export const ui = {
@@ -54,11 +76,47 @@ export const ui = {
     return b;
   },
 
+  /**
+   * A premium button: opens the purchase flow of one of your app's SKUs.
+   * Discord supplies the label, and no handler runs on your side.
+   */
+  premiumButton(skuId: string): ButtonBuilder {
+    return new ButtonBuilder().setStyle(ButtonStyle.Premium).setSKUId(skuId);
+  },
+
+  /**
+   * A native poll, to pass as the `poll` of a message.
+   * @example
+   * await ctx.reply({ poll: ui.poll("Pizza tonight?", ["Yes", { text: "No", emoji: "🥗" }], { hours: 12 }) });
+   */
+  poll(
+    question: string,
+    answers: ReadonlyArray<string | { text: string; emoji?: string }>,
+    options: PollOptions = {},
+  ): PollData {
+    return {
+      question: { text: question },
+      answers: answers.map((answer) => (typeof answer === "string" ? { text: answer } : answer)),
+      duration: options.hours ?? 24,
+      allowMultiselect: options.multiple ?? false,
+    };
+  },
+
   /* ----------------------------- Components V2 ---------------------------- */
 
-  /** A V2 container that groups display components, with an optional accent colour. */
-  container(...components: ContainerChild[]): ContainerBuilder {
+  /**
+   * A V2 container that groups display components. Pass an options object first
+   * to give it an accent colour or hide it behind a spoiler.
+   * @example ui.container({ accent: Colors.Blurple }, ui.text("## Title"), ui.separator())
+   */
+  container(...args: [ContainerOptions, ...ContainerChild[]] | ContainerChild[]): ContainerBuilder {
+    const [first, ...rest] = args;
+    const options = isContainerOptions(first) ? first : {};
+    const components = (isContainerOptions(first) ? rest : args) as ContainerChild[];
+
     const c = new ContainerBuilder();
+    if (options.accent !== undefined) c.setAccentColor(options.accent);
+    if (options.spoiler) c.setSpoiler(true);
     for (const component of components) addToContainer(c, component);
     return c;
   },

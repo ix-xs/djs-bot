@@ -4,13 +4,16 @@
  */
 
 /** The current framework version (kept in sync with package.json at build time). */
-export const VERSION = "1.0.0";
+export const VERSION = "1.1.0";
 
 /** Human-facing framework name, used in logs and CLI output. */
 export const FRAMEWORK_NAME = "djs-bot";
 
-/** Base URL for error-code documentation pages. */
-export const DOCS_BASE_URL = "https://github.com/ix-xs/djs-bot#readme";
+/** Root URL of the documentation site. */
+export const DOCS_URL = "https://ix-xs.github.io/djs-bot";
+
+/** The page documenting every error code; each code is an anchor on it. */
+export const DOCS_BASE_URL = `${DOCS_URL}/api/errors/`;
 
 /** Discord's hard limit on the length of a component `customId`. */
 export const CUSTOM_ID_MAX_LENGTH = 100;
@@ -32,7 +35,7 @@ export const FILE_SUFFIXES = [
   ".modal",
   ".service",
   ".job",
-  ".guard",
+  ".plugin",
   ".feature",
 ] as const;
 

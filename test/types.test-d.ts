@@ -11,11 +11,13 @@ import {
   defineCommand,
   defineButton,
   defineModal,
+  defineService,
+  type KVStore,
   type InferOptions,
   type InferParams,
   type InferFields,
 } from "../src/index.js";
-import type { Attachment, GuildBasedChannel, GuildMember, Role, User } from "discord.js";
+import type { Attachment, Collection, GuildBasedChannel, GuildMember, Role, User } from "discord.js";
 
 /* ------------------------------- helpers --------------------------------- */
 
@@ -96,3 +98,88 @@ defineModal({
 export type _Check = [
   _r1, _r2, _r3, _r4, _r5, _o1, _o2, _o3, _o4, _p1, _f1,
 ];
+
+/* ------------------------- modal fields, every kind ----------------------- */
+
+const richFields = {
+  note: field.text("Display only"),
+  title: field.short({ label: "Title", required: true }),
+  tags: field.select({ label: "Tags", options: [{ label: "A", value: "a" }] }),
+  who: field.users({ label: "Who" }),
+  roles: field.roles({ label: "Roles" }),
+  where: field.channels({ label: "Where" }),
+  proof: field.files({ label: "Proof" }),
+  plan: field.radio({ label: "Plan", required: true, options: [{ label: "A", value: "a" }, { label: "B", value: "b" }] }),
+  maybe: field.radio({ label: "Maybe", options: [{ label: "A", value: "a" }, { label: "B", value: "b" }] }),
+  extras: field.checkboxes({ label: "Extras", options: [{ label: "A", value: "a" }] }),
+  agree: field.checkbox({ label: "Agree" }),
+};
+type Rich = InferFields<typeof richFields>;
+type _rich1 = Expect<Equal<Rich["title"], string>>;
+type _rich2 = Expect<Equal<Rich["tags"], string[]>>;
+type _rich3 = Expect<Equal<Rich["who"], Collection<string, User>>>;
+type _rich4 = Expect<Equal<Rich["roles"], Collection<string, Role>>>;
+type _rich5 = Expect<Equal<Rich["where"], Collection<string, GuildBasedChannel>>>;
+type _rich6 = Expect<Equal<Rich["proof"], Collection<string, Attachment>>>;
+type _rich7 = Expect<Equal<Rich["plan"], string>>; // required radio: never undefined
+type _rich8 = Expect<Equal<Rich["maybe"], string | undefined>>;
+type _rich9 = Expect<Equal<Rich["extras"], string[]>>;
+type _rich10 = Expect<Equal<Rich["agree"], boolean>>;
+// A text block is display only: it must not appear in ctx.fields.
+type _rich11 = Expect<Equal<"note" extends keyof Rich ? true : false, false>>;
+
+const RichModal = defineModal({
+  id: "rich",
+  title: "Rich",
+  params: { ticket: p.string },
+  fields: richFields,
+  run: (ctx) => {
+    type _m1 = Expect<Equal<typeof ctx.fields.agree, boolean>>;
+    type _m2 = Expect<Equal<typeof ctx.params.ticket, string>>;
+  },
+});
+
+/* ------------------- ctx.showModal checks the modal's params -------------- */
+
+defineCommand({
+  name: "open",
+  description: "o",
+  run: async (ctx) => {
+    await ctx.showModal(RichModal, { ticket: "42" });
+    // @ts-expect-error - `ticket` must be a string
+    await ctx.showModal(RichModal, { ticket: 42 });
+  },
+});
+
+/* --------------------------- typed customId unions ------------------------ */
+
+defineButton({
+  id: "decide",
+  params: { action: p.oneOf("approve", "reject") },
+  run: (ctx) => {
+    type _o1 = Expect<Equal<typeof ctx.params.action, "approve" | "reject">>;
+  },
+});
+
+/* ------------------- built-in services are typed out of the box ----------- */
+
+defineCommand({
+  name: "svc",
+  description: "s",
+  run: async (ctx) => {
+    type _s1 = Expect<Equal<typeof ctx.services.store, KVStore>>;
+    const total: number = await ctx.services.store.increment("hits");
+    void total;
+  },
+});
+
+/* ------------- defineService types deps from the ServiceMap --------------- */
+
+defineService("report", {
+  deps: ["store", "somethingElse"],
+  factory: (deps) => {
+    type _d1 = Expect<Equal<typeof deps.store, KVStore>>;
+    type _d2 = Expect<Equal<typeof deps.somethingElse, unknown>>;
+    return {};
+  },
+});

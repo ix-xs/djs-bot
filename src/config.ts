@@ -4,11 +4,13 @@
  * @module config
  */
 import comfort from "@ix-xs/node-comfort";
-import type { GatewayIntentBits, Partials, PresenceData } from "discord.js";
+import type { ClientOptions, GatewayIntentBits, Partials, PresenceData } from "discord.js";
 import type { LogLevel } from "./logger.js";
 import type { Registrable } from "./registry.js";
 import type { PluginDefinition } from "./definitions.js";
-import type { BaseContext } from "./context.js";
+import type { BaseContext, DeferOption } from "./context.js";
+import type { IntentAdjustments } from "./intents.js";
+import type { FrameworkMessages, Theme } from "./messages.js";
 import type { ShardingOptions } from "./sharding.js";
 import type { I18nOptions } from "./i18n.js";
 import type { KVStore } from "./store.js";
@@ -41,14 +43,55 @@ export interface BotConfig {
   clientId?: string;
   /** Feature sources - a directory path and/or explicit definitions. */
   features?: FeatureSource | FeatureSource[];
-  /** `"auto"` to derive intents from your events, or an explicit list. */
-  intents?: "auto" | GatewayIntentBits[];
+  /**
+   * Gateway intents. `"auto"` (the default) derives them from the events and
+   * triggers you registered. Pass `{ add, remove }` to keep the automatic
+   * selection but adjust it, or an explicit list to take full control.
+   *
+   * @example intents: { add: [GatewayIntentBits.DirectMessages] }
+   * @example intents: { remove: [GatewayIntentBits.MessageContent] }
+   */
+  intents?: "auto" | GatewayIntentBits[] | IntentAdjustments;
   /** Explicit partials (merged with auto-derived ones). */
   partials?: Partials[];
   /** Cross-cutting plugins. */
   plugins?: PluginDefinition[];
-  /** Bot owner user ids (used by the `ownerOnly` guard helper if you wire it). */
+  /** Bot owner user ids, read back as `ctx.owners` and used by `ownerOnly()`. */
   owners?: string[];
+  /**
+   * Extra options for the discord.js `Client`: cache limits, sweepers, default
+   * `allowedMentions`, REST settings... Intents are computed for you, so they
+   * are set through `intents` rather than here.
+   *
+   * @example
+   * client: {
+   *   allowedMentions: { parse: ["users"], repliedUser: true },
+   *   sweepers: { messages: { interval: 3600, lifetime: 1800 } },
+   * }
+   */
+  client?: Omit<ClientOptions, "intents">;
+  /** Behaviour applied to every definition that does not set its own. */
+  defaults?: {
+    /**
+     * Acknowledge interactions for you so a slow handler never hits Discord's
+     * 3 second limit. `true` defers only when a handler has not answered after
+     * 2 s. Each definition can override it with its own `defer`.
+     */
+    defer?: DeferOption;
+  };
+  /**
+   * Rewords (or translates) the sentences the framework itself shows: guard
+   * refusals, the generic error, the confirm dialog buttons.
+   *
+   * @example
+   * messages: {
+   *   cooldown: "Patiente {seconds}s avant de recommencer.",
+   *   error: (_vars, ctx) => ctx?.t("errors.generic") ?? "Oups.",
+   * }
+   */
+  messages?: FrameworkMessages;
+  /** Accent colours of the `ctx.reply.success/error/info/warn` embeds. */
+  theme?: Partial<Theme>;
   /** Command deployment settings. */
   deploy?: DeployConfig;
   /** Logger settings. */
@@ -74,7 +117,11 @@ export interface BotConfig {
   flags?: FeatureFlagsOptions;
   /** Expose an HTTP health server: a port number, or {@link HealthOptions}. */
   health?: number | HealthOptions;
-  /** Global error handler for interactions. Return a value to mark it handled. */
+  /**
+   * Global error handler. Receives the `ctx` for an interaction error, and no
+   * `ctx` when an event listener, a trigger or a job threw. Return a value from
+   * an interaction error to mark it handled and suppress the default reply.
+   */
   onError?: (error: unknown, ctx?: BaseContext) => unknown | Promise<unknown>;
 }
 
@@ -98,6 +145,49 @@ export function env(name: string, fallback?: string): string {
 env.optional = function optional(name: string): string | undefined {
   const value = process.env[name] ?? comfort.fs.getEnv(name);
   return value === "" ? undefined : value;
+};
+
+/**
+ * Reads a numeric variable. Throws when it is missing without a fallback, or
+ * when its value is not a number - so a typo fails at startup.
+ * @example const port = env.number("PORT", 3000);
+ */
+env.number = function number(name: string, fallback?: number): number {
+  const raw = env.optional(name);
+  if (raw === undefined) {
+    if (fallback !== undefined) return fallback;
+    return Number(env(name)); // throws the standard "missing variable" error
+  }
+  const value = Number(raw);
+  if (Number.isNaN(value)) {
+    throw new Error(`Environment variable "${name}" must be a number, got "${raw}".`);
+  }
+  return value;
+};
+
+/**
+ * Reads a boolean variable: `true`/`1`/`yes`/`on` and `false`/`0`/`no`/`off`
+ * (any case). Unset resolves to `fallback` (default `false`).
+ * @example const debug = env.boolean("DEBUG");
+ */
+env.boolean = function boolean(name: string, fallback = false): boolean {
+  const raw = env.optional(name)?.trim().toLowerCase();
+  if (raw === undefined) return fallback;
+  if (["true", "1", "yes", "on"].includes(raw)) return true;
+  if (["false", "0", "no", "off"].includes(raw)) return false;
+  throw new Error(`Environment variable "${name}" must be a boolean, got "${raw}".`);
+};
+
+/**
+ * Reads a comma-separated variable as a list, trimming each entry and dropping
+ * empty ones. Unset resolves to an empty list.
+ * @example owners: env.list("OWNER_IDS")
+ */
+env.list = function list(name: string): string[] {
+  return (env.optional(name) ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
 };
 
 /**

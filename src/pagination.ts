@@ -24,6 +24,7 @@ import {
 } from "discord.js";
 import comfort from "@ix-xs/node-comfort";
 import type { BaseContext } from "./context.js";
+import { messageFor } from "./messages.js";
 
 function ms(duration: string | number | undefined, fallback: number): number {
   if (typeof duration === "number") return duration;
@@ -177,8 +178,8 @@ export interface ConfirmOptions {
 export async function confirm(ctx: BaseContext, options: ConfirmOptions = {}): Promise<boolean> {
   const nonce = comfort.id.nano(8);
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setCustomId(`${nonce}:y`).setStyle(ButtonStyle.Success).setLabel(options.confirmLabel ?? "Confirm"),
-    new ButtonBuilder().setCustomId(`${nonce}:n`).setStyle(ButtonStyle.Danger).setLabel(options.cancelLabel ?? "Cancel"),
+    new ButtonBuilder().setCustomId(`${nonce}:y`).setStyle(ButtonStyle.Success).setLabel(options.confirmLabel ?? messageFor(ctx, "confirm")),
+    new ButtonBuilder().setCustomId(`${nonce}:n`).setStyle(ButtonStyle.Danger).setLabel(options.cancelLabel ?? messageFor(ctx, "cancel")),
   );
 
   const payload: InteractionReplyOptions = { components: [row] };

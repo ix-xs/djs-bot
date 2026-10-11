@@ -8,7 +8,8 @@
  * @module flags
  */
 import { guard, pass, fail, type Guard } from "./guards.js";
-import { memoryStore, type KVStore } from "./store.js";
+import { memoryStore, upgradeStore, type KVStore } from "./store.js";
+import { messageFor } from "./messages.js";
 
 /** A scope for reading/writing a flag. */
 export interface FlagScope {
@@ -50,7 +51,7 @@ const guildKey = (name: string, guildId: string) => `flag:${name}:guild:${guildI
  * await flags.disable("economy", { guildId });   // off in this guild only
  */
 export function createFeatureFlags(options: FeatureFlagsOptions = {}): FeatureFlags {
-  const store = (options.store ?? memoryStore()) as KVStore<boolean>;
+  const store = upgradeStore((options.store ?? memoryStore()) as KVStore<boolean>);
   const defaults: Record<string, boolean> = { ...options.defaults };
 
   return {
@@ -77,12 +78,11 @@ export function createFeatureFlags(options: FeatureFlagsOptions = {}): FeatureFl
     },
     async list(guildId) {
       const result: Record<string, boolean> = { ...defaults };
-      for (const key of await store.keys()) {
+      for (const [key, value] of await store.entries()) {
         const m = /^flag:(.+):(global|guild:(.+))$/.exec(key);
         if (!m) continue;
         const [, name, kind] = m;
-        const value = await store.get(key);
-        if (value === undefined || name === undefined) continue;
+        if (name === undefined) continue;
         if (kind === "global") result[name] = value;
         else if (guildId && kind === `guild:${guildId}`) result[name] = value;
       }
@@ -103,6 +103,6 @@ export function featureEnabled(name: string): Guard {
     if (!("flags" in ctx.services)) return pass();
     const flags = ctx.services.flags as FeatureFlags;
     const ok = await flags.isEnabled(name, { guildId: ctx.guildId });
-    return ok ? pass() : fail("This feature is currently disabled here.");
+    return ok ? pass() : fail(messageFor(ctx, "featureDisabled", { feature: name }));
   });
 }

@@ -91,15 +91,25 @@ export async function loadFromDirectory(dir: string): Promise<LoadedItem[]> {
   const absolute = path.resolve(dir);
   const files = (comfort.fs.getFilesIn(absolute, true) ?? []).filter(isLoadable).sort();
 
-  const loaded: LoadedItem[] = [];
-  for (const file of files) {
-    let mod: Record<string, unknown>;
-    try {
-      mod = (await import(pathToFileURL(file).href)) as Record<string, unknown>;
-    } catch (cause) {
-      throw new BotError("DJSBOT_E060", { detail: `failed to import ${file}`, cause });
-    }
+  // Import every file concurrently (startup time on a large bot is dominated
+  // by module loading), then walk the results in sorted order so registration
+  // stays deterministic no matter which import finished first.
+  const modules = await Promise.all(
+    files.map(async (file) => {
+      try {
+        return (await import(pathToFileURL(file).href)) as Record<string, unknown>;
+      } catch (cause) {
+        throw new BotError("DJSBOT_E060", {
+          detail: `failed to import ${file}: ${cause instanceof Error ? cause.message : String(cause)}`,
+          cause,
+        });
+      }
+    }),
+  );
 
+  const loaded: LoadedItem[] = [];
+  for (const [index, file] of files.entries()) {
+    const mod = modules[index]!;
     const exportsFound = collectDefinitions(mod);
     if (exportsFound.length === 0) {
       // A matched file that exports nothing usable is almost always a mistake.
