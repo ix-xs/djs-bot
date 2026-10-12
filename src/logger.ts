@@ -5,6 +5,7 @@
  *
  * @module logger
  */
+import comfort from "@ix-xs/node-comfort";
 
 /** Ordered log levels. `silent` disables everything. */
 export type LogLevel = "debug" | "info" | "warn" | "error" | "silent";
@@ -17,24 +18,26 @@ const LEVEL_WEIGHT: Record<LogLevel, number> = {
   silent: 99,
 };
 
-const COLORS = {
-  gray: "\x1b[90m",
-  red: "\x1b[31m",
-  green: "\x1b[32m",
-  yellow: "\x1b[33m",
-  blue: "\x1b[34m",
-  magenta: "\x1b[35m",
-  cyan: "\x1b[36m",
-  reset: "\x1b[0m",
-  bold: "\x1b[1m",
-} as const;
+/**
+ * What pretty output needs for one stream. Colours follow the stream: they are
+ * off when it is not a terminal (a file, a pipe, most CI logs) and when
+ * `NO_COLOR` asks for it.
+ */
+function palette(stream: NodeJS.WriteStream) {
+  const paint = comfort.color.create(comfort.color.detect(stream));
+  return {
+    stream,
+    gray: paint.gray,
+    tags: {
+      debug: paint.gray.bold("DEBUG"),
+      info: paint.cyan.bold("INFO "),
+      warn: paint.yellow.bold("WARN "),
+      error: paint.red.bold("ERROR"),
+    } satisfies Record<Exclude<LogLevel, "silent">, string>,
+  };
+}
 
-const LEVEL_COLOR: Record<Exclude<LogLevel, "silent">, keyof typeof COLORS> = {
-  debug: "gray",
-  info: "cyan",
-  warn: "yellow",
-  error: "red",
-};
+let palettes: { out: ReturnType<typeof palette>; err: ReturnType<typeof palette> } | undefined;
 
 /** Options for creating a {@link Logger}. */
 export interface LoggerOptions {
@@ -109,36 +112,47 @@ export class Logger {
 
     const time = new Date();
     if (!this.pretty) {
-      process.stdout.write(
-        JSON.stringify({ level, time: time.toISOString(), msg: message ?? "", ...fields }) + "\n",
-      );
+      const record = { level, time: time.toISOString(), msg: message ?? "", ...fields };
+      let line: string;
+      try {
+        line = JSON.stringify(record);
+      } catch {
+        // A bigint (a permission bitfield) or a circular value: write it anyway.
+        line = comfort.utils.JSONString(record, 0);
+      }
+      process.stdout.write(line + "\n");
       return;
     }
 
-    const c = COLORS;
-    const tint = c[LEVEL_COLOR[level]];
-    const ts = `${c.gray}${time.toLocaleTimeString()}${c.reset}`;
-    const tag = `${tint}${c.bold}${level.toUpperCase().padEnd(5)}${c.reset}`;
+    palettes ??= { out: palette(process.stdout), err: palette(process.stderr) };
+    const p = level === "error" || level === "warn" ? palettes.err : palettes.out;
+    const ts = p.gray(comfort.time.format(time, "HH:mm:ss"));
     const body = message ? `${message}` : "";
-    const extra = Object.keys(fields).length ? ` ${c.gray}${safeInline(fields)}${c.reset}` : "";
-    const stream = level === "error" || level === "warn" ? process.stderr : process.stdout;
-    stream.write(`${ts} ${tag} ${body}${extra}\n`);
+    const extra = Object.keys(fields).length ? ` ${p.gray(inline(fields))}` : "";
+    p.stream.write(`${ts} ${p.tags[level]} ${body}${extra}\n`);
   }
 }
 
-/** Serialises an Error (incl. BotError's code/hint/docs) into a loggable object. */
-function serializeError(err: Error): Record<string, unknown> {
-  return { name: err.name, message: err.message, stack: err.stack, ...(err as unknown as Record<string, unknown>) };
+/** Serialises an Error (incl. BotError's code/hint/docs, and its cause) into a loggable object. */
+function serializeError(err: Error, depth = 0): Record<string, unknown> {
+  const record: Record<string, unknown> = {
+    name: err.name,
+    message: err.message,
+    stack: err.stack,
+    ...(err as unknown as Record<string, unknown>),
+  };
+  // `cause` is not enumerable, so the spread above does not see it.
+  if (err.cause !== undefined) {
+    record.cause = err.cause instanceof Error && depth < 3 ? serializeError(err.cause, depth + 1) : String(err.cause);
+  }
+  return record;
 }
 
-function safeInline(fields: Record<string, unknown>): string {
-  try {
-    return Object.entries(fields)
-      .map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : String(v)}`)
-      .join(" ");
-  } catch {
-    return "[unserialisable]";
-  }
+/** `key=value` pairs for the pretty output. A value that JSON cannot write is still written. */
+function inline(fields: Record<string, unknown>): string {
+  return Object.entries(fields)
+    .map(([k, v]) => `${k}=${typeof v === "object" ? comfort.utils.JSONString(v, 0) : String(v)}`)
+    .join(" ");
 }
 
 /** Creates a root {@link Logger}. */

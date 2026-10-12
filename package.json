@@ -109,7 +109,7 @@
     "bench:dispatch": "tsx benchmarks/dispatch.ts"
   },
   "dependencies": {
-    "@ix-xs/node-comfort": "^2.0.0"
+    "@ix-xs/node-comfort": "^2.1.0"
   },
   "peerDependencies": {
     "discord.js": "^14.27.0"

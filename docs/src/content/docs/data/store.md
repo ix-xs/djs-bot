@@ -151,8 +151,11 @@ await tickets.clear();                      // only clears tickets
 
 Namespaces nest (`store.namespace("guild").namespace(id)`), and the methods
 that look at several keys only ever see the view you hold. A feature can list
-or wipe its own data without touching anyone else's. Prefixes are matched
-literally, so a namespace containing `%` or `_` is safe with SQLite.
+or wipe its own data without touching anyone else's.
+
+Namespaces are told apart exactly. Every character of a name is matched
+literally, whatever it is, and so is its case: `namespace("Users")` and
+`namespace("users")` are two different namespaces, with SQLite too.
 
 ```ts
 const economy = ctx.services.store.namespace<number>("economy");
@@ -170,6 +173,12 @@ await economy.setMany({ [ctx.user.id]: 500, [otherUserId]: 250 });
 
 await economy.size();   // how many live keys
 ```
+
+With `sqliteStore`, `setMany()` is one transaction: all the keys are written or
+none, and it is much faster than writing them one by one. `entries()` is one
+query instead of one per key. With `memoryStore`, or with a backend that has no
+bulk method of its own, the keys are written one after the other, so a write
+that fails leaves the earlier ones in place.
 
 ## Choosing an adapter
 
@@ -267,6 +276,12 @@ namespaces. The TTL arrives already converted to milliseconds, and `0` means
 the key never expires. The backend is responsible for expiry: `get` must return
 `undefined` for an expired key, and `keys` must leave it out.
 
+Two optional functions speed up bulk access. `setMany(entries, ttlMs)` writes
+several keys at once, as one step when the backend can (a transaction, a
+pipeline). `entries(prefix)` returns every live `[key, value]` pair under
+`prefix` in one go. Without them the store falls back on `set`, `keys` and
+`get`.
+
 A hand-written object that implements `KVStore` directly also works, including
 one written before `increment`, `update`, `getMany`, `setMany`, `entries`,
 `size` and `close` existed. When such an object reaches `defineBot({ store })`,
@@ -292,9 +307,9 @@ string such as `"10m"`, or nothing for no expiry.
 | `increment(key, by?, ttl?)` | `Promise<number>` | Adds `by` (default `1`) to a numeric key and returns the new value. A missing key counts as `0`. |
 | `update(key, fn, ttl?)` | `Promise<V>` | Reads, transforms and writes back as one step. `fn` receives the current value or `undefined` and may be async. Returns the new value. |
 | `getMany(keys)` | `Promise<Map<string, V>>` | Several keys at once. Missing keys are absent from the map. |
-| `setMany(entries, ttl?)` | `Promise<void>` | Several writes sharing one TTL. Takes an object or an iterable of `[key, value]` pairs. |
+| `setMany(entries, ttl?)` | `Promise<void>` | Several writes sharing one TTL. Takes an object or an iterable of `[key, value]` pairs. One transaction with `sqliteStore`: all the keys are written or none. |
 | `keys()` | `Promise<string[]>` | Every live key of this (namespaced) store, without the namespace prefix. |
-| `entries()` | `Promise<[string, V][]>` | Every live `[key, value]` pair of this store. |
+| `entries()` | `Promise<[string, V][]>` | Every live `[key, value]` pair of this store. One query with `sqliteStore`. |
 | `size()` | `Promise<number>` | How many live keys this store holds. |
 | `clear()` | `Promise<void>` | Removes every key of this (namespaced) store. |
 | `namespace<T>(prefix)` | `KVStore<T>` | A view scoped under `prefix:`. Synchronous. `T` defaults to `V`. |
@@ -339,6 +354,8 @@ async.
 | `delete(key)` | Yes | Deletes a key and reports whether something was removed. |
 | `keys(prefix)` | Yes | Every live key that starts with `prefix` (`""` means all keys). |
 | `clear(prefix)` | No | A fast path to delete every key under `prefix`. Without it, `clear()` falls back to `keys` then `delete`. |
+| `setMany(entries, ttlMs)` | No | A fast path to write several keys at once, as one step when the backend can (a transaction, a pipeline). `entries` is a `ReadonlyArray<readonly [key: string, value: unknown]>`. Without it, `setMany()` falls back to `set`, one key at a time. |
+| `entries(prefix)` | No | A fast path to return every live `[key, value]` pair under `prefix` in one go. Without it, `entries()` falls back to `keys` then `get`. |
 | `close()` | No | Cleanup, called once by `store.close()`. |
 
 ### `defineStore(token, store)`

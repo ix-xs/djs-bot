@@ -11,6 +11,7 @@ import { PermissionsBitField, type PermissionResolvable } from "discord.js";
 import comfort from "@ix-xs/node-comfort";
 import type { BaseContext } from "./context.js";
 import { messageFor } from "./messages.js";
+import { durationMs } from "./duration.js";
 
 /** The outcome of a guard check. */
 export interface GuardResult {
@@ -87,7 +88,7 @@ export function not(inner: Guard, reason?: string): Guard {
 
 /** `"BanMembers"` → `"Ban Members"`, so permission lists read naturally. */
 function readable(permissions: readonly string[]): string {
-  return permissions.map((name) => name.replace(/([a-z])([A-Z])/g, "$1 $2")).join(", ");
+  return permissions.map((name) => comfort.str.words(name).join(" ")).join(", ");
 }
 
 /** The permissions from `needed` that `held` lacks. */
@@ -212,7 +213,7 @@ export function cooldown(
     scope?: CooldownScope;
   } = {},
 ): Guard {
-  const ms = comfort.time.parseDuration(duration) ?? (typeof duration === "number" ? duration : 0);
+  const ms = durationMs(duration, 0);
   const scope = options.scope ?? "user";
   const hits = new Map<string, number>();
   let checks = 0;

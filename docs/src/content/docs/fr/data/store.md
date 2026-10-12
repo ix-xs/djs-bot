@@ -156,8 +156,12 @@ await tickets.clear();                      // ne vide que tickets
 Les espaces de noms s'imbriquent (`store.namespace("guild").namespace(id)`), et
 les méthodes qui regardent plusieurs clés ne voient jamais que la vue que vous
 tenez. Une fonctionnalité peut lister ou effacer ses propres données sans
-toucher à celles des autres. Les préfixes sont comparés littéralement, donc un
-espace de noms contenant `%` ou `_` ne pose pas de problème avec SQLite.
+toucher à celles des autres.
+
+Les espaces de noms sont distingués exactement. Chaque caractère d'un nom est
+comparé littéralement, quel qu'il soit, et sa casse aussi :
+`namespace("Users")` et `namespace("users")` sont deux espaces de noms
+différents, avec SQLite également.
 
 ```ts
 const economy = ctx.services.store.namespace<number>("economy");
@@ -175,6 +179,13 @@ await economy.setMany({ [ctx.user.id]: 500, [otherUserId]: 250 });
 
 await economy.size();   // combien de clés vivantes
 ```
+
+Avec `sqliteStore`, `setMany()` est une seule transaction : toutes les clés sont
+écrites ou aucune, et c'est beaucoup plus rapide que de les écrire une par une.
+`entries()` est une seule requête au lieu d'une par clé. Avec `memoryStore`, ou
+avec un backend qui n'a pas de méthode groupée à lui, les clés sont écrites
+l'une après l'autre : une écriture qui échoue laisse donc les précédentes en
+place.
 
 ## Choisir un adaptateur
 
@@ -274,6 +285,12 @@ connaître les espaces de noms. Le TTL arrive déjà converti en millisecondes, 
 l'expiration : `get` doit renvoyer `undefined` pour une clé expirée, et `keys`
 doit l'omettre.
 
+Deux fonctions facultatives accélèrent les accès groupés.
+`setMany(entries, ttlMs)` écrit plusieurs clés d'un coup, en une seule étape
+quand le backend le permet (une transaction, un pipeline). `entries(prefix)`
+renvoie en une fois toutes les paires `[key, value]` vivantes sous `prefix`.
+Sans elles, le store se rabat sur `set`, `keys` et `get`.
+
 Un objet écrit à la main qui implémente `KVStore` directement fonctionne aussi,
 y compris un objet écrit avant l'existence de `increment`, `update`, `getMany`,
 `setMany`, `entries`, `size` et `close`. Quand un tel objet arrive dans
@@ -300,9 +317,9 @@ chaîne de durée comme `"10m"`, ou rien pour aucune expiration.
 | `increment(key, by?, ttl?)` | `Promise<number>` | Ajoute `by` (`1` par défaut) à une clé numérique et renvoie la nouvelle valeur. Une clé absente compte pour `0`. |
 | `update(key, fn, ttl?)` | `Promise<V>` | Lit, transforme et réécrit en une seule étape. `fn` reçoit la valeur actuelle ou `undefined` et peut être asynchrone. Renvoie la nouvelle valeur. |
 | `getMany(keys)` | `Promise<Map<string, V>>` | Plusieurs clés d'un coup. Les clés absentes ne figurent pas dans la map. |
-| `setMany(entries, ttl?)` | `Promise<void>` | Plusieurs écritures partageant un même TTL. Accepte un objet ou un itérable de paires `[key, value]`. |
+| `setMany(entries, ttl?)` | `Promise<void>` | Plusieurs écritures partageant un même TTL. Accepte un objet ou un itérable de paires `[key, value]`. Une seule transaction avec `sqliteStore` : toutes les clés sont écrites ou aucune. |
 | `keys()` | `Promise<string[]>` | Toutes les clés vivantes de ce store (avec espace de noms), sans le préfixe de l'espace de noms. |
-| `entries()` | `Promise<[string, V][]>` | Toutes les paires `[key, value]` vivantes de ce store. |
+| `entries()` | `Promise<[string, V][]>` | Toutes les paires `[key, value]` vivantes de ce store. Une seule requête avec `sqliteStore`. |
 | `size()` | `Promise<number>` | Le nombre de clés vivantes que contient ce store. |
 | `clear()` | `Promise<void>` | Supprime toutes les clés de ce store (avec espace de noms). |
 | `namespace<T>(prefix)` | `KVStore<T>` | Une vue limitée à `prefix:`. Synchrone. `T` vaut `V` par défaut. |
@@ -347,6 +364,8 @@ synchrone ou asynchrone.
 | `delete(key)` | Oui | Supprime une clé et indique si quelque chose a été supprimé. |
 | `keys(prefix)` | Oui | Toutes les clés vivantes qui commencent par `prefix` (`""` signifie toutes les clés). |
 | `clear(prefix)` | Non | Un raccourci rapide pour supprimer toutes les clés sous `prefix`. Sans lui, `clear()` se rabat sur `keys` puis `delete`. |
+| `setMany(entries, ttlMs)` | Non | Un raccourci rapide pour écrire plusieurs clés d'un coup, en une seule étape quand le backend le permet (une transaction, un pipeline). `entries` est un `ReadonlyArray<readonly [key: string, value: unknown]>`. Sans lui, `setMany()` se rabat sur `set`, une clé à la fois. |
+| `entries(prefix)` | Non | Un raccourci rapide pour renvoyer en une fois toutes les paires `[key, value]` vivantes sous `prefix`. Sans lui, `entries()` se rabat sur `keys` puis `get`. |
 | `close()` | Non | Nettoyage, appelé une fois par `store.close()`. |
 
 ### `defineStore(token, store)`

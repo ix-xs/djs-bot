@@ -138,14 +138,16 @@ export interface BotConfig {
 }
 
 /**
- * Reads an environment variable (also consulting a `.env` file), with an
- * optional fallback. Throws a clear error when a required variable is missing.
+ * Reads an environment variable, with an optional fallback. Throws a clear
+ * error when a required variable is missing. The `.env` file of the working
+ * directory is already in the environment by then: it is read when the package
+ * is imported (see {@link loadEnvFile}).
  *
  * @example const token = env("DISCORD_TOKEN");
  * @example const level = env("LOG_LEVEL", "info");
  */
 export function env(name: string, fallback?: string): string {
-  const value = process.env[name] ?? comfort.fs.getEnv(name);
+  const value = process.env[name];
   if (value !== undefined && value !== "") return value;
   if (fallback !== undefined) return fallback;
   throw new Error(
@@ -155,7 +157,7 @@ export function env(name: string, fallback?: string): string {
 
 /** Like {@link env} but returns `undefined` instead of throwing when unset. */
 env.optional = function optional(name: string): string | undefined {
-  const value = process.env[name] ?? comfort.fs.getEnv(name);
+  const value = process.env[name];
   return value === "" ? undefined : value;
 };
 
@@ -203,22 +205,15 @@ env.list = function list(name: string): string[] {
 };
 
 /**
- * Loads a `.env` file into `process.env` (without overwriting existing vars).
- * Called automatically by the CLI. Safe to call when the file is absent.
+ * Loads a `.env` file into `process.env`. Safe to call when the file is absent.
+ *
+ * You rarely need it: the `.env` of the working directory is read as soon as
+ * the package is imported. Call it for another file (`.env.local`, a path of
+ * your own). What the real environment already defines is never replaced; a
+ * file loaded here wins over the `.env` read at import.
+ *
+ * @example loadEnvFile(".env.local");
  */
 export function loadEnvFile(path = ".env"): void {
-  const content = comfort.fs.readFile(path);
-  if (!content) return;
-  for (const rawLine of content.split(/\r?\n/)) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith("#")) continue;
-    const eq = line.indexOf("=");
-    if (eq === -1) continue;
-    const key = line.slice(0, eq).trim();
-    let val = line.slice(eq + 1).trim();
-    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-      val = val.slice(1, -1);
-    }
-    if (process.env[key] === undefined) process.env[key] = val;
-  }
+  comfort.env.load(path);
 }

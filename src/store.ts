@@ -11,12 +11,7 @@
 import comfort from "@ix-xs/node-comfort";
 import type { ServiceDefinition } from "./container.js";
 import { defineService } from "./definitions.js";
-
-function toMs(ttl: number | string | undefined): number {
-  if (ttl === undefined) return 0;
-  if (typeof ttl === "number") return ttl;
-  return comfort.time.parseDuration(ttl) ?? 0;
-}
+import { durationMs } from "./duration.js";
 
 /** An async key-value store. Values are JSON-serialisable. */
 export interface KVStore<V = unknown> {
@@ -80,6 +75,17 @@ export interface KVBackend {
   keys(prefix: string): string[] | Promise<string[]>;
   /** Optional fast path to delete every key under `prefix`. */
   clear?(prefix: string): void | Promise<void>;
+  /**
+   * Optional fast path to write several keys at once, as one step when the
+   * backend can (a transaction, a pipeline). Without it they are written one
+   * by one through `set`.
+   */
+  setMany?(entries: ReadonlyArray<readonly [key: string, value: unknown]>, ttlMs: number): void | Promise<void>;
+  /**
+   * Optional fast path to read every live `[key, value]` pair under `prefix`
+   * in one go. Without it the keys are listed, then read one by one.
+   */
+  entries?(prefix: string): Array<[key: string, value: unknown]> | Promise<Array<[key: string, value: unknown]>>;
   /** Optional cleanup hook, called by `store.close()`. */
   close?(): void | Promise<void>;
 }
@@ -111,7 +117,7 @@ class Store<V> implements KVStore<V> {
   }
 
   public async set(key: string, value: V, ttl?: number | string): Promise<void> {
-    await this.shared.backend.set(this.k(key), value, toMs(ttl));
+    await this.shared.backend.set(this.k(key), value, durationMs(ttl, 0));
   }
 
   public async has(key: string): Promise<boolean> {
@@ -174,10 +180,23 @@ class Store<V> implements KVStore<V> {
     ttl?: number | string,
   ): Promise<void> {
     const pairs = Symbol.iterator in entries ? [...entries] : Object.entries(entries);
+    const { backend } = this.shared;
+    if (backend.setMany) {
+      await backend.setMany(
+        pairs.map(([key, value]) => [this.k(key), value] as const),
+        durationMs(ttl, 0),
+      );
+      return;
+    }
     for (const [key, value] of pairs) await this.set(key, value as V, ttl);
   }
 
   public async entries(): Promise<Array<[string, V]>> {
+    const { backend } = this.shared;
+    if (backend.entries) {
+      const found = await backend.entries(this.prefix);
+      return found.map(([key, value]) => [key.slice(this.prefix.length), value as V]);
+    }
     const keys = await this.keys();
     const values = await this.getMany(keys);
     return [...values.entries()];
@@ -321,11 +340,13 @@ export function memoryStore<V = unknown>(): KVStore<V> {
 type SQLiteInstance = InstanceType<typeof comfort.SQLite>;
 
 /**
- * The prefix as a LIKE pattern, with `%`, `_` and `\` escaped so a namespace
- * containing those characters matches literally (they are LIKE wildcards).
+ * The prefix as a GLOB pattern, with `*`, `?` and `[` in brackets so a
+ * namespace containing those characters matches literally. GLOB, not LIKE:
+ * LIKE ignores the case of ASCII letters, which would mix the keys of
+ * `namespace("Users")` with those of `namespace("users")`.
  */
-function likePattern(prefix: string): string {
-  return `${prefix.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+function globPattern(prefix: string): string {
+  return `${prefix.replace(/[*?[]/g, (c) => `[${c}]`)}*`;
 }
 
 function sqliteBackend(db: SQLiteInstance): KVBackend {
@@ -341,6 +362,19 @@ function sqliteBackend(db: SQLiteInstance): KVBackend {
   };
   purge();
 
+  const upsert = (key: string, value: unknown, ttlMs: number): void => {
+    db.exec(
+      "INSERT INTO djsbot_kv (key, value, expires) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, expires = excluded.expires",
+      [key, JSON.stringify(value), ttlMs ? Date.now() + ttlMs : 0],
+    );
+  };
+  // Expired rows that are never read again would otherwise grow the file.
+  const wrote = (count: number): void => {
+    const before = writes;
+    writes += count;
+    if (Math.floor(writes / SWEEP_EVERY) > Math.floor(before / SWEEP_EVERY)) purge();
+  };
+
   return {
     get(key) {
       const row = db.queryOne<{ value: string; expires: number }>(
@@ -355,25 +389,38 @@ function sqliteBackend(db: SQLiteInstance): KVBackend {
       return JSON.parse(row.value) as unknown;
     },
     set(key, value, ttlMs) {
-      db.exec(
-        "INSERT INTO djsbot_kv (key, value, expires) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, expires = excluded.expires",
-        [key, JSON.stringify(value), ttlMs ? Date.now() + ttlMs : 0],
+      upsert(key, value, ttlMs);
+      wrote(1);
+    },
+    // One transaction: a single commit instead of one per key, and all or nothing.
+    setMany(entries, ttlMs) {
+      db.transaction(
+        () => {
+          for (const [key, value] of entries) upsert(key, value, ttlMs);
+        },
+        { immediate: true },
       );
-      // Expired rows that are never read again would otherwise grow the file.
-      if (++writes % SWEEP_EVERY === 0) purge();
+      wrote(entries.length);
+    },
+    entries(prefix) {
+      const rows = db.queryAll<{ key: string; value: string }>(
+        "SELECT key, value FROM djsbot_kv WHERE key GLOB ? AND (expires = 0 OR expires > ?)",
+        [globPattern(prefix), Date.now()],
+      );
+      return rows.map((row) => [row.key, JSON.parse(row.value) as unknown]);
     },
     delete(key) {
       return db.exec("DELETE FROM djsbot_kv WHERE key = ?", [key]).changes > 0;
     },
     keys(prefix) {
       const rows = db.queryAll<{ key: string }>(
-        "SELECT key FROM djsbot_kv WHERE key LIKE ? ESCAPE '\\' AND (expires = 0 OR expires > ?)",
-        [likePattern(prefix), Date.now()],
+        "SELECT key FROM djsbot_kv WHERE key GLOB ? AND (expires = 0 OR expires > ?)",
+        [globPattern(prefix), Date.now()],
       );
       return rows.map((row) => row.key);
     },
     clear(prefix) {
-      db.exec("DELETE FROM djsbot_kv WHERE key LIKE ? ESCAPE '\\'", [likePattern(prefix)]);
+      db.exec("DELETE FROM djsbot_kv WHERE key GLOB ?", [globPattern(prefix)]);
     },
     close: () => db.close(),
   };

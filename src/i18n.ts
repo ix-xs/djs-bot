@@ -64,7 +64,7 @@ export function createI18n(options: I18nOptions): I18n {
   const fallbackLocale = options.fallbackLocale;
 
   const interpolate = (template: string, vars?: Record<string, unknown>): string =>
-    vars ? comfort.str.template(template, vars, { open: "{", close: "}", fallback: "" }) : template;
+    vars ? comfort.str.template(template, vars, { fallback: "" }) : template;
 
   const pick = (locale: string, key: string, vars?: Record<string, unknown>): string | undefined => {
     const entry = resolveEntry(options.resources[locale], key);

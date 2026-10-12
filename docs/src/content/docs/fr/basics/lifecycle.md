@@ -132,9 +132,21 @@ le bot continue de tourner.
 
 ## L'arrêt
 
-Sur `SIGINT` (Ctrl+C), `SIGTERM` ou `SIGQUIT`, le bot appelle `bot.shutdown()` et
-quitte avec le code 0. Vous pouvez aussi appeler `shutdown()` vous-même. Il peut
-être appelé plusieurs fois sans risque.
+Sur `SIGINT` (Ctrl+C), `SIGTERM` ou `SIGQUIT`, le bot appelle `bot.shutdown()`,
+puis le processus quitte avec le code 0. Il quitte avec le code 1 dans trois
+cas :
+
+- L'arrêt échoue, par exemple parce que le client ne parvient pas à se
+  déconnecter.
+- L'arrêt dure plus de 30 secondes.
+- Un second signal arrive avant la fin : un second Ctrl+C arrête tout de suite.
+
+Un signal met donc toujours fin au processus, même quand une étape de nettoyage
+reste bloquée.
+
+Vous pouvez aussi appeler `shutdown()` vous-même. Appelé depuis votre propre
+code, il ne fait pas quitter le processus. Il peut être appelé plusieurs fois
+sans risque.
 
 Dans l'ordre :
 
@@ -153,7 +165,8 @@ Dans l'ordre :
 Un hook, un `teardown` ou un `dispose` qui lève une erreur est consigné et les
 suivants s'exécutent quand même : un nettoyage qui échoue ne laisse donc pas le
 reste ouvert. Passé les 10 secondes, l'arrêt continue même si une tâche tourne
-encore.
+encore. Ces 10 secondes font partie des 30 secondes qu'un signal accorde à
+l'ensemble de la séquence.
 
 ## Où s'exécute votre code
 
@@ -210,6 +223,8 @@ Limites à connaître :
 
 - Les tâches en cours disposent de 10 secondes pour se terminer pendant l'arrêt.
   Une tâche longue devrait surveiller `ctx.signal` et s'arrêter plus tôt.
+- Après un signal, l'arrêt complet dispose de 30 secondes. Au-delà, le processus
+  quitte avec le code 1, quoi qu'il reste en cours.
 - L'arrêt attend les tâches, pas les gestionnaires d'interactions encore en
   cours d'exécution.
 - `bot.client` lève une erreur tant que `start()` n'a pas créé le client.

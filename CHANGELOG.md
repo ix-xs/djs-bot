@@ -3,6 +3,96 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## 1.3.0
+
+The internals were read again next to `@ix-xs/node-comfort` 2.1, and what was
+written by hand moved onto it wherever it does the same job. That removed code,
+and it fixed defects that the hand-written versions had. Nothing has to change
+in a bot that used 1.2 the documented way.
+
+### Added
+
+- **`retry()` and `timeout()` take durations as text** (`delay: "1s"`,
+  `timeout(work, "5s")`), like every other option of the framework.
+- **`retry()` takes a `signal`**: once it is aborted, no further attempt is
+  made. Pass the `ctx.signal` of a job so that a shutdown stops the retries.
+- **`timeout()` hands the work a signal** when it is given a function:
+  `timeout((signal) => fetch(url, { signal }), "5s")` stops the request when
+  the time is up, instead of only giving up on it.
+- **A store backend can write and read in bulk.** `KVBackend` has two optional
+  methods, `setMany` and `entries`. A backend that has them is asked once
+  where it was asked once per key.
+
+### Changed
+
+- **The command line refuses what it does not understand.** An unknown option
+  used to be ignored: `djs-bot deploy --dryrun` really deployed, and
+  `djs-bot deploy --guild` with the id forgotten deployed everywhere. Both now
+  stop with a message and a suggestion (`Did you mean --dry-run?`), and so do
+  an unknown command and an option that the command does not take.
+- **`--help` after a command prints the help and runs nothing.**
+  `djs-bot deploy --help` used to deploy.
+- **A shutdown asked by a signal always ends the process.** It exits with code
+  1 when the shutdown fails, when it takes longer than 30 seconds, or when a
+  second signal arrives before it is over; a failing shutdown used to leave the
+  process running, and a second Ctrl+C started the shutdown a second time.
+- **`djs-bot dev` and `djs-bot start` exit with code 1 when the bot was
+  killed by a signal.** They used to exit with code 0, which a supervisor reads
+  as a clean stop.
+- **Colours only on a terminal.** The CLI and the development logs wrote
+  escape codes into files, pipes and CI logs. They now write plain text there,
+  and follow `NO_COLOR` and `FORCE_COLOR`. The time of a development log line
+  is `HH:mm:ss` in every locale.
+- **`loadEnvFile(path)` gives your file the last word over `.env`.** The
+  `.env` of the working directory is read when the package is imported; a file
+  loaded afterwards now wins over it. The real environment still wins over
+  both. Files are read with the rules of that first read: a ` # comment` after
+  a value is removed, and `$NAME` is replaced unless the value is in single
+  quotes.
+- With SQLite, `store.setMany()` writes all its keys or none.
+
+### Fixed
+
+- **A job on an interval longer than 24.8 days ran without end**, about once a
+  millisecond: such a delay overflows a timer. The same held for a presence
+  rotation.
+- **With SQLite, two namespaces whose names differ only by case shared their
+  keys** in `keys()`, `entries()` and `clear()`: clearing
+  `namespace("Users")` also emptied `namespace("users")`.
+- **Logging a `bigint` in production threw** out of the logger (a permission
+  bitfield is one), and in development a value that JSON cannot write, nested
+  in a field, replaced every field of the line by `[unserialisable]`. Such
+  values are now written: a bigint as text, a loop as `[Circular]`.
+- The `cause` of an error was missing from the logged error.
+- A permission whose name holds an acronym was misspelt in the refusal
+  message: "Send TTSMessages" is now "Send TTS Messages".
+- An override of a framework message containing `{constructor}` or
+  `{toString}` printed a piece of JavaScript in its place.
+- A malformed choice that JSON cannot write (a `bigint`) raised a bare
+  `TypeError` instead of `DJSBOT_E015`.
+- An autocomplete suggestion cut to 100 characters could end on half an emoji.
+- `djs-bot init` and `djs-bot generate` said "Created" for a file they could
+  not write, and `init` refused a `package.json` saved with a byte order mark.
+
+### Faster
+
+- With SQLite, `store.setMany()` is one transaction (2000 keys: about 6 ms
+  where it took about 560 ms) and `store.entries()` is one query, which is
+  what the audit log and the feature flags read through.
+- Deploying to several servers keeps five requests in flight at all times,
+  instead of waiting for each batch of five to finish.
+
+### Documentation
+
+- The configuration page said that nothing reads `.env` unless the CLI runs.
+  It is read as soon as the package is imported: the page now says so, and
+  describes how the file is parsed.
+
+### Internal
+
+- `@ix-xs/node-comfort` 2.1: argument parsing, colours, child processes,
+  shutdown, timers, caches, `.env` loading and JSON writing go through it.
+
 ## 1.2.1
 
 Nothing changes in how the framework behaves. The package says what it is in

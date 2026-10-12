@@ -19,6 +19,7 @@ import {
   type RESTPostAPIApplicationCommandsJSONBody,
   type PermissionResolvable,
 } from "discord.js";
+import comfort from "@ix-xs/node-comfort";
 import type { AnyOption, OptionKind, OptionMap } from "./schema.js";
 import type {
   CommandDefinition,
@@ -278,9 +279,13 @@ function commandKey(cmd: Record<string, unknown>): string {
 
 type Json = Record<string, unknown>;
 
-/** Drops `undefined` values so two shapes compare equal regardless of absent keys. */
+/**
+ * Drops the keys that hold nothing, so two shapes compare equal regardless of
+ * absent keys. Discord answers `null` where a definition leaves a key out:
+ * both count as nothing.
+ */
 function compact(value: Json): Json {
-  return Object.fromEntries(Object.entries(value).filter(([, v]) => v !== undefined));
+  return comfort.obj.compact(value);
 }
 
 /** A localization map with stable key order, or `undefined` when empty. */
@@ -308,10 +313,10 @@ function normalizeOption(o: Json): Json {
           compact({ name: ch.name, value: ch.value, name_localizations: localizations(ch.name_localizations) }),
         )
       : undefined,
-    min_value: o.min_value ?? undefined,
-    max_value: o.max_value ?? undefined,
-    min_length: o.min_length ?? undefined,
-    max_length: o.max_length ?? undefined,
+    min_value: o.min_value,
+    max_value: o.max_value,
+    min_length: o.min_length,
+    max_length: o.max_length,
     channel_types: numbers(o.channel_types),
     file_types:
       Array.isArray(o.file_types) && o.file_types.length ? [...(o.file_types as string[])].sort() : undefined,
@@ -336,9 +341,9 @@ function normalizeCommand(cmd: Json, only?: ReadonlySet<string>): Json {
     type: cmd.type ?? ApplicationCommandType.ChatInput,
     name: cmd.name,
     description: cmd.description || undefined,
-    default_member_permissions: cmd.default_member_permissions ?? undefined,
+    default_member_permissions: cmd.default_member_permissions,
     nsfw: cmd.nsfw || undefined,
-    dm_permission: keep("dm_permission") ? (cmd.dm_permission ?? undefined) : undefined,
+    dm_permission: keep("dm_permission") ? cmd.dm_permission : undefined,
     integration_types: keep("integration_types") ? numbers(cmd.integration_types) : undefined,
     contexts: keep("contexts") ? numbers(cmd.contexts) : undefined,
     name_localizations: localizations(cmd.name_localizations),
@@ -401,12 +406,12 @@ function preserveEntryPoint(cmd: Json): Json {
     name: cmd.name,
     description: cmd.description,
     handler: cmd.handler,
-    name_localizations: cmd.name_localizations ?? undefined,
-    description_localizations: cmd.description_localizations ?? undefined,
-    default_member_permissions: cmd.default_member_permissions ?? undefined,
-    integration_types: cmd.integration_types ?? undefined,
-    contexts: cmd.contexts ?? undefined,
-    nsfw: cmd.nsfw ?? undefined,
+    name_localizations: cmd.name_localizations,
+    description_localizations: cmd.description_localizations,
+    default_member_permissions: cmd.default_member_permissions,
+    integration_types: cmd.integration_types,
+    contexts: cmd.contexts,
+    nsfw: cmd.nsfw,
   });
 }
 
@@ -511,17 +516,13 @@ export async function deployCommands(registry: Registry, options: DeployOptions)
       targets.push(await reconcileTarget(rest, options.clientId, undefined, plan.global, dryRun, options.logger));
       // Guild scopes are independent of each other: reconcile a few at a time.
       // The REST client still queues per route, so this cannot trip a rate limit.
-      const guildTargets = [...plan.guilds];
-      for (let i = 0; i < guildTargets.length; i += GUILD_CONCURRENCY) {
-        const batch = guildTargets.slice(i, i + GUILD_CONCURRENCY);
-        targets.push(
-          ...(await Promise.all(
-            batch.map(([guildId, commands]) =>
-              reconcileTarget(rest, options.clientId, guildId, commands, dryRun, options.logger),
-            ),
-          )),
-        );
-      }
+      targets.push(
+        ...(await comfort.async.map(
+          plan.guilds,
+          ([guildId, commands]) => reconcileTarget(rest, options.clientId, guildId, commands, dryRun, options.logger),
+          { concurrency: GUILD_CONCURRENCY },
+        )),
+      );
       deployedGuilds = [...plan.guilds.keys()];
 
       // Auto-prune: clear commands in guilds we deployed to before but no longer target.

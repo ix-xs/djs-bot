@@ -120,9 +120,18 @@ running.
 
 ## Shutting down
 
-On `SIGINT` (Ctrl+C), `SIGTERM` or `SIGQUIT`, the bot calls `bot.shutdown()`
-and exits with code 0. You can call `shutdown()` yourself too. It is safe to
-call more than once.
+On `SIGINT` (Ctrl+C), `SIGTERM` or `SIGQUIT`, the bot calls `bot.shutdown()`,
+then the process exits with code 0. It exits with code 1 instead in three
+cases:
+
+- The shutdown fails, for example because the client cannot disconnect.
+- The shutdown takes longer than 30 seconds.
+- A second signal arrives before it is over: a second Ctrl+C stops at once.
+
+So a signal always ends the process, even when a cleanup step hangs.
+
+You can call `shutdown()` yourself too. Called from your own code, it does not
+exit the process. It is safe to call more than once.
 
 In order:
 
@@ -139,7 +148,8 @@ In order:
 
 A hook, a `teardown` or a `dispose` that throws is logged and the following
 ones still run, so one failing cleanup does not leave the rest open. After the
-10 seconds, shutdown continues even if a job is still running.
+10 seconds, shutdown continues even if a job is still running. Those 10 seconds
+are part of the 30 seconds that a signal gives to the whole sequence.
 
 ## Where your code runs
 
@@ -195,6 +205,8 @@ Limits worth knowing:
 
 - Running jobs get 10 seconds to finish during shutdown. A long job should
   watch `ctx.signal` and stop early.
+- After a signal, the whole shutdown gets 30 seconds. Past that, the process
+  exits with code 1, whatever is still running.
 - Shutdown waits for jobs, not for interaction handlers that are still running.
 - `bot.client` throws until `start()` has created the client.
 

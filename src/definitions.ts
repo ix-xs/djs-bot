@@ -30,6 +30,7 @@ import {
   type PermissionResolvable,
   type User,
 } from "discord.js";
+import comfort from "@ix-xs/node-comfort";
 import type { Logger } from "./logger.js";
 import type { ServiceDefinition, ServiceMap } from "./container.js";
 import type { BotConfig } from "./config.js";
@@ -1176,12 +1177,8 @@ export function defineJob(input: JobInput): JobDefinition {
   } catch (cause) {
     throw new BotError("DJSBOT_E080", { detail: `job "${input.name}": "${input.schedule}"`, cause });
   }
-  if (input.timezone !== undefined) {
-    try {
-      new Intl.DateTimeFormat("en-US", { timeZone: input.timezone });
-    } catch (cause) {
-      throw new BotError("DJSBOT_E080", { detail: `job "${input.name}": unknown timezone "${input.timezone}"`, cause });
-    }
+  if (input.timezone !== undefined && !comfort.checker.isTimeZone(input.timezone)) {
+    throw new BotError("DJSBOT_E080", { detail: `job "${input.name}": unknown timezone "${input.timezone}"` });
   }
   return {
     kind: "job",

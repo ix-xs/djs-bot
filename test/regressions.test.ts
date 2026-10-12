@@ -26,7 +26,7 @@ import {
   type BotConfig,
   type ParamCodec,
 } from "../src/index.js";
-import { flagValue, positional } from "../src/cli-args.js";
+import { parseArgs } from "../src/cli-args.js";
 import { encodeCustomId } from "../src/customId.js";
 import { Registry } from "../src/registry.js";
 import { createHarness } from "../src/testing.js";
@@ -62,21 +62,52 @@ afterEach(() => {
 });
 
 describe("CLI arguments", () => {
+  const entry = (...argv: string[]) => parseArgs(argv).positionals[0];
+
   it("does not take the value of --guild for the entry file", () => {
-    expect(positional(["--guild", "123456789012345678"])).toBeUndefined();
-    expect(positional(["--guild", "123456789012345678", "--dry-run"])).toBeUndefined();
-    expect(positional(["--guild", "123", "src/index.ts"])).toBe("src/index.ts");
-    expect(positional(["src/index.ts", "--guild", "123"])).toBe("src/index.ts");
-    expect(positional(["--dry-run", "src/bot.ts"])).toBe("src/bot.ts");
-    expect(positional([])).toBeUndefined();
+    expect(entry("deploy", "--guild", "123456789012345678")).toBeUndefined();
+    expect(entry("deploy", "--guild", "123456789012345678", "--dry-run")).toBeUndefined();
+    expect(entry("deploy", "--guild", "123", "src/index.ts")).toBe("src/index.ts");
+    expect(entry("deploy", "src/index.ts", "--guild", "123")).toBe("src/index.ts");
+    expect(entry("deploy", "--dry-run", "src/bot.ts")).toBe("src/bot.ts");
+    expect(entry("deploy")).toBeUndefined();
   });
 
   it("reads a flag value in both spellings", () => {
-    expect(flagValue(["--guild", "123"], "--guild")).toBe("123");
-    expect(flagValue(["src/index.ts", "--guild=123"], "--guild")).toBe("123");
-    expect(flagValue(["--guild", "--dry-run"], "--guild")).toBeUndefined();
-    expect(flagValue(["--guild="], "--guild")).toBeUndefined();
-    expect(flagValue(["--dry-run"], "--guild")).toBeUndefined();
+    expect(parseArgs(["deploy", "--guild", "123"]).guild).toBe("123");
+    expect(parseArgs(["deploy", "src/index.ts", "--guild=123"]).guild).toBe("123");
+    expect(parseArgs(["deploy", "--dry-run"]).guild).toBeUndefined();
+    expect(parseArgs(["deploy", "--dry-run"]).dryRun).toBe(true);
+    expect(parseArgs(["clear", "--global"]).global).toBe(true);
+    expect(parseArgs(["explain", "--json"]).json).toBe(true);
+  });
+
+  it("refuses --guild without an id instead of deploying everywhere", () => {
+    expect(() => parseArgs(["deploy", "--guild"])).toThrow(/--guild/);
+    expect(() => parseArgs(["deploy", "--guild", "--dry-run"])).toThrow(/--guild/);
+    expect(() => parseArgs(["deploy", "--guild="])).toThrow(/--guild needs a value/);
+  });
+
+  it("refuses an option or a command it does not know, with a suggestion", () => {
+    expect(() => parseArgs(["deploy", "--dryrun"])).toThrow(/Did you mean --dry-run\?/);
+    expect(() => parseArgs(["deplyo"])).toThrow(/Did you mean deploy\?/);
+    expect(() => parseArgs(["dev", "--guild", "123"])).toThrow(/--guild does not apply to "djs-bot dev"/);
+    expect(() => parseArgs(["deploy", "--json"])).toThrow(/--json does not apply to "djs-bot deploy"/);
+  });
+
+  it("sees a request for help or for the version next to any command", () => {
+    expect(parseArgs(["deploy", "--help"])).toMatchObject({ command: "deploy", help: true });
+    expect(parseArgs(["clear", "-h"]).help).toBe(true);
+    // Asking for help about a command says nothing against its options.
+    expect(parseArgs(["dev", "--guild", "123", "--help"]).help).toBe(true);
+    expect(parseArgs(["-v"])).toMatchObject({ command: undefined, version: true });
+    expect(parseArgs(["--version"]).version).toBe(true);
+    expect(parseArgs([])).toMatchObject({ command: undefined, help: false, version: false, positionals: [] });
+  });
+
+  it("keeps what follows generate as it is", () => {
+    expect(parseArgs(["generate", "command", "ping"])).toMatchObject({ command: "generate", positionals: ["command", "ping"] });
+    expect(parseArgs(["g", "button", "close"])).toMatchObject({ command: "g", positionals: ["button", "close"] });
   });
 });
 

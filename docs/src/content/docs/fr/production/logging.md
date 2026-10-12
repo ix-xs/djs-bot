@@ -92,7 +92,9 @@ que les traces d'appels disparaissent des journaux de production. Le logger
 convertit chaque `Error` qu'il rencontre, qu'elle soit passée seule ou comme
 valeur d'un champ, en un objet simple avec `name`, `message` et `stack`, plus
 toute propriété propre que porte l'erreur. Pour une `BotError`, cela ajoute
-`code`, `hint`, `docs` et, s'il est défini, `meta`.
+`code`, `hint`, `docs` et, s'il est défini, `meta`. La `cause` d'une erreur est
+conservée elle aussi, sous `cause` : convertie de la même façon quand c'est une
+`Error` (jusqu'à trois niveaux de profondeur), écrite sous forme de texte sinon.
 
 ```ts
 try {
@@ -204,7 +206,8 @@ options. Pour journaliser avec les réglages du bot, utilisez `ctx.logger`, ou
 
 Avec `pretty: true`, chaque ligne est l'heure locale, le niveau en couleur, le
 message, puis les champs sous la forme `key=value`. Les valeurs d'objet sont
-affichées en JSON.
+affichées en JSON. L'heure est écrite `HH:mm:ss`, de la même façon dans toutes
+les locales.
 
 ```
 14:22:07 INFO  member joined userId=123 guildId=456
@@ -224,9 +227,13 @@ liés, puis les champs de l'appel.
 
 `pretty` vaut `true` par défaut sauf si `NODE_ENV` vaut `production`, donc un bot
 déployé passe de lui-même en JSON. Définissez-le explicitement pour changer ce
-comportement. Les lignes au format lisible contiennent toujours des codes de
-couleur : si vous redirigez la sortie de développement vers un fichier, utilisez
-`pretty: false`.
+comportement.
+
+Les lignes au format lisible ne sont colorées que dans un terminal. Quand la
+sortie est redirigée vers un tube ou un fichier, ou quand la variable
+d'environnement `NO_COLOR` est définie, c'est du texte brut. Chaque flux est
+examiné séparément : rediriger seulement stdout laisse donc en couleur les
+lignes écrites sur stderr.
 
 Les deux formats n'utilisent pas les mêmes flux :
 
@@ -237,11 +244,11 @@ Les deux formats n'utilisent pas les mêmes flux :
 
 :::caution[Gardez des champs sérialisables]
 Dans la sortie JSON, ne nommez pas un champ `level`, `time` ou `msg` : il
-écraserait celui de l'enregistrement. Évitez les valeurs que `JSON.stringify` ne
-sait pas traiter, comme une structure circulaire ou un `bigint` : en sortie JSON,
-l'appel de journalisation lève une erreur, et en sortie lisible les champs sont
-remplacés par `[unserialisable]`. Journalisez un identifiant plutôt qu'un objet
-discord.js entier.
+écraserait celui de l'enregistrement. Un enregistrement qui contient une valeur
+que `JSON.stringify` ne sait pas traiter est écrit au lieu de lever une erreur,
+dans les deux formats : un `bigint` devient du texte et une référence circulaire
+devient `"[Circular]"`. Journalisez tout de même un identifiant plutôt qu'un
+objet discord.js entier.
 :::
 
 Le logger écrit sur les flux du processus et nulle part ailleurs. Pour envoyer

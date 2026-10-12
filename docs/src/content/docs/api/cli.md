@@ -24,6 +24,11 @@ npx djs-bot <command> [entry] [flags]
 | [`explain [entry]`](#explain-entry) | Prints everything that is loaded, and the deployment plan. |
 | [`help`, `version`](#help-and-version) | Prints the usage, or the versions in use. |
 
+Three commands take flags of their own: `deploy` (`--dry-run`, `--guild <id>`),
+`clear` (`--dry-run`, `--global`, `--guild <id>`) and `explain` (`--json`). The
+others take none. Flags may come before or after the entry file, and
+`--guild=<id>` is accepted too.
+
 ## A first run
 
 Install the package first: `npx djs-bot` runs the copy in your project's
@@ -352,15 +357,37 @@ npx djs-bot version
 no command do the same. `version` (also `--version` and `-v`) prints the three
 versions a bug report needs, on one line.
 
+`--help` or `-h` after any command prints the help and runs nothing:
+`djs-bot deploy --help` does not deploy. `--version` and `-v` work the same
+way, anywhere on the line.
+
 ## Failures and CI
 
 | Exit code | When |
 | --- | --- |
 | `0` | The command succeeded. `doctor` with warnings only is a success. |
-| `1` | A usage error (unknown command, missing argument, no scope for `clear`), an entry that cannot be found or does not export a bot, a failed `doctor` check, or any error raised while loading or deploying. |
+| `1` | A usage error (unknown command, unknown or misplaced flag, missing argument, no scope for `clear`), an entry that cannot be found or does not export a bot, a failed `doctor` check, or any error raised while loading or deploying. |
 
-`dev` and `start` exit with the code of the bot process they started, or with
-`1` when they find no entry to run.
+`dev` and `start` exit with the code of the bot process they started, with `1`
+when a signal killed that process, and with `1` when they find no entry to
+run.
+
+The command line is checked before anything runs. Each of these mistakes stops
+with exit code 1, and nothing is started, deployed or cleared:
+
+| Mistake | Message |
+| --- | --- |
+| An unknown command | `Unknown command "deplyo". Did you mean deploy?` |
+| An unknown flag | `Unknown option --dryrun. Did you mean --dry-run?` |
+| A flag the command does not take | `Option --json does not apply to "djs-bot dev"` |
+| `--guild` without an id | `Option --guild needs a value` |
+
+So a typo in `deploy --dry-run` never turns into a real deployment, and
+`deploy --guild` with the id forgotten never deploys globally.
+
+Output is coloured on a terminal only. When it is piped or redirected to a
+file, or when the `NO_COLOR` environment variable is set, it is plain text, so
+CI logs stay readable. `FORCE_COLOR=1` forces colours.
 
 An error raised by the framework is printed with its code, its hint and a link
 to its entry in [Errors](/api/errors/). When Discord rejects a request, the CLI

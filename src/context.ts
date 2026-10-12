@@ -32,7 +32,7 @@ import {
   type User,
   type UserContextMenuCommandInteraction,
 } from "discord.js";
-import comfort from "@ix-xs/node-comfort";
+import { durationMs } from "./duration.js";
 import type { Logger } from "./logger.js";
 import type { ServiceMap } from "./container.js";
 import { DEFAULT_THEME, type MessageKey, type MessageVars, type Theme } from "./messages.js";
@@ -260,6 +260,15 @@ export const AUTOCOMPLETE_MAX_CHOICES = 25;
 /** The longest suggestion name, and the longest text value, Discord accepts. */
 export const AUTOCOMPLETE_MAX_LENGTH = 100;
 
+/** Shortens a suggestion name to the limit, without cutting an emoji in two. */
+function clip(label: string): string {
+  let end = AUTOCOMPLETE_MAX_LENGTH - 3;
+  // A character outside the basic plane takes two units: never keep only the first.
+  const last = label.charCodeAt(end - 1);
+  if (last >= 0xd800 && last <= 0xdbff) end--;
+  return `${label.slice(0, end)}...`;
+}
+
 /** What {@link toAutocompleteChoices} produced, and what it had to leave out. */
 export interface NormalizedChoices {
   /** The suggestions to send, at most 25. */
@@ -319,7 +328,7 @@ export function toAutocompleteChoices(
       continue;
     }
     choices.push({
-      name: label.length > AUTOCOMPLETE_MAX_LENGTH ? `${label.slice(0, AUTOCOMPLETE_MAX_LENGTH - 3)}...` : label,
+      name: label.length > AUTOCOMPLETE_MAX_LENGTH ? clip(label) : label,
       value,
     });
   }
@@ -454,13 +463,7 @@ export function resolveDefer(option: DeferOption | undefined): ResolvedDefer | u
   if (option === true) return { ephemeral: false, update: false, afterMs: DEFAULT_DEFER_AFTER_MS };
   if (option === "ephemeral") return { ephemeral: true, update: false, afterMs: DEFAULT_DEFER_AFTER_MS };
   if (option === "update") return { ephemeral: false, update: true, afterMs: DEFAULT_DEFER_AFTER_MS };
-  const after = option.after;
-  const afterMs =
-    typeof after === "number"
-      ? after
-      : typeof after === "string"
-        ? (comfort.time.parseDuration(after) ?? DEFAULT_DEFER_AFTER_MS)
-        : DEFAULT_DEFER_AFTER_MS;
+  const afterMs = durationMs(option.after, DEFAULT_DEFER_AFTER_MS);
   return { ephemeral: option.ephemeral ?? false, update: option.update ?? false, afterMs };
 }
 

@@ -65,7 +65,7 @@ import { /* ... */ } from "@ix-xs/djs-bot";
 | `describeInteraction()` | Summarises an interaction as a kind plus a readable name - what a logging or metrics plugin wants to tag its records with. | [L'objet ctx](/basics/context/) |
 | `dmOnly()` | Requires the interaction to happen in DMs. | [Gardes](/commands/guards/) |
 | `encodeCustomId()` | Encodes a routing key and typed params into a Discord-safe customId. | [Boutons](/components/buttons/) |
-| `env()` | Reads an environment variable (also consulting a `.env` file), with an optional fallback. | [Configuration](/basics/configuration/) |
+| `env()` | Reads an environment variable, with an optional fallback. | [Configuration](/basics/configuration/) |
 | `fail()` | Signals a guard failed, with a user-facing reason. | [Gardes](/commands/guards/) |
 | `featureEnabled()` | A guard that blocks a command/component when a feature flag is off for the guild. | [Feature flags](/data/flags/) |
 | `guard()` | Creates a named guard. | [Gardes](/commands/guards/) |
@@ -79,7 +79,7 @@ import { /* ... */ } from "@ix-xs/djs-bot";
 | `isHiddenChannel()` | Whether a channel is one the bot cannot view, sent by Discord with its name and details withheld ("obfuscated"). | [Cache et résolution d'entités](/data/cache/) |
 | `isShardChild()` | True when the current process is a shard child spawned by a manager (so it should run the bot), rather than the manager itself. | [Sharding](/production/sharding/) |
 | `launchShardManager()` | Launches a `ShardingManager` for the given entry file. | [Sharding](/production/sharding/) |
-| `loadEnvFile()` | Loads a `.env` file into `process.env` (without overwriting existing vars). | [Configuration](/basics/configuration/) |
+| `loadEnvFile()` | Loads a `.env` file into `process.env`. | [Configuration](/basics/configuration/) |
 | `loggerAuditSink()` | A sink that writes each entry to the structured logger. | [Journal d'audit](/data/audit/) |
 | `memoryAuditSink()` | An in-memory sink (bounded ring buffer). | [Journal d'audit](/data/audit/) |
 | `memoryStore()` | Creates an in-memory `KVStore` (fast, non-durable). | [Store](/data/store/) |
@@ -97,7 +97,7 @@ import { /* ... */ } from "@ix-xs/djs-bot";
 | `startHealthServer()` | Starts the health server. | [Santé et métriques](/production/health/) |
 | `storeAuditSink()` | A sink that persists entries in a `KVStore` (one key per entry). | [Journal d'audit](/data/audit/) |
 | `subcommand()` | Defines one subcommand with its own typed options. | [Sous-commandes](/commands/subcommands/) |
-| `timeout()` | Rejects if `promise` doesn't settle within `ms`. | [Résilience](/production/resilience/) |
+| `timeout()` | Rejects if `promise` doesn't settle within `ms` (milliseconds, or text such as `"5s"`). | [Résilience](/production/resilience/) |
 | `timestamp()` | Renders a Discord timestamp (auto-localised in each user's client). | [Mentions, horodatages et pings sûrs](/messages/formatting/) |
 | `toAutocompleteChoices()` | Turns what an autocomplete handler returned into suggestions Discord accepts. | [Options et autocomplétion](/commands/options/) |
 | `toPrometheus()` | Renders a status as the Prometheus text exposition format, so the endpoint can be scraped directly without an exporter. | [Santé et métriques](/production/health/) |

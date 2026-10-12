@@ -8,6 +8,7 @@
  *
  * @module validate
  */
+import comfort from "@ix-xs/node-comfort";
 import { BotError } from "./errors.js";
 import { CUSTOM_ID_MAX_LENGTH } from "./constants.js";
 
@@ -160,7 +161,7 @@ export function assertCommandShape(command: CommandLike): void {
       for (const choice of choices) {
         // Reached from plain JavaScript only: the types refuse anything else.
         if (typeof choice !== "object" || choice === null || typeof choice.name !== "string" || choice.value === undefined) {
-          reject(`${label}: each choice must be { name, value }, got ${JSON.stringify(choice)}`);
+          reject(`${label}: each choice must be { name, value }, got ${comfort.utils.JSONString(choice, 0)}`);
         }
         if (choice.name.length < 1 || choice.name.length > COMMAND_LIMITS.choiceName) {
           reject(`${label}: choice name "${choice.name.slice(0, 20)}" must be 1-${COMMAND_LIMITS.choiceName} characters`);

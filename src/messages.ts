@@ -8,6 +8,7 @@
  *
  * @module messages
  */
+import comfort from "@ix-xs/node-comfort";
 import type { BaseContext } from "./context.js";
 
 /** The variables each framework message receives. */
@@ -117,10 +118,9 @@ export const DEFAULT_MESSAGES: { readonly [K in MessageKey]: string } = {
   cancel: "Cancel",
 };
 
+/** Fills `{name}` placeholders; one that has no value is left as it is written. */
 function interpolate(template: string, vars: Record<string, unknown>): string {
-  return template.replace(/\{(\w+)\}/g, (whole, name: string) =>
-    name in vars ? String(vars[name]) : whole,
-  );
+  return comfort.str.template(template, vars);
 }
 
 /**

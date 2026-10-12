@@ -88,7 +88,9 @@ An `Error` does not survive `JSON.stringify`: it becomes `{}`, which is how
 stack traces disappear from production logs. The logger converts every `Error`
 it finds, whether passed alone or as the value of a field, into a plain object
 with `name`, `message` and `stack`, plus any own property the error carries.
-For a `BotError` that adds `code`, `hint`, `docs` and, when set, `meta`.
+For a `BotError` that adds `code`, `hint`, `docs` and, when set, `meta`. The
+`cause` of an error is kept too, under `cause`: converted the same way when it
+is an `Error` (up to three levels deep), written as text otherwise.
 
 ```ts
 try {
@@ -193,7 +195,8 @@ the bot instance.
 ## Output formats
 
 With `pretty: true` each line is the local time, the level in colour, the
-message, then the fields as `key=value`. Object values are printed as JSON.
+message, then the fields as `key=value`. Object values are printed as JSON. The
+time is written `HH:mm:ss`, the same in every locale.
 
 ```
 14:22:07 INFO  member joined userId=123 guildId=456
@@ -211,9 +214,12 @@ With `pretty: false` each line is one JSON object, ready for any log pipeline:
 then the fields of the call.
 
 `pretty` defaults to `true` unless `NODE_ENV` is `production`, so a deployed bot
-switches to JSON on its own. Set it explicitly to override that. Pretty lines
-always contain colour codes: if you redirect development output to a file, use
-`pretty: false`.
+switches to JSON on its own. Set it explicitly to override that.
+
+Pretty lines are coloured on a terminal only. When the output is piped or
+redirected to a file, or when the `NO_COLOR` environment variable is set, they
+are plain text. Each stream is checked on its own, so redirecting stdout alone
+leaves the lines written to stderr coloured.
 
 The two formats do not use the same streams:
 
@@ -224,10 +230,10 @@ The two formats do not use the same streams:
 
 :::caution[Keep fields serialisable]
 In JSON output, do not name a field `level`, `time` or `msg`: it would overwrite
-the record's own. Avoid values `JSON.stringify` cannot handle, such as a
-circular structure or a `bigint`: in JSON output the log call throws, and in
-pretty output the fields are replaced by `[unserialisable]`. Log an id rather
-than a whole discord.js object.
+the record's own. A record that holds a value `JSON.stringify` cannot handle is
+written instead of throwing, in both formats: a `bigint` becomes text and a
+circular reference becomes `"[Circular]"`. Log an id rather than a whole
+discord.js object all the same.
 :::
 
 The logger writes to the process streams and nowhere else. To send logs to a

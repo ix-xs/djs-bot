@@ -64,6 +64,7 @@ import { DEFAULT_THEME, renderMessage, type Theme } from "./messages.js";
 import { readModalFields } from "./modal.js";
 import { VERSION } from "./constants.js";
 import { nextCorrelationId } from "./ids.js";
+import { durationMs } from "./duration.js";
 import type { Guard } from "./guards.js";
 import type { OptionMap } from "./schema.js";
 import type { Server } from "node:http";
@@ -162,8 +163,15 @@ export interface BotStats {
  */
 const BOT_BRAND: unique symbol = Symbol.for("djsbot.bot") as never;
 
-/** How many trigger hits between two sweeps of expired cooldown entries. */
-const TRIGGER_SWEEP_EVERY = 1000;
+/**
+ * How long a shutdown started by a signal may take before the process is ended
+ * anyway. Above the 10 seconds running jobs are given, so hooks, plugins and
+ * services still get their turn after a slow job.
+ */
+const SHUTDOWN_DEADLINE = "30s";
+
+/** The authors a trigger does not answer again yet. */
+type TriggerCooldown = InstanceType<typeof comfort.Cache<string, true>>;
 
 /** What the router needs to run one handler inside the boundary. */
 interface Dispatch {
@@ -195,12 +203,14 @@ export class Bot {
   private computed?: ComputedIntents;
   private loaded = false;
   private loading?: Promise<void>;
-  private presenceTimer?: NodeJS.Timeout;
+  private presenceRotation?: { stop: () => void };
   private i18n?: I18n;
   private auditLog?: AuditLog;
   private store?: KVStore;
   private healthServer?: Server;
-  private signals?: { dispose?: () => void };
+  private signals?: { dispose: () => void };
+  /** Takes the bot out of node-comfort's shutdown sequence. */
+  private offShutdown?: () => void;
   private readonly theme: Theme;
   private readonly startedAt = Date.now();
   /** Options whose dropped autocomplete suggestions were already reported. */
@@ -480,18 +490,18 @@ export class Bot {
   private report(error: unknown, message: string, fields: Record<string, unknown> = {}): void {
     this.counters.errors++;
     this.logger.error({ err: error, ...fields }, message);
-    for (const hook of this.errorHooks) {
-      try {
-        void Promise.resolve(hook(error)).catch(() => undefined);
-      } catch {
-        /* an error hook must never throw */
-      }
-    }
-    try {
-      void Promise.resolve(this.config.onError?.(error)).catch(() => undefined);
-    } catch {
-      /* same for the global handler */
-    }
+    this.notifyErrorHooks(error);
+  }
+
+  /**
+   * Hands an error to every error hook and to `config.onError`, without
+   * waiting for them. A hook that throws or rejects is ignored: reporting an
+   * error must never raise another one.
+   */
+  private notifyErrorHooks(error: unknown): void {
+    for (const hook of this.errorHooks) void comfort.func.to(() => hook(error));
+    const onError = this.config.onError;
+    if (onError) void comfort.func.to(() => onError(error));
   }
 
   private attachEvents(client: Client<true>): void {
@@ -517,37 +527,23 @@ export class Bot {
     const triggers = this.registry.triggers;
     if (triggers.length === 0) return;
 
-    const cooldowns = new Map<string, Map<string, number>>();
-    for (const t of triggers) cooldowns.set(t.name, new Map());
-    const durations = new Map<string, number>(
-      triggers.map((t) => [
-        t.name,
-        t.cooldown === undefined
-          ? 0
-          : typeof t.cooldown === "number"
-            ? t.cooldown
-            : (comfort.time.parseDuration(t.cooldown) ?? 0),
-      ]),
-    );
+    // One cache of authors per trigger that has a cooldown: an entry expires
+    // with the cooldown, and the cache drops the expired ones as it grows.
+    const cooldowns = new Map<string, TriggerCooldown>();
+    for (const t of triggers) {
+      const ms = durationMs(t.cooldown, 0);
+      if (ms > 0) cooldowns.set(t.name, new comfort.Cache<string, true>({ ttl: ms }));
+    }
 
-    let hits = 0;
     client.on(Events.MessageCreate, (message) => {
-      // Authors that never write again would otherwise stay in the maps forever.
-      if (++hits % TRIGGER_SWEEP_EVERY === 0) {
-        const now = Date.now();
-        for (const map of cooldowns.values()) {
-          for (const [authorId, until] of map) if (now >= until) map.delete(authorId);
-        }
-      }
-      void this.handleTriggers(message, triggers, cooldowns, durations);
+      void this.handleTriggers(message, triggers, cooldowns);
     });
   }
 
   private async handleTriggers(
     message: Message,
     triggers: readonly TriggerDefinition[],
-    cooldowns: Map<string, Map<string, number>>,
-    durations: Map<string, number>,
+    cooldowns: ReadonlyMap<string, TriggerCooldown>,
   ): Promise<void> {
     for (const trigger of triggers) {
       try {
@@ -555,12 +551,10 @@ export class Bot {
         const match = matchTrigger(trigger, message);
         if (!match) continue;
 
-        const cooldownMs = durations.get(trigger.name) ?? 0;
-        if (cooldownMs > 0) {
-          const map = cooldowns.get(trigger.name)!;
-          const until = map.get(message.author.id) ?? 0;
-          if (Date.now() < until) continue;
-          map.set(message.author.id, Date.now() + cooldownMs);
+        const cooling = cooldowns.get(trigger.name);
+        if (cooling) {
+          if (cooling.has(message.author.id)) continue;
+          cooling.set(message.author.id, true);
         }
 
         const correlationId = nextCorrelationId();
@@ -636,10 +630,9 @@ export class Bot {
   private startPresenceRotation(client: Client<true>): void {
     const rotation = this.config.presenceRotation;
     if (!rotation || rotation.items.length === 0) return;
-    const intervalMs =
-      typeof rotation.interval === "number"
-        ? rotation.interval
-        : (comfort.time.parseDuration(rotation.interval) ?? 60_000);
+    // An interval that cannot be read, or that is not positive, falls back to a minute.
+    const parsed = durationMs(rotation.interval, 60_000);
+    const intervalMs = Number.isFinite(parsed) && parsed > 0 ? parsed : 60_000;
 
     let index = 0;
     const apply = () => {
@@ -647,8 +640,10 @@ export class Bot {
       index++;
     };
     apply();
-    this.presenceTimer = setInterval(apply, intervalMs);
-    this.presenceTimer.unref?.();
+    this.presenceRotation = comfort.time.every(intervalMs, apply, {
+      unref: true,
+      onError: (error) => this.report(error, "Presence rotation failed"),
+    });
   }
 
   /** Updates the bot's gateway presence at runtime. */
@@ -695,18 +690,7 @@ export class Bot {
         // The scheduler already logged it; only forward to the hooks.
         onError: (error) => {
           this.counters.errors++;
-          for (const hook of this.errorHooks) {
-            try {
-              void Promise.resolve(hook(error)).catch(() => undefined);
-            } catch {
-              /* ignore */
-            }
-          }
-          try {
-            void Promise.resolve(this.config.onError?.(error)).catch(() => undefined);
-          } catch {
-            /* ignore */
-          }
+          this.notifyErrorHooks(error);
         },
       },
     );
@@ -736,17 +720,25 @@ export class Bot {
     }
   }
 
+  /**
+   * An uncaught error is reported and the process stays up. A signal runs
+   * {@link shutdown} through node-comfort's shutdown sequence, which ends the
+   * process in every case: with code 0 once the shutdown is done, with code 1
+   * when it fails, when it takes longer than {@link SHUTDOWN_DEADLINE}, or
+   * when a second signal arrives before it is over.
+   */
   private installSignals(): void {
     this.signals = comfort.utils
       .dontCrash()
-      .on("sig", async () => {
-        this.logger.info({}, "Signal received - shutting down");
-        await this.shutdown();
-        process.exit(0);
-      })
       .on("error", (error: unknown) => {
         this.report(error, "Uncaught error (kept alive)");
-      }) as { dispose?: () => void };
+      })
+      .on("sig", (signal: NodeJS.Signals) => {
+        this.logger.info({ signal }, "Signal received - shutting down");
+        void comfort.sys.shutdown();
+      });
+    // The signals are listened to above, so that `dispose()` removes them all.
+    this.offShutdown = comfort.sys.onShutdown(() => this.shutdown(), { timeout: SHUTDOWN_DEADLINE, signals: [] });
   }
 
   /**
@@ -812,10 +804,10 @@ export class Bot {
     return Array.isArray(state?.guilds) ? state.guilds : [];
   }
   private writeDeployState(guilds: string[]): void {
-    try {
-      comfort.fs.writeJSON(this.deployStatePath, { guilds });
-    } catch {
-      /* state tracking is best-effort */
+    // Best effort: without the file, guilds that are no longer targeted keep
+    // their commands until a deploy that knows about them.
+    if (!comfort.fs.writeJSON(this.deployStatePath, { guilds }, { fsync: true })) {
+      this.logger.debug({ path: this.deployStatePath }, "Could not write the deploy state");
     }
   }
 
@@ -829,8 +821,8 @@ export class Bot {
     this.scheduler = undefined;
     await scheduler?.stop();
 
-    if (this.presenceTimer) clearInterval(this.presenceTimer);
-    this.presenceTimer = undefined;
+    this.presenceRotation?.stop();
+    this.presenceRotation = undefined;
     this.healthServer?.close();
     this.healthServer = undefined;
 
@@ -863,7 +855,9 @@ export class Bot {
       await this._client.destroy();
       this._client = undefined;
     }
-    this.signals?.dispose?.();
+    this.offShutdown?.();
+    this.offShutdown = undefined;
+    this.signals?.dispose();
     this.signals = undefined;
     this.logger.info({}, "Shutdown complete");
   }

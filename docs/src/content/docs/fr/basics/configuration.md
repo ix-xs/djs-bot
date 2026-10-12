@@ -78,16 +78,31 @@ export default defineBot({
 Une valeur vide compte partout comme absente : un `DISCORD_TOKEN=` égaré échoue
 donc bruyamment au lieu de s'authentifier discrètement en tant que personne.
 
-Les helpers lisent `process.env`. Un fichier `.env` y arrive grâce à
-`loadEnvFile()`, que chaque commande `djs-bot` appelle avant d'exécuter ou
-d'importer votre fichier d'entrée. Les variables déjà définies ne sont jamais
-écrasées : l'environnement réel l'emporte donc toujours sur le fichier, ce que
-vous voulez en production.
+Les helpers lisent `process.env`. Le fichier `.env` du répertoire de travail y
+est chargé dès que `@ix-xs/djs-bot` est importé : sa dépendance
+`@ix-xs/node-comfort` s'en charge, avec ou sans la CLI. Définissez la variable
+d'environnement `NODE_COMFORT_DOTENV=false` pour désactiver ce chargement.
 
-:::note[Démarrer sans la CLI]
-Si vous lancez vous-même le fichier d'entrée (`node dist/index.js`), rien ne lit
-`.env` à votre place. Appelez `loadEnvFile()` en haut du fichier, avant le
-premier `env()`.
+Quand une variable est définie à plusieurs endroits, la source la plus forte
+l'emporte :
+
+1. L'environnement réel (votre shell, votre hébergeur). Une variable qui y est
+   déjà définie n'est jamais remplacée, ce que vous voulez en production.
+2. Un fichier chargé avec `loadEnvFile(path)`.
+3. Le `.env` lu à l'import.
+
+:::note[Charger un autre fichier]
+Vous n'avez rien à appeler pour `.env`, même quand vous lancez vous-même le
+fichier d'entrée (`node dist/index.js`). `loadEnvFile(path)` sert à charger un
+autre fichier, comme `.env.local` : appelez-la en haut du fichier d'entrée,
+avant le premier `env()`.
+:::
+
+:::caution[Mettez entre guillemets les secrets qui contiennent des caractères spéciaux]
+Dans un fichier `.env`, `$NAME` est remplacé par la valeur de cette variable et
+` #` ouvre un commentaire. Un secret qui contient `$` ou ` #` doit être écrit
+entre guillemets simples, `TOKEN='pa$word'`, sinon il est altéré. Les règles
+complètes sont listées sous [`loadEnvFile`](#loadenvfilepath).
 :::
 
 :::danger[Ne commitez jamais votre token]
@@ -355,20 +370,25 @@ Lit `process.env[name]`. Les variantes sont des propriétés de la même fonctio
 function loadEnvFile(path?: string): void
 ```
 
-Analyse un fichier `.env` dans `process.env`.
+Analyse un fichier `.env` dans `process.env`. Vous en avez rarement besoin : le
+`.env` du répertoire de travail est déjà lu à l'import du paquet. Appelez-la
+pour un autre fichier, comme `.env.local`.
 
 | Option | Type | Défaut | Description |
 | --- | --- | --- | --- |
 | `path` | `string` | `".env"` | Le fichier à lire. Par défaut, c'est `.env` dans le répertoire de travail. |
 
-- Les variables qui existent déjà ne sont pas modifiées.
-- Les lignes vides et les lignes qui commencent par `#` sont ignorées. Les lignes
-  sans `=` aussi.
+- Une variable que l'environnement réel définit déjà n'est pas modifiée. Une
+  valeur venue du `.env` lu à l'import est remplacée.
+- Les lignes vides et les lignes qui commencent par `#` sont ignorées.
+- Un ` # commentaire` placé après une valeur sans guillemets est retiré.
 - Une valeur entourée de guillemets simples ou doubles perd ses guillemets.
+- `$NAME` et `${NAME}` sont remplacés par la valeur de cette variable, sauf
+  entre guillemets simples.
+- `export NAME=value` est accepté.
 - Un fichier absent n'est pas une erreur : l'appel ne fait rien.
 
-La CLI l'appelle pour vous. Appelez-la vous-même seulement depuis un point d'entrée
-que vous lancez sans la CLI.
+Le `.env` lu à l'import suit les mêmes règles.
 
 ## Limites et erreurs
 

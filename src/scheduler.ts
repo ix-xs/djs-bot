@@ -181,7 +181,7 @@ export interface SchedulerOptions {
 
 /** Runs and supervises the registered jobs. */
 export class Scheduler {
-  private readonly timers: NodeJS.Timeout[] = [];
+  private readonly intervals: Array<{ stop: () => void }> = [];
   private readonly running = new Map<string, number>();
   private readonly active = new Set<Promise<void>>();
   private readonly abort = new AbortController();
@@ -204,9 +204,8 @@ export class Scheduler {
       const parsed = parseSchedule(job.schedule);
       if (job.runOnStart) this.launch(job);
       if (parsed.type === "interval") {
-        const timer = setInterval(() => this.launch(job), parsed.ms);
-        timer.unref?.();
-        this.timers.push(timer);
+        // Not setInterval: an interval longer than 24.8 days would overflow it and fire without end.
+        this.intervals.push(comfort.time.every(parsed.ms, () => this.launch(job), { unref: true }));
       } else {
         cronJobs.push({ job, fields: parsed.fields });
       }
@@ -276,7 +275,7 @@ export class Scheduler {
    */
   public async stop(graceMs = 10_000): Promise<void> {
     this.stopped = true;
-    for (const timer of this.timers) clearInterval(timer);
+    for (const interval of this.intervals) interval.stop();
     if (this.cronTimer) clearTimeout(this.cronTimer);
     this.abort.abort();
 

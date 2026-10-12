@@ -158,7 +158,24 @@ const user = await retry(() => api.getUser(id), {
 With no options, `retry` makes three attempts, waiting about 200 ms and then
 about 400 ms: `delay` defaults to `200`, `backoff` to `2` and `jitter` to
 `0.2`. The jitter moves each wait by a random amount, so that many callers
-hitting the same failure do not all come back at the same instant.
+hitting the same failure do not all come back at the same instant. `delay` and
+`maxDelay` take milliseconds or text such as `"1s"`.
+
+Two things end the retries before the attempts are used:
+
+- **A signal.** Pass an `AbortSignal` as `signal`: once it is aborted, no
+  further attempt is made and `retry` rejects with an `AbortError`. The attempt
+  in progress is not interrupted. The `ctx.signal` of a
+  [job](/events/jobs/) fits well, so a job that is being stopped does not keep
+  retrying.
+- **An aborted attempt.** An attempt that fails with an error named
+  `AbortError`, such as a `fetch` you aborted yourself, is not tried again. A
+  `TimeoutError` from `timeout()` is still retried.
+
+```ts
+// In a job: stop retrying as soon as the job is asked to stop.
+await retry(() => syncLeaderboard(), { attempts: 5, delay: "1s", signal: ctx.signal });
+```
 
 :::caution[Retry only what is safe to repeat]
 Retrying a read is harmless. Retrying "send a message" can post it three times.
@@ -172,12 +189,17 @@ dependency cannot hold a handler forever.
 
 ```ts
 const data = await timeout(api.slowCall(), 5000, "The API took too long");
-const same = await timeout(() => api.slowCall(), 5000);   // a function works too
+const same = await timeout(() => api.slowCall(), "5s");   // a function works too, and so does "5s"
+const page = await timeout((signal) => fetch(url, { signal }), "5s");   // aborted when the time is up
 ```
 
 The rejection is an error named `TimeoutError`. Its message is the third
-argument, or `Operation timed out after 5000ms` without one. The call itself is
-not cancelled: `timeout` stops waiting for it, nothing more.
+argument, or `Operation timed out after 5000ms` without one.
+
+A promise you pass is not cancelled: `timeout` stops waiting for it, nothing
+more. To stop the work too, pass a function. It receives an `AbortSignal` that
+aborts when the time is up, and you hand that signal to whatever does the work,
+as the `fetch` above does.
 
 This matters most in interaction handlers, where Discord gives you 3 seconds to
 answer or defer, and 15 minutes after that. See
@@ -198,7 +220,8 @@ const result = await breaker.execute(() =>
 );
 ```
 
-- `timeout` bounds one attempt.
+- `timeout` bounds one attempt. Its `TimeoutError` is retried like any other
+  failure.
 - `retry` absorbs a passing failure.
 - The breaker stops trying once the service is really down, and sees one
   failure per exhausted retry, not one per attempt.
@@ -295,27 +318,33 @@ apart from an error of the call itself.
 ### `retry(fn, options)`
 
 Calls `fn` (sync or async) until it succeeds, and resolves with its result.
-Rejects with the last error. `options` is `RetryOptions`:
+Rejects with the last error. An attempt that fails with an error named
+`AbortError` is not tried again. `options` is `RetryOptions`:
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `attempts` | `number` | `3` | Total attempts, the first one included. |
-| `delay` | `number` | `200` | Wait before the second attempt, in milliseconds. |
+| `delay` | `number \| string` | `200` | Wait before the second attempt: milliseconds, or text such as `"1s"`. |
 | `backoff` | `number` | `2` | Multiplies the wait after each failure. `2` turns 200 into 200, 400, 800. |
-| `maxDelay` | `number` | no cap | Upper bound of the wait, in milliseconds. |
+| `maxDelay` | `number \| string` | no cap | Upper bound of the wait: milliseconds, or text such as `"30s"`. |
 | `jitter` | `number` | `0.2` | Randomises each wait: `0` for none, up to `1` for anywhere between zero and twice the delay. |
 | `shouldRetry` | `(error: unknown, attempt: number) => boolean` | retry every error | Return `false` to give up at once. |
 | `onRetry` | `(error: unknown, attempt: number) => void` | none | Called before each wait. `attempt` is the one that failed, starting at 1. |
+| `signal` | `AbortSignal` | none | Once aborted, no further attempt is made and the call rejects with an `AbortError`. The attempt in progress is not interrupted. |
+
+A `delay` or a `maxDelay` that cannot be read as a duration rejects with a
+`TypeError`.
 
 ### `timeout(promise, ms, message)`
 
-Resolves with the value of `promise` if it settles within `ms` milliseconds,
-and rejects with a `TimeoutError` otherwise.
+Resolves with the value of `promise` if it settles within `ms`, and rejects
+with a `TimeoutError` otherwise. An `ms` that cannot be read as a duration
+throws a `TypeError`.
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
-| `promise` | `Promise<T> \| (() => Promise<T>)` | required | The work to bound, or a function that starts it. |
-| `ms` | `number` | required | The time allowed, in milliseconds. |
+| `promise` | `Promise<T> \| ((signal: AbortSignal) => Promise<T>)` | required | The work to bound, or a function that starts it. The function receives a signal that aborts when the time is up. |
+| `ms` | `number \| string` | required | The time allowed: milliseconds (`5000`) or text (`"5s"`). |
 | `message` | `string` | `Operation timed out after <ms>ms` | The message of the rejection. |
 
 ## See also

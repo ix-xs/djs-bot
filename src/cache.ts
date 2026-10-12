@@ -8,7 +8,7 @@
  *
  * @module cache
  */
-import comfort from "@ix-xs/node-comfort";
+import { durationMs } from "./duration.js";
 import type { Channel, Client, Guild, GuildMember, Message, Role, TextBasedChannel, User } from "discord.js";
 
 interface Entry<V> {
@@ -30,12 +30,6 @@ export interface TTLCacheOptions {
   staleWhileRevalidate?: boolean;
 }
 
-function toMs(ttl: number | string | undefined, fallback: number): number {
-  if (typeof ttl === "number") return ttl;
-  if (typeof ttl === "string") return comfort.time.parseDuration(ttl) ?? fallback;
-  return fallback;
-}
-
 /**
  * An in-memory TTL + LRU cache with single-flight fetching.
  *
@@ -51,7 +45,7 @@ export class TTLCache<K, V> {
   private readonly swr: boolean;
 
   public constructor(options: TTLCacheOptions = {}) {
-    this.ttl = toMs(options.ttl, 300_000);
+    this.ttl = durationMs(options.ttl, 300_000);
     this.max = options.max ?? 1000;
     this.swr = options.staleWhileRevalidate ?? false;
   }
@@ -76,7 +70,7 @@ export class TTLCache<K, V> {
       const oldest = this.store.keys().next().value as K | undefined;
       if (oldest !== undefined) this.store.delete(oldest);
     }
-    this.store.set(key, { value, expires: Date.now() + toMs(ttl, this.ttl) });
+    this.store.set(key, { value, expires: Date.now() + durationMs(ttl, this.ttl) });
   }
 
   /** Whether a fresh value exists. */

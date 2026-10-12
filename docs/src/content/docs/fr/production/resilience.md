@@ -163,7 +163,24 @@ Sans options, `retry` fait trois tentatives, en attendant environ 200 ms puis
 environ 400 ms : `delay` vaut `200` par défaut, `backoff` vaut `2` et `jitter`
 vaut `0.2`. Le jitter décale chaque attente d'une quantité aléatoire, afin que
 de nombreux appelants confrontés au même échec ne reviennent pas tous au même
-instant.
+instant. `delay` et `maxDelay` acceptent des millisecondes ou un texte comme
+`"1s"`.
+
+Deux choses mettent fin aux tentatives avant qu'elles soient épuisées :
+
+- **Un signal.** Passez un `AbortSignal` dans `signal` : une fois qu'il est
+  interrompu, aucune nouvelle tentative n'est faite et `retry` rejette avec une
+  `AbortError`. La tentative en cours n'est pas interrompue. Le `ctx.signal`
+  d'une [tâche planifiée](/events/jobs/) convient bien : une tâche que l'on
+  arrête ne continue pas à réessayer.
+- **Une tentative interrompue.** Une tentative qui échoue avec une erreur nommée
+  `AbortError`, comme un `fetch` que vous avez interrompu vous-même, n'est pas
+  réessayée. Une `TimeoutError` venue de `timeout()` est toujours réessayée.
+
+```ts
+// Dans une tâche planifiée : cesser de réessayer dès qu'on lui demande de s'arrêter.
+await retry(() => syncLeaderboard(), { attempts: 5, delay: "1s", signal: ctx.signal });
+```
 
 :::caution[Ne réessayez que ce qui peut être répété sans risque]
 Réessayer une lecture est sans danger. Réessayer « envoyer un message » peut le
@@ -178,12 +195,17 @@ qu'une dépendance lente ne puisse pas bloquer un gestionnaire indéfiniment.
 
 ```ts
 const data = await timeout(api.slowCall(), 5000, "The API took too long");
-const same = await timeout(() => api.slowCall(), 5000);   // une fonction marche aussi
+const same = await timeout(() => api.slowCall(), "5s");   // une fonction marche aussi, tout comme "5s"
+const page = await timeout((signal) => fetch(url, { signal }), "5s");   // interrompu quand le temps est écoulé
 ```
 
 Le rejet est une erreur nommée `TimeoutError`. Son message est le troisième
-argument, ou `Operation timed out after 5000ms` s'il n'y en a pas. L'appel
-lui-même n'est pas annulé : `timeout` cesse de l'attendre, rien de plus.
+argument, ou `Operation timed out after 5000ms` s'il n'y en a pas.
+
+Une promesse que vous passez n'est pas annulée : `timeout` cesse de l'attendre,
+rien de plus. Pour arrêter aussi le travail, passez une fonction. Elle reçoit un
+`AbortSignal` qui s'interrompt quand le temps est écoulé, et vous transmettez ce
+signal à ce qui fait le travail, comme le `fetch` ci-dessus.
 
 Cela compte surtout dans les gestionnaires d'interaction, où Discord vous laisse
 3 secondes pour répondre ou différer, puis 15 minutes ensuite. Voir
@@ -204,7 +226,8 @@ const result = await breaker.execute(() =>
 );
 ```
 
-- `timeout` borne une tentative.
+- `timeout` borne une tentative. Sa `TimeoutError` est réessayée comme
+  n'importe quel autre échec.
 - `retry` absorbe un échec passager.
 - Le disjoncteur cesse d'essayer quand le service est vraiment en panne, et voit
   un échec par série de tentatives épuisée, pas un par tentative.
@@ -302,28 +325,34 @@ L'erreur avec laquelle `execute` rejette tant que le circuit est ouvert. Son
 ### `retry(fn, options)`
 
 Appelle `fn` (synchrone ou asynchrone) jusqu'à ce qu'elle réussisse, et se
-résout avec son résultat. Rejette avec la dernière erreur. `options` est un
+résout avec son résultat. Rejette avec la dernière erreur. Une tentative qui
+échoue avec une erreur nommée `AbortError` n'est pas réessayée. `options` est un
 `RetryOptions` :
 
 | Option | Type | Défaut | Description |
 | --- | --- | --- | --- |
 | `attempts` | `number` | `3` | Nombre total de tentatives, la première comprise. |
-| `delay` | `number` | `200` | Attente avant la deuxième tentative, en millisecondes. |
+| `delay` | `number \| string` | `200` | Attente avant la deuxième tentative : des millisecondes, ou un texte comme `"1s"`. |
 | `backoff` | `number` | `2` | Multiplie l'attente après chaque échec. `2` transforme 200 en 200, 400, 800. |
-| `maxDelay` | `number` | aucun plafond | Borne supérieure de l'attente, en millisecondes. |
+| `maxDelay` | `number \| string` | aucun plafond | Borne supérieure de l'attente : des millisecondes, ou un texte comme `"30s"`. |
 | `jitter` | `number` | `0.2` | Rend chaque attente aléatoire : `0` pour aucune variation, jusqu'à `1` pour n'importe quelle valeur entre zéro et le double du délai. |
 | `shouldRetry` | `(error: unknown, attempt: number) => boolean` | réessayer toute erreur | Renvoyez `false` pour abandonner aussitôt. |
 | `onRetry` | `(error: unknown, attempt: number) => void` | aucun | Appelé avant chaque attente. `attempt` est celle qui a échoué, en commençant à 1. |
+| `signal` | `AbortSignal` | aucun | Une fois interrompu, aucune nouvelle tentative n'est faite et l'appel rejette avec une `AbortError`. La tentative en cours n'est pas interrompue. |
+
+Un `delay` ou un `maxDelay` qui ne peut pas être lu comme une durée rejette avec
+une `TypeError`.
 
 ### `timeout(promise, ms, message)`
 
-Se résout avec la valeur de `promise` si elle se règle dans les `ms`
-millisecondes, et rejette sinon avec une `TimeoutError`.
+Se résout avec la valeur de `promise` si elle se règle dans le délai `ms`, et
+rejette sinon avec une `TimeoutError`. Un `ms` qui ne peut pas être lu comme une
+durée lève une `TypeError`.
 
 | Paramètre | Type | Défaut | Description |
 | --- | --- | --- | --- |
-| `promise` | `Promise<T> \| (() => Promise<T>)` | requis | Le travail à borner, ou une fonction qui le démarre. |
-| `ms` | `number` | requis | Le temps accordé, en millisecondes. |
+| `promise` | `Promise<T> \| ((signal: AbortSignal) => Promise<T>)` | requis | Le travail à borner, ou une fonction qui le démarre. La fonction reçoit un signal qui s'interrompt quand le temps est écoulé. |
+| `ms` | `number \| string` | requis | Le temps accordé : des millisecondes (`5000`) ou un texte (`"5s"`). |
 | `message` | `string` | `Operation timed out after <ms>ms` | Le message du rejet. |
 
 ## Voir aussi

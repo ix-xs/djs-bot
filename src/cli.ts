@@ -12,8 +12,6 @@
  *
  * @module cli
  */
-import { spawn } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
@@ -25,29 +23,23 @@ import { interopDefault } from "./loader.js";
 import { closeRestConnections } from "./deploy.js";
 import { VERSION } from "./constants.js";
 import { adoptPackage, STARTER_SCRIPTS } from "./scaffold.js";
-import { flagValue, positional } from "./cli-args.js";
+import { parseArgs, type CliArgs } from "./cli-args.js";
 
-const C = {
-  reset: "\x1b[0m",
-  bold: "\x1b[1m",
-  gray: "\x1b[90m",
-  green: "\x1b[32m",
-  red: "\x1b[31m",
-  yellow: "\x1b[33m",
-  cyan: "\x1b[36m",
-};
+// Colours that turn themselves off when the output is not a terminal, or when
+// NO_COLOR asks for it.
+const { bold, gray, green, red, yellow, cyan } = comfort.color;
 
 function print(line = ""): void {
   process.stdout.write(line + "\n");
 }
 function ok(msg: string): void {
-  print(`${C.green}✓${C.reset} ${msg}`);
+  print(`${green("✓")} ${msg}`);
 }
 function warn(msg: string): void {
-  print(`${C.yellow}!${C.reset} ${msg}`);
+  print(`${yellow("!")} ${msg}`);
 }
 function bad(msg: string): void {
-  print(`${C.red}✗${C.reset} ${msg}`);
+  print(`${red("✗")} ${msg}`);
 }
 
 const ENTRY_CANDIDATES = [
@@ -111,19 +103,21 @@ async function loadBot(explicit: string | undefined, command: string): Promise<B
   return bot as Bot;
 }
 
-/** Spawns the entry in a child process (for dev/start). */
-function run(entry: string, opts: { watch?: boolean; prod?: boolean }): void {
+/** Runs the entry in a child process (for dev/start), and ends with its exit code. */
+async function run(entry: string, opts: { watch?: boolean; prod?: boolean }): Promise<never> {
   const nodeArgs: string[] = [];
   if (opts.watch) nodeArgs.push("--watch");
   nodeArgs.push("--enable-source-maps");
   if (hasTsx()) nodeArgs.push("--import", "tsx");
   nodeArgs.push(entry);
 
-  const child = spawn(process.execPath, nodeArgs, {
+  const { exitCode } = await comfort.sys.run(process.execPath, nodeArgs, {
     stdio: "inherit",
-    env: { ...process.env, NODE_ENV: opts.prod ? "production" : "development" },
+    env: { NODE_ENV: opts.prod ? "production" : "development" },
+    reject: false,
   });
-  child.on("exit", (code) => process.exit(code ?? 0));
+  // No exit code: a signal killed the bot, which is not a clean stop.
+  process.exit(exitCode ?? 1);
 }
 
 /* ------------------------------- commands -------------------------------- */
@@ -143,31 +137,29 @@ function requireEntry(entryArg: string | undefined, command: string): string {
 async function cmdDev(entryArg?: string): Promise<void> {
   const entry = requireEntry(entryArg, "dev");
   loadEnvFile();
-  print(`${C.cyan}${C.bold}djs-bot dev${C.reset} ${C.gray}→ ${path.relative(process.cwd(), entry)} (watch)${C.reset}`);
-  run(entry, { watch: true, prod: false });
+  print(`${cyan.bold("djs-bot dev")} ${gray(`→ ${path.relative(process.cwd(), entry)} (watch)`)}`);
+  await run(entry, { watch: true, prod: false });
 }
 
 async function cmdStart(entryArg?: string): Promise<void> {
   const entry = requireEntry(entryArg, "start");
   loadEnvFile();
-  print(`${C.cyan}${C.bold}djs-bot start${C.reset} ${C.gray}→ ${path.relative(process.cwd(), entry)}${C.reset}`);
-  run(entry, { watch: false, prod: true });
+  print(`${cyan.bold("djs-bot start")} ${gray(`→ ${path.relative(process.cwd(), entry)}`)}`);
+  await run(entry, { watch: false, prod: true });
 }
 
-async function cmdDeploy(args: string[]): Promise<void> {
-  const bot = await loadBot(positional(args), "deploy");
-  const dryRun = args.includes("--dry-run");
-  const guildId = flagValue(args, "--guild");
+async function cmdDeploy(entryArg: string | undefined, { dryRun, guild: guildId }: CliArgs): Promise<void> {
+  const bot = await loadBot(entryArg, "deploy");
   const result = await bot.deploy({ dryRun, guildId });
   print();
   for (const target of result.targets) {
     const label = target.scope === "global" ? "global" : `guild ${target.guildId}`;
     ok(`${label}${dryRun ? " (dry run)" : ""}`);
-    if (target.added.length) print(`  ${C.green}+ ${target.added.join(", ")}${C.reset}`);
-    if (target.changed.length) print(`  ${C.yellow}~ ${target.changed.join(", ")}${C.reset}`);
-    if (target.removed.length) print(`  ${C.red}- ${target.removed.join(", ")}${C.reset}`);
+    if (target.added.length) print(`  ${green(`+ ${target.added.join(", ")}`)}`);
+    if (target.changed.length) print(`  ${yellow(`~ ${target.changed.join(", ")}`)}`);
+    if (target.removed.length) print(`  ${red(`- ${target.removed.join(", ")}`)}`);
     if (!target.added.length && !target.changed.length && !target.removed.length) {
-      print(`  ${C.gray}no changes${C.reset}`);
+      print(`  ${gray("no changes")}`);
     }
   }
 
@@ -183,7 +175,7 @@ async function cmdDeploy(args: string[]): Promise<void> {
         `Your dev guild (${bot.devGuildId}) still holds the command mirror from \`djs-bot dev\`. ` +
           `These global commands will appear as DUPLICATES there until you clear it:`,
       );
-      print(`  ${C.gray}djs-bot clear --guild ${bot.devGuildId}${C.reset}`);
+      print(`  ${gray(`djs-bot clear --guild ${bot.devGuildId}`)}`);
     }
   }
 
@@ -191,11 +183,8 @@ async function cmdDeploy(args: string[]): Promise<void> {
   process.exit(0);
 }
 
-async function cmdClear(args: string[]): Promise<void> {
-  const bot = await loadBot(positional(args), "clear");
-  const dryRun = args.includes("--dry-run");
-  const global = args.includes("--global");
-  const guildId = flagValue(args, "--guild");
+async function cmdClear(entryArg: string | undefined, { dryRun, global, guild: guildId }: CliArgs): Promise<void> {
+  const bot = await loadBot(entryArg, "clear");
   if (!global && !guildId) {
     bad("Specify what to clear: `--global` or `--guild <id>`.");
     process.exit(1);
@@ -205,7 +194,7 @@ async function cmdClear(args: string[]): Promise<void> {
   print();
   if (target.removed.length) {
     ok(`Cleared ${target.removed.length} command(s) from ${label}${dryRun ? " (dry run)" : ""}`);
-    print(`  ${C.red}- ${target.removed.join(", ")}${C.reset}`);
+    print(`  ${red(`- ${target.removed.join(", ")}`)}`);
   } else {
     ok(`Nothing to clear in ${label}`);
   }
@@ -213,16 +202,16 @@ async function cmdClear(args: string[]): Promise<void> {
   process.exit(0);
 }
 
-async function cmdExplain(args: string[]): Promise<void> {
-  const bot = await loadBot(positional(args), "explain");
+async function cmdExplain(entryArg: string | undefined, json: boolean): Promise<void> {
+  const bot = await loadBot(entryArg, "explain");
   const d = await bot.describe();
-  if (args.includes("--json")) {
+  if (json) {
     // Machine-readable, for scripts and CI checks.
     print(JSON.stringify(d, null, 2));
     process.exit(0);
   }
   const section = (title: string, items: string[]) => {
-    print(`${C.bold}${title}${C.reset} ${C.gray}(${items.length})${C.reset}`);
+    print(`${bold(title)} ${gray(`(${items.length})`)}`);
     if (items.length) print(`  ${items.join(", ")}`);
   };
   print();
@@ -242,10 +231,10 @@ async function cmdExplain(args: string[]): Promise<void> {
   section("Plugins", d.plugins);
   section("Features", d.features);
 
-  print(`${C.bold}Deployment plan${C.reset}`);
-  print(`  ${C.gray}global:${C.reset} ${d.deployment.global.join(", ") || C.gray + "(none)" + C.reset}`);
+  print(bold("Deployment plan"));
+  print(`  ${gray("global:")} ${d.deployment.global.join(", ") || gray("(none)")}`);
   for (const [guildId, names] of Object.entries(d.deployment.guilds)) {
-    print(`  ${C.gray}guild ${guildId}:${C.reset} ${names.join(", ")}`);
+    print(`  ${gray(`guild ${guildId}:`)} ${names.join(", ")}`);
   }
   process.exit(0);
 }
@@ -264,7 +253,7 @@ const MIN_NODE = "22.13.0";
 const MIN_DISCORD_JS = "14.27.0";
 
 async function cmdDoctor(entryArg?: string): Promise<void> {
-  print(`${C.bold}djs-bot doctor${C.reset} ${C.gray}v${VERSION}${C.reset}\n`);
+  print(`${bold("djs-bot doctor")} ${gray(`v${VERSION}`)}\n`);
   let failed = false;
   const fail = (msg: string): void => {
     failed = true;
@@ -295,9 +284,8 @@ async function cmdDoctor(entryArg?: string): Promise<void> {
   else if (!/^\d{17,20}$/.test(devGuild)) fail("DISCORD_DEV_GUILD is not a valid id (expected 17-20 digits)");
   else ok("DISCORD_DEV_GUILD is set");
 
-  const gitignore = comfort.fs.readFile(".gitignore");
   if (comfort.fs.exists(path.resolve(".env")) && comfort.fs.exists(path.resolve(".git"))) {
-    const ignored = (gitignore ?? "").split(/\r?\n/).some((line) => /^\/?\.env(\b|$)/.test(line.trim()));
+    const ignored = (comfort.fs.readLines(".gitignore") ?? []).some((line) => /^\/?\.env(\b|$)/.test(line.trim()));
     if (ignored) ok(".env is git-ignored");
     else fail(".env is NOT in .gitignore - your token would be committed");
   }
@@ -333,7 +321,7 @@ async function cmdDoctor(entryArg?: string): Promise<void> {
   process.exit(0);
 }
 
-async function cmdGenerate(args: string[]): Promise<void> {
+async function cmdGenerate(args: readonly string[]): Promise<void> {
   const [type, name] = args;
   if (!type || !name) {
     bad(
@@ -356,7 +344,10 @@ async function cmdGenerate(args: string[]): Promise<void> {
     bad(`${path.relative(process.cwd(), target)} already exists.`);
     process.exit(1);
   }
-  comfort.fs.createFile(target, true, content);
+  if (!comfort.fs.createFile(target, true, content)) {
+    bad(`Could not write ${path.relative(process.cwd(), target)}.`);
+    process.exit(1);
+  }
   ok(`Created ${path.relative(process.cwd(), target)}`);
   process.exit(0);
 }
@@ -368,8 +359,8 @@ async function cmdInit(): Promise<void> {
       warn(`${rel} exists - skipped`);
       return;
     }
-    comfort.fs.createFile(target, true, content);
-    ok(`Created ${rel}`);
+    if (comfort.fs.createFile(target, true, content)) ok(`Created ${rel}`);
+    else bad(`Could not write ${rel}`);
   };
   write("src/index.ts", STARTER.entry);
   write("src/features/ping/ping.command.ts", STARTER.ping);
@@ -381,10 +372,10 @@ async function cmdInit(): Promise<void> {
   adoptOrWritePackage(write);
   print();
   ok("Starter created. Next:");
-  print(`  ${C.gray}1.${C.reset} put your token, client id and test server id in .env`);
-  print(`  ${C.gray}2.${C.reset} npm i @ix-xs/djs-bot discord.js && npm i -D tsx typescript @types/node`);
-  print(`  ${C.gray}3.${C.reset} npx djs-bot doctor`);
-  print(`  ${C.gray}4.${C.reset} npx djs-bot dev`);
+  print(`  ${gray("1.")} put your token, client id and test server id in .env`);
+  print(`  ${gray("2.")} npm i @ix-xs/djs-bot discord.js && npm i -D tsx typescript @types/node`);
+  print(`  ${gray("3.")} npx djs-bot doctor`);
+  print(`  ${gray("4.")} npx djs-bot dev`);
   process.exit(0);
 }
 
@@ -395,85 +386,86 @@ async function cmdInit(): Promise<void> {
  */
 function adoptOrWritePackage(write: (rel: string, content: string) => void): void {
   const target = path.resolve("package.json");
-  if (!existsSync(target)) {
+  if (!comfort.fs.exists(target)) {
     write("package.json", STARTER.packageJson(path.basename(process.cwd())));
     return;
   }
-  let existing: Record<string, unknown>;
-  try {
-    existing = JSON.parse(readFileSync(target, "utf8")) as Record<string, unknown>;
-  } catch {
-    warn("package.json exists but is not valid JSON - skipped");
+  const existing = comfort.fs.readJSON<unknown>(target);
+  if (typeof existing !== "object" || existing === null || Array.isArray(existing)) {
+    warn("package.json exists but is not a valid package file - skipped");
     return;
   }
-  const main = typeof existing.main === "string" ? existing.main : "index.js";
-  const { pkg, changes, esm } = adoptPackage(existing, existsSync(path.resolve(main)));
+  const manifest = existing as Record<string, unknown>;
+  const main = typeof manifest.main === "string" ? manifest.main : "index.js";
+  const { pkg, changes, esm } = adoptPackage(manifest, comfort.fs.exists(path.resolve(main)));
   if (changes.length > 0) {
-    writeFileSync(target, `${JSON.stringify(pkg, null, 2)}\n`);
-    ok(`Updated package.json (${changes.join("; ")})`);
+    if (comfort.fs.writeJSON(target, pkg)) ok(`Updated package.json (${changes.join("; ")})`);
+    else bad("Could not write package.json");
   } else {
     ok("package.json already has what the starter needs");
   }
   if (!esm) {
     warn('package.json is a CommonJS package with existing code: the starter uses ES modules.');
-    print(`  ${C.gray}↳ once your code is ready for it: npm pkg set type=module${C.reset}`);
+    print(`  ${gray("↳ once your code is ready for it: npm pkg set type=module")}`);
   }
 }
 
 function help(): void {
-  print(`${C.bold}djs-bot${C.reset} - a TypeScript-first Discord bot framework
+  print(`${bold("djs-bot")} - a TypeScript-first Discord bot framework
 
-${C.bold}Usage${C.reset}
+${bold("Usage")}
   djs-bot <command> [options]
 
-${C.bold}Commands${C.reset}
-  ${C.cyan}dev${C.reset} [entry]              Start with watch + instant guild deploy
-  ${C.cyan}start${C.reset} [entry]            Start in production mode
-  ${C.cyan}deploy${C.reset} [entry]           Diff & deploy commands  ${C.gray}(--dry-run, --guild <id>)${C.reset}
-  ${C.cyan}clear${C.reset} [entry]            Remove all commands  ${C.gray}(--global | --guild <id>)${C.reset}
-  ${C.cyan}doctor${C.reset} [entry]           Diagnose config, intents & permissions
-  ${C.cyan}explain${C.reset} [entry]          Print what's loaded and why  ${C.gray}(--json)${C.reset}
-  ${C.cyan}generate${C.reset} <type> <name>   Scaffold a definition file
-  ${C.cyan}init${C.reset}                     Scaffold a minimal starter
-  ${C.cyan}help${C.reset}, ${C.cyan}version${C.reset}            Show help / version`);
+${bold("Commands")}
+  ${cyan("dev")} [entry]              Start with watch + instant guild deploy
+  ${cyan("start")} [entry]            Start in production mode
+  ${cyan("deploy")} [entry]           Diff & deploy commands  ${gray("(--dry-run, --guild <id>)")}
+  ${cyan("clear")} [entry]            Remove all commands  ${gray("(--global | --guild <id>)")}
+  ${cyan("doctor")} [entry]           Diagnose config, intents & permissions
+  ${cyan("explain")} [entry]          Print what's loaded and why  ${gray("(--json)")}
+  ${cyan("generate")} <type> <name>   Scaffold a definition file
+  ${cyan("init")}                     Scaffold a minimal starter
+  ${cyan("help")}, ${cyan("version")}            Show help / version`);
 }
 
 /* -------------------------------- helpers -------------------------------- */
 
 async function main(): Promise<void> {
-  const [command, ...rest] = process.argv.slice(2);
-  switch (command) {
+  let args: CliArgs;
+  try {
+    args = parseArgs(process.argv.slice(2));
+  } catch (error) {
+    // A command or an option that does not exist: nothing runs.
+    bad(error instanceof Error ? error.message : String(error));
+    print(`  ${gray("↳ djs-bot help lists the commands and their options")}`);
+    process.exit(1);
+  }
+  if (args.version || args.command === "version") {
+    print(`djs-bot ${VERSION}  (discord.js ${discordJsVersion}, node ${process.versions.node})`);
+    return;
+  }
+  // Asking for help never runs the command it is asked about.
+  if (args.help || args.command === undefined || args.command === "help") return help();
+
+  const entry = args.positionals[0];
+  switch (args.command) {
     case "dev":
-      return cmdDev(positional(rest));
+      return cmdDev(entry);
     case "start":
-      return cmdStart(positional(rest));
+      return cmdStart(entry);
     case "deploy":
-      return cmdDeploy(rest);
+      return cmdDeploy(entry, args);
     case "clear":
-      return cmdClear(rest);
+      return cmdClear(entry, args);
     case "explain":
-      return cmdExplain(rest);
+      return cmdExplain(entry, args.json);
     case "doctor":
-      return cmdDoctor(positional(rest));
+      return cmdDoctor(entry);
     case "generate":
     case "g":
-      return cmdGenerate(rest);
+      return cmdGenerate(args.positionals);
     case "init":
       return cmdInit();
-    case "version":
-    case "--version":
-    case "-v":
-      print(`djs-bot ${VERSION}  (discord.js ${discordJsVersion}, node ${process.versions.node})`);
-      return;
-    case undefined:
-    case "help":
-    case "--help":
-    case "-h":
-      return help();
-    default:
-      bad(`Unknown command "${command}".`);
-      help();
-      process.exit(1);
   }
 }
 
@@ -738,7 +730,7 @@ main().catch(async (error) => {
   // A BotError prints its code, its hint and a docs link; show all of it.
   bad(error instanceof Error ? error.toString() : String(error));
   const hint = restHint(error);
-  if (hint) print(`  ${C.gray}↳ ${hint}${C.reset}`);
+  if (hint) print(`  ${gray(`↳ ${hint}`)}`);
   // A failed deploy has open connections too: let them close before exiting.
   await closeRestConnections();
   process.exit(1);

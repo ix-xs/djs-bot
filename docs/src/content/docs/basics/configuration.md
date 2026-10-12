@@ -76,15 +76,30 @@ export default defineBot({
 An empty value counts as missing everywhere, so a stray `DISCORD_TOKEN=` fails
 loudly instead of quietly authenticating as nobody.
 
-The helpers read `process.env`. A `.env` file gets there through
-`loadEnvFile()`, which every `djs-bot` command calls before it runs or imports
-your entry file. Variables that are already set are never overwritten, so the
-real environment always wins over the file, which is what you want in
-production.
+The helpers read `process.env`. The `.env` file of the working directory is
+read into it as soon as `@ix-xs/djs-bot` is imported: its dependency
+`@ix-xs/node-comfort` does it, with or without the CLI. Set the environment
+variable `NODE_COMFORT_DOTENV=false` to turn that off.
 
-:::note[Starting without the CLI]
-If you run the entry file yourself (`node dist/index.js`), nothing reads `.env`
-for you. Call `loadEnvFile()` at the top of the file, before the first `env()`.
+When a variable is defined in several places, the strongest one wins:
+
+1. The real environment (your shell, your host). A variable that is already
+   set there is never replaced, which is what you want in production.
+2. A file loaded with `loadEnvFile(path)`.
+3. The `.env` read at import.
+
+:::note[Loading another file]
+You do not need to call anything for `.env`, even when you run the entry file
+yourself (`node dist/index.js`). `loadEnvFile(path)` is for another file, such
+as `.env.local`: call it at the top of the entry file, before the first
+`env()`.
+:::
+
+:::caution[Quote the secrets that contain special characters]
+In a `.env` file, `$NAME` is replaced by the value of that variable and ` #`
+starts a comment. A secret that contains `$` or ` #` must be written in single
+quotes, `TOKEN='pa$word'`, otherwise it is altered. The full rules are listed
+under [`loadEnvFile`](#loadenvfilepath).
 :::
 
 :::danger[Never commit your token]
@@ -348,19 +363,25 @@ Reads `process.env[name]`. The variants are properties of the same function:
 function loadEnvFile(path?: string): void
 ```
 
-Parses a `.env` file into `process.env`.
+Parses a `.env` file into `process.env`. You rarely need it: the `.env` of the
+working directory is already read when the package is imported. Call it for
+another file, such as `.env.local`.
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `path` | `string` | `".env"` | The file to read. The default is `.env` in the working directory. |
 
-- Variables that already exist are left untouched.
-- Blank lines and lines starting with `#` are ignored. So are lines without `=`.
+- A variable that the real environment already defines is left untouched. A
+  value that came from the `.env` read at import is replaced.
+- Blank lines and lines starting with `#` are ignored.
+- A ` # comment` after an unquoted value is removed.
 - A value wrapped in single or double quotes loses its quotes.
+- `$NAME` and `${NAME}` are replaced by the value of that variable, except
+  inside single quotes.
+- `export NAME=value` is accepted.
 - A missing file is not an error: the call does nothing.
 
-The CLI calls it for you. Call it yourself only from an entry point you start
-without the CLI.
+The `.env` read at import follows the same rules.
 
 ## Limits and errors
 

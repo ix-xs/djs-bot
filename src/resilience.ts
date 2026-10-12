@@ -9,11 +9,7 @@
 import comfort from "@ix-xs/node-comfort";
 import { guard, pass, fail, scopeKey, type Guard, type CooldownScope } from "./guards.js";
 import { messageFor } from "./messages.js";
-
-function toMs(value: number | string, fallback = 0): number {
-  if (typeof value === "number") return value;
-  return comfort.time.parseDuration(value) ?? fallback;
-}
+import { durationMs } from "./duration.js";
 
 /* ------------------------------ Rate limiter ----------------------------- */
 
@@ -44,7 +40,7 @@ export class RateLimiter {
 
   public constructor(options: RateLimiterOptions) {
     this.limit = options.limit;
-    this.windowMs = toMs(options.window, 60_000);
+    this.windowMs = durationMs(options.window, 60_000);
   }
 
   /** Records a hit for `key` (cost defaults to 1) and reports whether it's allowed. */
@@ -152,7 +148,7 @@ export class CircuitBreaker {
 
   public constructor(private readonly options: CircuitBreakerOptions = {}) {
     this.failureThreshold = options.failureThreshold ?? 5;
-    this.resetTimeoutMs = toMs(options.resetTimeout ?? "30s", 30_000);
+    this.resetTimeoutMs = durationMs(options.resetTimeout ?? "30s", 30_000);
     this.successThreshold = options.successThreshold ?? 1;
     this.isFailure = options.isFailure ?? (() => true);
   }
@@ -218,12 +214,12 @@ export function createCircuitBreaker(options?: CircuitBreakerOptions): CircuitBr
 export interface RetryOptions {
   /** Max attempts (including the first). Default `3`. */
   attempts?: number;
-  /** Base delay between attempts in ms. Default `200`. */
-  delay?: number;
+  /** Base delay between attempts, in ms or as text (`"1s"`). Default `200`. */
+  delay?: number | string;
   /** Exponential backoff multiplier. Default `2`. */
   backoff?: number;
-  /** Max delay cap in ms. */
-  maxDelay?: number;
+  /** Max delay cap, in ms or as text (`"30s"`). */
+  maxDelay?: number | string;
   /**
    * Randomises each delay so that many callers do not retry in step: `0` for
    * none, up to `1` for anywhere between zero and twice the delay. Default `0.2`.
@@ -233,10 +229,16 @@ export interface RetryOptions {
   shouldRetry?: (error: unknown, attempt: number) => boolean;
   /** Called before each retry. */
   onRetry?: (error: unknown, attempt: number) => void;
+  /**
+   * Stops retrying once aborted, for example the `ctx.signal` of a job. The
+   * attempt in progress is not interrupted.
+   */
+  signal?: AbortSignal;
 }
 
 /**
- * Retries an async function with exponential backoff + jitter.
+ * Retries an async function with exponential backoff + jitter. An attempt that
+ * fails because it was aborted (an `AbortError`) is not tried again.
  * @example await retry(() => fetchFromApi(), { attempts: 5, delay: 300 });
  */
 export function retry<T>(fn: () => T | Promise<T>, options: RetryOptions = {}): Promise<T> {
@@ -250,9 +252,16 @@ export function retry<T>(fn: () => T | Promise<T>, options: RetryOptions = {}): 
 }
 
 /**
- * Rejects if `promise` doesn't settle within `ms`.
+ * Rejects if `promise` doesn't settle within `ms` (milliseconds, or text such
+ * as `"5s"`). Given a function, it passes it a signal that aborts when the
+ * time is up, so the work can stop too.
  * @example await timeout(fetchFromApi(), 5000, "API too slow");
+ * @example await timeout((signal) => fetch(url, { signal }), "5s");
  */
-export function timeout<T>(promise: Promise<T> | (() => Promise<T>), ms: number, message?: string): Promise<T> {
-  return comfort.func.timeout(promise, ms, message);
+export function timeout<T>(
+  promise: Promise<T> | ((signal: AbortSignal) => Promise<T>),
+  ms: number | string,
+  message?: string,
+): Promise<T> {
+  return comfort.func.timeout(promise, ms, message) as Promise<T>;
 }

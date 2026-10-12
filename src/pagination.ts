@@ -26,12 +26,7 @@ import {
 import comfort from "@ix-xs/node-comfort";
 import type { BaseContext } from "./context.js";
 import { messageFor } from "./messages.js";
-
-function ms(duration: string | number | undefined, fallback: number): number {
-  if (typeof duration === "number") return duration;
-  if (typeof duration === "string") return comfort.time.parseDuration(duration) ?? fallback;
-  return fallback;
-}
+import { durationMs } from "./duration.js";
 
 /**
  * A single page. Either an {@link EmbedBuilder} (rendered as `embeds: [page]`), or
@@ -143,7 +138,7 @@ export async function paginate(ctx: BaseContext, options: PaginateOptions): Prom
 
   const collector = message.createMessageComponentCollector({
     componentType: ComponentType.Button,
-    time: ms(options.timeout, 120_000),
+    time: durationMs(options.timeout, 120_000),
     filter: (i) => i.customId.startsWith(`${nonce}:`) && allowed.has(i.user.id),
   });
 
@@ -202,7 +197,7 @@ export async function confirm(ctx: BaseContext, options: ConfirmOptions = {}): P
   try {
     const picked = await message.awaitMessageComponent({
       componentType: ComponentType.Button,
-      time: ms(options.timeout, 60_000),
+      time: durationMs(options.timeout, 60_000),
       filter: (i) => i.customId.startsWith(`${nonce}:`) && i.user.id === ctx.user.id,
     });
     for (const b of row.components) b.setDisabled(true);
