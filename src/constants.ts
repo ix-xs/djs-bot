@@ -4,7 +4,7 @@
  */
 
 /** The current framework version (kept in sync with package.json at build time). */
-export const VERSION = "1.2.1";
+export const VERSION = "1.3.0";
 
 /** Human-facing framework name, used in logs and CLI output. */
 export const FRAMEWORK_NAME = "djs-bot";
