@@ -1,7 +1,7 @@
 /* ==========================================================================
    The showcase of the landing page (components/showcase/Showcase.astro).
 
-   The frame speaks the site's language (graphite, hairlines, gold). The screen
+   The frame speaks the site's language (graphite, hairlines, blue). The screen
    inside depicts Discord and keeps Discord's own colours in both themes.
 
    This page is read once, not worked in all day: motion is allowed to explain.
@@ -124,6 +124,8 @@ at-showcase:not(:defined) :is([data-at="1"], [data-at="2"], [data-at="3"]) { dis
   --dc-name: #f2f3f5;
   --dc-muted: #949ba4;
   --dc-blurple: #5865f2;
+  /* The site's blue would be lost next to Discord's own: here the ring is white. */
+  --sc-ring: var(--dc-name);
   grid-area: screen;
   position: relative;
   display: flex;
@@ -283,7 +285,7 @@ select.sc-field { appearance: none; padding-inline-end: 2rem; background-image: 
 .sc-modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.5rem; }
 
 /* A job has no conversation: its screen is a terminal, in the site's own colours. */
-.sc-screen.is-term { background: var(--at-bg); color: var(--at-muted); font-family: var(--sl-font-mono); font-size: 0.8125rem; }
+.sc-screen.is-term { --sc-ring: var(--at-accent); background: var(--at-bg); color: var(--at-muted); font-family: var(--sl-font-mono); font-size: 0.8125rem; }
 .sc-screen.is-term .sc-chan { border-bottom-color: var(--at-line); color: var(--at-faint); font-family: var(--sl-font-mono); font-size: 0.6875rem; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; }
 .sc-screen.is-term .sc-feed { justify-content: flex-start; gap: 0.5rem; }
 .sc-log { color: var(--at-fg); overflow-wrap: anywhere; }
@@ -293,7 +295,7 @@ select.sc-field { appearance: none; padding-inline-end: 2rem; background-image: 
 
 /* What moves the scene on wears a ring: the next move is never a guess. */
 .sc [data-hint] { position: relative; }
-.sc [data-hint]::after { content: ""; position: absolute; inset: -4px; border: 2px solid var(--at-accent); border-radius: 11px; pointer-events: none; animation: sc-ring 1.5s var(--ease-out) infinite; }
+.sc [data-hint]::after { content: ""; position: absolute; inset: -4px; border: 2px solid var(--sc-ring, var(--at-accent)); border-radius: 11px; pointer-events: none; animation: sc-ring 1.5s var(--ease-out) infinite; }
 @keyframes sc-ring { from { opacity: 0.95; transform: scale(0.96); } 70%, to { opacity: 0; transform: scale(1.08); } }
 
 /* ------------------------------- The trace ------------------------------- */
@@ -304,7 +306,7 @@ select.sc-field { appearance: none; padding-inline-end: 2rem; background-image: 
 .sc-steps { flex: none; display: flex; gap: 0.3125rem; margin: 0; padding: 0; list-style: none; }
 .sc-steps button { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; padding: 0; border: 1px solid var(--at-faint); border-radius: 50%; background: none; color: var(--at-muted); font-family: var(--sl-font-mono); font-size: 0.6875rem; line-height: 1; cursor: pointer; transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, opacity 200ms ease; }
 .sc-steps button:disabled { border-color: var(--at-line); color: var(--at-faint); opacity: 0.7; cursor: default; }
-.sc-steps button[aria-current] { border-color: var(--at-accent); background: var(--at-accent); color: var(--at-on-accent); }
+.sc-steps button[aria-current] { border-color: var(--at-accent-fill); background: var(--at-accent-fill); color: var(--at-on-fill); }
 /* Every sentence sits in the same place; the one in front is the one that shows. */
 .sc-caption { order: 3; flex: 1 1 100%; display: grid; align-items: center; min-width: 0; }
 .sc-caption > p { grid-area: 1 / 1; margin: 0; color: var(--at-muted); font-size: 0.875rem; line-height: 1.45; }
@@ -346,7 +348,7 @@ select.sc-field { appearance: none; padding-inline-end: 2rem; background-image: 
   .sc-chip:hover { background: #6d6f78; }
   .sc-screen.is-term .sc-chip:hover { background: none; border-color: var(--at-faint); }
   .sc-steps button:not(:disabled):hover { border-color: var(--at-accent); color: var(--at-fg); }
-  .sc-steps button[aria-current]:hover { color: var(--at-on-accent); }
+  .sc-steps button[aria-current]:hover { border-color: var(--at-accent-fill); color: var(--at-on-fill); }
   .sc-client button:hover { color: var(--dc-name); }
 }
 @media (pointer: coarse) {

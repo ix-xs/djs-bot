@@ -1,4 +1,4 @@
-// The two syntax themes of the site. Restrained on purpose: gold for the
+// The two syntax themes of the site. Restrained on purpose: blue for the
 // language's own words, sage for strings, a warm tone for numbers, and the
 // text colour for everything you named yourself.
 
@@ -51,12 +51,12 @@ export const atelierDark = theme("atelier-dark", "dark", {
   fg: "#edebe4",
   muted: "#a29f95",
   faint: "#8a877d",
-  accent: "#e3b24c",
-  keyword: "#dcb565",
+  accent: "#8891f7",
+  keyword: "#9ba3f7",
   string: "#a9c49f",
   number: "#d9906c",
   type: "#c9c2ae",
-  selection: "#3a3320",
+  selection: "#2a2d50",
 });
 
 export const atelierLight = theme("atelier-light", "light", {
@@ -65,10 +65,10 @@ export const atelierLight = theme("atelier-light", "light", {
   fg: "#1b1a16",
   muted: "#5d594e",
   faint: "#7a7567",
-  accent: "#8a6100",
-  keyword: "#8a6100",
+  accent: "#4752c4",
+  keyword: "#4752c4",
   string: "#3c6a39",
   number: "#a14f29",
   type: "#4f4a3c",
-  selection: "#f1e4bf",
+  selection: "#e2e4fa",
 });

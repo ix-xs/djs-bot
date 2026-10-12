@@ -1,6 +1,11 @@
 /* ==========================================================================
    Atelier: the look of the djs-bot documentation.
-   Graphite and gold, editorial type, hairlines instead of shadows.
+   Graphite and Discord's blue, editorial type, hairlines instead of shadows.
+
+   The blue comes in two strengths. `--at-accent` is the one that is read:
+   text, rules and rings, lighter on graphite and deeper on paper so that it
+   stays legible. `--at-accent-fill` is the blue itself, the same in both
+   themes, for what is filled with it.
 
    Motion follows three rules. Anything seen tens of times a day does not move
    (page changes, hover on navigation, the search palette). What does move uses
@@ -44,15 +49,17 @@
   --at-fg: #edebe4;
   --at-muted: #a29f95;
   --at-faint: #726f66;
-  --at-accent: #e3b24c;
+  --at-accent: #8891f7;
   --at-on-accent: #171612;
+  --at-accent-fill: #5865f2;
+  --at-on-fill: #fff;
   --at-caution: #e08a4f;
   --at-danger: #e5645c;
   --at-scrim: rgb(0 0 0 / 0.55);
 
-  --sl-color-accent-low: #33290f;
+  --sl-color-accent-low: #1e2148;
   --sl-color-accent: var(--at-accent);
-  --sl-color-accent-high: #f2d695;
+  --sl-color-accent-high: #c9cdfb;
   --sl-color-white: var(--at-fg);
   --sl-color-gray-1: #dedcd4;
   --sl-color-gray-2: var(--at-muted);
@@ -81,14 +88,14 @@
   --at-fg: #1b1a16;
   --at-muted: #5d594e;
   --at-faint: #8b8678;
-  --at-accent: #8a6100;
+  --at-accent: #4752c4;
   --at-on-accent: #fffdf8;
   --at-caution: #a2511a;
   --at-danger: #b3362f;
   --at-scrim: rgb(40 36 24 / 0.4);
 
-  --sl-color-accent-low: #f1e4bf;
-  --sl-color-accent-high: #5b4000;
+  --sl-color-accent-low: #e2e4fa;
+  --sl-color-accent-high: #2c3391;
   --sl-color-gray-1: #2a2822;
   --sl-color-gray-4: #b9b3a3;
   --sl-color-gray-7: var(--at-bg);
@@ -186,7 +193,7 @@ site-search dialog input { font-size: 1rem; }
 .at-queries { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .at-queries button { padding: 0.4375rem 0.6875rem; border: 1px solid var(--at-line); border-radius: var(--at-radius); background: transparent; color: var(--at-muted); font-family: var(--sl-font-mono); font-size: 0.8125rem; line-height: 1.4; cursor: pointer; }
 .at-suggest [data-at-forget] { margin-inline-end: -0.375rem; padding: 0.25rem 0.375rem; border: 0; border-radius: var(--at-radius); background: none; color: var(--at-muted); font-size: 0.75rem; cursor: pointer; }
-/* Results speak the same language: a tinted row and a gold rule for the one
+/* Results speak the same language: a tinted row and a blue rule for the one
    that has the focus, instead of a box around a box. */
 site-search .dialog-frame { scrollbar-width: thin; scrollbar-color: var(--at-line) transparent; overscroll-behavior: contain; }
 /* Full screen on a phone: keep the field clear of the notch and the home indicator. */
@@ -417,7 +424,7 @@ code, pre, kbd, .expressive-code .ec-line { font-variant-ligatures: none; font-f
 .sl-steps > li::before { font-family: var(--sl-font-mono); font-size: 0.75rem; color: var(--at-accent); background: none; box-shadow: inset 0 0 0 1px var(--at-line); }
 .sl-badge { font-family: var(--sl-font-mono); border-radius: 4px; }
 :root .sl-link-button { padding: 0.7rem 1.1rem; border-radius: var(--at-radius); font-size: 0.9375rem; font-weight: 600; }
-:root .sl-link-button.primary { background: var(--at-accent); border-color: var(--at-accent); color: var(--at-on-accent); }
+:root .sl-link-button.primary { background: var(--at-accent-fill); border-color: var(--at-accent-fill); color: var(--at-on-fill); }
 :root .sl-link-button.secondary, :root .sl-link-button.minimal { color: var(--at-fg); }
 :root .sl-link-button.secondary { border-color: var(--at-line); }
 
@@ -456,7 +463,8 @@ footer .meta { font-size: 0.8125rem; color: var(--at-faint); }
 @keyframes at-rise { to { opacity: 1; transform: none; } }
 @keyframes at-focus { from { opacity: 0; transform: translateY(14px); filter: blur(10px); } to { opacity: 1; transform: none; filter: none; } }
 .at-hero h1 { max-width: 14ch; text-wrap: balance; overflow-wrap: anywhere; margin: 1.25rem 0 0; font-family: var(--at-display); font-weight: 750; font-size: clamp(2.75rem, 9.5vw, 6.5rem); line-height: 0.96; letter-spacing: -0.04em; font-optical-sizing: auto; color: var(--at-fg); }
-.at-hero h1 em { font-style: normal; color: var(--at-accent); }
+/* At this size the blue itself is legible on both grounds. */
+.at-hero h1 em { font-style: normal; color: var(--at-accent-fill); }
 .at-hero .at-lead { max-width: 39rem; margin-top: 1.75rem; text-wrap: pretty; }
 .at-hero-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.75rem 1.25rem; margin-top: 1.75rem; }
 .at-facts { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.375rem 1.5rem; margin: 2.5rem 0 0; padding: 0; list-style: none; font-family: var(--sl-font-mono); font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--at-faint); }
