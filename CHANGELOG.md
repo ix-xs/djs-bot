@@ -3,6 +3,28 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## 1.2.1
+
+Nothing changes in how the framework behaves. The package says what it is in
+the same words everywhere, and the documentation goes back to Discord's blue.
+
+### Changed
+
+- **One description everywhere**: "Discord bots, fully typed. A
+  TypeScript-first framework on top of discord.js: typed commands, buttons and
+  forms, automatic intents and deferral, i18n, jobs, a store and a CLI." It is
+  the description of the package on npm, the opening of the README and the
+  comment of the module.
+
+### Documentation
+
+- **Discord's blue instead of gold**, for the site and for its icon. The rest
+  of the design stays. The blue comes in two strengths: one that is read (text,
+  rules, focus rings), lighter on the dark theme and deeper on the light one to
+  keep its contrast, and the blue itself for what is filled with it.
+- The description of the site, shown by search engines and link previews,
+  follows the package's, in English and in French.
+
 ## 1.2.0
 
 Forms that speak the language of whoever opens them, and a documentation
