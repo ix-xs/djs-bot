@@ -216,9 +216,10 @@ then the fields of the call.
 `pretty` defaults to `true` unless `NODE_ENV` is `production`, so a deployed bot
 switches to JSON on its own. Set it explicitly to override that.
 
-Pretty lines are coloured on a terminal only. When the output is piped or
-redirected to a file, or when the `NO_COLOR` environment variable is set, they
-are plain text. Each stream is checked on its own, so redirecting stdout alone
+Pretty lines are coloured on a terminal, and on the CI systems that display
+colours (GitHub Actions, GitLab CI and a few others). Anywhere else, when the
+output is piped or redirected to a file, or when the `NO_COLOR` environment
+variable is set, they are plain text. Each stream is checked on its own, so redirecting stdout alone
 leaves the lines written to stderr coloured.
 
 The two formats do not use the same streams:

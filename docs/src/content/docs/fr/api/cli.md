@@ -398,10 +398,11 @@ Une faute de frappe dans `deploy --dry-run` ne se transforme donc jamais en vrai
 déploiement, et `deploy --guild` sans l'identifiant ne déploie jamais
 globalement.
 
-La sortie n'est colorée que dans un terminal. Quand elle est redirigée vers un
-tube ou un fichier, ou quand la variable d'environnement `NO_COLOR` est définie,
-c'est du texte brut : les journaux de CI restent lisibles. `FORCE_COLOR=1` force
-les couleurs.
+La sortie est colorée dans un terminal, et sur les systèmes de CI qui affichent
+les couleurs (GitHub Actions, GitLab CI et quelques autres). Partout ailleurs,
+quand elle est redirigée vers un tube ou un fichier, ou quand la variable
+d'environnement `NO_COLOR` est définie, c'est du texte brut. `FORCE_COLOR=1`
+force les couleurs.
 
 Une erreur levée par le framework est affichée avec son code, sa piste de
 résolution et un lien vers son entrée dans [Erreurs](/api/errors/). Quand Discord

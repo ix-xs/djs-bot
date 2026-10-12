@@ -20,8 +20,8 @@ const LEVEL_WEIGHT: Record<LogLevel, number> = {
 
 /**
  * What pretty output needs for one stream. Colours follow the stream: they are
- * off when it is not a terminal (a file, a pipe, most CI logs) and when
- * `NO_COLOR` asks for it.
+ * off when it is a file or a pipe, and when `NO_COLOR` asks for it. A terminal
+ * gets them, and so does a CI system known to display them.
  */
 function palette(stream: NodeJS.WriteStream) {
   const paint = comfort.color.create(comfort.color.detect(stream));

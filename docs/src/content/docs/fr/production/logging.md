@@ -229,9 +229,11 @@ liés, puis les champs de l'appel.
 déployé passe de lui-même en JSON. Définissez-le explicitement pour changer ce
 comportement.
 
-Les lignes au format lisible ne sont colorées que dans un terminal. Quand la
-sortie est redirigée vers un tube ou un fichier, ou quand la variable
-d'environnement `NO_COLOR` est définie, c'est du texte brut. Chaque flux est
+Les lignes au format lisible sont colorées dans un terminal, et sur les
+systèmes de CI qui affichent les couleurs (GitHub Actions, GitLab CI et quelques
+autres). Partout ailleurs, quand la sortie est redirigée vers un tube ou un
+fichier, ou quand la variable d'environnement `NO_COLOR` est définie, c'est du
+texte brut. Chaque flux est
 examiné séparément : rediriger seulement stdout laisse donc en couleur les
 lignes écrites sur stderr.
 

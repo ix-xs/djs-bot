@@ -39,10 +39,11 @@ in a bot that used 1.2 the documented way.
 - **`djs-bot dev` and `djs-bot start` exit with code 1 when the bot was
   killed by a signal.** They used to exit with code 0, which a supervisor reads
   as a clean stop.
-- **Colours only on a terminal.** The CLI and the development logs wrote
-  escape codes into files, pipes and CI logs. They now write plain text there,
-  and follow `NO_COLOR` and `FORCE_COLOR`. The time of a development log line
-  is `HH:mm:ss` in every locale.
+- **Colours only where they are displayed.** The CLI and the development logs
+  wrote escape codes into files and pipes. They now write plain text there,
+  keep their colours on a terminal and on the CI systems that display them, and
+  follow `NO_COLOR` and `FORCE_COLOR`. The time of a development log line is
+  `HH:mm:ss` in every locale.
 - **`loadEnvFile(path)` gives your file the last word over `.env`.** The
   `.env` of the working directory is read when the package is imported; a file
   loaded afterwards now wins over it. The real environment still wins over

@@ -385,9 +385,10 @@ with exit code 1, and nothing is started, deployed or cleared:
 So a typo in `deploy --dry-run` never turns into a real deployment, and
 `deploy --guild` with the id forgotten never deploys globally.
 
-Output is coloured on a terminal only. When it is piped or redirected to a
-file, or when the `NO_COLOR` environment variable is set, it is plain text, so
-CI logs stay readable. `FORCE_COLOR=1` forces colours.
+Output is coloured on a terminal, and on the CI systems that display colours
+(GitHub Actions, GitLab CI and a few others). Anywhere else, when it is piped
+or redirected to a file, or when the `NO_COLOR` environment variable is set,
+it is plain text. `FORCE_COLOR=1` forces colours.
 
 An error raised by the framework is printed with its code, its hint and a link
 to its entry in [Errors](/api/errors/). When Discord rejects a request, the CLI

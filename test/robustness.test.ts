@@ -235,17 +235,18 @@ describe("logger", () => {
     expect(record.err.cause.stack).toContain("inner");
   });
 
-  it("writes plain text, with a fixed-width time, when the output is not a terminal", () => {
-    // A test runner's output is not a terminal; some CI systems force colours anyway.
-    const forced = process.env.FORCE_COLOR;
-    delete process.env.FORCE_COLOR;
+  it("writes plain text, with a fixed-width time, when colours are turned off", () => {
+    // Asked for by name: a CI system that displays colours would get them otherwise.
+    const before = process.env.NO_COLOR;
+    process.env.NO_COLOR = "1";
     try {
       const out = capture(process.stdout, () => {
         createLogger({ pretty: true }).info({ guilds: 3, big: 1n }, "Ready");
       });
       expect(out).toMatch(/^\d{2}:\d{2}:\d{2} INFO {2}Ready guilds=3 big=1\n$/);
     } finally {
-      if (forced !== undefined) process.env.FORCE_COLOR = forced;
+      if (before === undefined) delete process.env.NO_COLOR;
+      else process.env.NO_COLOR = before;
     }
   });
 });

@@ -25,8 +25,8 @@ import { VERSION } from "./constants.js";
 import { adoptPackage, STARTER_SCRIPTS } from "./scaffold.js";
 import { parseArgs, type CliArgs } from "./cli-args.js";
 
-// Colours that turn themselves off when the output is not a terminal, or when
-// NO_COLOR asks for it.
+// Colours that turn themselves off when the output is a file or a pipe, or
+// when NO_COLOR asks for it.
 const { bold, gray, green, red, yellow, cyan } = comfort.color;
 
 function print(line = ""): void {
