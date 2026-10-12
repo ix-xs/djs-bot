@@ -49,7 +49,7 @@ export default defineConfig({
         fr: { label: "Français", lang: "fr" },
       },
       description:
-        "A TypeScript-first, production-ready framework for Discord bots built on discord.js. Typed commands, typed customId routing, auto intents, DI, plugins, jobs and a batteries-included CLI.",
+        "Discord bots, fully typed. A TypeScript-first framework on top of discord.js: typed commands, buttons and forms, automatic intents and deferral, i18n, jobs, a store and a CLI.",
       social: [{ icon: "github", label: "GitHub", href: "https://github.com/ix-xs/djs-bot" }],
       editLink: {
         baseUrl: "https://github.com/ix-xs/djs-bot/edit/main/docs/",

@@ -1,10 +1,8 @@
 /**
- * `@ix-xs/djs-bot` - a TypeScript-first, production-ready framework for Discord
- * bots built on discord.js.
+ * `@ix-xs/djs-bot` - Discord bots, fully typed.
  *
- * Write features, not plumbing: typed slash commands, typed customId routing,
- * automatic intents, error boundaries, dependency injection, plugins, jobs and
- * a batteries-included CLI.
+ * A TypeScript-first framework on top of discord.js: typed commands, buttons
+ * and forms, automatic intents and deferral, i18n, jobs, a store and a CLI.
  *
  * @packageDocumentation
  */

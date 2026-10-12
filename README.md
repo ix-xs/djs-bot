@@ -2,9 +2,10 @@
 
 # @ix-xs/djs-bot
 
-**A TypeScript-first, production-ready framework for Discord bots - built on [discord.js](https://discord.js.org).**
+**Discord bots, fully typed.**
 
-_Discord bots, fully typed._
+A TypeScript-first framework on top of [discord.js](https://discord.js.org): typed commands, buttons and forms,
+automatic intents and deferral, i18n, jobs, a store and a CLI.
 
 [![npm version](https://img.shields.io/npm/v/@ix-xs/djs-bot.svg?color=cb3837&logo=npm)](https://www.npmjs.com/package/@ix-xs/djs-bot)
 [![npm downloads](https://img.shields.io/npm/dm/@ix-xs/djs-bot.svg?color=cb3837&logo=npm)](https://www.npmjs.com/package/@ix-xs/djs-bot)
