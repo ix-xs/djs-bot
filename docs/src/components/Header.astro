@@ -20,7 +20,7 @@ const inRecipes = path.startsWith("/recipes/");
 const inReference = path.startsWith("/api/") || path.startsWith("/help/");
 
 const areas = [
-  { label: t("nav.docs"), href: "/quick-start/", current: !inRecipes && !inReference && path !== "/" },
+  { label: t("nav.docs"), href: "/introduction/", current: !inRecipes && !inReference && path !== "/" },
   { label: t("nav.recipes"), href: "/recipes/moderation/", current: inRecipes },
   { label: t("nav.reference"), href: "/api/exports/", current: inReference },
 ];
