@@ -3,6 +3,12 @@
  * exports, with the first sentence of its doc comment and the page that
  * documents it. Run from the repository root with `npm run docs:api`; the
  * result is committed, and `test/exports.test.ts` fails when it is out of date.
+ *
+ * The French page takes its descriptions from `api-descriptions.fr.json`, next
+ * to this file: for each symbol, the English sentence it translates and its
+ * translation. When a doc comment changes or an export is added, generating
+ * fails and names what is to translate; `npm run docs:api -- --pending`
+ * prints those entries, ready to fill in.
  */
 import { createRequire } from "node:module";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -28,7 +34,35 @@ const ENTRIES = [
   },
 ];
 
-/** The words of the page itself. The descriptions of the symbols come from the source, in English. */
+/** Where the descriptions of each translated page are kept. */
+const TRANSLATIONS = { fr: path.join(root, "docs/scripts/api-descriptions.fr.json") };
+
+/**
+ * Gives the description of a symbol in a language. English is the source: a
+ * translation is used only while the sentence it was made from is still the
+ * one in the code.
+ */
+function translator(language) {
+  if (language === "en") return { describe: (_key, english) => english, pending: () => ({}), unused: () => [] };
+  const table = JSON.parse(readFileSync(TRANSLATIONS[language], "utf8"));
+  const pending = {};
+  const seen = new Set();
+  return {
+    describe(key, english) {
+      seen.add(key);
+      const entry = table[key];
+      if (entry && entry.en === english && entry[language]) return entry[language];
+      pending[key] = { en: english, [language]: entry && entry.en === english ? (entry[language] ?? "") : "" };
+      return english;
+    },
+    /** The entries with no translation, or whose English sentence has changed. */
+    pending: () => pending,
+    /** The entries of the table that no export uses any more. */
+    unused: () => Object.keys(table).filter((key) => !seen.has(key)),
+  };
+}
+
+/** The words of the page itself. */
 const WORDS = {
   en: {
     title: "All exports",
@@ -49,9 +83,9 @@ const WORDS = {
     description: "Chaque fonction, objet, classe et type exporté par le paquet, avec son rôle et la page qui le documente.",
     intro: [
       "La liste complète de ce que vous pouvez importer, construite à partir du",
-      "code source. La description de chaque symbole est celle que votre éditeur",
-      "affiche au survol, en anglais comme dans le code ; la dernière colonne mène",
-      "à la page qui l'explique.",
+      "code source. La description de chaque symbole traduit celle que votre",
+      "éditeur affiche au survol ; la dernière colonne mène à la page qui",
+      "l'explique.",
     ],
     kinds: { function: "Fonctions", object: "Objets et constantes", class: "Classes", type: "Types" },
     columns: "| Export | Ce que c'est | Documenté dans |",
@@ -145,7 +179,14 @@ const KINDS = ["function", "object", "class", "type"];
 /** The first sentence of a doc comment, as one line of table-safe Markdown. */
 function summarise(text) {
   const paragraph = text.split(/\n\s*\n/)[0].replace(/\s+/g, " ").trim();
-  const sentence = /^(.*?[.!?])(\s+[A-Z`*]|$)/.exec(paragraph)?.[1] ?? paragraph;
+  // The first full stop that ends a sentence: not the one of "e.g." or "i.e.".
+  let sentence = paragraph;
+  const stop = /[.!?](?=\s+[A-Z`*]|$)/g;
+  for (let match; (match = stop.exec(paragraph)); ) {
+    if (/\b(e\.g|i\.e)$/.test(paragraph.slice(0, match.index))) continue;
+    sentence = paragraph.slice(0, match.index + 1);
+    break;
+  }
   return sentence
     .replace(/\{@link\s+([^}\s|]+)(?:[\s|][^}]*)?\}/g, "`$1`")
     .replace(/\|/g, "\\|")
@@ -155,9 +196,14 @@ function summarise(text) {
     .join("`");
 }
 
-/** The page in a language ("en" by default), and the names it lists. */
-export function generate(language = "en") {
+/**
+ * The page in a language ("en" by default), and the names it lists. With
+ * `allowPending`, a description that has no translation yet is left in English
+ * instead of failing, and comes back in `pending`.
+ */
+export function generate(language = "en", { allowPending = false } = {}) {
   const words = WORDS[language];
+  const translation = translator(language);
   const config = ts.readConfigFile(path.join(root, "tsconfig.json"), ts.sys.readFile);
   const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, root);
   const program = ts.createProgram(
@@ -207,7 +253,8 @@ export function generate(language = "en") {
       const page = pageFor(exported.name, path.basename(decl.getSourceFile().fileName));
       if (!page) throw new Error(`No page mapped for ${decl.getSourceFile().fileName} (export ${exported.name})`);
       if (!doc.trim()) throw new Error(`Export ${exported.name} has no doc comment`);
-      groups.get(kind).push({ name: exported.name, summary: summarise(doc), page });
+      const summary = translation.describe(`${entry.specifier}#${exported.name}`, summarise(doc));
+      groups.get(kind).push({ name: exported.name, summary, page });
       names.push(exported.name);
       total++;
     }
@@ -239,11 +286,34 @@ export function generate(language = "en") {
     }
   }
   out.push(words.total(total), "");
-  return { markdown: out.join("\n"), names };
+
+  const pending = translation.pending();
+  const unused = translation.unused();
+  if (!allowPending && (Object.keys(pending).length > 0 || unused.length > 0)) {
+    const file = path.relative(root, TRANSLATIONS[language]).split(path.sep).join("/");
+    throw new Error(
+      [
+        `${file} does not match the source:`,
+        ...Object.keys(pending).map((key) => `  to translate: ${key}`),
+        ...unused.map((key) => `  no longer exported: ${key}`),
+        "Run `npm run docs:api -- --pending` to print the entries to fill in.",
+      ].join("\n"),
+    );
+  }
+  return { markdown: out.join("\n"), names, pending, unused };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const check = process.argv.includes("--check");
+  if (process.argv.includes("--pending")) {
+    // What each translated page still lacks, as entries to paste into its table.
+    for (const language of Object.keys(TRANSLATIONS)) {
+      const { pending, unused } = generate(language, { allowPending: true });
+      console.log(JSON.stringify(pending, null, 2));
+      for (const key of unused) console.error(`no longer exported, remove it: ${key}`);
+    }
+    process.exit(0);
+  }
   for (const [language, file] of Object.entries(OUTPUTS)) {
     const { markdown, names } = generate(language);
     const shown = path.relative(root, file).split(path.sep).join("/");

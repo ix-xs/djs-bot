@@ -45,12 +45,28 @@ A translation changes the prose and nothing else:
 (frontmatter keys, headings, code, link targets) and the deploy workflow runs
 it. After changing an English page, change its translations in the same commit.
 
-The words of the interface (header, search, landing page) are in `src/i18n.ts`
-and `src/showcase/scenes.ts`; Starlight translates its own. To add a language,
-add it to `LOCALES` in `plugins/base-links.mjs`, to `locales` in
-`astro.config.mjs`, to `LANGUAGES` and the dictionary in `src/i18n.ts`, to the
-generator of the exports page (`scripts/api-index.mjs`), then translate the
-pages.
+The words of the interface (header, search suggestions, landing page) are in
+`src/i18n.ts` and `src/showcase/scenes.ts`; Starlight translates its own. The
+texts of the search results are in `src/content/i18n/<language>.json`: the
+search library leaves them in English otherwise.
+
+The exports page is generated (`npm run docs:api`, at the root). Its
+descriptions come from the doc comments of the source, in English; each
+translation keeps its own in `scripts/api-descriptions.<language>.json`, as the
+English sentence and its translation. When a doc comment changes or an export
+is added, the generator stops and names what is to translate, and so does
+`npm test`: `npm run docs:api -- --pending` prints the entries to fill in.
+
+What a translated page still says in English is deliberate: code, the messages
+a program prints (error messages, what Discord shows), and names of things.
+
+To add a language, add it to `LOCALES` in `plugins/base-links.mjs`, to
+`locales` in `astro.config.mjs`, to `LANGUAGES` and the dictionary in
+`src/i18n.ts`, to the generator of the exports page (`scripts/api-index.mjs`,
+with its file of descriptions), to `LABELS` in `plugins/wrap-tables.mjs`, add
+`src/content/i18n/<language>.json`, then translate the pages, `404.md`
+included: a missing address under a language is sent to that language's own
+"not found" page.
 
 The samples of the landing page's showcase are real files
 (`src/showcase/samples/`), compiled against the package by `npm run test:types`

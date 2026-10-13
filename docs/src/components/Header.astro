@@ -7,7 +7,7 @@ import Search from "virtual:starlight/components/Search";
 import LanguageSelect from "virtual:starlight/components/LanguageSelect";
 import ThemeSelect from "virtual:starlight/components/ThemeSelect";
 import SearchExtras from "./SearchExtras.astro";
-import { normalizeBase, switchLocale } from "../../plugins/base-links.mjs";
+import { LOCALES, normalizeBase, switchLocale, withBase } from "../../plugins/base-links.mjs";
 import { href, useT } from "../i18n";
 import pkg from "../../../package.json";
 
@@ -24,9 +24,21 @@ const areas = [
   { label: t("nav.recipes"), href: "/recipes/moderation/", current: inRecipes },
   { label: t("nav.reference"), href: "/api/exports/", current: inReference },
 ];
+// The host serves one "not found" page, the English one, whatever the address
+// asked for. Under a translation, it hands over to that language's own.
+const notFound = /^\/404(?:\.html|\/)?$/.test(Astro.url.pathname.slice(base.length) || "/");
+const translatedNotFound = LOCALES.map((code) => [withBase(`/${code}/`, base), withBase(`/${code}/404/`, base)]);
 // The published minor version, read from the package itself.
 const version = pkg.version.split(".").slice(0, 2).join(".");
 ---
+
+{notFound && (
+  <script is:inline define:vars={{ translatedNotFound }}>
+    for (const [prefix, page] of translatedNotFound) {
+      if (location.pathname.startsWith(prefix) && location.pathname !== page) location.replace(page);
+    }
+  </script>
+)}
 
 <div class="at-header">
   <a class="at-brand" href={Astro.locals.starlightRoute.siteTitleHref} translate="no">

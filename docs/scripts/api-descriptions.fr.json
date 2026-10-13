@@ -1,0 +1,1026 @@
+{
+  "@ix-xs/djs-bot#Bot": {
+    "en": "The bot application.",
+    "fr": "L'application du bot."
+  },
+  "@ix-xs/djs-bot#defineBot": {
+    "en": "Creates a `Bot`.",
+    "fr": "Crée un `Bot`."
+  },
+  "@ix-xs/djs-bot#isBot": {
+    "en": "Robust, cross-realm check that a value is a `Bot` - use this instead of `instanceof`, which breaks across the CJS/ESM dual-package boundary.",
+    "fr": "Vérification robuste, valable entre realms, qu'une valeur est un `Bot` : utilisez-la à la place de `instanceof`, qui ne fonctionne plus à travers la frontière du double paquet CJS/ESM."
+  },
+  "@ix-xs/djs-bot#BotDescription": {
+    "en": "A structured description of everything the bot has loaded.",
+    "fr": "Une description structurée de tout ce que le bot a chargé."
+  },
+  "@ix-xs/djs-bot#BotStats": {
+    "en": "A snapshot of the runtime counters, as returned by `Bot.stats`.",
+    "fr": "Un instantané des compteurs d'exécution, tel que renvoyé par `Bot.stats`."
+  },
+  "@ix-xs/djs-bot#DeployCallOptions": {
+    "en": "Options for `Bot.deploy`.",
+    "fr": "Options de `Bot.deploy`."
+  },
+  "@ix-xs/djs-bot#env": {
+    "en": "Reads an environment variable, with an optional fallback.",
+    "fr": "Lit une variable d'environnement, avec une valeur de repli facultative."
+  },
+  "@ix-xs/djs-bot#loadEnvFile": {
+    "en": "Loads a `.env` file into `process.env`.",
+    "fr": "Charge un fichier `.env` dans `process.env`."
+  },
+  "@ix-xs/djs-bot#BotConfig": {
+    "en": "The full bot configuration object.",
+    "fr": "L'objet de configuration complet du bot."
+  },
+  "@ix-xs/djs-bot#DeployConfig": {
+    "en": "Deployment configuration.",
+    "fr": "Configuration du déploiement."
+  },
+  "@ix-xs/djs-bot#FeatureSource": {
+    "en": "Where features come from: a directory to auto-discover, or explicit definitions.",
+    "fr": "D'où viennent les features : un répertoire à découvrir automatiquement, ou des définitions explicites."
+  },
+  "@ix-xs/djs-bot#defineCommand": {
+    "en": "Defines a slash command with typed options, or with subcommands/groups.",
+    "fr": "Définit une commande slash avec des options typées, ou avec des sous-commandes et des groupes."
+  },
+  "@ix-xs/djs-bot#subcommand": {
+    "en": "Defines one subcommand with its own typed options.",
+    "fr": "Définit une sous-commande avec ses propres options typées."
+  },
+  "@ix-xs/djs-bot#defineUserCommand": {
+    "en": "Defines a user context-menu command.",
+    "fr": "Définit une commande de menu contextuel d'utilisateur."
+  },
+  "@ix-xs/djs-bot#defineMessageCommand": {
+    "en": "Defines a message context-menu command.",
+    "fr": "Définit une commande de menu contextuel de message."
+  },
+  "@ix-xs/djs-bot#defineEvent": {
+    "en": "Defines a gateway event listener.",
+    "fr": "Définit un écouteur d'événement de la Gateway."
+  },
+  "@ix-xs/djs-bot#defineTrigger": {
+    "en": "Defines a message trigger - an auto-responder that fires on `messageCreate`.",
+    "fr": "Définit un déclencheur de message : un répondeur automatique qui se déclenche sur `messageCreate`."
+  },
+  "@ix-xs/djs-bot#defineButton": {
+    "en": "Defines a button.",
+    "fr": "Définit un bouton."
+  },
+  "@ix-xs/djs-bot#defineSelectMenu": {
+    "en": "Defines a string select menu (a custom list of options).",
+    "fr": "Définit un menu de sélection de chaînes (une liste personnalisée d'options)."
+  },
+  "@ix-xs/djs-bot#defineUserSelect": {
+    "en": "Defines a native user select menu.",
+    "fr": "Définit un menu de sélection d'utilisateurs natif."
+  },
+  "@ix-xs/djs-bot#defineRoleSelect": {
+    "en": "Defines a native role select menu.",
+    "fr": "Définit un menu de sélection de rôles natif."
+  },
+  "@ix-xs/djs-bot#defineChannelSelect": {
+    "en": "Defines a native channel select menu.",
+    "fr": "Définit un menu de sélection de salons natif."
+  },
+  "@ix-xs/djs-bot#defineMentionableSelect": {
+    "en": "Defines a native mentionable (users + roles) select menu.",
+    "fr": "Définit un menu de sélection d'éléments mentionnables (utilisateurs + rôles) natif."
+  },
+  "@ix-xs/djs-bot#defineModal": {
+    "en": "Defines a modal.",
+    "fr": "Définit une modale."
+  },
+  "@ix-xs/djs-bot#defineService": {
+    "en": "Defines an injectable service with explicit dependencies.",
+    "fr": "Définit un service injectable avec des dépendances explicites."
+  },
+  "@ix-xs/djs-bot#defineJob": {
+    "en": "Defines a scheduled job.",
+    "fr": "Définit une tâche planifiée."
+  },
+  "@ix-xs/djs-bot#definePlugin": {
+    "en": "Defines a cross-cutting plugin (hooks, middleware, capabilities).",
+    "fr": "Définit un plugin transversal (hooks, middleware, capacités)."
+  },
+  "@ix-xs/djs-bot#defineFeature": {
+    "en": "Bundles a set of definitions into a reusable, publishable feature.",
+    "fr": "Regroupe un ensemble de définitions en une feature réutilisable et publiable."
+  },
+  "@ix-xs/djs-bot#CommandDefinition": {
+    "en": "A registered slash command (flat, with subcommands, or with groups).",
+    "fr": "Une commande slash enregistrée (simple, avec sous-commandes ou avec groupes)."
+  },
+  "@ix-xs/djs-bot#CommandInput": {
+    "en": "Input accepted by `defineCommand`.",
+    "fr": "Entrée acceptée par `defineCommand`."
+  },
+  "@ix-xs/djs-bot#SubcommandDefinition": {
+    "en": "A single subcommand (the leaf that actually runs).",
+    "fr": "Une sous-commande seule (la feuille qui s'exécute réellement)."
+  },
+  "@ix-xs/djs-bot#SubcommandGroupDefinition": {
+    "en": "A subcommand group (a folder of subcommands).",
+    "fr": "Un groupe de sous-commandes (un dossier de sous-commandes)."
+  },
+  "@ix-xs/djs-bot#SubcommandInput": {
+    "en": "Input accepted by `subcommand`.",
+    "fr": "Entrée acceptée par `subcommand`."
+  },
+  "@ix-xs/djs-bot#UserCommandDefinition": {
+    "en": "A registered user context-menu command (right-click a user → Apps).",
+    "fr": "Une commande de menu contextuel d'utilisateur enregistrée (clic droit sur un utilisateur → Apps)."
+  },
+  "@ix-xs/djs-bot#UserCommandInput": {
+    "en": "Input accepted by `defineUserCommand`.",
+    "fr": "Entrée acceptée par `defineUserCommand`."
+  },
+  "@ix-xs/djs-bot#MessageCommandDefinition": {
+    "en": "A registered message context-menu command (right-click a message → Apps).",
+    "fr": "Une commande de menu contextuel de message enregistrée (clic droit sur un message → Apps)."
+  },
+  "@ix-xs/djs-bot#MessageCommandInput": {
+    "en": "Input accepted by `defineMessageCommand`.",
+    "fr": "Entrée acceptée par `defineMessageCommand`."
+  },
+  "@ix-xs/djs-bot#InstallContext": {
+    "en": "Where an app command can be installed: on servers, and/or on a user account.",
+    "fr": "Où une commande d'application peut être installée : sur des serveurs, et/ou sur un compte utilisateur."
+  },
+  "@ix-xs/djs-bot#InteractionContext": {
+    "en": "Where an app command can be used: in servers, the bot's DMs, or group DMs / other DMs.",
+    "fr": "Où une commande d'application peut être utilisée : dans des serveurs, dans les messages privés du bot, ou dans les groupes de messages privés et autres messages privés."
+  },
+  "@ix-xs/djs-bot#TriggerDefinition": {
+    "en": "A registered message trigger (auto-responder).",
+    "fr": "Un déclencheur de message enregistré (répondeur automatique)."
+  },
+  "@ix-xs/djs-bot#TriggerInput": {
+    "en": "Input accepted by `defineTrigger`.",
+    "fr": "Entrée acceptée par `defineTrigger`."
+  },
+  "@ix-xs/djs-bot#TriggerContext": {
+    "en": "Context passed to a message trigger handler.",
+    "fr": "Contexte transmis à un gestionnaire de déclencheur de message."
+  },
+  "@ix-xs/djs-bot#TriggerMode": {
+    "en": "How a string pattern is compared against message content.",
+    "fr": "Comment un motif de type chaîne est comparé au contenu du message."
+  },
+  "@ix-xs/djs-bot#TriggerPattern": {
+    "en": "A pattern: a substring/keyword, a RegExp, or a custom predicate.",
+    "fr": "Un motif : une sous-chaîne ou un mot-clé, une RegExp, ou un prédicat personnalisé."
+  },
+  "@ix-xs/djs-bot#EventDefinition": {
+    "en": "A registered gateway event listener.",
+    "fr": "Un écouteur d'événement de la Gateway enregistré."
+  },
+  "@ix-xs/djs-bot#ButtonDefinition": {
+    "en": "A registered button with typed customId params.",
+    "fr": "Un bouton enregistré avec des paramètres de customId typés."
+  },
+  "@ix-xs/djs-bot#ButtonInput": {
+    "en": "Input accepted by `defineButton`.",
+    "fr": "Entrée acceptée par `defineButton`."
+  },
+  "@ix-xs/djs-bot#ButtonVisualOptions": {
+    "en": "Visual configuration for a built button.",
+    "fr": "Configuration visuelle d'un bouton construit."
+  },
+  "@ix-xs/djs-bot#SelectMenuDefinition": {
+    "en": "A registered string select menu.",
+    "fr": "Un menu de sélection de chaînes enregistré."
+  },
+  "@ix-xs/djs-bot#SelectMenuInput": {
+    "en": "Input accepted by every `define*Select` factory.",
+    "fr": "Entrée acceptée par chaque fabrique `define*Select`."
+  },
+  "@ix-xs/djs-bot#SelectVisualOptions": {
+    "en": "Visual configuration for a built string select menu.",
+    "fr": "Configuration visuelle d'un menu de sélection de chaînes construit."
+  },
+  "@ix-xs/djs-bot#NativeSelectVisualOptions": {
+    "en": "Visual configuration for a native (user/role/channel/mentionable) select.",
+    "fr": "Configuration visuelle d'un menu de sélection natif (utilisateur/rôle/salon/mentionnable)."
+  },
+  "@ix-xs/djs-bot#SelectType": {
+    "en": "The five kinds of select menu Discord supports.",
+    "fr": "Les cinq types de menu de sélection pris en charge par Discord."
+  },
+  "@ix-xs/djs-bot#SelectRoutable": {
+    "en": "The routable shape shared by every select menu (used by the registry/router).",
+    "fr": "La forme routable partagée par tous les menus de sélection (utilisée par le registre et le routeur)."
+  },
+  "@ix-xs/djs-bot#AnySelectDefinition": {
+    "en": "Any select-menu definition.",
+    "fr": "Toute définition de menu de sélection."
+  },
+  "@ix-xs/djs-bot#UserSelectDefinition": {
+    "en": "A registered user select menu.",
+    "fr": "Un menu de sélection d'utilisateurs enregistré."
+  },
+  "@ix-xs/djs-bot#RoleSelectDefinition": {
+    "en": "A registered role select menu.",
+    "fr": "Un menu de sélection de rôles enregistré."
+  },
+  "@ix-xs/djs-bot#ChannelSelectDefinition": {
+    "en": "A registered channel select menu.",
+    "fr": "Un menu de sélection de salons enregistré."
+  },
+  "@ix-xs/djs-bot#MentionableSelectDefinition": {
+    "en": "A registered mentionable (users + roles) select menu.",
+    "fr": "Un menu de sélection d'éléments mentionnables (utilisateurs + rôles) enregistré."
+  },
+  "@ix-xs/djs-bot#ModalDefinition": {
+    "en": "A registered modal with typed fields and optional customId params.",
+    "fr": "Une modale enregistrée avec des champs typés et des paramètres de customId facultatifs."
+  },
+  "@ix-xs/djs-bot#ModalInput": {
+    "en": "Input accepted by `defineModal`.",
+    "fr": "Entrée acceptée par `defineModal`."
+  },
+  "@ix-xs/djs-bot#JobDefinition": {
+    "en": "A scheduled job.",
+    "fr": "Une tâche planifiée."
+  },
+  "@ix-xs/djs-bot#JobInput": {
+    "en": "Input accepted by `defineJob`.",
+    "fr": "Entrée acceptée par `defineJob`."
+  },
+  "@ix-xs/djs-bot#JobContext": {
+    "en": "Context passed to scheduled jobs.",
+    "fr": "Contexte transmis aux tâches planifiées."
+  },
+  "@ix-xs/djs-bot#EventContext": {
+    "en": "Context passed to gateway event handlers (after the event's own args).",
+    "fr": "Contexte transmis aux gestionnaires d'événements de la Gateway (après les arguments propres à l'événement)."
+  },
+  "@ix-xs/djs-bot#PluginDefinition": {
+    "en": "A cross-cutting plugin.",
+    "fr": "Un plugin transversal."
+  },
+  "@ix-xs/djs-bot#PluginInput": {
+    "en": "Input accepted by `definePlugin`.",
+    "fr": "Entrée acceptée par `definePlugin`."
+  },
+  "@ix-xs/djs-bot#PluginApp": {
+    "en": "The restricted façade handed to plugins in `setup()`.",
+    "fr": "La façade restreinte transmise aux plugins dans `setup()`."
+  },
+  "@ix-xs/djs-bot#HookRegistrar": {
+    "en": "Lets plugins register hooks without touching the core.",
+    "fr": "Permet aux plugins d'enregistrer des hooks sans toucher au cœur."
+  },
+  "@ix-xs/djs-bot#MiddlewareFn": {
+    "en": "Middleware runs around every interaction; call `next()` to continue.",
+    "fr": "Un middleware s'exécute autour de chaque interaction ; appelez `next()` pour continuer."
+  },
+  "@ix-xs/djs-bot#FeatureDefinition": {
+    "en": "A self-contained feature: commands, events, components, services, jobs.",
+    "fr": "Une feature autonome : commandes, événements, composants, services, tâches."
+  },
+  "@ix-xs/djs-bot#FeatureInput": {
+    "en": "Input accepted by `defineFeature`.",
+    "fr": "Entrée acceptée par `defineFeature`."
+  },
+  "@ix-xs/djs-bot#AnyDefinition": {
+    "en": "Any definition that a feature can bundle.",
+    "fr": "Toute définition qu'une feature peut regrouper."
+  },
+  "@ix-xs/djs-bot#s": {
+    "en": "Slash-command option builders.",
+    "fr": "Constructeurs d'options de commande slash."
+  },
+  "@ix-xs/djs-bot#p": {
+    "en": "customId parameter codecs.",
+    "fr": "Codecs de paramètres customId."
+  },
+  "@ix-xs/djs-bot#field": {
+    "en": "Modal component builders.",
+    "fr": "Constructeurs de composants de modale."
+  },
+  "@ix-xs/djs-bot#oneOf": {
+    "en": "Builds a codec for a parameter that must be one of a fixed set of strings, so `ctx.params` is typed as that union instead of a plain `string`.",
+    "fr": "Construit un codec pour un paramètre qui doit être l'une des chaînes d'un ensemble fixe, de sorte que `ctx.params` soit typé comme cette union plutôt que comme une simple `string`."
+  },
+  "@ix-xs/djs-bot#FieldKind": {
+    "en": "Every kind of component a modal can hold.",
+    "fr": "Tous les types de composants qu'une modale peut contenir."
+  },
+  "@ix-xs/djs-bot#FileType": {
+    "en": "What a file may be: one of Discord's categories, or a dot-prefixed extension.",
+    "fr": "Ce qu'un fichier peut être : l'une des catégories de Discord, ou une extension préfixée d'un point."
+  },
+  "@ix-xs/djs-bot#FieldChoice": {
+    "en": "One entry of a `select`, `radio` or `checkboxes` field.",
+    "fr": "Une entrée d'un champ `select`, `radio` ou `checkboxes`."
+  },
+  "@ix-xs/djs-bot#FieldOutput": {
+    "en": "What `ctx.fields.<name>` holds for each kind of field.",
+    "fr": "Ce que contient `ctx.fields.<name>` pour chaque type de champ."
+  },
+  "@ix-xs/djs-bot#OptionKind": {
+    "en": "Every supported slash-command option kind.",
+    "fr": "Tous les types d'option de commande slash pris en charge."
+  },
+  "@ix-xs/djs-bot#OptionDef": {
+    "en": "Internal descriptor for a single option.",
+    "fr": "Descripteur interne d'une option."
+  },
+  "@ix-xs/djs-bot#OptionMap": {
+    "en": "A map of option name → descriptor, as passed to `defineCommand`.",
+    "fr": "Une table de correspondance nom d'option → descripteur, telle que transmise à `defineCommand`."
+  },
+  "@ix-xs/djs-bot#InferOptions": {
+    "en": "Infers the typed `ctx.options` object from an `OptionMap`.",
+    "fr": "Déduit l'objet `ctx.options` typé à partir d'une `OptionMap`."
+  },
+  "@ix-xs/djs-bot#ParamCodec": {
+    "en": "Encodes/decodes a single customId parameter with a known runtime type.",
+    "fr": "Encode/décode un seul paramètre customId de type d'exécution connu."
+  },
+  "@ix-xs/djs-bot#ParamMap": {
+    "en": "A map of param name → codec, as passed to `defineButton`.",
+    "fr": "Table de nom de paramètre → codec, telle que passée à `defineButton`."
+  },
+  "@ix-xs/djs-bot#InferParams": {
+    "en": "Infers the typed `ctx.params` object from a `ParamMap`.",
+    "fr": "Déduit l'objet `ctx.params` typé à partir d'une `ParamMap`."
+  },
+  "@ix-xs/djs-bot#FieldDef": {
+    "en": "Internal descriptor for one modal component.",
+    "fr": "Descripteur interne d'un composant de modale."
+  },
+  "@ix-xs/djs-bot#FieldMap": {
+    "en": "A map of field name → descriptor, as passed to `defineModal`.",
+    "fr": "Table de nom de champ → descripteur, telle que passée à `defineModal`."
+  },
+  "@ix-xs/djs-bot#InferFields": {
+    "en": "Infers the typed `ctx.fields` object from a `FieldMap`.",
+    "fr": "Déduit l'objet `ctx.fields` typé à partir d'une `FieldMap`."
+  },
+  "@ix-xs/djs-bot#FieldText": {
+    "en": "The text of one field of a modal, given when the modal is built.",
+    "fr": "Le texte d'un champ de modale, fourni à la construction de la modale."
+  },
+  "@ix-xs/djs-bot#ModalTextOptions": {
+    "en": "Text given when a modal is built, in place of what was declared.",
+    "fr": "Texte fourni à la construction d'une modale, à la place de ce qui a été déclaré."
+  },
+  "@ix-xs/djs-bot#guard": {
+    "en": "Creates a named guard.",
+    "fr": "Crée une garde nommée."
+  },
+  "@ix-xs/djs-bot#pass": {
+    "en": "Signals a guard passed.",
+    "fr": "Signale qu'une garde a réussi."
+  },
+  "@ix-xs/djs-bot#fail": {
+    "en": "Signals a guard failed, with a user-facing reason.",
+    "fr": "Signale qu'une garde a échoué, avec une raison destinée à l'utilisateur."
+  },
+  "@ix-xs/djs-bot#inGuild": {
+    "en": "Requires the interaction to happen inside a guild.",
+    "fr": "Exige que l'interaction ait lieu dans un serveur."
+  },
+  "@ix-xs/djs-bot#dmOnly": {
+    "en": "Requires the interaction to happen in DMs.",
+    "fr": "Exige que l'interaction ait lieu en messages privés."
+  },
+  "@ix-xs/djs-bot#hasPermission": {
+    "en": "Requires the invoking member to have all of the given permissions **in the current channel** (channel overwrites included, as computed by Discord).",
+    "fr": "Exige que le membre qui invoque possède toutes les permissions données **dans le salon courant** (surcharges du salon incluses, telles que calculées par Discord)."
+  },
+  "@ix-xs/djs-bot#botHasPermission": {
+    "en": "Requires the *bot* to have all of the given permissions **in the current channel** (channel overwrites included, as computed by Discord).",
+    "fr": "Exige que le *bot* possède toutes les permissions données **dans le salon courant** (surcharges du salon incluses, telles que calculées par Discord)."
+  },
+  "@ix-xs/djs-bot#inChannel": {
+    "en": "Restricts usage to specific channel ids.",
+    "fr": "Restreint l'usage à des identifiants de salon précis."
+  },
+  "@ix-xs/djs-bot#hasRole": {
+    "en": "Requires the invoking member to hold **at least one** of the given roles.",
+    "fr": "Exige que le membre qui invoque possède **au moins un** des rôles donnés."
+  },
+  "@ix-xs/djs-bot#ownerOnly": {
+    "en": "Restricts usage to specific user ids.",
+    "fr": "Restreint l'usage à des identifiants d'utilisateur précis."
+  },
+  "@ix-xs/djs-bot#guildOwnerOnly": {
+    "en": "Restricts usage to the owner of the server the interaction happens in.",
+    "fr": "Restreint l'usage au propriétaire du serveur où l'interaction a lieu."
+  },
+  "@ix-xs/djs-bot#cooldown": {
+    "en": "Per-invocation cooldown.",
+    "fr": "Cooldown par invocation."
+  },
+  "@ix-xs/djs-bot#anyOf": {
+    "en": "Passes when **at least one** of the given guards passes.",
+    "fr": "Réussit lorsque **au moins une** des gardes données réussit."
+  },
+  "@ix-xs/djs-bot#not": {
+    "en": "Inverts a guard: passes when it fails.",
+    "fr": "Inverse une garde : réussit lorsqu'elle échoue."
+  },
+  "@ix-xs/djs-bot#Guard": {
+    "en": "A named, composable precondition.",
+    "fr": "Une précondition nommée et composable."
+  },
+  "@ix-xs/djs-bot#GuardFn": {
+    "en": "A guard's check function.",
+    "fr": "La fonction de vérification d'une garde."
+  },
+  "@ix-xs/djs-bot#GuardResult": {
+    "en": "The outcome of a guard check.",
+    "fr": "Le résultat d'une vérification de garde."
+  },
+  "@ix-xs/djs-bot#CooldownScope": {
+    "en": "Cooldown scope.",
+    "fr": "Portée du cooldown."
+  },
+  "@ix-xs/djs-bot#describeInteraction": {
+    "en": "Summarises an interaction as a kind plus a readable name - what a logging or metrics plugin wants to tag its records with.",
+    "fr": "Résume une interaction en un type et un nom lisible : ce dont un plugin de journalisation ou de métriques a besoin pour étiqueter ses enregistrements."
+  },
+  "@ix-xs/djs-bot#toAutocompleteChoices": {
+    "en": "Turns what an autocomplete handler returned into suggestions Discord accepts.",
+    "fr": "Transforme ce qu'un gestionnaire d'autocomplétion a renvoyé en suggestions que Discord accepte."
+  },
+  "@ix-xs/djs-bot#DeferOption": {
+    "en": "When and how an interaction is acknowledged for you.",
+    "fr": "Quand et comment une interaction est acquittée à votre place."
+  },
+  "@ix-xs/djs-bot#InteractionSummary": {
+    "en": "A short, log-friendly identity for an interaction.",
+    "fr": "Une courte identité d'interaction, adaptée aux journaux."
+  },
+  "@ix-xs/djs-bot#ShowModalFn": {
+    "en": "Opens a modal as the response to an interaction.",
+    "fr": "Ouvre une modale en réponse à une interaction."
+  },
+  "@ix-xs/djs-bot#BaseContext": {
+    "en": "Fields shared by every interaction context.",
+    "fr": "Champs communs à tous les contextes d'interaction."
+  },
+  "@ix-xs/djs-bot#CommandContext": {
+    "en": "Context passed to slash-command handlers.",
+    "fr": "Contexte passé aux gestionnaires de commandes slash."
+  },
+  "@ix-xs/djs-bot#UserCommandContext": {
+    "en": "Context passed to user context-menu command handlers.",
+    "fr": "Contexte passé aux gestionnaires de commandes de menu contextuel utilisateur."
+  },
+  "@ix-xs/djs-bot#MessageCommandContext": {
+    "en": "Context passed to message context-menu command handlers.",
+    "fr": "Contexte passé aux gestionnaires de commandes de menu contextuel de message."
+  },
+  "@ix-xs/djs-bot#ButtonContext": {
+    "en": "Context passed to button handlers.",
+    "fr": "Contexte passé aux gestionnaires de bouton."
+  },
+  "@ix-xs/djs-bot#SelectMenuContext": {
+    "en": "Context passed to select-menu handlers (string and native selects).",
+    "fr": "Contexte passé aux gestionnaires de menu de sélection (menus de sélection de chaînes et natifs)."
+  },
+  "@ix-xs/djs-bot#ModalContext": {
+    "en": "Context passed to modal handlers.",
+    "fr": "Contexte passé aux gestionnaires de modale."
+  },
+  "@ix-xs/djs-bot#ReplyFn": {
+    "en": "Callable reply helper with semantic shortcuts.",
+    "fr": "Aide de réponse appelable, avec des raccourcis sémantiques."
+  },
+  "@ix-xs/djs-bot#UpdateFn": {
+    "en": "Callable component-update helper (edits the source message).",
+    "fr": "Aide de mise à jour de composant appelable (modifie le message source)."
+  },
+  "@ix-xs/djs-bot#ReplyContent": {
+    "en": "Content accepted by reply helpers: a plain string or full reply options.",
+    "fr": "Contenu accepté par les aides de réponse : une chaîne simple ou des options de réponse complètes."
+  },
+  "@ix-xs/djs-bot#SemanticReplyOptions": {
+    "en": "Extra options for the semantic reply helpers.",
+    "fr": "Options supplémentaires pour les aides de réponse sémantiques."
+  },
+  "@ix-xs/djs-bot#AutocompleteContext": {
+    "en": "Context passed to an option's autocomplete handler.",
+    "fr": "Contexte passé au gestionnaire d'autocomplétion d'une option."
+  },
+  "@ix-xs/djs-bot#AutocompleteHandler": {
+    "en": "An option's autocomplete handler.",
+    "fr": "Le gestionnaire d'autocomplétion d'une option."
+  },
+  "@ix-xs/djs-bot#AutocompleteResult": {
+    "en": "What an autocomplete handler may return (auto-mapped to choices).",
+    "fr": "Ce qu'un gestionnaire d'autocomplétion peut renvoyer (converti automatiquement en choix)."
+  },
+  "@ix-xs/djs-bot#AutocompleteChoice": {
+    "en": "One autocomplete suggestion.",
+    "fr": "Une suggestion d'autocomplétion."
+  },
+  "@ix-xs/djs-bot#AutocompleteOptions": {
+    "en": "What the user has filled in so far, by option name, as Discord sends it while they type: text, numbers and booleans as such, and the **id** of a user, role, channel, mentionable or attachment.",
+    "fr": "Ce que l'utilisateur a déjà renseigné, par nom d'option, tel que Discord l'envoie pendant la saisie : texte, nombres et booléens tels quels, et l'**identifiant** d'un utilisateur, d'un rôle, d'un salon, d'un mentionnable ou d'une pièce jointe."
+  },
+  "@ix-xs/djs-bot#NormalizedChoices": {
+    "en": "What `toAutocompleteChoices` produced, and what it had to leave out.",
+    "fr": "Ce qu'a produit `toAutocompleteChoices`, et ce qu'elle a dû écarter."
+  },
+  "@ix-xs/djs-bot#Container": {
+    "en": "Resolves service definitions and holds their singleton instances.",
+    "fr": "Résout les définitions de services et conserve leurs instances singleton."
+  },
+  "@ix-xs/djs-bot#ServiceDefinition": {
+    "en": "A service definition.",
+    "fr": "Une définition de service."
+  },
+  "@ix-xs/djs-bot#ServiceMap": {
+    "en": "Global service map.",
+    "fr": "Table globale des services."
+  },
+  "@ix-xs/djs-bot#Registry": {
+    "en": "Holds every definition and exposes typed lookups.",
+    "fr": "Contient toutes les définitions et expose des recherches typées."
+  },
+  "@ix-xs/djs-bot#Registrable": {
+    "en": "A registrable item: any definition or a whole feature.",
+    "fr": "Un élément enregistrable : n'importe quelle définition ou une feature entière."
+  },
+  "@ix-xs/djs-bot#computeIntents": {
+    "en": "Derives the minimal set of intents and partials for the given events.",
+    "fr": "Déduit l'ensemble minimal d'intents et de partials pour les événements donnés."
+  },
+  "@ix-xs/djs-bot#ComputedIntents": {
+    "en": "Result of `computeIntents`.",
+    "fr": "Résultat de `computeIntents`."
+  },
+  "@ix-xs/djs-bot#IntentAdjustments": {
+    "en": "Fine-tunes the automatic selection without giving it up.",
+    "fr": "Affine la sélection automatique sans y renoncer."
+  },
+  "@ix-xs/djs-bot#DEFAULT_MESSAGES": {
+    "en": "The built-in English wording.",
+    "fr": "Les messages anglais intégrés."
+  },
+  "@ix-xs/djs-bot#DEFAULT_THEME": {
+    "en": "The default palette.",
+    "fr": "La palette par défaut."
+  },
+  "@ix-xs/djs-bot#FrameworkMessages": {
+    "en": "The overridable message table accepted by `defineBot({ messages })`.",
+    "fr": "La table de messages remplaçable acceptée par `defineBot({ messages })`."
+  },
+  "@ix-xs/djs-bot#MessageKey": {
+    "en": "The name of a framework message.",
+    "fr": "Le nom d'un message du framework."
+  },
+  "@ix-xs/djs-bot#MessageValue": {
+    "en": "One message: a template string with `{placeholders}`, or a function for full control (translation, pluralisation).",
+    "fr": "Un message : une chaîne modèle avec des `{placeholders}`, ou une fonction pour un contrôle total (traduction, pluralisation)."
+  },
+  "@ix-xs/djs-bot#MessageVars": {
+    "en": "The variables each framework message receives.",
+    "fr": "Les variables que reçoit chaque message du framework."
+  },
+  "@ix-xs/djs-bot#Theme": {
+    "en": "The accent colours of the built-in `ctx.reply.success/error/info/warn` embeds.",
+    "fr": "Les couleurs d'accent des embeds intégrés `ctx.reply.success/error/info/warn`."
+  },
+  "@ix-xs/djs-bot#deployCommands": {
+    "en": "Deploys commands, honouring per-command scoping: - commands with no `guilds` go **global**, - commands with `guilds` go to **those guilds**.",
+    "fr": "Déploie les commandes en respectant la portée propre à chacune : - les commandes sans `guilds` sont **globales**, - les commandes avec `guilds` vont dans **ces serveurs**."
+  },
+  "@ix-xs/djs-bot#clearCommands": {
+    "en": "Removes **all** of the app's commands from one scope (a guild, or global).",
+    "fr": "Supprime **toutes** les commandes de l'application d'une portée (un serveur, ou global)."
+  },
+  "@ix-xs/djs-bot#planDeployment": {
+    "en": "Partitions the registry's commands into a global set and per-guild sets based on each command's `guilds` field.",
+    "fr": "Répartit les commandes du registre en un ensemble global et des ensembles par serveur, d'après le champ `guilds` de chaque commande."
+  },
+  "@ix-xs/djs-bot#buildCommandTree": {
+    "en": "Builds the full desired command tree (ignoring per-command scoping).",
+    "fr": "Construit l'arbre de commandes complet souhaité (sans tenir compte de la portée propre à chaque commande)."
+  },
+  "@ix-xs/djs-bot#commandToJSON": {
+    "en": "Converts one slash command definition to the REST JSON body Discord expects.",
+    "fr": "Convertit une définition de commande slash en corps JSON REST attendu par Discord."
+  },
+  "@ix-xs/djs-bot#commandsEqual": {
+    "en": "Whether a local command and the one Discord returned describe the same thing.",
+    "fr": "Indique si une commande locale et celle renvoyée par Discord décrivent la même chose."
+  },
+  "@ix-xs/djs-bot#DeployOptions": {
+    "en": "Options for `deployCommands`.",
+    "fr": "Options de `deployCommands`."
+  },
+  "@ix-xs/djs-bot#DeployResult": {
+    "en": "The outcome of a deploy across all targets.",
+    "fr": "Le résultat d'un déploiement sur toutes les cibles."
+  },
+  "@ix-xs/djs-bot#DeployTargetResult": {
+    "en": "What changed for one deploy target (global, or a specific guild).",
+    "fr": "Ce qui a changé pour une cible de déploiement (globale, ou un serveur précis)."
+  },
+  "@ix-xs/djs-bot#DeploymentPlan": {
+    "en": "A resolved deployment plan: which commands go global, and which go to which guild.",
+    "fr": "Un plan de déploiement résolu : quelles commandes sont globales, et lesquelles vont dans quel serveur."
+  },
+  "@ix-xs/djs-bot#ClearOptions": {
+    "en": "Options for `clearCommands`.",
+    "fr": "Options de `clearCommands`."
+  },
+  "@ix-xs/djs-bot#encodeCustomId": {
+    "en": "Encodes a routing key and typed params into a Discord-safe customId.",
+    "fr": "Encode une clé de routage et des paramètres typés en un customId compatible avec Discord."
+  },
+  "@ix-xs/djs-bot#decodeCustomId": {
+    "en": "Decodes a customId back into its routing key and typed params.",
+    "fr": "Décode un customId pour retrouver sa clé de routage et ses paramètres typés."
+  },
+  "@ix-xs/djs-bot#customIdKey": {
+    "en": "Extracts just the routing key from a raw customId without decoding params.",
+    "fr": "Extrait uniquement la clé de routage d'un customId brut, sans décoder les paramètres."
+  },
+  "@ix-xs/djs-bot#BotError": {
+    "en": "A framework error with a stable code, an actionable hint, and a docs link.",
+    "fr": "Une erreur du framework avec un code stable, une piste exploitable et un lien vers la documentation."
+  },
+  "@ix-xs/djs-bot#isBotError": {
+    "en": "Type guard for `BotError`.",
+    "fr": "Garde de type pour `BotError`."
+  },
+  "@ix-xs/djs-bot#ERROR_CATALOGUE": {
+    "en": "Catalogue of framework error codes and their default messages/hints.",
+    "fr": "Catalogue des codes d'erreur du framework, avec leurs messages et pistes par défaut."
+  },
+  "@ix-xs/djs-bot#ErrorCode": {
+    "en": "Union of all known error codes.",
+    "fr": "Union de tous les codes d'erreur connus."
+  },
+  "@ix-xs/djs-bot#BotErrorOptions": {
+    "en": "Options accepted when constructing a `BotError`.",
+    "fr": "Options acceptées à la construction d'une `BotError`."
+  },
+  "@ix-xs/djs-bot#Logger": {
+    "en": "Structured logger with level filtering and child bindings.",
+    "fr": "Logger structuré avec filtrage par niveau et liaisons enfants."
+  },
+  "@ix-xs/djs-bot#createLogger": {
+    "en": "Creates a root `Logger`.",
+    "fr": "Crée un `Logger` racine."
+  },
+  "@ix-xs/djs-bot#LogLevel": {
+    "en": "Ordered log levels.",
+    "fr": "Niveaux de journalisation ordonnés."
+  },
+  "@ix-xs/djs-bot#LoggerOptions": {
+    "en": "Options for creating a `Logger`.",
+    "fr": "Options de création d'un `Logger`."
+  },
+  "@ix-xs/djs-bot#VERSION": {
+    "en": "The current framework version (kept in sync with package.json at build time).",
+    "fr": "La version actuelle du framework (synchronisée avec package.json au moment du build)."
+  },
+  "@ix-xs/djs-bot#FRAMEWORK_NAME": {
+    "en": "Human-facing framework name, used in logs and CLI output.",
+    "fr": "Nom du framework destiné aux humains, utilisé dans les logs et la sortie de la CLI."
+  },
+  "@ix-xs/djs-bot#CUSTOM_ID_MAX_LENGTH": {
+    "en": "Discord's hard limit on the length of a component `customId`.",
+    "fr": "Limite stricte de Discord sur la longueur du `customId` d'un composant."
+  },
+  "@ix-xs/djs-bot#DOCS_URL": {
+    "en": "Root URL of the documentation site.",
+    "fr": "URL racine du site de documentation."
+  },
+  "@ix-xs/djs-bot#mention": {
+    "en": "Mention builders - return the exact markup Discord renders as a mention.",
+    "fr": "Constructeurs de mentions : renvoient exactement le balisage que Discord affiche comme une mention."
+  },
+  "@ix-xs/djs-bot#emoji": {
+    "en": "Custom emoji helpers: build the markup, and read it back.",
+    "fr": "Utilitaires pour les émojis personnalisés : construire le balisage, puis le relire."
+  },
+  "@ix-xs/djs-bot#timestamp": {
+    "en": "Renders a Discord timestamp (auto-localised in each user's client).",
+    "fr": "Produit un horodatage Discord (localisé automatiquement dans le client de chaque utilisateur)."
+  },
+  "@ix-xs/djs-bot#allowedMentions": {
+    "en": "Builders for `allowed_mentions`, controlling who a message may ping.",
+    "fr": "Constructeurs pour `allowed_mentions`, qui contrôle qui un message peut mentionner."
+  },
+  "@ix-xs/djs-bot#ui": {
+    "en": "Terse component factories.",
+    "fr": "Fabriques de composants concises."
+  },
+  "@ix-xs/djs-bot#ContainerChild": {
+    "en": "A display component that can live inside a `ui.container`: a text block, separator, section, media gallery, file, or an action row of buttons/selects.",
+    "fr": "Un composant d'affichage pouvant se placer dans un `ui.container` : un bloc de texte, un séparateur, une section, une galerie de médias, un fichier, ou une rangée d'actions de boutons/menus de sélection."
+  },
+  "@ix-xs/djs-bot#ContainerOptions": {
+    "en": "Appearance options for a `ui.container`.",
+    "fr": "Options d'apparence d'un `ui.container`."
+  },
+  "@ix-xs/djs-bot#PollOptions": {
+    "en": "Options for `ui.poll`.",
+    "fr": "Options de `ui.poll`."
+  },
+  "@ix-xs/djs-bot#TTLCache": {
+    "en": "An in-memory TTL + LRU cache with single-flight fetching.",
+    "fr": "Un cache en mémoire TTL + LRU avec récupération en un seul appel (single-flight)."
+  },
+  "@ix-xs/djs-bot#createCache": {
+    "en": "Creates a `TTLCache`.",
+    "fr": "Crée un `TTLCache`."
+  },
+  "@ix-xs/djs-bot#resolve": {
+    "en": "Cache-first fetch helpers.",
+    "fr": "Utilitaires de récupération qui interrogent d'abord le cache."
+  },
+  "@ix-xs/djs-bot#isHiddenChannel": {
+    "en": "Whether a channel is one the bot cannot view, sent by Discord with its name and details withheld (\"obfuscated\").",
+    "fr": "Indique si un salon est un salon que le bot ne peut pas voir, envoyé par Discord sans son nom ni ses détails (« masqué »)."
+  },
+  "@ix-xs/djs-bot#TTLCacheOptions": {
+    "en": "Options for `TTLCache`.",
+    "fr": "Options de `TTLCache`."
+  },
+  "@ix-xs/djs-bot#paginate": {
+    "en": "Sends a paginated message with prev/next (and first/last) controls, updating in place as the user navigates and disabling the controls on timeout.",
+    "fr": "Envoie un message paginé avec des contrôles précédent/suivant (et premier/dernier), mis à jour sur place pendant la navigation de l'utilisateur et désactivés à l'expiration du délai."
+  },
+  "@ix-xs/djs-bot#confirm": {
+    "en": "Shows a yes/no dialog and resolves to the user's choice (or `false` on timeout).",
+    "fr": "Affiche une boîte de dialogue oui/non et se résout avec le choix de l'utilisateur (ou `false` si le délai est dépassé)."
+  },
+  "@ix-xs/djs-bot#Page": {
+    "en": "A single page.",
+    "fr": "Une page unique."
+  },
+  "@ix-xs/djs-bot#PagePayload": {
+    "en": "A full-payload page (see `Page`).",
+    "fr": "Une page à charge utile complète (voir `Page`)."
+  },
+  "@ix-xs/djs-bot#PaginateOptions": {
+    "en": "Options for `paginate`.",
+    "fr": "Options de `paginate`."
+  },
+  "@ix-xs/djs-bot#ConfirmOptions": {
+    "en": "Options for `confirm`.",
+    "fr": "Options de `confirm`."
+  },
+  "@ix-xs/djs-bot#assets": {
+    "en": "Asset URL helpers.",
+    "fr": "Utilitaires pour les URL de ressources."
+  },
+  "@ix-xs/djs-bot#ImageOptions": {
+    "en": "Options for image URLs.",
+    "fr": "Options pour les URL d'images."
+  },
+  "@ix-xs/djs-bot#voice": {
+    "en": "Voice-state helpers.",
+    "fr": "Utilitaires pour l'état vocal."
+  },
+  "@ix-xs/djs-bot#isShardChild": {
+    "en": "True when the current process is a shard child spawned by a manager (so it should run the bot), rather than the manager itself.",
+    "fr": "Vrai lorsque le processus courant est un shard enfant lancé par un gestionnaire (il doit donc exécuter le bot), et non le gestionnaire lui-même."
+  },
+  "@ix-xs/djs-bot#normalizeSharding": {
+    "en": "Normalises the loose `sharding` config into full options.",
+    "fr": "Normalise la configuration `sharding` souple en options complètes."
+  },
+  "@ix-xs/djs-bot#launchShardManager": {
+    "en": "Launches a `ShardingManager` for the given entry file.",
+    "fr": "Lance un `ShardingManager` pour le fichier d'entrée donné."
+  },
+  "@ix-xs/djs-bot#ShardingOptions": {
+    "en": "Sharding configuration.",
+    "fr": "Configuration du sharding."
+  },
+  "@ix-xs/djs-bot#createI18n": {
+    "en": "Creates a translator.",
+    "fr": "Crée un traducteur."
+  },
+  "@ix-xs/djs-bot#I18n": {
+    "en": "A translator produced by `createI18n`.",
+    "fr": "Un traducteur produit par `createI18n`."
+  },
+  "@ix-xs/djs-bot#I18nOptions": {
+    "en": "Options for `createI18n`.",
+    "fr": "Options de `createI18n`."
+  },
+  "@ix-xs/djs-bot#Messages": {
+    "en": "A (possibly nested) tree of translation strings.",
+    "fr": "Un arbre (éventuellement imbriqué) de chaînes de traduction."
+  },
+  "@ix-xs/djs-bot#memoryStore": {
+    "en": "Creates an in-memory `KVStore` (fast, non-durable).",
+    "fr": "Crée un `KVStore` en mémoire (rapide, non durable)."
+  },
+  "@ix-xs/djs-bot#sqliteStore": {
+    "en": "Creates a durable `KVStore` backed by SQLite (via node-comfort's built-in `node:sqlite`).",
+    "fr": "Crée un `KVStore` durable reposant sur SQLite (via le `node:sqlite` intégré de node-comfort)."
+  },
+  "@ix-xs/djs-bot#createStore": {
+    "en": "Builds a full `KVStore` from a minimal `KVBackend`.",
+    "fr": "Construit un `KVStore` complet à partir d'un `KVBackend` minimal."
+  },
+  "@ix-xs/djs-bot#defineStore": {
+    "en": "Wraps a `KVStore` as a service definition so it's injectable as `ctx.services.<token>` and discovered from a `*.service.ts` file.",
+    "fr": "Enveloppe un `KVStore` dans une définition de service pour qu'il soit injectable sous `ctx.services.<token>` et découvert depuis un fichier `*.service.ts`."
+  },
+  "@ix-xs/djs-bot#KVStore": {
+    "en": "An async key-value store.",
+    "fr": "Un store clé-valeur asynchrone."
+  },
+  "@ix-xs/djs-bot#KVBackend": {
+    "en": "The minimal contract a storage backend has to fulfil.",
+    "fr": "Le contrat minimal qu'un backend de stockage doit remplir."
+  },
+  "@ix-xs/djs-bot#parseSchedule": {
+    "en": "Parses a duration, a cron expression or a macro into a schedule descriptor.",
+    "fr": "Analyse une durée, une expression cron ou une macro pour produire un descripteur de planification."
+  },
+  "@ix-xs/djs-bot#ParsedSchedule": {
+    "en": "A schedule parsed into something the scheduler can evaluate.",
+    "fr": "Une planification analysée sous une forme que le planificateur peut évaluer."
+  },
+  "@ix-xs/djs-bot#createAuditLog": {
+    "en": "Creates an `AuditLog`.",
+    "fr": "Crée un `AuditLog`."
+  },
+  "@ix-xs/djs-bot#memoryAuditSink": {
+    "en": "An in-memory sink (bounded ring buffer).",
+    "fr": "Un sink en mémoire (tampon circulaire borné)."
+  },
+  "@ix-xs/djs-bot#storeAuditSink": {
+    "en": "A sink that persists entries in a `KVStore` (one key per entry).",
+    "fr": "Un sink qui persiste les entrées dans un `KVStore` (une clé par entrée)."
+  },
+  "@ix-xs/djs-bot#loggerAuditSink": {
+    "en": "A sink that writes each entry to the structured logger.",
+    "fr": "Un sink qui écrit chaque entrée dans le logger structuré."
+  },
+  "@ix-xs/djs-bot#AuditLog": {
+    "en": "A configured audit log.",
+    "fr": "Un journal d'audit configuré."
+  },
+  "@ix-xs/djs-bot#AuditEntry": {
+    "en": "A single audit record.",
+    "fr": "Un enregistrement d'audit unique."
+  },
+  "@ix-xs/djs-bot#AuditSink": {
+    "en": "A destination audit entries are written to.",
+    "fr": "Une destination dans laquelle les entrées d'audit sont écrites."
+  },
+  "@ix-xs/djs-bot#AuditFilter": {
+    "en": "Filter for `AuditLog.query`.",
+    "fr": "Filtre pour `AuditLog.query`."
+  },
+  "@ix-xs/djs-bot#AuditLogOptions": {
+    "en": "Options for `createAuditLog`.",
+    "fr": "Options de `createAuditLog`."
+  },
+  "@ix-xs/djs-bot#createFeatureFlags": {
+    "en": "Creates a `FeatureFlags` service.",
+    "fr": "Crée un service `FeatureFlags`."
+  },
+  "@ix-xs/djs-bot#featureEnabled": {
+    "en": "A guard that blocks a command/component when a feature flag is off for the guild.",
+    "fr": "Une garde qui bloque une commande/un composant lorsqu'un feature flag est désactivé pour le serveur."
+  },
+  "@ix-xs/djs-bot#FeatureFlags": {
+    "en": "A runtime feature-flag service.",
+    "fr": "Un service de feature flags à l'exécution."
+  },
+  "@ix-xs/djs-bot#FeatureFlagsOptions": {
+    "en": "Options for `createFeatureFlags`.",
+    "fr": "Options de `createFeatureFlags`."
+  },
+  "@ix-xs/djs-bot#FlagScope": {
+    "en": "A scope for reading/writing a flag.",
+    "fr": "Une portée pour lire/écrire un flag."
+  },
+  "@ix-xs/djs-bot#startHealthServer": {
+    "en": "Starts the health server.",
+    "fr": "Démarre le serveur de santé."
+  },
+  "@ix-xs/djs-bot#toPrometheus": {
+    "en": "Renders a status as the Prometheus text exposition format, so the endpoint can be scraped directly without an exporter.",
+    "fr": "Produit un statut au format texte d'exposition de Prometheus, afin que le point d'accès puisse être interrogé directement sans exporter."
+  },
+  "@ix-xs/djs-bot#HealthStatus": {
+    "en": "Live status reported by the server, produced on each request.",
+    "fr": "Statut en direct renvoyé par le serveur, produit à chaque requête."
+  },
+  "@ix-xs/djs-bot#HealthOptions": {
+    "en": "Options for `startHealthServer`.",
+    "fr": "Options de `startHealthServer`."
+  },
+  "@ix-xs/djs-bot#createRateLimiter": {
+    "en": "Creates a `RateLimiter`.",
+    "fr": "Crée un `RateLimiter`."
+  },
+  "@ix-xs/djs-bot#rateLimit": {
+    "en": "A guard that allows `limit` uses per `window`, per scope (default `\"user\"`).",
+    "fr": "Une garde qui autorise `limit` utilisations par `window`, par portée (`\"user\"` par défaut)."
+  },
+  "@ix-xs/djs-bot#RateLimiter": {
+    "en": "A fixed-window rate limiter, keyed by an arbitrary string.",
+    "fr": "Un limiteur de débit à fenêtre fixe, indexé par une chaîne arbitraire."
+  },
+  "@ix-xs/djs-bot#createCircuitBreaker": {
+    "en": "Creates a `CircuitBreaker`.",
+    "fr": "Crée un `CircuitBreaker`."
+  },
+  "@ix-xs/djs-bot#CircuitBreaker": {
+    "en": "A circuit breaker: after too many failures it \"opens\" and fails fast for a cool-off period, then tries again (\"half-open\") before fully recovering.",
+    "fr": "Un disjoncteur : après trop d'échecs, il s'« ouvre » et échoue immédiatement pendant une période de repos, puis réessaie (« semi-ouvert ») avant de se rétablir complètement."
+  },
+  "@ix-xs/djs-bot#CircuitOpenError": {
+    "en": "Error thrown when calls are rejected because the circuit is open.",
+    "fr": "Erreur levée lorsque des appels sont rejetés parce que le circuit est ouvert."
+  },
+  "@ix-xs/djs-bot#retry": {
+    "en": "Retries an async function with exponential backoff + jitter.",
+    "fr": "Réessaie une fonction asynchrone avec un backoff exponentiel + jitter."
+  },
+  "@ix-xs/djs-bot#timeout": {
+    "en": "Rejects if `promise` doesn't settle within `ms` (milliseconds, or text such as `\"5s\"`).",
+    "fr": "Rejette si `promise` ne se termine pas dans le délai `ms` (millisecondes, ou texte tel que `\"5s\"`)."
+  },
+  "@ix-xs/djs-bot#RateLimiterOptions": {
+    "en": "Options for `createRateLimiter`.",
+    "fr": "Options de `createRateLimiter`."
+  },
+  "@ix-xs/djs-bot#RateLimitResult": {
+    "en": "The outcome of a `RateLimiter.consume` call.",
+    "fr": "Le résultat d'un appel à `RateLimiter.consume`."
+  },
+  "@ix-xs/djs-bot#CircuitBreakerOptions": {
+    "en": "Options for `createCircuitBreaker`.",
+    "fr": "Options de `createCircuitBreaker`."
+  },
+  "@ix-xs/djs-bot#CircuitState": {
+    "en": "The state of a `CircuitBreaker`.",
+    "fr": "L'état d'un `CircuitBreaker`."
+  },
+  "@ix-xs/djs-bot#RetryOptions": {
+    "en": "Options for `retry`.",
+    "fr": "Options de `retry`."
+  },
+  "@ix-xs/djs-bot/plugins#antiSpam": {
+    "en": "Rejects interactions from users who exceed a per-window rate limit - a simple guard against interaction spam, applied globally to every interaction.",
+    "fr": "Rejette les interactions des utilisateurs qui dépassent une limite de débit par fenêtre : une garde simple contre le spam d'interactions, appliquée globalement à chaque interaction."
+  },
+  "@ix-xs/djs-bot/plugins#commandLogger": {
+    "en": "Logs a structured line for every interaction (with duration), using the per-interaction correlation logger.",
+    "fr": "Journalise une ligne structurée pour chaque interaction (avec sa durée), à l'aide du logger de corrélation propre à l'interaction."
+  },
+  "@ix-xs/djs-bot/plugins#errorReporter": {
+    "en": "Forwards every unhandled interaction error to your reporter (e.g. Sentry).",
+    "fr": "Transmet chaque erreur d'interaction non gérée à votre outil de suivi d'erreurs (par exemple Sentry)."
+  },
+  "@ix-xs/djs-bot/plugins#maintenance": {
+    "en": "Blocks all interactions with a maintenance notice, except for allow-listed users.",
+    "fr": "Bloque toutes les interactions avec un avis de maintenance, sauf pour les utilisateurs de la liste d'autorisation."
+  },
+  "@ix-xs/djs-bot/plugins#AntiSpamOptions": {
+    "en": "Options for `antiSpam`.",
+    "fr": "Options de `antiSpam`."
+  },
+  "@ix-xs/djs-bot/plugins#CommandLoggerOptions": {
+    "en": "Options for `commandLogger`.",
+    "fr": "Options de `commandLogger`."
+  },
+  "@ix-xs/djs-bot/plugins#ErrorReporterOptions": {
+    "en": "Options for `errorReporter`.",
+    "fr": "Options de `errorReporter`."
+  },
+  "@ix-xs/djs-bot/plugins#MaintenanceOptions": {
+    "en": "Options for `maintenance`.",
+    "fr": "Options de `maintenance`."
+  },
+  "@ix-xs/djs-bot/testing#createHarness": {
+    "en": "Creates a test harness.",
+    "fr": "Crée un harnais de test."
+  },
+  "@ix-xs/djs-bot/testing#CapturedReply": {
+    "en": "A single captured response produced by a handler under test.",
+    "fr": "Une réponse unique capturée, produite par un gestionnaire sous test."
+  },
+  "@ix-xs/djs-bot/testing#HarnessResult": {
+    "en": "The result of running a handler through the harness.",
+    "fr": "Le résultat de l'exécution d'un gestionnaire dans le harnais."
+  },
+  "@ix-xs/djs-bot/testing#Harness": {
+    "en": "A harness bound to an optional `Bot` (for its services).",
+    "fr": "Un harnais lié à un `Bot` facultatif (pour ses services)."
+  }
+}

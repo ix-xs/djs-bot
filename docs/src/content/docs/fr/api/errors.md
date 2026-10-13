@@ -316,26 +316,30 @@ ignorée, et une exception qu'il lève est avalée.
 
 ## Codes d'erreur
 
+Le titre de chaque code est son message, cité tel que le programme l'affiche,
+en anglais. La piste qui l'accompagne dans le terminal est donnée ici en
+français.
+
 | Code | Titre | Levée |
 | --- | --- | --- |
-| [`DJSBOT_E001`](#djsbot_e001) | Missing bot token | Démarrage, déploiement |
-| [`DJSBOT_E002`](#djsbot_e002) | Missing application client id | Déploiement |
-| [`DJSBOT_E010`](#djsbot_e010) | Duplicate command name | Démarrage |
-| [`DJSBOT_E011`](#djsbot_e011) | Duplicate component id | Démarrage |
-| [`DJSBOT_E012`](#djsbot_e012) | Invalid command or option name | Définition |
-| [`DJSBOT_E013`](#djsbot_e013) | Invalid component id | Définition |
-| [`DJSBOT_E014`](#djsbot_e014) | Invalid modal definition | Définition |
-| [`DJSBOT_E015`](#djsbot_e015) | Invalid command definition | Définition, déploiement |
-| [`DJSBOT_E020`](#djsbot_e020) | customId too long | À la construction d'un composant |
-| [`DJSBOT_E021`](#djsbot_e021) | Invalid customId payload | À l'utilisation d'un composant |
-| [`DJSBOT_E030`](#djsbot_e030) | Service resolution failed | Démarrage |
-| [`DJSBOT_E031`](#djsbot_e031) | Unknown service | Démarrage, exécution |
-| [`DJSBOT_E040`](#djsbot_e040) | Feature contract not satisfied | Démarrage |
-| [`DJSBOT_E041`](#djsbot_e041) | Capability conflict | Démarrage |
-| [`DJSBOT_E050`](#djsbot_e050) | Invalid option value | Réservé |
-| [`DJSBOT_E060`](#djsbot_e060) | Loader error | Démarrage |
-| [`DJSBOT_E070`](#djsbot_e070) | Privileged intent required | Réservé |
-| [`DJSBOT_E080`](#djsbot_e080) | Invalid job schedule | Définition |
+| [`DJSBOT_E001`](#djsbot_e001) | `Missing bot token` | Démarrage, déploiement |
+| [`DJSBOT_E002`](#djsbot_e002) | `Missing application client id` | Déploiement |
+| [`DJSBOT_E010`](#djsbot_e010) | `Duplicate command name` | Démarrage |
+| [`DJSBOT_E011`](#djsbot_e011) | `Duplicate component id` | Démarrage |
+| [`DJSBOT_E012`](#djsbot_e012) | `Invalid command or option name` | Définition |
+| [`DJSBOT_E013`](#djsbot_e013) | `Invalid component id` | Définition |
+| [`DJSBOT_E014`](#djsbot_e014) | `Invalid modal definition` | Définition |
+| [`DJSBOT_E015`](#djsbot_e015) | `Invalid command definition` | Définition, déploiement |
+| [`DJSBOT_E020`](#djsbot_e020) | `customId too long` | À la construction d'un composant |
+| [`DJSBOT_E021`](#djsbot_e021) | `Invalid customId payload` | À l'utilisation d'un composant |
+| [`DJSBOT_E030`](#djsbot_e030) | `Service resolution failed` | Démarrage |
+| [`DJSBOT_E031`](#djsbot_e031) | `Unknown service` | Démarrage, exécution |
+| [`DJSBOT_E040`](#djsbot_e040) | `Feature contract not satisfied` | Démarrage |
+| [`DJSBOT_E041`](#djsbot_e041) | `Capability conflict` | Démarrage |
+| [`DJSBOT_E050`](#djsbot_e050) | `Invalid option value` | Réservé |
+| [`DJSBOT_E060`](#djsbot_e060) | `Loader error` | Démarrage |
+| [`DJSBOT_E070`](#djsbot_e070) | `Privileged intent required` | Réservé |
+| [`DJSBOT_E080`](#djsbot_e080) | `Invalid job schedule` | Définition |
 
 « Définition » signifie que l'erreur est levée par l'appel `define*()` lui-même,
 dès que le fichier est importé. Quand c'est le chargeur qui importe le fichier,
@@ -347,8 +351,8 @@ de la CLI qui l'inspectent (`deploy`, `clear`, `doctor`, `explain`).
 
 ### `DJSBOT_E001`
 
-**Missing bot token.** Hint: provide `token` in `defineBot()` or set the
-`DISCORD_TOKEN` env var.
+**`Missing bot token`** : fournissez `token` dans `defineBot()` ou définissez la
+variable d'environnement `DISCORD_TOKEN`.
 
 Levée par `bot.start()`, `bot.deploy()` et `bot.clear()` quand il n'y a ni
 `token` dans la configuration ni variable `DISCORD_TOKEN`. Une valeur vide compte
@@ -361,8 +365,9 @@ La solution est la même.
 
 ### `DJSBOT_E002`
 
-**Missing application client id.** Hint: set `clientId` in `defineBot()` or the
-`DISCORD_CLIENT_ID` env var, required to deploy commands.
+**`Missing application client id`** : définissez `clientId` dans `defineBot()`
+ou la variable d'environnement `DISCORD_CLIENT_ID`. Il est nécessaire pour
+déployer les commandes.
 
 Levée par `bot.deploy()` et `bot.clear()`, donc par `djs-bot deploy` et
 `djs-bot clear`. Le bot se connecte sans identifiant client, et le déploiement
@@ -372,8 +377,8 @@ dans le Developer Portal.
 
 ### `DJSBOT_E010`
 
-**Duplicate command name.** Hint: two commands registered under the same name;
-command names must be unique.
+**`Duplicate command name`** : deux commandes sont enregistrées sous le même
+nom. Les noms de commande doivent être uniques.
 
 Deux définitions de commande slash différentes partagent un nom, ou deux
 commandes de menu contextuel sur un utilisateur, ou deux commandes de menu
@@ -388,8 +393,9 @@ Lancez `npx djs-bot explain` pour voir tout ce qui a été chargé.
 
 ### `DJSBOT_E011`
 
-**Duplicate component id.** Hint: two components share the same id;
-button/select/modal ids must be unique per type.
+**`Duplicate component id`** : deux composants partagent le même identifiant.
+Les identifiants de bouton, de menu de sélection et de modale doivent être
+uniques pour chaque type.
 
 Deux boutons, deux menus de sélection ou deux modales partagent un `id`. Les
 identifiants sont uniques par type, donc un bouton et une modale peuvent utiliser
@@ -398,9 +404,9 @@ le même. Mettez-les dans un espace de noms pour éviter les ennuis : `ticket:cl
 
 ### `DJSBOT_E012`
 
-**Invalid command or option name.** Hint: slash command, subcommand, group and
-option names must be 1-32 chars, lowercase, and use only letters, numbers, `-`
-or `_` (no spaces).
+**`Invalid command or option name`** : les noms de commande slash, de
+sous-commande, de groupe et d'option font de 1 à 32 caractères, en minuscules,
+et n'utilisent que des lettres, des chiffres, `-` ou `_` (pas d'espace).
 
 Levée par `defineCommand` pour la commande, ses sous-commandes, ses groupes et
 ses options. Le détail nomme le fautif.
@@ -419,17 +425,18 @@ nom est vide ou dépasse 32 caractères.
 
 ### `DJSBOT_E013`
 
-**Invalid component id.** Hint: button/select/modal ids must be non-empty and
-must not contain `$` (reserved as the customId separator); use `:` or `-` to
-namespace.
+**`Invalid component id`** : les identifiants de bouton, de menu de sélection et
+de modale ne doivent pas être vides ni contenir `$` (réservé comme séparateur du
+customId). Utilisez `:` ou `-` pour les préfixer.
 
 Levée par `defineButton`, les définitions de menus de sélection et `defineModal`
 quand l'`id` est vide, contient `$`, ou dépasse 100 caractères.
 
 ### `DJSBOT_E014`
 
-**Invalid modal definition.** Hint: a modal holds 1 to 5 components; a select
-takes 1-25 options, a radio group 2-10, a checkbox group 1-10.
+**`Invalid modal definition`** : une modale contient de 1 à 5 composants. Un
+menu de sélection prend de 1 à 25 options, un groupe de boutons radio de 2 à 10,
+un groupe de cases à cocher de 1 à 10.
 
 Levée par `defineModal`, donc une erreur échoue au démarrage et n'atteint jamais
 un utilisateur. Le détail nomme la modale et le champ.
@@ -454,9 +461,9 @@ comme `".pdf"`.
 
 ### `DJSBOT_E015`
 
-**Invalid command definition.** Hint: Discord limits: descriptions of 1-100
-characters, 25 options and 25 choices per command, 8000 characters in total,
-and 100 slash commands (15 of each context-menu type) per scope.
+**`Invalid command definition`** : les limites de Discord sont des descriptions
+de 1 à 100 caractères, 25 options et 25 choix par commande, 8000 caractères au
+total, et 100 commandes slash (15 de chaque type de menu contextuel) par portée.
 
 Une commande enfreint une limite que Discord applique au déploiement. Levée par
 `defineCommand`, là où l'API n'aurait répondu que `400 Invalid Form Body`. Le
@@ -487,8 +494,9 @@ limiter certaines à des serveurs précis.
 
 ### `DJSBOT_E020`
 
-**customId too long.** Hint: shorten params or move large state into a store
-keyed by a short id; the limit is 100.
+**`customId too long`** : raccourcissez les paramètres, ou placez l'état
+volumineux dans un store sous un identifiant court. La limite est de 100
+caractères.
 
 Levée par `.build()` sur un bouton, un menu de sélection ou une modale quand le
 customId encodé (l'`id` plus les `params` encodés) dépasse la limite de 100
@@ -505,8 +513,8 @@ Publish.build({ key });
 
 ### `DJSBOT_E021`
 
-**Invalid customId payload.** Hint: the component payload could not be decoded;
-it may have been produced by an incompatible version.
+**`Invalid customId payload`** : la charge utile du composant n'a pas pu être
+décodée. Elle a peut-être été produite par une version incompatible.
 
 Levée quand un utilisateur clique sur un composant dont le customId a le bon
 `id` mais une section de paramètres illisible. Cela arrive avec d'anciens
@@ -530,8 +538,8 @@ async onError(error, ctx) {
 
 ### `DJSBOT_E030`
 
-**Service resolution failed.** Hint: services depend on each other in a cycle;
-check the `deps` arrays and break the loop.
+**`Service resolution failed`** : des services dépendent les uns des autres en
+boucle. Vérifiez les tableaux `deps` et cassez la boucle.
 
 Levée au démarrage quand des services dépendent les uns des autres en cercle. Le
 détail affiche la chaîne (`dependency cycle: a -> b -> a`) et `error.meta.chain`
@@ -543,9 +551,9 @@ Une dépendance qui n'existe pas du tout lève plutôt
 
 ### `DJSBOT_E031`
 
-**Unknown service.** Hint: a service that was never registered was requested;
-check the token, and the `deps` arrays that name it. On the error itself, the
-hint lists the services that are registered instead.
+**`Unknown service`** : un service qui n'a jamais été enregistré a été demandé.
+Vérifiez le token, et les tableaux `deps` qui le nomment. Sur l'erreur
+elle-même, la piste donne à la place la liste des services enregistrés.
 
 Levée au démarrage quand un tableau `deps` nomme un token que personne n'a
 enregistré, et à l'exécution quand un gestionnaire lit un `ctx.services.something`
@@ -556,8 +564,8 @@ tous les tokens enregistrés.
 
 ### `DJSBOT_E040`
 
-**Feature contract not satisfied.** Hint: a feature/plugin `requires` a
-capability that nothing `provides`.
+**`Feature contract not satisfied`** : une feature ou un plugin exige par
+`requires` une capacité que rien ne fournit par `provides`.
 
 Une feature ou un plugin liste une capacité dans `requires` et rien ne l'offre.
 Une capacité est offerte par un service enregistré sous ce nom, par le
@@ -567,8 +575,8 @@ Une capacité est offerte par un service enregistré sous ce nom, par le
 
 ### `DJSBOT_E041`
 
-**Capability conflict.** Hint: a plugin lists in `conflicts` a capability that
-something else provides; load one or the other.
+**`Capability conflict`** : un plugin déclare dans `conflicts` une capacité que
+quelque chose d'autre fournit. Chargez l'un ou l'autre.
 
 Un plugin liste une capacité dans `conflicts`, et un service, un plugin ou une
 feature fournit cette capacité. Le détail nomme le plugin et la capacité.
@@ -576,8 +584,8 @@ Retirez l'un des deux, ou renommez ce que l'autre fournit.
 
 ### `DJSBOT_E050`
 
-**Invalid option value.** Hint: a command option failed runtime validation at
-the Discord boundary.
+**`Invalid option value`** : une option de commande a échoué à la validation à
+l'exécution, à la frontière avec Discord.
 
 Réservé. La version actuelle ne le lève jamais : Discord vérifie lui-même les
 choix, les plages et les longueurs avant d'envoyer l'interaction au bot. Le code
@@ -585,8 +593,8 @@ reste dans le catalogue pour que son lien continue de fonctionner.
 
 ### `DJSBOT_E060`
 
-**Loader error.** Hint: a discovered file could not be imported or exported no
-valid definitions.
+**`Loader error`** : un fichier découvert n'a pas pu être importé, ou
+n'exportait aucune définition valide.
 
 Levée pendant le chargement du dossier de features. Le détail nomme le fichier.
 
@@ -608,8 +616,8 @@ pour les suffixes que le chargeur reconnaît.
 
 ### `DJSBOT_E070`
 
-**Privileged intent required.** Hint: an event needs a privileged intent;
-enable it in the Developer Portal, or set `intents: "auto"`.
+**`Privileged intent required`** : un événement a besoin d'un intent privilégié.
+Activez-le dans le Developer Portal, ou définissez `intents: "auto"`.
 
 Réservé. La version actuelle ne le lève jamais. Quand la sélection automatique
 des intents en inclut un privilégié, le framework journalise un avertissement au
@@ -640,8 +648,8 @@ Voir [Événements et intents](/events/events-and-intents/).
 
 ### `DJSBOT_E080`
 
-**Invalid job schedule.** Hint: use a duration (`"30s"`, `"5m"`, `"1h"`), a
-5-field cron expression (`"0 3 * * *"`) or a macro (`"@daily"`).
+**`Invalid job schedule`** : utilisez une durée (`"30s"`, `"5m"`, `"1h"`), une
+expression cron à 5 champs (`"0 3 * * *"`) ou une macro (`"@daily"`).
 
 Levée par `defineJob`, au démarrage et non quand la tâche était due. Le détail
 nomme la tâche et sa planification, et `error.cause` dit quelle partie est

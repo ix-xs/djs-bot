@@ -77,7 +77,7 @@ const COLOURS = [
         data-active={index === 0 ? "" : undefined}
       >
         <div class="sc-code">
-          <Code code={scene.code.trimEnd()} lang="ts" title={scene.file} />
+          <Code code={scene.code.trimEnd()} lang="ts" title={scene.file} locale={page} />
         </div>
 
         <div class:list={["sc-screen", scene.id === "job" && "is-term"]}>
