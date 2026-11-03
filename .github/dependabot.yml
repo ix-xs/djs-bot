@@ -11,7 +11,9 @@ updates:
       # The types follow the oldest Node the package supports (see "engines").
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
-      # TypeScript 7 has no compiler API for tsup to build the declarations with.
+      # TypeScript 7 ships no JavaScript compiler API, which the declaration build
+      # (tsup) and the docs generator (docs/scripts/api-index.mjs) both use. The
+      # code itself type-checks with 7.
       - dependency-name: "typescript"
         versions: [">=7"]
     open-pull-requests-limit: 5
