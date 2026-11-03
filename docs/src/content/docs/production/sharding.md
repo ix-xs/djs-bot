@@ -92,6 +92,24 @@ export default defineCommand({
 
 Broadcasts work the same way, through `ctx.client.shard.broadcastEval(...)`.
 
+:::note[Listing the servers with large bot sharding]
+Since September 15, 2026, an app that uses large bot sharding must pass a
+`shard` query parameter to Get Current User Guilds (`GET /users/@me/guilds`), or
+the request fails with `400 Bad Request`. Valid values are `0` to
+`max_concurrency - 1`, `max_concurrency` coming from Get Gateway Bot. Apps
+without large bot sharding are not affected. The framework never calls that
+endpoint, and the guild cache (`client.guilds.cache`) is the usual way to list
+the servers. A bot that calls it itself passes the parameter like this:
+
+```ts
+import { Routes } from "discord.js";
+
+const guilds = await client.rest.get(Routes.userGuilds(), {
+  query: new URLSearchParams({ shard: "0" }),
+});
+```
+:::
+
 ## Jobs and deploys
 
 Every shard runs your code, so a scheduled job would run once per shard. That

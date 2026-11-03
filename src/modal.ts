@@ -276,8 +276,9 @@ function attach(label: LabelBuilder, name: string, def: FieldDef, cfg: FieldConf
       label.setMentionableSelectMenuComponent(applyPick(new MentionableSelectMenuBuilder(), name, def, cfg));
       return;
     case "files": {
-      // `file_types` has no setter in discord.js yet; the builder keeps raw
-      // API fields passed to its constructor, so it is seeded there.
+      // `file_types` goes in as raw data, which the builder keeps, rather than
+      // through `setFileTypes()`: only discord.js 14.28 has it, and 14.27 must
+      // keep working.
       const seed = cfg.fileTypes?.length ? { file_types: [...cfg.fileTypes] } : {};
       const upload = new FileUploadBuilder(seed as never).setCustomId(name).setRequired(def.required);
       if (cfg.minValues !== undefined) upload.setMinValues(cfg.minValues);

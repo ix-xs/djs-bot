@@ -976,8 +976,8 @@
     "fr": "Options de `retry`."
   },
   "@ix-xs/djs-bot/plugins#antiSpam": {
-    "en": "Rejects interactions from users who exceed a per-window rate limit - a simple guard against interaction spam, applied globally to every interaction.",
-    "fr": "Rejette les interactions des utilisateurs qui dépassent une limite de débit par fenêtre : une garde simple contre le spam d'interactions, appliquée globalement à chaque interaction."
+    "en": "Rejects the interactions of a user who exceeds a per-window rate limit: commands, components and forms.",
+    "fr": "Rejette les interactions d'un utilisateur qui dépasse une limite de débit par fenêtre : commandes, composants et formulaires."
   },
   "@ix-xs/djs-bot/plugins#commandLogger": {
     "en": "Logs a structured line for every interaction (with duration), using the per-interaction correlation logger.",

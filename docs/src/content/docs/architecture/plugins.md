@@ -289,9 +289,10 @@ The object handed to `setup` and `teardown`.
 ### `antiSpam(options?)`
 
 Rejects the interactions of a user who exceeds a rate limit. The limit is
-counted per user across every interaction, whatever the command or the server,
-and is kept in memory. A rejected user gets an error reply and neither the
-guards nor the handler run.
+counted per user across every command, component and modal submission, whatever
+the command or the server, and is kept in memory. A rejected user gets an error
+reply and neither the guards nor the handler run. Autocomplete requests are not
+counted, since an autocomplete cannot be refused with a message.
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -345,8 +346,9 @@ A reporter that throws is swallowed: reporting must never take the bot down.
 
 ### `maintenance(options?)`
 
-Answers every interaction with a notice and stops it, except for the users you
-allow.
+Answers every command, component and modal submission with a notice and stops
+it, except for the users you allow. Autocomplete requests still get their
+suggestions, since an autocomplete cannot be refused with a message.
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |

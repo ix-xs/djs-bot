@@ -92,7 +92,7 @@ export default defineCommand({
 - `fileTypes` limite ce qui peut être joint : `"image"`, `"video"`, `"audio"`, ou une extension comme `".pdf"`. Discord filtre le sélecteur de fichiers et refuse tout le reste. La comparaison se fait sur l'extension du fichier uniquement : vérifiez donc aussi `contentType` si le type compte vraiment. La lecture du fichier envoyé est traitée dans [Embeds et pièces jointes](/messages/embeds-and-attachments/).
 
 :::tip[Les chaînes peuvent tenir sur plusieurs lignes]
-Depuis septembre 2026, les utilisateurs peuvent taper des sauts de ligne dans une option de type chaîne. Si une valeur finit à un endroit qui tient sur une seule ligne (un titre d'embed, un nom de salon), retirez-les : `value.replace(/\s+/g, " ")`.
+Depuis septembre 2026, les utilisateurs peuvent taper des sauts de ligne dans une option de type chaîne. Il n'y a rien à activer : toute option de type chaîne peut en recevoir, et `maxLength` compte chacun d'eux. Si une valeur finit à un endroit qui tient sur une seule ligne (un titre d'embed, un nom de salon), retirez-les : `value.replace(/\s+/g, " ")`.
 :::
 
 ## Autocomplétion

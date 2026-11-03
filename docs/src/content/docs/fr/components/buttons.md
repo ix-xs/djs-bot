@@ -128,9 +128,14 @@ valeur (`"approve"` ici), jamais en une chaîne inattendue.
 :::caution[Les paramètres viennent du client]
 Un customId transite par le client Discord de l'utilisateur et il est seulement
 encodé, ni chiffré ni signé. N'importe qui peut le lire, et un client modifié
-peut en envoyer un autre. N'y mettez aucun secret, et décidez qui a le droit
-d'agir dans le gestionnaire ou avec une [garde](/commands/guards/), pas à partir
-d'un paramètre comme `isAdmin`.
+peut en envoyer un autre. N'y mettez aucun secret.
+
+Les paramètres identifient des choses. Pour une décision qui compte, comme savoir
+qui peut fermer un ticket ou qui peut bannir, vérifiez-la par rapport à ce que le
+bot stocke ou à ce que Discord fournit (`ctx.user`), comme le fait
+[la recette du système de tickets](/recipes/ticket-system/), ou avec une
+[garde](/commands/guards/). Ne décidez jamais à partir d'un paramètre comme
+`isAdmin`.
 :::
 
 ## Libellé, style et état
@@ -219,6 +224,17 @@ Deux conséquences sont bonnes à connaître :
 - **Le base64 ajoute un tiers à la longueur.** Avec la clé `ticket:close`, deux
   identifiants Discord produisent déjà 73 des 100 caractères.
 
+Le bot écrit le customId, mais celui-ci revient dans la requête de
+l'interaction, et un bouton peut survivre au code qui l'a écrit : un message
+envoyé par une ancienne version du bot porte un ancien schéma `params`. Le
+framework lit donc ces données comme une entrée. Elles doivent être la liste de
+chaînes qu'écrit `build()`, et chaque codec vérifie sa propre valeur. Des données
+qui ne sont pas une liste de chaînes, ou une valeur `p.number` qui n'est pas un
+nombre fini, ne se décodent pas : l'utilisateur reçoit le message d'erreur et
+l'erreur est [`DJSBOT_E021`](/api/errors/#djsbot_e021). Une liste plus courte que
+le schéma, venant d'un bouton envoyé avant l'ajout d'un paramètre, se décode
+toujours, les valeurs manquantes étant vides comme décrit plus haut.
+
 ### Quand 100 caractères ne suffisent pas
 
 Stockez les données et gardez une clé courte dans le bouton :
@@ -275,6 +291,8 @@ Les codecs de paramètres : `p.string`, `p.number`, `p.boolean` et
 `p.oneOf(...values)`, listés dans
 [Paramètres typés](/components/buttons/#typed-params). `oneOf` est aussi exporté
 seul. Les menus de sélection et les modales acceptent les mêmes `params`.
+`p.number` refuse une valeur qui n'est pas un nombre fini : l'interaction échoue
+alors avec [`DJSBOT_E021`](/api/errors/#djsbot_e021).
 
 ### `ParamCodec<T>`
 
@@ -293,7 +311,7 @@ const date: ParamCodec<Date> = {
 | --- | --- | --- |
 | `type` | `"string" \| "number" \| "boolean"` | Le type d'exécution en lequel le paramètre est décodé. |
 | `encode` | `(value: T) => string` | Transforme une valeur en texte. |
-| `decode` | `(raw: string) => T` | Relit le texte. |
+| `decode` | `(raw: string) => T` | Relit le texte. Un `decode` qui lève une erreur refuse la valeur (`DJSBOT_E021`). |
 
 `ParamMap` est un enregistrement de codecs, la forme de `params`.
 `InferParams<M>` est le type de `ctx.params` pour un `ParamMap`.
@@ -315,8 +333,8 @@ decodeCustomId(id, schema); // { key: "ticket:close", params: { ticketId: "42", 
 ### `decodeCustomId(raw, schema)`
 
 Renvoie `{ key, params }`. Lève [`DJSBOT_E021`](/api/errors/#djsbot_e021) quand la
-partie après `$` ne peut pas être décodée. Le routeur l'appelle avant chaque
-gestionnaire.
+partie après `$` n'est pas la liste de chaînes qu'écrit `build()`, ou quand un
+codec refuse sa valeur. Le routeur l'appelle avant chaque gestionnaire.
 
 ### `customIdKey(raw)`
 

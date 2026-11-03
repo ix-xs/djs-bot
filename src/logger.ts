@@ -127,7 +127,7 @@ export class Logger {
     palettes ??= { out: palette(process.stdout), err: palette(process.stderr) };
     const p = level === "error" || level === "warn" ? palettes.err : palettes.out;
     const ts = p.gray(comfort.time.format(time, "HH:mm:ss"));
-    const body = message ? `${message}` : "";
+    const body = message ? printable(message, true) : "";
     const extra = Object.keys(fields).length ? ` ${p.gray(inline(fields))}` : "";
     p.stream.write(`${ts} ${p.tags[level]} ${body}${extra}\n`);
   }
@@ -151,8 +151,22 @@ function serializeError(err: Error, depth = 0): Record<string, unknown> {
 /** `key=value` pairs for the pretty output. A value that JSON cannot write is still written. */
 function inline(fields: Record<string, unknown>): string {
   return Object.entries(fields)
-    .map(([k, v]) => `${k}=${typeof v === "object" ? comfort.utils.JSONString(v, 0) : String(v)}`)
+    .map(([k, v]) => `${k}=${typeof v === "object" ? comfort.utils.JSONString(v, 0) : printable(String(v))}`)
     .join(" ");
+}
+
+// Every C0 and C1 control character, DEL included. The message, written by the
+// developer, may keep its tabs and line breaks; a field value may not.
+const CONTROL = /[\u0000-\u001f\u007f-\u009f]/g;
+const CONTROL_BUT_LINES = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/g;
+
+/** A string with its control characters written as escapes (`\u001b`), so that it cannot drive the terminal. */
+function printable(text: string, keepLines = false): string {
+  const pattern = keepLines ? CONTROL_BUT_LINES : CONTROL;
+  pattern.lastIndex = 0;
+  if (!pattern.test(text)) return text;
+  pattern.lastIndex = 0;
+  return text.replace(pattern, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`);
 }
 
 /** Creates a root {@link Logger}. */

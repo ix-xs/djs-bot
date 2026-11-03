@@ -31,6 +31,10 @@ Un nombre est le port. Pour choisir aussi l'interface, passez un objet :
 health: { port: env.number("PORT", 3000), host: "127.0.0.1" },
 ```
 
+Sans `host`, le serveur écoute sur toutes les interfaces réseau, ce dont ont
+besoin les sondes qui viennent de l'extérieur d'un conteneur (Kubernetes, par
+exemple). Passez `host: "127.0.0.1"` quand seule la même machine l'interroge.
+
 Le serveur démarre quand le bot devient prêt et journalise
 `Health server listening`. Il est fermé par `bot.shutdown()`, et il ne maintient
 jamais le processus en vie à lui seul.
@@ -163,8 +167,9 @@ avec `curl`), pointez-le vers `/readyz` : il passe au rouge quand le bot ne
 répond pas à Discord, ce que vivent vos utilisateurs.
 
 :::caution[Ne l'exposez pas publiquement]
-`/metrics` révèle le nombre de serveurs et des éléments internes, et le serveur
-n'a aucune authentification. Liez-le à une interface privée avec `host`, ou
+`/metrics` révèle la durée de fonctionnement, les compteurs, le nombre de
+serveurs, la latence de la passerelle, la mémoire utilisée et le shard, jamais le
+token ni la configuration, et le serveur n'a aucune authentification. Liez-le à une interface privée avec `host`, ou
 gardez-le derrière votre pare-feu ou votre reverse proxy.
 :::
 

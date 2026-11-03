@@ -283,12 +283,12 @@ Vérifie tout ce qui tourne couramment mal, avant que vous ne lanciez ou ne livr
 
 | Vérification | Résultat |
 | --- | --- |
-| Version de Node | Échoue en dessous de 22.13. |
+| Version de Node | Échoue en dessous de 22.13. Avertit, sans échouer, sur une version dont le `fetch()` intégré a une faille (GHSA-xjj6-f33q-929c : une seule réponse HTTP malveillante arrête le processus) : en dessous de 22.23.4 sur Node 22, de 24.22.1 sur Node 24, de 26.12.1 sur Node 26, et sur Node 23 et 25, qui ne reçoivent pas de correctif. |
 | Version de discord.js | Échoue en dessous de 14.27. |
 | `DISCORD_TOKEN` | Échoue s'il manque, ou s'il n'a pas les trois parties séparées par des points d'un token de bot (le client secret collé par erreur). La valeur n'est jamais affichée. |
 | `DISCORD_CLIENT_ID` | Avertit s'il manque (il n'est nécessaire que pour déployer). Échoue si ce n'est pas un identifiant de 17 à 20 chiffres. |
 | `DISCORD_DEV_GUILD` | Avertit s'il manque. Échoue si ce n'est pas un identifiant de 17 à 20 chiffres. |
-| `.env` et git | Échoue quand le dossier est un dépôt git, contient un `.env`, et que `.gitignore` ne le liste pas : le token serait versionné. |
+| `.env` et git | Quand le dossier contient un `.env`, interroge git à son sujet. Échoue quand git n'ignore pas le fichier (le token serait versionné), et quand le fichier est déjà suivi par git. Toute façon de l'ignorer compte : un motif comme `.env*`, le `.gitignore` d'un dossier parent. Vérification sautée hors d'un dépôt git, ou quand git n'est pas installé. |
 | Le bot se charge | Échoue sur tout ce qui interrompt le chargement : une erreur d'import, un nom en double, une définition invalide, un contrat non satisfait, un service impossible à résoudre. L'erreur est affichée avec son code et sa piste de résolution. |
 | Intents privilégiés | Avertit avec la liste de ceux à activer dans le Developer Portal. |
 | Commandes | Avertit quand aucune n'est enregistrée, ce qui signifie généralement que `features` pointe vers le mauvais dossier. |
@@ -296,7 +296,7 @@ Vérifie tout ce qui tourne couramment mal, avant que vous ne lanciez ou ne livr
 ```text
 djs-bot doctor v1.1.0
 
-✓ Node 24.14.0
+✓ Node 24.22.1
 ✓ discord.js 14.27.0
 ✓ DISCORD_TOKEN is set
 ✓ DISCORD_CLIENT_ID is set

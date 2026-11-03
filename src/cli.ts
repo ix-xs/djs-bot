@@ -24,6 +24,7 @@ import { closeRestConnections } from "./deploy.js";
 import { VERSION } from "./constants.js";
 import { adoptPackage, STARTER_SCRIPTS } from "./scaffold.js";
 import { parseArgs, type CliArgs } from "./cli-args.js";
+import { atLeast, nodeAdvisory } from "./versions.js";
 
 // Colours that turn themselves off when the output is a file or a pipe, or
 // when NO_COLOR asks for it.
@@ -239,18 +240,24 @@ async function cmdExplain(entryArg: string | undefined, json: boolean): Promise<
   process.exit(0);
 }
 
-/** Compares dotted versions: is `actual` at least `minimum`? */
-function atLeast(actual: string, minimum: string): boolean {
-  const a = actual.split(".").map((n) => Number.parseInt(n, 10) || 0);
-  const m = minimum.split(".").map((n) => Number.parseInt(n, 10) || 0);
-  for (let i = 0; i < m.length; i++) {
-    if ((a[i] ?? 0) !== (m[i] ?? 0)) return (a[i] ?? 0) > (m[i] ?? 0);
-  }
-  return true;
-}
-
 const MIN_NODE = "22.13.0";
 const MIN_DISCORD_JS = "14.27.0";
+
+/**
+ * What git says of `.env`: whether it is ignored, and whether it is already
+ * committed. Nothing when git cannot tell: no repository here, or no git.
+ */
+async function envInGit(): Promise<{ ignored: boolean; tracked: boolean } | undefined> {
+  try {
+    const ignored = await comfort.sys.run("git", ["check-ignore", "-q", ".env"], { reject: false });
+    // 0: ignored, 1: not ignored, anything else: not a repository.
+    if (ignored.exitCode !== 0 && ignored.exitCode !== 1) return undefined;
+    const tracked = await comfort.sys.run("git", ["ls-files", "--error-unmatch", ".env"], { reject: false });
+    return { ignored: ignored.exitCode === 0, tracked: tracked.exitCode === 0 };
+  } catch {
+    return undefined;
+  }
+}
 
 async function cmdDoctor(entryArg?: string): Promise<void> {
   print(`${bold("djs-bot doctor")} ${gray(`v${VERSION}`)}\n`);
@@ -260,8 +267,11 @@ async function cmdDoctor(entryArg?: string): Promise<void> {
     bad(msg);
   };
 
-  if (atLeast(process.versions.node, MIN_NODE)) ok(`Node ${process.versions.node}`);
-  else fail(`Node ${process.versions.node} - djs-bot needs >= ${MIN_NODE}`);
+  if (atLeast(process.versions.node, MIN_NODE)) {
+    const advisory = nodeAdvisory(process.versions.node);
+    if (advisory) warn(advisory);
+    else ok(`Node ${process.versions.node}`);
+  } else fail(`Node ${process.versions.node} - djs-bot needs >= ${MIN_NODE}`);
 
   if (atLeast(discordJsVersion, MIN_DISCORD_JS)) ok(`discord.js ${discordJsVersion}`);
   else fail(`discord.js ${discordJsVersion} - djs-bot needs >= ${MIN_DISCORD_JS} (npm i discord.js@latest)`);
@@ -284,10 +294,13 @@ async function cmdDoctor(entryArg?: string): Promise<void> {
   else if (!/^\d{17,20}$/.test(devGuild)) fail("DISCORD_DEV_GUILD is not a valid id (expected 17-20 digits)");
   else ok("DISCORD_DEV_GUILD is set");
 
-  if (comfort.fs.exists(path.resolve(".env")) && comfort.fs.exists(path.resolve(".git"))) {
-    const ignored = (comfort.fs.readLines(".gitignore") ?? []).some((line) => /^\/?\.env(\b|$)/.test(line.trim()));
-    if (ignored) ok(".env is git-ignored");
-    else fail(".env is NOT in .gitignore - your token would be committed");
+  // Git itself answers, so every way of ignoring the file counts (a pattern
+  // such as .env*, a parent folder's .gitignore), and nothing else does.
+  if (comfort.fs.exists(path.resolve(".env"))) {
+    const git = await envInGit();
+    if (git?.tracked) fail(".env is tracked by git - remove it with `git rm --cached .env`, and regenerate your token if it was ever pushed");
+    else if (git?.ignored) ok(".env is git-ignored");
+    else if (git) fail(".env is NOT git-ignored - your token would be committed");
   }
 
   try {

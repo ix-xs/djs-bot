@@ -131,8 +131,13 @@ the id comes from user input.
 From November 16, 2026, Discord stops sending bots the real data of channels
 they lack the `VIEW_CHANNEL` permission on. Over the Gateway such a channel
 still arrives, but with the name `"___hidden___"`, its other details blanked
-and a dedicated flag. The REST channel list leaves it out. When the bot gains
-access, a channel update delivers the full data.
+and the flag `CHANNEL_OBFUSCATED` (`1 << 17`). The REST channel list,
+`GET /guilds/{guild.id}/channels`, leaves it out entirely: from that date
+`guild.channels.fetch()` returns only the channels the bot can view. When the
+bot gains access, a channel update delivers the full data.
+
+Until then, the temporary **Private Channel Obfuscation** toggle of the
+Developer Portal turns this behaviour on early, for testing.
 
 `isHiddenChannel` tells the two apart, so that a channel list, a counter or an
 autocomplete never shows a placeholder:
@@ -145,8 +150,8 @@ const names = guild.channels.cache
   .map((channel) => channel.name);
 ```
 
-Channels received through an interaction (a channel option, a channel select)
-are never hidden this way.
+Interaction payloads are not obfuscated: channels received through an
+interaction (a channel option, a channel select) always carry their real data.
 
 ## Reference
 

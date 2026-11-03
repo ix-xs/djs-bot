@@ -34,6 +34,10 @@ Node **22.13 or newer** (the SQLite store uses `node:sqlite`), plus
 `@ix-xs/djs-bot` and `discord.js` **14.27 or newer**. `tsx` is optional and lets `dev` and `start`
 run TypeScript with no build step.
 
+For Node, use 22.23.4, 24.22.1 or 26.12.1, or a later release of those lines:
+earlier ones have a flaw in their built-in `fetch()` that a malicious server can
+use to stop the process.
+
 ### Is TypeScript required?
 
 Not strictly, but the entire point of the framework is the typing: typed
@@ -184,8 +188,9 @@ runtime to unwind.
 
 ### Is it production ready?
 
-It is 1.0.0, semver-stable, with a typed public API, an error catalogue and a
-test suite. Version 1.x will not break your code.
+Yes. It follows semver: a minor or patch release never breaks your code, only a
+new major version may. The public API is typed, its errors carry codes listed in
+the [error catalogue](/api/errors/), and a test suite covers the framework.
 
 ### Where do I report a bug or ask for a feature?
 

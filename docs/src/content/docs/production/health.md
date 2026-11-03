@@ -31,6 +31,10 @@ A number is the port. To choose the interface too, pass an object:
 health: { port: env.number("PORT", 3000), host: "127.0.0.1" },
 ```
 
+With no `host`, the server listens on every network interface, which probes
+that come from outside a container need (Kubernetes, for one). Set
+`host: "127.0.0.1"` when only the same machine probes it.
+
 The server starts when the bot becomes ready and logs `Health server listening`.
 It is closed by `bot.shutdown()`, and it never keeps the process alive on its
 own.
@@ -161,8 +165,9 @@ it at `/readyz`: it turns red when the bot is not answering Discord, which is
 what your users experience.
 
 :::caution[Do not expose it publicly]
-`/metrics` reveals guild counts and internals, and the server has no
-authentication. Bind it to a private interface with `host`, or keep it behind
+`/metrics` reveals the uptime, the counters, the guild count, the gateway ping,
+the memory use and the shard, never the token or the configuration, and the
+server has no authentication. Bind it to a private interface with `host`, or keep it behind
 your firewall or reverse proxy.
 :::
 

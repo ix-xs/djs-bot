@@ -186,6 +186,15 @@ Discord refuses the connection (`Used disallowed intents`). Enable it, or remove
 it with `intents: { remove: [...] }`.
 :::
 
+:::note[Custom statuses and private profiles]
+Since September 17, 2026, when a user's Profile Privacy Setting is
+`Friends Only`, or `Friends & Small Servers Only` in a server of more than 200
+members, the presence updates sent to that server leave their custom status
+(activity type `4`, `ActivityType.Custom` in discord.js) out of `activities`.
+Other activity types are not affected. A `presenceUpdate` listener that reads a
+custom status has to expect it to be missing.
+:::
+
 ## Reference
 
 ### `defineEvent(event, run, options?)`

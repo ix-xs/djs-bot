@@ -284,11 +284,15 @@ export const p = {
     encode: (v: string) => v,
     decode: (raw: string) => raw,
   } as ParamCodec<string>,
-  /** A number parameter. */
+  /** A number parameter. A value that is not a finite number does not decode (`DJSBOT_E021`). */
   number: {
     type: "number",
     encode: (v: number) => String(v),
-    decode: (raw: string) => Number(raw),
+    decode: (raw: string) => {
+      const value = Number(raw);
+      if (!Number.isFinite(value)) throw new TypeError(`"${raw}" is not a finite number`);
+      return value;
+    },
   } as ParamCodec<number>,
   /** A boolean parameter (`"1"`/`"0"`). */
   boolean: {

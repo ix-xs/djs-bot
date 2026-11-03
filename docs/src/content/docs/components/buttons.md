@@ -128,8 +128,13 @@ If a value that is not in the set comes back, it decodes to the first one
 :::caution[Params come from the client]
 A customId travels through the user's Discord client and is only encoded, not
 encrypted or signed. Anyone can read it, and a modified client can send a
-different one. Do not put a secret in it, and decide who may act in the handler
-or with a [guard](/commands/guards/), not from a param such as `isAdmin`.
+different one. Do not put a secret in it.
+
+Params identify things. For a decision that matters, such as who may close a
+ticket or who may ban, check it against what the bot stores or against what
+Discord supplies (`ctx.user`), as [the ticket recipe](/recipes/ticket-system/)
+does, or with a [guard](/commands/guards/). Never decide from a param such as
+`isAdmin`.
 :::
 
 ## Label, style and state
@@ -213,6 +218,17 @@ Two consequences are worth knowing:
 - **Base64 adds a third to the length.** With the key `ticket:close`, two
   Discord ids already produce 73 of the 100 characters.
 
+The bot writes the customId, but it comes back inside the interaction request,
+and a button can outlive the code that wrote it: a message sent by an older
+version of the bot carries an older `params` schema. The framework therefore
+reads the payload as input. It must be the list of strings that `build()`
+writes, and each codec checks its own value. A payload that is not a list of
+strings, or a `p.number` value that is not a finite number, does not decode:
+the user gets the error message and the error is
+[`DJSBOT_E021`](/api/errors/#djsbot_e021). A list shorter than the schema, from
+a button sent before a param was added, still decodes, with the missing values
+empty as described above.
+
 ### When 100 characters is not enough
 
 Store the payload and keep a short key in the button:
@@ -266,7 +282,9 @@ methods still apply.
 The param codecs: `p.string`, `p.number`, `p.boolean` and
 `p.oneOf(...values)`, listed under
 [Typed params](/components/buttons/#typed-params). `oneOf` is also exported on
-its own. Select menus and modals take the same `params`.
+its own. Select menus and modals take the same `params`. `p.number` refuses a
+value that is not a finite number: the interaction then fails with
+[`DJSBOT_E021`](/api/errors/#djsbot_e021).
 
 ### `ParamCodec<T>`
 
@@ -285,7 +303,7 @@ const date: ParamCodec<Date> = {
 | --- | --- | --- |
 | `type` | `"string" \| "number" \| "boolean"` | The runtime type the param decodes to. |
 | `encode` | `(value: T) => string` | Turns a value into text. |
-| `decode` | `(raw: string) => T` | Parses the text back. |
+| `decode` | `(raw: string) => T` | Parses the text back. A `decode` that throws refuses the value (`DJSBOT_E021`). |
 
 `ParamMap` is a record of codecs, the shape of `params`. `InferParams<M>` is the
 `ctx.params` type for a `ParamMap`.
@@ -307,8 +325,8 @@ decodeCustomId(id, schema); // { key: "ticket:close", params: { ticketId: "42", 
 ### `decodeCustomId(raw, schema)`
 
 Returns `{ key, params }`. Throws [`DJSBOT_E021`](/api/errors/#djsbot_e021)
-when the part after `$` cannot be decoded. The router calls it before every
-handler.
+when the part after `$` is not the list of strings that `build()` writes, or
+when a codec refuses its value. The router calls it before every handler.
 
 ### `customIdKey(raw)`
 

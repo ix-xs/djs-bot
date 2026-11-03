@@ -3,6 +3,57 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## 1.3.1
+
+Discord's changes since August, read against the framework, and a review of
+what the framework does with input it does not control.
+
+### Fixed
+
+- **A customId payload is checked like any other input.** It comes back inside
+  the interaction request, and a button can outlive the code that wrote it.
+  A payload that is not the list of strings `build()` writes, and a `p.number`
+  value that is not a finite number, now fail to decode (`DJSBOT_E021`) instead
+  of reaching the handler as an object, an array, `NaN` or `Infinity`. A
+  button sent before a param was added still decodes, as before.
+- **`djs-bot doctor` asks git whether `.env` is ignored.** It read the
+  `.gitignore` of the current folder only, and took `.env.example` or
+  `.env.local` for a rule that ignores `.env`. Every way of ignoring the file
+  now counts, a parent folder's `.gitignore` included, and a `.env` already
+  tracked by git fails the check.
+- Development logs write the control characters of a value as escapes, so
+  that text that came from a user (a forged customId, a message) cannot drive
+  the terminal or fake a log line.
+- The doc comments of `antiSpam()` and `maintenance()` said they cover every
+  interaction. They do not see autocomplete requests, which cannot be refused
+  with a message; the comments and the plugins page say so.
+
+### Added
+
+- **`djs-bot doctor` warns about the Node releases with the `fetch()` flaw**
+  (GHSA-xjj6-f33q-929c): one malicious HTTP response can stop the process.
+  It points to 22.23.4, 24.22.1 or 26.12.1, and away from Node 23 and 25,
+  which get no fix.
+
+### Documentation
+
+- Discord's changes since August: custom statuses left out of presence
+  updates for users with a private profile, the `shard` parameter that large
+  bot sharding now needs on Get Current User Guilds, and the hidden channels
+  that the REST channel list leaves out from 16 November 2026.
+- customId params: what decodes and what does not, and why a decision that
+  matters is checked against what the bot stores.
+- The health server listens on every interface unless `host` is set.
+- The ticket recipe no longer lets text typed by a user ping `@everyone` or a
+  role.
+- The recommended Node releases, next to the minimum.
+
+### Internal
+
+- Dependencies: discord.js 14.28 and node-comfort 2.1.1 for development,
+  tsup 9, vitest 5.1; for the site, Astro 7.4 and Starlight 0.42.8. `npm
+  audit` is clean in both (undici, zod, esbuild advisories).
+
 ## 1.3.0
 
 The internals were read again next to `@ix-xs/node-comfort` 2.1, and what was

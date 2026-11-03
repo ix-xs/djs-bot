@@ -34,8 +34,8 @@ export interface AntiSpamOptions {
 }
 
 /**
- * Rejects interactions from users who exceed a per-window rate limit - a simple
- * guard against interaction spam, applied globally to every interaction.
+ * Rejects the interactions of a user who exceeds a per-window rate limit: commands, components and forms.
+ * Autocomplete requests are not counted: they cannot be refused with a message.
  */
 export function antiSpam(options: AntiSpamOptions = {}): PluginDefinition {
   const limiter = createRateLimiter({ limit: options.max ?? 5, window: options.window ?? "10s" });
@@ -126,7 +126,8 @@ export interface MaintenanceOptions {
 
 /**
  * Blocks all interactions with a maintenance notice, except for allow-listed
- * users. Toggle it live by passing a function for `enabled`.
+ * users. Toggle it live by passing a function for `enabled`. Autocomplete
+ * requests still get their suggestions: they cannot be refused with a message.
  *
  * @example maintenance({ enabled: () => flags.maintenance, allow: ownerIds })
  */

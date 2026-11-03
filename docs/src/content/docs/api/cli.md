@@ -275,12 +275,12 @@ Checks everything that commonly goes wrong, before you run or ship.
 
 | Check | Result |
 | --- | --- |
-| Node version | Fails below 22.13. |
+| Node version | Fails below 22.13. Warns, without failing, on a release whose built-in `fetch()` has a flaw (GHSA-xjj6-f33q-929c: one malicious HTTP response stops the process): below 22.23.4 on Node 22, below 24.22.1 on Node 24, below 26.12.1 on Node 26, and on Node 23 and 25, which get no fix. |
 | discord.js version | Fails below 14.27. |
 | `DISCORD_TOKEN` | Fails when it is missing, or when it does not have the three dot-separated parts of a bot token (the client secret pasted by mistake). The value is never printed. |
 | `DISCORD_CLIENT_ID` | Warns when it is missing (it is only needed to deploy). Fails when it is not a 17-20 digit id. |
 | `DISCORD_DEV_GUILD` | Warns when it is missing. Fails when it is not a 17-20 digit id. |
-| `.env` and git | Fails when the folder is a git repository, has a `.env`, and `.gitignore` does not list it: the token would be committed. |
+| `.env` and git | When the folder has a `.env`, asks git about it. Fails when git does not ignore the file (the token would be committed), and when the file is already tracked by git. Any way of ignoring it counts: a pattern such as `.env*`, the `.gitignore` of a parent folder. Skipped outside a git repository, or when git is not installed. |
 | The bot loads | Fails on anything that stops the load: an import error, a duplicate name, an invalid definition, an unsatisfied contract, an unresolvable service. The error is printed with its code and hint. |
 | Privileged intents | Warns with the list of the ones to enable in the Developer Portal. |
 | Commands | Warns when none is registered, which usually means `features` points at the wrong folder. |
@@ -288,7 +288,7 @@ Checks everything that commonly goes wrong, before you run or ship.
 ```text
 djs-bot doctor v1.1.0
 
-✓ Node 24.14.0
+✓ Node 24.22.1
 ✓ discord.js 14.27.0
 ✓ DISCORD_TOKEN is set
 ✓ DISCORD_CLIENT_ID is set

@@ -72,7 +72,10 @@ export default defineBot({
 ## Install
 
 Requires **Node 22.13 or newer** (the SQLite store uses the built-in
-`node:sqlite`) and **discord.js 14.27 or newer**.
+`node:sqlite`) and **discord.js 14.27 or newer**. Prefer Node 22.23.4, 24.22.1,
+26.12.1 or later: the releases before them have a flaw in their built-in
+`fetch()` that one malicious server response can use to stop the process.
+`npx djs-bot doctor` tells you.
 
 ```bash
 npm install @ix-xs/djs-bot discord.js

@@ -137,9 +137,14 @@ l'utilisateur.
 À partir du 16 novembre 2026, Discord cesse d'envoyer aux bots les vraies
 données des salons pour lesquels ils n'ont pas la permission `VIEW_CHANNEL`.
 Via la passerelle (gateway), un tel salon arrive toujours, mais avec le nom
-`"___hidden___"`, ses autres détails effacés et un indicateur dédié. La liste
-des salons de l'API REST l'omet. Quand le bot obtient l'accès, une mise à jour
-du salon livre les données complètes.
+`"___hidden___"`, ses autres détails effacés et l'indicateur
+`CHANNEL_OBFUSCATED` (`1 << 17`). La liste des salons de l'API REST,
+`GET /guilds/{guild.id}/channels`, l'omet entièrement : à partir de cette date,
+`guild.channels.fetch()` ne renvoie que les salons que le bot peut voir. Quand le
+bot obtient l'accès, une mise à jour du salon livre les données complètes.
+
+D'ici là, l'option temporaire **Private Channel Obfuscation** du Developer Portal
+active ce comportement en avance, pour le tester.
 
 `isHiddenChannel` fait la différence, pour qu'une liste de salons, un compteur
 ou une autocomplétion n'affiche jamais un substitut :
@@ -152,8 +157,9 @@ const names = guild.channels.cache
   .map((channel) => channel.name);
 ```
 
-Les salons reçus via une interaction (une option de salon, un menu de sélection
-de salons) ne sont jamais cachés de cette manière.
+Les données des interactions ne sont pas masquées : les salons reçus via une
+interaction (une option de salon, un menu de sélection de salons) portent
+toujours leurs vraies données.
 
 ## Référence
 

@@ -97,6 +97,11 @@ installation, et `djs-bot deploy` publie vos commandes.
 | discord.js | 14.27 ou plus récent |
 | Langage | TypeScript, ou JavaScript (CommonJS ou modules ES) |
 
+22.13 est le minimum. Utilisez 22.23.4, 24.22.1 ou 26.12.1, ou une version
+ultérieure de ces branches : les versions antérieures ont une faille dans leur
+`fetch()` intégré qu'un serveur malveillant peut exploiter pour arrêter le
+processus.
+
 TypeScript n'est pas obligatoire, mais l'essentiel de ce que le framework
 apporte se trouve dans les types. En JavaScript, vous gardez le routage, les
 gardes et la ligne de commande, et votre éditeur complète toujours grâce aux

@@ -302,7 +302,7 @@ import { /* ... */ } from "@ix-xs/djs-bot/plugins";
 
 | Export | Ce que c'est | Documenté dans |
 | --- | --- | --- |
-| `antiSpam()` | Rejette les interactions des utilisateurs qui dépassent une limite de débit par fenêtre : une garde simple contre le spam d'interactions, appliquée globalement à chaque interaction. | [Plugins et hooks](/architecture/plugins/) |
+| `antiSpam()` | Rejette les interactions d'un utilisateur qui dépasse une limite de débit par fenêtre : commandes, composants et formulaires. | [Plugins et hooks](/architecture/plugins/) |
 | `commandLogger()` | Journalise une ligne structurée pour chaque interaction (avec sa durée), à l'aide du logger de corrélation propre à l'interaction. | [Plugins et hooks](/architecture/plugins/) |
 | `errorReporter()` | Transmet chaque erreur d'interaction non gérée à votre outil de suivi d'erreurs (par exemple Sentry). | [Plugins et hooks](/architecture/plugins/) |
 | `maintenance()` | Bloque toutes les interactions avec un avis de maintenance, sauf pour les utilisateurs de la liste d'autorisation. | [Plugins et hooks](/architecture/plugins/) |

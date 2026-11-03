@@ -301,7 +301,7 @@ import { /* ... */ } from "@ix-xs/djs-bot/plugins";
 
 | Export | What it is | Documented in |
 | --- | --- | --- |
-| `antiSpam()` | Rejects interactions from users who exceed a per-window rate limit - a simple guard against interaction spam, applied globally to every interaction. | [Plugins and hooks](/architecture/plugins/) |
+| `antiSpam()` | Rejects the interactions of a user who exceeds a per-window rate limit: commands, components and forms. | [Plugins and hooks](/architecture/plugins/) |
 | `commandLogger()` | Logs a structured line for every interaction (with duration), using the per-interaction correlation logger. | [Plugins and hooks](/architecture/plugins/) |
 | `errorReporter()` | Forwards every unhandled interaction error to your reporter (e.g. Sentry). | [Plugins and hooks](/architecture/plugins/) |
 | `maintenance()` | Blocks all interactions with a maintenance notice, except for allow-listed users. | [Plugins and hooks](/architecture/plugins/) |

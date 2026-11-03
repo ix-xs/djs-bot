@@ -39,10 +39,13 @@ Discord only while your program is running. Hosting comes later, in
 
 <Steps>
 
-1. **Node.js 22 or newer**
+1. **Node.js 22.13 or newer**
 
-   `djs-bot` needs Node 22+ (it uses the built-in `node:sqlite`). Download the
-   **LTS** build from [nodejs.org](https://nodejs.org).
+   `djs-bot` needs Node 22.13 or newer (it uses the built-in `node:sqlite`).
+   Download the **LTS** build from [nodejs.org](https://nodejs.org): 22.23.4,
+   24.22.1 or 26.12.1, or a later release of those lines. Earlier ones have a
+   flaw in their built-in `fetch()` that a malicious server can use to stop the
+   process.
 
    Check it worked:
 

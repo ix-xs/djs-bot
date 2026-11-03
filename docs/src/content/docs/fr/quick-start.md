@@ -18,6 +18,11 @@ Il vous faut :
 | Son token de bot et son identifiant d'application | Depuis les pages **Bot** et **General Information** |
 | Un serveur de test | Où le bot est invité avec les scopes `bot` et `applications.commands` |
 
+22.13 est le minimum. Utilisez 22.23.4, 24.22.1 ou 26.12.1, ou une version
+ultérieure de ces branches : les versions antérieures ont une faille dans leur
+`fetch()` intégré qu'un serveur malveillant peut exploiter pour arrêter le
+processus.
+
 ## Installer
 
 ```bash

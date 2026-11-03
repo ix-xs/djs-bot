@@ -116,9 +116,10 @@ export default defineCommand({
   covered in [Embeds and attachments](/messages/embeds-and-attachments/).
 
 :::tip[Strings can span several lines]
-Since September 2026 users can type line breaks into a string option. If a
-value ends up somewhere single-line (an embed title, a channel name), strip
-them: `value.replace(/\s+/g, " ")`.
+Since September 2026 users can type line breaks into a string option. There is
+nothing to turn on: any string option can receive them, and `maxLength` counts
+each one. If a value ends up somewhere single-line (an embed title, a channel
+name), strip them: `value.replace(/\s+/g, " ")`.
 :::
 
 ## Autocomplete

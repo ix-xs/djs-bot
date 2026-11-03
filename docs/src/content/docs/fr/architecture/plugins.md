@@ -302,10 +302,11 @@ L'objet transmis à `setup` et à `teardown`.
 ### `antiSpam(options?)`
 
 Rejette les interactions d'un utilisateur qui dépasse une limite de débit. La
-limite est comptée par utilisateur sur toutes les interactions, quels que soient
-la commande ou le serveur, et elle est conservée en mémoire. Un utilisateur
-rejeté reçoit une réponse d'erreur, et ni les gardes ni le gestionnaire ne
-s'exécutent.
+limite est comptée par utilisateur sur toutes les commandes, tous les composants
+et tous les envois de modales, quels que soient la commande ou le serveur, et elle
+est conservée en mémoire. Un utilisateur rejeté reçoit une réponse d'erreur, et
+ni les gardes ni le gestionnaire ne s'exécutent. Les requêtes d'autocomplétion ne
+sont pas comptées, car une autocomplétion ne peut pas être refusée par un message.
 
 | Option | Type | Défaut | Description |
 | --- | --- | --- | --- |
@@ -362,8 +363,10 @@ faire tomber le bot.
 
 ### `maintenance(options?)`
 
-Répond à chaque interaction par un avis et l'arrête, sauf pour les utilisateurs
-que vous autorisez.
+Répond à chaque commande, chaque composant et chaque envoi de modale par un avis
+et l'arrête, sauf pour les utilisateurs que vous autorisez. Les requêtes
+d'autocomplétion reçoivent toujours leurs suggestions, car une autocomplétion ne
+peut pas être refusée par un message.
 
 | Option | Type | Défaut | Description |
 | --- | --- | --- | --- |

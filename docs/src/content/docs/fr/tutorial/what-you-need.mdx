@@ -40,10 +40,13 @@ plus tard, à l'[étape 7](/tutorial/going-live/).
 
 <Steps>
 
-1. **Node.js 22 ou plus récent**
+1. **Node.js 22.13 ou plus récent**
 
-   `djs-bot` a besoin de Node 22+ (il utilise le module intégré `node:sqlite`). Téléchargez
-   la version **LTS** sur [nodejs.org](https://nodejs.org).
+   `djs-bot` a besoin de Node 22.13 ou plus récent (il utilise le module intégré
+   `node:sqlite`). Téléchargez la version **LTS** sur [nodejs.org](https://nodejs.org) :
+   22.23.4, 24.22.1 ou 26.12.1, ou une version ultérieure de ces branches. Les
+   versions antérieures ont une faille dans leur `fetch()` intégré qu'un serveur
+   malveillant peut exploiter pour arrêter le processus.
 
    Vérifiez que l'installation a fonctionné :
 

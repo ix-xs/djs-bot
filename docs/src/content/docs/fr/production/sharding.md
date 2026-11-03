@@ -98,6 +98,25 @@ export default defineCommand({
 
 Les diffusions fonctionnent de la même façon, via `ctx.client.shard.broadcastEval(...)`.
 
+:::note[Lister les serveurs avec le large bot sharding]
+Depuis le 15 septembre 2026, une application qui utilise le large bot sharding
+doit passer un paramètre de requête `shard` à Get Current User Guilds
+(`GET /users/@me/guilds`), sinon la requête échoue avec `400 Bad Request`. Les
+valeurs valides vont de `0` à `max_concurrency - 1`, `max_concurrency` venant de
+Get Gateway Bot. Les applications sans large bot sharding ne sont pas concernées.
+Le framework n'appelle jamais ce point d'accès, et le cache des serveurs
+(`client.guilds.cache`) est le moyen habituel de les lister. Un bot qui l'appelle
+lui-même passe le paramètre ainsi :
+
+```ts
+import { Routes } from "discord.js";
+
+const guilds = await client.rest.get(Routes.userGuilds(), {
+  query: new URLSearchParams({ shard: "0" }),
+});
+```
+:::
+
 ## Tâches planifiées et déploiements
 
 Chaque shard exécute votre code, donc une tâche planifiée s'exécuterait une fois

@@ -91,6 +91,10 @@ and restarts it when a file changes, `djs-bot doctor` checks your setup, and
 | discord.js | 14.27 or newer |
 | Language | TypeScript, or JavaScript (CommonJS or ES modules) |
 
+22.13 is the minimum. Use 22.23.4, 24.22.1 or 26.12.1, or a later release of
+those lines: earlier ones have a flaw in their built-in `fetch()` that a
+malicious server can use to stop the process.
+
 TypeScript is not required, but most of what the framework gives you is in
 the types. In JavaScript you keep the routing, the guards and the command
 line, and your editor still autocompletes from the bundled declarations.

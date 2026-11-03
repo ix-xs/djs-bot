@@ -34,6 +34,10 @@ Node **22.13 ou plus récent** (le store SQLite utilise `node:sqlite`), plus
 `@ix-xs/djs-bot` et `discord.js` **14.27 ou plus récent**. `tsx` est facultatif :
 il permet à `dev` et `start` d'exécuter du TypeScript sans étape de compilation.
 
+Côté Node, utilisez 22.23.4, 24.22.1 ou 26.12.1, ou une version ultérieure de ces
+branches : les versions antérieures ont une faille dans leur `fetch()` intégré
+qu'un serveur malveillant peut exploiter pour arrêter le processus.
+
 ### TypeScript est-il obligatoire ?
 
 Pas strictement, mais tout l'intérêt du framework est dans le typage : options
@@ -195,9 +199,10 @@ sont à vous, et vous pouvez toujours redescendre à `client.on(...)` via un
 
 ### Est-il prêt pour la production ?
 
-C'est la version 1.0.0, stable au sens de semver, avec une API publique typée, un
-catalogue d'erreurs et une suite de tests. La version 1.x ne cassera pas votre
-code.
+Oui. Il suit semver : une version mineure ou corrective ne casse jamais votre
+code, seule une nouvelle version majeure le peut. L'API publique est typée, ses
+erreurs portent des codes répertoriés dans le
+[catalogue d'erreurs](/api/errors/), et une suite de tests couvre le framework.
 
 ### Où signaler un bug ou demander une fonctionnalité ?
 

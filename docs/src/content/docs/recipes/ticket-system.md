@@ -84,7 +84,7 @@ declare module "@ix-xs/djs-bot" {
 import { defineModal, field } from "@ix-xs/djs-bot";
 import { ChannelType, PermissionFlagsBits } from "discord.js";
 import { CloseButton } from "./close.button.js";
-import { ui } from "@ix-xs/djs-bot";
+import { ui, allowedMentions } from "@ix-xs/djs-bot";
 
 const MAX_OPEN_PER_USER = 3;
 
@@ -137,6 +137,7 @@ export const OpenModal = defineModal({
     await channel.send({
       content: `<@${ctx.user.id}> **${ctx.fields.subject}**\n\n${ctx.fields.details}`,
       components: [ui.row(CloseButton.build({ ticketId: ticket.id }))],
+      allowedMentions: allowedMentions.users(ctx.user.id),
     });
 
     await ctx.audit("ticket.open", { metadata: { ticketId: ticket.id, subject: ctx.fields.subject } });
@@ -145,6 +146,11 @@ export const OpenModal = defineModal({
   },
 });
 ```
+
+The subject and the details are text the user typed, and can contain
+`@everyone` or a role mention. `allowedMentions.users(ctx.user.id)` lets the
+message ping the author of the ticket and nobody else, see
+[Safe pings](/messages/formatting/#safe-pings).
 
 :::caution
 A modal must be the **first** response to an interaction, so the button that

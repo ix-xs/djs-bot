@@ -57,6 +57,12 @@ export function encodeCustomId(
 /**
  * Decodes a customId back into its routing key and typed params.
  *
+ * The bot wrote the customId, but it comes back inside a request, so its
+ * payload is read like any other input: it must be the list of strings that
+ * {@link encodeCustomId} writes, and each codec checks its own value. A list
+ * shorter than the schema (a button sent before a param was added) leaves the
+ * missing values empty, as before.
+ *
  * @param raw    The raw customId from the interaction.
  * @param schema The param codec map declared on the resolved component.
  * @throws {BotError} `DJSBOT_E021` if the payload cannot be decoded.
@@ -73,7 +79,10 @@ export function decodeCustomId(
   if (!schema || rest.length === 0) return { key, params: {} };
 
   try {
-    const decoded = JSON.parse(fromBase64Url(rest)) as string[];
+    const decoded: unknown = JSON.parse(fromBase64Url(rest));
+    if (!Array.isArray(decoded) || !decoded.every((value) => typeof value === "string")) {
+      throw new TypeError("the payload is not a list of strings");
+    }
     const ordered = Object.keys(schema);
     const params: Record<string, unknown> = {};
     ordered.forEach((name, i) => {

@@ -254,7 +254,9 @@ données d'une interaction ne sont jamais masquées.
 ### `node:sqlite` n'est pas disponible
 
 Le framework demande **Node 22.13 ou plus récent**. Vérifiez avec `node -v` et
-mettez à jour.
+mettez à jour, vers 22.23.4, 24.22.1 ou 26.12.1, ou une version ultérieure de ces
+branches : les versions antérieures ont une faille dans leur `fetch()` intégré
+qu'un serveur malveillant peut exploiter pour arrêter le processus.
 
 ### Un compteur perd des mises à jour sous charge
 

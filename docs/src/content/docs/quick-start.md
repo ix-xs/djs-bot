@@ -18,6 +18,10 @@ You need:
 | Its bot token and application id | From the **Bot** and **General Information** pages |
 | A test server | With the bot invited using the `bot` and `applications.commands` scopes |
 
+22.13 is the minimum. Use 22.23.4, 24.22.1 or 26.12.1, or a later release of
+those lines: earlier ones have a flaw in their built-in `fetch()` that a
+malicious server can use to stop the process.
+
 ## Install
 
 ```bash

@@ -193,6 +193,16 @@ Discord refuse la connexion (`Used disallowed intents`). Activez-le, ou retirez-
 avec `intents: { remove: [...] }`.
 :::
 
+:::note[Statuts personnalisés et profils privés]
+Depuis le 17 septembre 2026, quand le paramètre de confidentialité du profil d'un
+utilisateur vaut `Friends Only`, ou `Friends & Small Servers Only` dans un serveur
+de plus de 200 membres, les mises à jour de présence envoyées à ce serveur
+retirent son statut personnalisé (type d'activité `4`, `ActivityType.Custom` dans
+discord.js) de `activities`. Les autres types d'activité ne sont pas concernés.
+Un écouteur `presenceUpdate` qui lit un statut personnalisé doit s'attendre à ce
+qu'il soit absent.
+:::
+
 ## Référence
 
 ### `defineEvent(event, run, options?)`
