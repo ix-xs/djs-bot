@@ -95,6 +95,21 @@ as `.env.local`: call it at the top of the entry file, before the first
 `env()`.
 :::
 
+:::caution[Variables that can run code]
+The `.env` read at import leaves out the variables that can run code or
+weaken TLS, and names them in one warning on stderr. Among them:
+
+- `NODE_OPTIONS`, `NODE_TLS_REJECT_UNAUTHORIZED`, `NODE_EXTRA_CA_CERTS`,
+  `NODE_PATH`, `LD_PRELOAD`, `PATH`;
+- the git variables that run a command (`GIT_SSH_COMMAND`, `GIT_EDITOR`...),
+  and the editor and pager ones (`EDITOR`, `VISUAL`, `PAGER`).
+
+A `.env` from a repository someone sent you therefore cannot run code in your
+bot. When you mean such a variable, set it in the real environment.
+`loadEnvFile(path)` loads every variable of the file, those included: call it
+only on a file you trust.
+:::
+
 :::caution[Quote the secrets that contain special characters]
 In a `.env` file, `$NAME` is replaced by the value of that variable and ` #`
 starts a comment. A secret that contains `$` or ` #` must be written in single
@@ -380,8 +395,11 @@ another file, such as `.env.local`.
   inside single quotes.
 - `export NAME=value` is accepted.
 - A missing file is not an error: the call does nothing.
+- Every variable of the file is loaded, including those that can run code
+  (`NODE_OPTIONS`...). Call it only on a file you trust.
 
-The `.env` read at import follows the same rules.
+The `.env` read at import follows the same rules, except that it leaves out
+the variables that can run code.
 
 ## Limits and errors
 

@@ -5,7 +5,8 @@
 import { describe, expect, it } from "vitest";
 import { createLogger, isBotError, p } from "../src/index.js";
 import { decodeCustomId, encodeCustomId } from "../src/customId.js";
-import { nodeAdvisory } from "../src/versions.js";
+import { NODE_ENGINES, NODE_LINES, nodeProblem } from "../src/versions.js";
+import { readFileSync } from "node:fs";
 
 const schema = { ticketId: p.string, page: p.number, open: p.boolean };
 const forged = (payload: unknown): string => `ticket$${Buffer.from(JSON.stringify(payload)).toString("base64url")}`;
@@ -74,23 +75,30 @@ describe("development logs", () => {
   });
 });
 
-describe("the Node version check of doctor", () => {
-  it("warns below the release that fixes the flaw of the built-in fetch()", () => {
-    expect(nodeAdvisory("22.13.0")).toMatch(/Update to 22\.23\.4/);
-    expect(nodeAdvisory("22.23.3")).toMatch(/GHSA-xjj6-f33q-929c/);
-    expect(nodeAdvisory("24.22.0")).toMatch(/Update to 24\.22\.1/);
-    expect(nodeAdvisory("26.12.0")).toMatch(/Update to 26\.12\.1/);
+describe("the Node versions the package runs on", () => {
+  it("refuses a release older than the one that fixes the flaw of the built-in fetch()", () => {
+    expect(nodeProblem("22.13.0")).toMatch(/needs 22\.23\.4 or later/);
+    expect(nodeProblem("22.23.3")).toMatch(/GHSA-xjj6-f33q-929c/);
+    expect(nodeProblem("24.22.0")).toMatch(/needs 24\.22\.1 or later/);
+    expect(nodeProblem("26.12.0")).toMatch(/needs 26\.12\.1 or later/);
   });
 
-  it("says nothing from that release on", () => {
-    expect(nodeAdvisory("22.23.4")).toBeUndefined();
-    expect(nodeAdvisory("24.22.2")).toBeUndefined();
-    expect(nodeAdvisory("26.13.0")).toBeUndefined();
-    expect(nodeAdvisory("27.0.0")).toBeUndefined();
+  it("accepts that release and every later one", () => {
+    expect(nodeProblem("22.23.4")).toBeUndefined();
+    expect(nodeProblem("24.22.2")).toBeUndefined();
+    expect(nodeProblem("26.13.0")).toBeUndefined();
+    expect(nodeProblem("27.0.0")).toBeUndefined();
   });
 
-  it("points the lines that get no fix to one that does", () => {
-    expect(nodeAdvisory("25.9.0")).toMatch(/Node 25 gets no fix/);
-    expect(nodeAdvisory("23.11.0")).toMatch(/Node 23 gets no fix/);
+  it("refuses the lines that get no fix, and those before 22", () => {
+    expect(nodeProblem("25.9.0")).toMatch(/Node 25\.9\.0 is not supported/);
+    expect(nodeProblem("23.11.0")).toMatch(/not supported/);
+    expect(nodeProblem("20.18.0")).toMatch(/not supported/);
+  });
+
+  it("says the same as the engines field of the package", () => {
+    const engines = JSON.parse(readFileSync("package.json", "utf8")).engines.node;
+    expect(engines).toBe(NODE_ENGINES);
+    for (const [major, minimum] of Object.entries(NODE_LINES)) expect(engines).toContain(`${major === "26" ? ">=" : "^"}${minimum}`);
   });
 });

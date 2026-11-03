@@ -1,5 +1,5 @@
 /**
- * Version checks of `djs-bot doctor`.
+ * The Node versions the package runs on, and the checks of `djs-bot doctor`.
  *
  * @module versions
  */
@@ -15,20 +15,22 @@ export function atLeast(actual: string, minimum: string): boolean {
 }
 
 /**
- * The first release of each Node line that fixes GHSA-xjj6-f33q-929c: before
- * it, one malicious HTTP response to the built-in `fetch()` stops the process.
- * A bot that fetches addresses its users give is exposed. The lines that are
- * not listed get no fix.
+ * The first supported release of each Node line: the one that fixes
+ * GHSA-xjj6-f33q-929c. Before it, one malicious HTTP response to the built-in
+ * `fetch()` stops the process, and no package can prevent it. The odd lines
+ * (23, 25) get no fix and are not supported. The same rule as node-comfort's.
  */
-const NODE_FETCH_FIX: Readonly<Record<string, string>> = { "22": "22.23.4", "24": "24.22.1", "26": "26.12.1" };
+export const NODE_LINES: Readonly<Record<string, string>> = { "22": "22.23.4", "24": "24.22.1", "26": "26.12.1" };
 
-/** What to say about a Node version that has that flaw, or nothing. */
-export function nodeAdvisory(version: string): string | undefined {
-  const major = version.split(".")[0] ?? "";
-  const fixed = NODE_FETCH_FIX[major];
-  if (fixed === undefined) {
-    return Number(major) > 26 ? undefined : `Node ${major} gets no fix for a flaw of its built-in fetch() (GHSA-xjj6-f33q-929c): use Node 22, 24 or 26`;
-  }
-  if (atLeast(version, fixed)) return undefined;
-  return `Node ${version} has a flaw in its built-in fetch(): one malicious HTTP response stops the process (GHSA-xjj6-f33q-929c). Update to ${fixed} or later`;
+/** The same rule, written for the `engines` field of a `package.json`. */
+export const NODE_ENGINES = "^22.23.4 || ^24.22.1 || >=26.12.1";
+
+/** Why the package cannot run on this Node version, or nothing when it can. */
+export function nodeProblem(version: string): string | undefined {
+  const major = Number.parseInt(version.split(".")[0] ?? "", 10);
+  if (major > 26) return undefined;
+  const minimum = NODE_LINES[String(major)];
+  if (minimum === undefined) return `Node ${version} is not supported: use Node 22, 24 or 26 (${Object.values(NODE_LINES).join(", ")} or later)`;
+  if (atLeast(version, minimum)) return undefined;
+  return `Node ${version} is too old: on Node ${major}, djs-bot needs ${minimum} or later. Earlier releases have a flaw in their built-in fetch() that one malicious HTTP response can use to stop the process (GHSA-xjj6-f33q-929c)`;
 }

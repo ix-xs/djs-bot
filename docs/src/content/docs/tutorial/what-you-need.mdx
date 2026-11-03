@@ -39,19 +39,19 @@ Discord only while your program is running. Hosting comes later, in
 
 <Steps>
 
-1. **Node.js 22.13 or newer**
+1. **Node.js 22, 24 or 26**
 
-   `djs-bot` needs Node 22.13 or newer (it uses the built-in `node:sqlite`).
-   Download the **LTS** build from [nodejs.org](https://nodejs.org): 22.23.4,
-   24.22.1 or 26.12.1, or a later release of those lines. Earlier ones have a
-   flaw in their built-in `fetch()` that a malicious server can use to stop the
-   process.
+   `djs-bot` needs Node 22.23.4 or later on Node 22, 24.22.1 or later on
+   Node 24, or 26.12.1 or later. Node 23 and 25 are not supported. The
+   **LTS** build from [nodejs.org](https://nodejs.org) is one of these. Releases
+   before these have a flaw in their built-in `fetch()` that one malicious HTTP
+   response can use to stop the process.
 
    Check it worked:
 
    ```bash
    node --version
-   # v22.x.x or higher
+   # v22.23.4, v24.22.1, v26.12.1 or later on its line
    ```
 
    <Aside type="caution">

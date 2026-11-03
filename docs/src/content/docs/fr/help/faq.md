@@ -30,13 +30,13 @@ Déplacez une commande à la fois. Rien ne vous oblige à tout réécrire d'un c
 
 ### Que faut-il installer ?
 
-Node **22.13 ou plus récent** (le store SQLite utilise `node:sqlite`), plus
+Node **22.23.4 ou ultérieure sur Node 22, 24.22.1 ou ultérieure sur Node 24, ou 26.12.1 ou ultérieure**, plus
 `@ix-xs/djs-bot` et `discord.js` **14.27 ou plus récent**. `tsx` est facultatif :
 il permet à `dev` et `start` d'exécuter du TypeScript sans étape de compilation.
 
-Côté Node, utilisez 22.23.4, 24.22.1 ou 26.12.1, ou une version ultérieure de ces
-branches : les versions antérieures ont une faille dans leur `fetch()` intégré
-qu'un serveur malveillant peut exploiter pour arrêter le processus.
+Node 23 et 25 ne sont pas pris en charge, ni rien d'antérieur à 22. Les versions
+antérieures ont une faille dans leur `fetch()` intégré qu'une seule réponse HTTP
+malveillante peut exploiter pour arrêter le processus.
 
 ### TypeScript est-il obligatoire ?
 
@@ -152,8 +152,8 @@ premier lancement.
 
 ### Comment l'héberger ?
 
-Tout ce qui fait tourner Node 22 : un VPS avec systemd ou pm2, Docker, Fly,
-Railway, Render. Voir [Passer en production](/tutorial/going-live/) pour un parcours
+Tout ce qui fait tourner l'une des versions de Node indiquées plus haut : un VPS
+avec systemd ou pm2, Docker, Fly, Railway, Render. Voir [Passer en production](/tutorial/going-live/) pour un parcours
 complet.
 
 ### Quand ai-je besoin du sharding ?

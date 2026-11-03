@@ -87,13 +87,13 @@ and restarts it when a file changes, `djs-bot doctor` checks your setup, and
 
 | | |
 | --- | --- |
-| Node | 22.13 or newer |
+| Node | 22.23.4 or later on Node 22, 24.22.1 or later on Node 24, or 26.12.1 or later |
 | discord.js | 14.27 or newer |
 | Language | TypeScript, or JavaScript (CommonJS or ES modules) |
 
-22.13 is the minimum. Use 22.23.4, 24.22.1 or 26.12.1, or a later release of
-those lines: earlier ones have a flaw in their built-in `fetch()` that a
-malicious server can use to stop the process.
+Node 23 and 25 are not supported, nor anything before 22. Releases before
+these have a flaw in their built-in `fetch()` that one malicious HTTP response
+can use to stop the process.
 
 TypeScript is not required, but most of what the framework gives you is in
 the types. In JavaScript you keep the routing, the guards and the command

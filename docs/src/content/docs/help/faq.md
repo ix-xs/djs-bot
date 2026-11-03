@@ -30,13 +30,13 @@ Move one command at a time. Nothing forces a big-bang rewrite.
 
 ### What do I need installed?
 
-Node **22.13 or newer** (the SQLite store uses `node:sqlite`), plus
+Node **22.23.4 or later on Node 22, 24.22.1 or later on Node 24, or 26.12.1 or later**, plus
 `@ix-xs/djs-bot` and `discord.js` **14.27 or newer**. `tsx` is optional and lets `dev` and `start`
 run TypeScript with no build step.
 
-For Node, use 22.23.4, 24.22.1 or 26.12.1, or a later release of those lines:
-earlier ones have a flaw in their built-in `fetch()` that a malicious server can
-use to stop the process.
+Node 23 and 25 are not supported, nor anything before 22. Releases before
+these have a flaw in their built-in `fetch()` that one malicious HTTP response
+can use to stop the process.
 
 ### Is TypeScript required?
 
@@ -144,8 +144,8 @@ Anywhere outside your source tree, for example `data/bot.sqlite`, and add
 
 ### How do I host it?
 
-Anything that runs Node 22: a VPS with systemd or pm2, Docker, Fly, Railway,
-Render. See [Going live](/tutorial/going-live/) for a complete walk
+Anything that runs one of the Node versions given above: a VPS with systemd or
+pm2, Docker, Fly, Railway, Render. See [Going live](/tutorial/going-live/) for a complete walk
 through.
 
 ### When do I need sharding?

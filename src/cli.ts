@@ -17,14 +17,13 @@ import { pathToFileURL } from "node:url";
 import { createRequire } from "node:module";
 import comfort from "@ix-xs/node-comfort";
 import { version as discordJsVersion } from "discord.js";
-import { loadEnvFile } from "./config.js";
 import { isBot, type Bot } from "./bot.js";
 import { interopDefault } from "./loader.js";
 import { closeRestConnections } from "./deploy.js";
 import { VERSION } from "./constants.js";
 import { adoptPackage, STARTER_SCRIPTS } from "./scaffold.js";
 import { parseArgs, type CliArgs } from "./cli-args.js";
-import { atLeast, nodeAdvisory } from "./versions.js";
+import { NODE_ENGINES, atLeast, nodeProblem } from "./versions.js";
 
 // Colours that turn themselves off when the output is a file or a pipe, or
 // when NO_COLOR asks for it.
@@ -88,9 +87,14 @@ async function ensureTsLoader(entry: string): Promise<void> {
   }
 }
 
+// The CLI does not load `.env` itself: node-comfort reads the one of the
+// working directory as soon as it is imported, and leaves out the variables
+// that could run code or weaken TLS (NODE_OPTIONS, NODE_TLS_REJECT_UNAUTHORIZED,
+// ...). Loading the file again would bring them back, into the bot that `dev`
+// and `start` launch.
+
 /** Imports the entry in-process (introspection only - never connects). */
 async function loadBot(explicit: string | undefined, command: string): Promise<Bot> {
-  loadEnvFile();
   process.env.DJSBOT_CLI = "introspect";
   const entry = requireEntry(explicit, command);
   await ensureTsLoader(entry);
@@ -137,14 +141,12 @@ function requireEntry(entryArg: string | undefined, command: string): string {
 
 async function cmdDev(entryArg?: string): Promise<void> {
   const entry = requireEntry(entryArg, "dev");
-  loadEnvFile();
   print(`${cyan.bold("djs-bot dev")} ${gray(`→ ${path.relative(process.cwd(), entry)} (watch)`)}`);
   await run(entry, { watch: true, prod: false });
 }
 
 async function cmdStart(entryArg?: string): Promise<void> {
   const entry = requireEntry(entryArg, "start");
-  loadEnvFile();
   print(`${cyan.bold("djs-bot start")} ${gray(`→ ${path.relative(process.cwd(), entry)}`)}`);
   await run(entry, { watch: false, prod: true });
 }
@@ -240,7 +242,6 @@ async function cmdExplain(entryArg: string | undefined, json: boolean): Promise<
   process.exit(0);
 }
 
-const MIN_NODE = "22.13.0";
 const MIN_DISCORD_JS = "14.27.0";
 
 /**
@@ -267,16 +268,13 @@ async function cmdDoctor(entryArg?: string): Promise<void> {
     bad(msg);
   };
 
-  if (atLeast(process.versions.node, MIN_NODE)) {
-    const advisory = nodeAdvisory(process.versions.node);
-    if (advisory) warn(advisory);
-    else ok(`Node ${process.versions.node}`);
-  } else fail(`Node ${process.versions.node} - djs-bot needs >= ${MIN_NODE}`);
+  const nodeIssue = nodeProblem(process.versions.node);
+  if (nodeIssue) fail(nodeIssue);
+  else ok(`Node ${process.versions.node}`);
 
   if (atLeast(discordJsVersion, MIN_DISCORD_JS)) ok(`discord.js ${discordJsVersion}`);
   else fail(`discord.js ${discordJsVersion} - djs-bot needs >= ${MIN_DISCORD_JS} (npm i discord.js@latest)`);
 
-  loadEnvFile();
   const token = process.env.DISCORD_TOKEN;
   if (!token) fail("DISCORD_TOKEN is missing (env or .env)");
   // A bot token is three base64url parts. Checking the shape catches the usual
@@ -714,7 +712,7 @@ data/
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=${MIN_NODE}" },
+  "engines": { "node": "${NODE_ENGINES}" },
   "scripts": ${JSON.stringify(STARTER_SCRIPTS, null, 2).replace(/\n/g, "\n  ")}
 }
 `,

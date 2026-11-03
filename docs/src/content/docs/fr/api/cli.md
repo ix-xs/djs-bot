@@ -69,9 +69,13 @@ La CLI se sert ensuite du fichier d'entrée de l'une de ces deux façons.
   un fichier d'entrée se termine par
   `if (!process.env.DJSBOT_CLI) void bot.start();`.
 
-Avant l'un comme l'autre, la CLI lit le fichier `.env` du dossier courant et le
-charge dans l'environnement. Les variables déjà définies sont conservées : votre
-shell et votre hébergeur l'emportent donc sur le fichier.
+Avant l'un comme l'autre, le fichier `.env` du dossier courant est chargé dans
+l'environnement, comme dans tout programme qui importe djs-bot (voir
+[Configuration](/basics/configuration/)). Les variables déjà définies sont
+conservées : votre shell et votre hébergeur l'emportent donc sur le fichier. Les
+variables qui peuvent exécuter du code, comme `NODE_OPTIONS`, sont écartées : le
+bot que lancent `dev` et `start` ne les reçoit donc jamais du `.env`. Avec
+`NODE_COMFORT_DOTENV=false`, rien ne lit `.env`, la CLI comprise.
 
 ## Créer des fichiers
 
@@ -93,7 +97,7 @@ jamais écrasé.
 | `tsconfig.json` | `strict`, `skipLibCheck`, `module` et `moduleResolution` à `NodeNext`, cible `ES2023`, `src` compilé vers `dist`. |
 | `.env`, `.env.example` | `DISCORD_TOKEN`, `DISCORD_CLIENT_ID` et `DISCORD_DEV_GUILD`, vides, chacun avec un commentaire qui indique où trouver la valeur. |
 | `.gitignore` | `node_modules/`, `dist/`, `data/`, `.env`, `.djs-bot/`. |
-| `package.json` | Privé, version `0.1.0`, `"type": "module"`, `engines.node` à `>=22.13.0`, et les scripts ci-dessous. Le nom est celui du dossier, en kebab-case. |
+| `package.json` | Privé, version `0.1.0`, `"type": "module"`, `engines.node` à `^22.23.4 || ^24.22.1 || >=26.12.1`, et les scripts ci-dessous. Le nom est celui du dossier, en kebab-case. |
 
 Les scripts sont `dev`, `start`, `deploy`, `doctor` et `explain` (chacun lance la
 commande `djs-bot` du même nom) et `typecheck` (`tsc --noEmit`).
@@ -283,7 +287,7 @@ Vérifie tout ce qui tourne couramment mal, avant que vous ne lanciez ou ne livr
 
 | Vérification | Résultat |
 | --- | --- |
-| Version de Node | Échoue en dessous de 22.13. Avertit, sans échouer, sur une version dont le `fetch()` intégré a une faille (GHSA-xjj6-f33q-929c : une seule réponse HTTP malveillante arrête le processus) : en dessous de 22.23.4 sur Node 22, de 24.22.1 sur Node 24, de 26.12.1 sur Node 26, et sur Node 23 et 25, qui ne reçoivent pas de correctif. |
+| Version de Node | Échoue, en donnant la raison, sur une version où djs-bot ne tourne pas : en dessous de 22.23.4 sur Node 22, de 24.22.1 sur Node 24, de 26.12.1 sur Node 26, sur Node 23 et 25, et avant 22. Ces versions ont une faille dans leur `fetch()` intégré (GHSA-xjj6-f33q-929c : une seule réponse HTTP malveillante arrête le processus). |
 | Version de discord.js | Échoue en dessous de 14.27. |
 | `DISCORD_TOKEN` | Échoue s'il manque, ou s'il n'a pas les trois parties séparées par des points d'un token de bot (le client secret collé par erreur). La valeur n'est jamais affichée. |
 | `DISCORD_CLIENT_ID` | Avertit s'il manque (il n'est nécessaire que pour déployer). Échoue si ce n'est pas un identifiant de 17 à 20 chiffres. |

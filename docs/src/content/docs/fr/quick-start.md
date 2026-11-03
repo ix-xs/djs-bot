@@ -13,15 +13,14 @@ Il vous faut :
 
 | | |
 | --- | --- |
-| Node | 22.13 ou plus récent (`node -v`) |
+| Node | 22.23.4 ou ultérieure sur Node 22, 24.22.1 ou ultérieure sur Node 24, ou 26.12.1 ou ultérieure (`node -v`) |
 | Une application Discord | Créée sur [discord.com/developers](https://discord.com/developers/applications) |
 | Son token de bot et son identifiant d'application | Depuis les pages **Bot** et **General Information** |
 | Un serveur de test | Où le bot est invité avec les scopes `bot` et `applications.commands` |
 
-22.13 est le minimum. Utilisez 22.23.4, 24.22.1 ou 26.12.1, ou une version
-ultérieure de ces branches : les versions antérieures ont une faille dans leur
-`fetch()` intégré qu'un serveur malveillant peut exploiter pour arrêter le
-processus.
+Node 23 et 25 ne sont pas pris en charge, ni rien d'antérieur à 22. Les versions
+antérieures ont une faille dans leur `fetch()` intégré qu'une seule réponse HTTP
+malveillante peut exploiter pour arrêter le processus.
 
 ## Installer
 

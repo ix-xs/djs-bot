@@ -3,6 +3,42 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## 1.4.0
+
+The framework moves to `@ix-xs/node-comfort` 2.2, a security release, and
+takes its rules on board: the Node versions it runs on, and what a `.env` file
+may set.
+
+### Changed
+
+- **Node 22.23.4, 24.22.1 or 26.12.1 is required**, or a later release of these
+  lines (`engines`: `^22.23.4 || ^24.22.1 || >=26.12.1`). It was 22.13. The
+  earlier releases have a flaw in their built-in `fetch()` that one malicious
+  HTTP response can use to stop the process (GHSA-xjj6-f33q-929c), and
+  node-comfort 2.2 requires the same. Node 23 and 25 get no fix and are not
+  supported. `djs-bot doctor` now fails on such a version, and `djs-bot
+  init` writes the new range in the `package.json` it creates.
+- **The CLI no longer loads `.env` itself.** The package already reads it
+  when it is imported, and from node-comfort 2.2 that read leaves out the
+  variables that can run code or weaken TLS (`NODE_OPTIONS`,
+  `NODE_TLS_REJECT_UNAUTHORIZED`, `PATH`...), with a warning. The CLI loaded
+  the file a second time, which brought them back. With
+  `NODE_COMFORT_DOTENV=false`, nothing reads `.env`, the CLI included.
+
+### Fixed
+
+- **A `.env` file could run code in the bot launched by `djs-bot dev` or
+  `djs-bot start`**: a `NODE_OPTIONS=--require ./x.js` in it reached the child
+  process. The `.env` of a repository someone sent you can no longer do that.
+  `loadEnvFile(path)`, the explicit load, still loads every variable of the
+  file: call it only on a file you trust.
+
+### Internal
+
+- `@ix-xs/node-comfort` 2.2.0. Among its fixes, the duration parser behind
+  every `timeout`, `ttl` and cooldown is now linear on any input.
+- The CI tests Node 22, 24 and 26.
+
 ## 1.3.1
 
 Discord's changes since August, read against the framework, and a review of

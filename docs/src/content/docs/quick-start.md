@@ -13,14 +13,14 @@ You need:
 
 | | |
 | --- | --- |
-| Node | 22.13 or newer (`node -v`) |
+| Node | 22.23.4 or later on Node 22, 24.22.1 or later on Node 24, or 26.12.1 or later (`node -v`) |
 | A Discord application | Created at [discord.com/developers](https://discord.com/developers/applications) |
 | Its bot token and application id | From the **Bot** and **General Information** pages |
 | A test server | With the bot invited using the `bot` and `applications.commands` scopes |
 
-22.13 is the minimum. Use 22.23.4, 24.22.1 or 26.12.1, or a later release of
-those lines: earlier ones have a flaw in their built-in `fetch()` that a
-malicious server can use to stop the process.
+Node 23 and 25 are not supported, nor anything before 22. Releases before
+these have a flaw in their built-in `fetch()` that one malicious HTTP response
+can use to stop the process.
 
 ## Install
 

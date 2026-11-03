@@ -212,6 +212,10 @@ env.list = function list(name: string): string[] {
  * your own). What the real environment already defines is never replaced; a
  * file loaded here wins over the `.env` read at import.
  *
+ * Unlike the read at import, it loads every variable of the file, those that
+ * can run code included (`NODE_OPTIONS`, `NODE_TLS_REJECT_UNAUTHORIZED`...):
+ * call it only on a file you trust.
+ *
  * @example loadEnvFile(".env.local");
  */
 export function loadEnvFile(path = ".env"): void {

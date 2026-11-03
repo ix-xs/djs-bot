@@ -27,7 +27,7 @@ automatic intents and deferral, i18n, jobs, a store and a CLI.
 npm install @ix-xs/djs-bot discord.js
 ```
 
-Requires **Node 22.13+** and **discord.js 14.27+**.
+Requires **Node 22.23.4+, 24.22.1+ or 26.12.1+** and **discord.js 14.27+**.
 
 ---
 
@@ -71,11 +71,11 @@ export default defineBot({
 
 ## Install
 
-Requires **Node 22.13 or newer** (the SQLite store uses the built-in
-`node:sqlite`) and **discord.js 14.27 or newer**. Prefer Node 22.23.4, 24.22.1,
-26.12.1 or later: the releases before them have a flaw in their built-in
-`fetch()` that one malicious server response can use to stop the process.
-`npx djs-bot doctor` tells you.
+Requires **Node 22.23.4, 24.22.1 or 26.12.1**, or a later release of these
+lines (Node 23 and 25 are not supported), and **discord.js 14.27 or newer**.
+Earlier Node releases have a flaw in their built-in `fetch()` that one
+malicious server response can use to stop the process. `npx djs-bot doctor`
+checks the version you run.
 
 ```bash
 npm install @ix-xs/djs-bot discord.js

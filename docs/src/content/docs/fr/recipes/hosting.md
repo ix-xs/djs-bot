@@ -30,7 +30,7 @@ Une liste de contrôle pour la production :
 ```json title="package.json"
 {
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": { "node": "^22.23.4 || ^24.22.1 || >=26.12.1" },
   "scripts": {
     "dev": "djs-bot dev",
     "build": "tsc",

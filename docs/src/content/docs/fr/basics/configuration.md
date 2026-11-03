@@ -98,6 +98,22 @@ autre fichier, comme `.env.local` : appelez-la en haut du fichier d'entrée,
 avant le premier `env()`.
 :::
 
+:::caution[Les variables qui peuvent exécuter du code]
+Le `.env` lu à l'import écarte les variables qui peuvent exécuter du code ou
+affaiblir TLS, et les nomme dans un seul avertissement sur stderr. Parmi elles :
+
+- `NODE_OPTIONS`, `NODE_TLS_REJECT_UNAUTHORIZED`, `NODE_EXTRA_CA_CERTS`,
+  `NODE_PATH`, `LD_PRELOAD`, `PATH` ;
+- les variables de git qui lancent une commande (`GIT_SSH_COMMAND`,
+  `GIT_EDITOR`...), et celles de l'éditeur et du pager (`EDITOR`, `VISUAL`,
+  `PAGER`).
+
+Un `.env` venu d'un dépôt qu'on vous a envoyé ne peut donc pas exécuter de code
+dans votre bot. Quand vous voulez vraiment une telle variable, définissez-la dans
+l'environnement réel. `loadEnvFile(path)` charge toutes les variables du
+fichier, celles-ci comprises : ne l'appelez que sur un fichier de confiance.
+:::
+
 :::caution[Mettez entre guillemets les secrets qui contiennent des caractères spéciaux]
 Dans un fichier `.env`, `$NAME` est remplacé par la valeur de cette variable et
 ` #` ouvre un commentaire. Un secret qui contient `$` ou ` #` doit être écrit
@@ -387,8 +403,12 @@ pour un autre fichier, comme `.env.local`.
   entre guillemets simples.
 - `export NAME=value` est accepté.
 - Un fichier absent n'est pas une erreur : l'appel ne fait rien.
+- Toutes les variables du fichier sont chargées, y compris celles qui peuvent
+  exécuter du code (`NODE_OPTIONS`...). Ne l'appelez que sur un fichier de
+  confiance.
 
-Le `.env` lu à l'import suit les mêmes règles.
+Le `.env` lu à l'import suit les mêmes règles, sauf qu'il écarte les variables
+qui peuvent exécuter du code.
 
 ## Limites et erreurs
 

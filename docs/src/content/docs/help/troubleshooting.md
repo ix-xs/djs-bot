@@ -239,10 +239,9 @@ never obfuscated.
 
 ### `node:sqlite` is not available
 
-The framework requires **Node 22.13 or newer**. Check with `node -v` and
-upgrade, to 22.23.4, 24.22.1 or 26.12.1, or a later release of those lines:
-earlier ones have a flaw in their built-in `fetch()` that a malicious server can
-use to stop the process.
+Your Node is too old. The framework requires Node **22.23.4 or later on Node
+22, 24.22.1 or later on Node 24, or 26.12.1 or later**. Check with `node -v`
+and upgrade.
 
 ### A counter loses updates under load
 
