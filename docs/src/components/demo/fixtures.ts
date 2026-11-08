@@ -14,7 +14,7 @@ export const demo: Fixture = {
       { do: "reply", embed: { color: "#22c55e", description: "Pong! 🏓 42 ms" } },
     ],
   ],
-  terminal: [{ command: "npx djs-bot dev", lines: [{ at: "14:02:10", level: "info", text: "Ready user=my-bot#1234 guilds=1 version=1.4.0" }] }],
+  terminal: [{ command: "npx djs-bot dev", lines: [{ at: "14:02:10", level: "info", text: "Ready user=my-bot#1234 guilds=1 version=1.4.1" }] }],
 };
 
 const user = "Aleksandra Wiśniewska-Kowalczyk";

@@ -3,7 +3,23 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
-## Unreleased
+## 1.4.1
+
+A security update of `@ix-xs/node-comfort`, and new documentation.
+
+### Security
+
+- **`@ix-xs/node-comfort` 2.2.1 at least** (was 2.2.0). It fixes what a full
+  CodeQL scan found in 2.2.0: the logger could block the process on a value
+  made of thousands of line breaks followed by spaces, which a bot can receive
+  in a message or a form; `time.format`, its Markdown tables and
+  `fs.ensureFile` are fixed too. Nothing changes in the framework's API.
+- The repository is now scanned by CodeQL on every pull request and every
+  week.
+
+### Changed
+
+- Tested against discord.js 14.28.1.
 
 ### Documentation
 

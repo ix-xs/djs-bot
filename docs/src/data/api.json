@@ -1,5 +1,5 @@
 {
- "discordjs": "14.28.0",
+ "discordjs": "14.28.1",
  "modules": [
   {
    "name": "@ix-xs/djs-bot",
@@ -325,7 +325,7 @@
           [
            "PresenceData",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PresenceData:Interface",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PresenceData:Interface",
             "external": "discord.js"
            }
           ]
@@ -349,7 +349,7 @@
         [
          "PresenceData",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PresenceData:Interface",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PresenceData:Interface",
           "external": "discord.js"
          }
         ],
@@ -393,7 +393,7 @@
           [
            "PresenceStatusData",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PresenceStatusData:TypeAlias",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PresenceStatusData:TypeAlias",
             "external": "discord.js"
            }
           ],
@@ -434,7 +434,7 @@
             [
              "PresenceStatusData",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PresenceStatusData:TypeAlias",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PresenceStatusData:TypeAlias",
               "external": "discord.js"
              }
             ]
@@ -472,7 +472,7 @@
         [
          "PresenceStatusData",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PresenceStatusData:TypeAlias",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PresenceStatusData:TypeAlias",
           "external": "discord.js"
          }
         ],
@@ -1604,7 +1604,7 @@
       [
        "Partials",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Partials:Enum",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Partials:Enum",
         "external": "discord.js"
        }
       ],
@@ -1657,7 +1657,7 @@
       [
        "ClientOptions",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ClientOptions:Interface",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ClientOptions:Interface",
         "external": "discord.js"
        }
       ],
@@ -1770,7 +1770,7 @@
       [
        "PresenceData",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PresenceData:Interface",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PresenceData:Interface",
         "external": "discord.js"
        }
       ]
@@ -1787,7 +1787,7 @@
       [
        "PresenceData",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PresenceData:Interface",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PresenceData:Interface",
         "external": "discord.js"
        }
       ],
@@ -2395,7 +2395,7 @@
         [
          "ClientEvents",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ClientEvents:Interface",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ClientEvents:Interface",
           "external": "discord.js"
          }
         ],
@@ -2469,7 +2469,7 @@
         [
          "ClientEvents",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ClientEvents:Interface",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ClientEvents:Interface",
           "external": "discord.js"
          }
         ]
@@ -2489,7 +2489,7 @@
       [
        "ClientEvents",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ClientEvents:Interface",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ClientEvents:Interface",
         "external": "discord.js"
        }
       ],
@@ -2499,7 +2499,7 @@
       [
        "ClientEvents",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ClientEvents:Interface",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ClientEvents:Interface",
         "external": "discord.js"
        }
       ],
@@ -3890,7 +3890,7 @@
       [
        "PermissionResolvable",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
         "external": "discord.js"
        }
       ]
@@ -4166,7 +4166,7 @@
       [
        "PermissionResolvable",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
         "external": "discord.js"
        }
       ]
@@ -4870,7 +4870,7 @@
       [
        "PermissionResolvable",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
         "external": "discord.js"
        }
       ]
@@ -5100,7 +5100,7 @@
       [
        "PermissionResolvable",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
         "external": "discord.js"
        }
       ]
@@ -5321,7 +5321,7 @@
       [
        "PermissionResolvable",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
         "external": "discord.js"
        }
       ]
@@ -5551,7 +5551,7 @@
       [
        "PermissionResolvable",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
         "external": "discord.js"
        }
       ]
@@ -6095,7 +6095,7 @@
       [
        "Message",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Message:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Message:Class",
         "external": "discord.js"
        }
       ]
@@ -6109,7 +6109,7 @@
       [
        "Client",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
         "external": "discord.js"
        }
       ],
@@ -6126,7 +6126,7 @@
       [
        "User",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
         "external": "discord.js"
        }
       ]
@@ -6140,7 +6140,7 @@
       [
        "GuildMember",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
         "external": "discord.js"
        }
       ],
@@ -6157,7 +6157,7 @@
       [
        "Guild",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
         "external": "discord.js"
        }
       ],
@@ -6174,7 +6174,7 @@
       [
        "Message",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Message:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Message:Class",
         "external": "discord.js"
        }
       ],
@@ -6247,7 +6247,7 @@
           [
            "MessageReplyOptions",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/MessageReplyOptions:Interface",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/MessageReplyOptions:Interface",
             "external": "discord.js"
            }
           ]
@@ -6269,7 +6269,7 @@
          [
           "Message",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Message:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Message:Class",
            "external": "discord.js"
           }
          ],
@@ -6288,7 +6288,7 @@
         [
          "MessageReplyOptions",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/MessageReplyOptions:Interface",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/MessageReplyOptions:Interface",
           "external": "discord.js"
          }
         ],
@@ -6308,7 +6308,7 @@
         [
          "Message",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Message:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Message:Class",
           "external": "discord.js"
          }
         ],
@@ -6334,7 +6334,7 @@
           [
            "MessageCreateOptions",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/MessageCreateOptions:Interface",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/MessageCreateOptions:Interface",
             "external": "discord.js"
            }
           ]
@@ -6356,7 +6356,7 @@
          [
           "Message",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Message:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Message:Class",
            "external": "discord.js"
           }
          ],
@@ -6375,7 +6375,7 @@
         [
          "MessageCreateOptions",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/MessageCreateOptions:Interface",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/MessageCreateOptions:Interface",
           "external": "discord.js"
          }
         ],
@@ -6395,7 +6395,7 @@
         [
          "Message",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Message:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Message:Class",
           "external": "discord.js"
          }
         ],
@@ -6469,7 +6469,7 @@
     [
      "Message",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Message:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Message:Class",
       "external": "discord.js"
      }
     ],
@@ -6501,7 +6501,7 @@
       [
        "ClientEvents",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ClientEvents:Interface",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ClientEvents:Interface",
         "external": "discord.js"
        }
       ]
@@ -6513,7 +6513,7 @@
       [
        "ClientEvents",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ClientEvents:Interface",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ClientEvents:Interface",
         "external": "discord.js"
        }
       ]
@@ -6567,7 +6567,7 @@
           [
            "ClientEvents",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ClientEvents:Interface",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ClientEvents:Interface",
             "external": "discord.js"
            }
           ],
@@ -6614,7 +6614,7 @@
         [
          "ClientEvents",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ClientEvents:Interface",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ClientEvents:Interface",
           "external": "discord.js"
          }
         ],
@@ -6880,7 +6880,7 @@
          [
           "ButtonBuilder",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ButtonBuilder:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ButtonBuilder:Class",
            "external": "discord.js"
           }
          ]
@@ -6914,7 +6914,7 @@
         [
          "ButtonBuilder",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ButtonBuilder:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ButtonBuilder:Class",
           "external": "discord.js"
          }
         ]
@@ -7366,7 +7366,7 @@
          [
           "StringSelectMenuBuilder",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/StringSelectMenuBuilder:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/StringSelectMenuBuilder:Class",
            "external": "discord.js"
           }
          ]
@@ -7400,7 +7400,7 @@
         [
          "StringSelectMenuBuilder",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/StringSelectMenuBuilder:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/StringSelectMenuBuilder:Class",
           "external": "discord.js"
          }
         ]
@@ -7745,7 +7745,7 @@
       [
        "SelectMenuComponentOptionData",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/SelectMenuComponentOptionData:Interface",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/SelectMenuComponentOptionData:Interface",
         "external": "discord.js"
        }
       ],
@@ -8334,7 +8334,7 @@
          [
           "UserSelectMenuBuilder",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/UserSelectMenuBuilder:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/UserSelectMenuBuilder:Class",
            "external": "discord.js"
           }
          ]
@@ -8368,7 +8368,7 @@
         [
          "UserSelectMenuBuilder",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/UserSelectMenuBuilder:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/UserSelectMenuBuilder:Class",
           "external": "discord.js"
          }
         ]
@@ -8650,7 +8650,7 @@
          [
           "RoleSelectMenuBuilder",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/RoleSelectMenuBuilder:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/RoleSelectMenuBuilder:Class",
            "external": "discord.js"
           }
          ]
@@ -8684,7 +8684,7 @@
         [
          "RoleSelectMenuBuilder",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/RoleSelectMenuBuilder:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/RoleSelectMenuBuilder:Class",
           "external": "discord.js"
          }
         ]
@@ -8966,7 +8966,7 @@
          [
           "ChannelSelectMenuBuilder",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ChannelSelectMenuBuilder:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ChannelSelectMenuBuilder:Class",
            "external": "discord.js"
           }
          ]
@@ -9000,7 +9000,7 @@
         [
          "ChannelSelectMenuBuilder",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ChannelSelectMenuBuilder:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ChannelSelectMenuBuilder:Class",
           "external": "discord.js"
          }
         ]
@@ -9282,7 +9282,7 @@
          [
           "MentionableSelectMenuBuilder",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/MentionableSelectMenuBuilder:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/MentionableSelectMenuBuilder:Class",
            "external": "discord.js"
           }
          ]
@@ -9316,7 +9316,7 @@
         [
          "MentionableSelectMenuBuilder",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/MentionableSelectMenuBuilder:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/MentionableSelectMenuBuilder:Class",
           "external": "discord.js"
          }
         ]
@@ -9712,7 +9712,7 @@
          [
           "ModalBuilder",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ModalBuilder:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ModalBuilder:Class",
            "external": "discord.js"
           }
          ]
@@ -9746,7 +9746,7 @@
         [
          "ModalBuilder",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ModalBuilder:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ModalBuilder:Class",
           "external": "discord.js"
          }
         ]
@@ -10301,7 +10301,7 @@
       [
        "Client",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
         "external": "discord.js"
        }
       ],
@@ -10389,7 +10389,7 @@
       [
        "Client",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
         "external": "discord.js"
        }
       ],
@@ -10990,7 +10990,7 @@
           [
            "Client",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
             "external": "discord.js"
            }
           ],
@@ -11017,7 +11017,7 @@
         [
          "Client",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
           "external": "discord.js"
          }
         ],
@@ -16080,7 +16080,7 @@
       [
        "User",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
         "external": "discord.js"
        }
       ],
@@ -16106,7 +16106,7 @@
       [
        "Role",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Role:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Role:Class",
         "external": "discord.js"
        }
       ],
@@ -16132,7 +16132,7 @@
       [
        "GuildBasedChannel",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildBasedChannel:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildBasedChannel:TypeAlias",
         "external": "discord.js"
        }
       ],
@@ -16161,7 +16161,7 @@
       [
        "User",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
         "external": "discord.js"
        }
       ],
@@ -16181,7 +16181,7 @@
       [
        "GuildMember",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
         "external": "discord.js"
        }
       ],
@@ -16201,7 +16201,7 @@
       [
        "Role",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Role:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Role:Class",
         "external": "discord.js"
        }
       ],
@@ -16227,7 +16227,7 @@
       [
        "Attachment",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Attachment:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Attachment:Class",
         "external": "discord.js"
        }
       ],
@@ -17413,7 +17413,7 @@
         [
          "PermissionResolvable",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
           "external": "discord.js"
          }
         ],
@@ -17444,7 +17444,7 @@
       [
        "PermissionResolvable",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
         "external": "discord.js"
        }
       ],
@@ -17479,7 +17479,7 @@
         [
          "PermissionResolvable",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
           "external": "discord.js"
          }
         ],
@@ -17510,7 +17510,7 @@
       [
        "PermissionResolvable",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
         "external": "discord.js"
        }
       ],
@@ -18173,7 +18173,7 @@
         [
          "RepliableInteraction",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/RepliableInteraction:TypeAlias",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/RepliableInteraction:TypeAlias",
           "external": "discord.js"
          }
         ]
@@ -18203,7 +18203,7 @@
       [
        "RepliableInteraction",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/RepliableInteraction:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/RepliableInteraction:TypeAlias",
         "external": "discord.js"
        }
       ],
@@ -18371,7 +18371,7 @@
     [
      "ModalBuilder",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ModalBuilder:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ModalBuilder:Class",
       "external": "discord.js"
      }
     ],
@@ -18413,7 +18413,7 @@
       [
        "RepliableInteraction",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/RepliableInteraction:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/RepliableInteraction:TypeAlias",
         "external": "discord.js"
        }
       ]
@@ -18422,7 +18422,7 @@
       [
        "RepliableInteraction",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/RepliableInteraction:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/RepliableInteraction:TypeAlias",
         "external": "discord.js"
        }
       ]
@@ -18436,7 +18436,7 @@
       [
        "Client",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
         "external": "discord.js"
        }
       ],
@@ -18463,7 +18463,7 @@
       [
        "User",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
         "external": "discord.js"
        }
       ]
@@ -18477,7 +18477,7 @@
       [
        "Guild",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
         "external": "discord.js"
        }
       ],
@@ -18504,7 +18504,7 @@
       [
        "TextBasedChannel",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/TextBasedChannel:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/TextBasedChannel:TypeAlias",
         "external": "discord.js"
        }
       ],
@@ -18531,7 +18531,7 @@
       [
        "GuildMember",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
         "external": "discord.js"
        }
       ],
@@ -18909,7 +18909,7 @@
      [
       "ChatInputCommandInteraction",
       {
-       "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ChatInputCommandInteraction:Class",
+       "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ChatInputCommandInteraction:Class",
        "external": "discord.js"
       }
      ],
@@ -18948,7 +18948,7 @@
       [
        "Client",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
         "external": "discord.js"
        }
       ],
@@ -18977,7 +18977,7 @@
       [
        "User",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
         "external": "discord.js"
        }
       ]
@@ -18992,7 +18992,7 @@
       [
        "Guild",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
         "external": "discord.js"
        }
       ],
@@ -19021,7 +19021,7 @@
       [
        "TextBasedChannel",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/TextBasedChannel:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/TextBasedChannel:TypeAlias",
         "external": "discord.js"
        }
       ],
@@ -19050,7 +19050,7 @@
       [
        "GuildMember",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
         "external": "discord.js"
        }
       ],
@@ -19405,7 +19405,7 @@
     [
      "ChatInputCommandInteraction",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ChatInputCommandInteraction:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ChatInputCommandInteraction:Class",
       "external": "discord.js"
      }
     ],
@@ -19441,7 +19441,7 @@
      [
       "UserContextMenuCommandInteraction",
       {
-       "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/UserContextMenuCommandInteraction:Class",
+       "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/UserContextMenuCommandInteraction:Class",
        "external": "discord.js"
       }
      ],
@@ -19457,7 +19457,7 @@
       [
        "User",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
         "external": "discord.js"
        }
       ]
@@ -19471,7 +19471,7 @@
       [
        "GuildMember",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
         "external": "discord.js"
        }
       ],
@@ -19501,7 +19501,7 @@
       [
        "Client",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
         "external": "discord.js"
        }
       ],
@@ -19530,7 +19530,7 @@
       [
        "User",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
         "external": "discord.js"
        }
       ]
@@ -19545,7 +19545,7 @@
       [
        "Guild",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
         "external": "discord.js"
        }
       ],
@@ -19574,7 +19574,7 @@
       [
        "TextBasedChannel",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/TextBasedChannel:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/TextBasedChannel:TypeAlias",
         "external": "discord.js"
        }
       ],
@@ -19603,7 +19603,7 @@
       [
        "GuildMember",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
         "external": "discord.js"
        }
       ],
@@ -19958,7 +19958,7 @@
     [
      "UserContextMenuCommandInteraction",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/UserContextMenuCommandInteraction:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/UserContextMenuCommandInteraction:Class",
       "external": "discord.js"
      }
     ],
@@ -19994,7 +19994,7 @@
      [
       "MessageContextMenuCommandInteraction",
       {
-       "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/MessageContextMenuCommandInteraction:Class",
+       "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/MessageContextMenuCommandInteraction:Class",
        "external": "discord.js"
       }
      ],
@@ -20010,7 +20010,7 @@
       [
        "Message",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Message:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Message:Class",
         "external": "discord.js"
        }
       ]
@@ -20037,7 +20037,7 @@
       [
        "Client",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
         "external": "discord.js"
        }
       ],
@@ -20066,7 +20066,7 @@
       [
        "User",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
         "external": "discord.js"
        }
       ]
@@ -20081,7 +20081,7 @@
       [
        "Guild",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
         "external": "discord.js"
        }
       ],
@@ -20110,7 +20110,7 @@
       [
        "TextBasedChannel",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/TextBasedChannel:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/TextBasedChannel:TypeAlias",
         "external": "discord.js"
        }
       ],
@@ -20139,7 +20139,7 @@
       [
        "GuildMember",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
         "external": "discord.js"
        }
       ],
@@ -20494,7 +20494,7 @@
     [
      "MessageContextMenuCommandInteraction",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/MessageContextMenuCommandInteraction:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/MessageContextMenuCommandInteraction:Class",
       "external": "discord.js"
      }
     ],
@@ -20535,7 +20535,7 @@
      [
       "ButtonInteraction",
       {
-       "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ButtonInteraction:Class",
+       "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ButtonInteraction:Class",
        "external": "discord.js"
       }
      ],
@@ -20587,7 +20587,7 @@
       [
        "Client",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
         "external": "discord.js"
        }
       ],
@@ -20616,7 +20616,7 @@
       [
        "User",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
         "external": "discord.js"
        }
       ]
@@ -20631,7 +20631,7 @@
       [
        "Guild",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
         "external": "discord.js"
        }
       ],
@@ -20660,7 +20660,7 @@
       [
        "TextBasedChannel",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/TextBasedChannel:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/TextBasedChannel:TypeAlias",
         "external": "discord.js"
        }
       ],
@@ -20689,7 +20689,7 @@
       [
        "GuildMember",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
         "external": "discord.js"
        }
       ],
@@ -21044,7 +21044,7 @@
     [
      "ButtonInteraction",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ButtonInteraction:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ButtonInteraction:Class",
       "external": "discord.js"
      }
     ],
@@ -21085,7 +21085,7 @@
      [
       "AnySelectMenuInteraction",
       {
-       "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/AnySelectMenuInteraction:TypeAlias",
+       "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/AnySelectMenuInteraction:TypeAlias",
        "external": "discord.js"
       }
      ],
@@ -21131,7 +21131,7 @@
       [
        "User",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
         "external": "discord.js"
        }
       ],
@@ -21159,7 +21159,7 @@
       [
        "GuildMember",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
         "external": "discord.js"
        }
       ],
@@ -21187,7 +21187,7 @@
       [
        "Role",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Role:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Role:Class",
         "external": "discord.js"
        }
       ],
@@ -21215,7 +21215,7 @@
       [
        "GuildBasedChannel",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildBasedChannel:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildBasedChannel:TypeAlias",
         "external": "discord.js"
        }
       ],
@@ -21259,7 +21259,7 @@
       [
        "Client",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
         "external": "discord.js"
        }
       ],
@@ -21288,7 +21288,7 @@
       [
        "User",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
         "external": "discord.js"
        }
       ]
@@ -21303,7 +21303,7 @@
       [
        "Guild",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
         "external": "discord.js"
        }
       ],
@@ -21332,7 +21332,7 @@
       [
        "TextBasedChannel",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/TextBasedChannel:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/TextBasedChannel:TypeAlias",
         "external": "discord.js"
        }
       ],
@@ -21361,7 +21361,7 @@
       [
        "GuildMember",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
         "external": "discord.js"
        }
       ],
@@ -21716,7 +21716,7 @@
     [
      "AnySelectMenuInteraction",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/AnySelectMenuInteraction:TypeAlias",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/AnySelectMenuInteraction:TypeAlias",
       "external": "discord.js"
      }
     ],
@@ -21762,7 +21762,7 @@
      [
       "ModalSubmitInteraction",
       {
-       "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ModalSubmitInteraction:Class",
+       "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ModalSubmitInteraction:Class",
        "external": "discord.js"
       }
      ],
@@ -21788,7 +21788,7 @@
       [
        "Client",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
         "external": "discord.js"
        }
       ],
@@ -21817,7 +21817,7 @@
       [
        "User",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
         "external": "discord.js"
        }
       ]
@@ -21832,7 +21832,7 @@
       [
        "Guild",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
         "external": "discord.js"
        }
       ],
@@ -21861,7 +21861,7 @@
       [
        "TextBasedChannel",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/TextBasedChannel:TypeAlias",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/TextBasedChannel:TypeAlias",
         "external": "discord.js"
        }
       ],
@@ -21890,7 +21890,7 @@
       [
        "GuildMember",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
         "external": "discord.js"
        }
       ],
@@ -22245,7 +22245,7 @@
     [
      "ModalSubmitInteraction",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ModalSubmitInteraction:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ModalSubmitInteraction:Class",
       "external": "discord.js"
      }
     ],
@@ -22821,7 +22821,7 @@
          [
           "Message",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Message:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Message:Class",
            "external": "discord.js"
           }
          ],
@@ -22850,7 +22850,7 @@
         [
          "Message",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Message:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Message:Class",
           "external": "discord.js"
          }
         ],
@@ -23038,7 +23038,7 @@
     [
      "InteractionReplyOptions",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/InteractionReplyOptions:Interface",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/InteractionReplyOptions:Interface",
       "external": "discord.js"
      }
     ]
@@ -23103,7 +23103,7 @@
       [
        "AutocompleteInteraction",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/AutocompleteInteraction:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/AutocompleteInteraction:Class",
         "external": "discord.js"
        }
       ]
@@ -23117,7 +23117,7 @@
       [
        "Client",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
         "external": "discord.js"
        }
       ],
@@ -23134,7 +23134,7 @@
       [
        "User",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
         "external": "discord.js"
        }
       ]
@@ -23148,7 +23148,7 @@
       [
        "Guild",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
         "external": "discord.js"
        }
       ],
@@ -24639,7 +24639,7 @@
       [
        "Partials",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Partials:Enum",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Partials:Enum",
         "external": "discord.js"
        }
       ],
@@ -27542,7 +27542,7 @@
    "kind": "variable",
    "code": [
     [
-     "const VERSION: \"1.4.0\""
+     "const VERSION: \"1.4.1\""
     ]
    ],
    "slug": "version"
@@ -27943,7 +27943,7 @@
           [
            "Guild",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
             "external": "discord.js"
            }
           ]
@@ -27963,7 +27963,7 @@
          [
           "GuildEmoji",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildEmoji:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildEmoji:Class",
            "external": "discord.js"
           }
          ],
@@ -27982,7 +27982,7 @@
         [
          "Guild",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
           "external": "discord.js"
          }
         ],
@@ -27992,7 +27992,7 @@
         [
          "GuildEmoji",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildEmoji:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildEmoji:Class",
           "external": "discord.js"
          }
         ],
@@ -28012,7 +28012,7 @@
     [
      "GuildEmoji",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildEmoji:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildEmoji:Class",
       "external": "discord.js"
      }
     ],
@@ -28304,7 +28304,7 @@
          [
           "ActionRowBuilder",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ActionRowBuilder:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ActionRowBuilder:Class",
            "external": "discord.js"
           }
          ],
@@ -28350,7 +28350,7 @@
         [
          "ActionRowBuilder",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ActionRowBuilder:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ActionRowBuilder:Class",
           "external": "discord.js"
          }
         ],
@@ -28401,7 +28401,7 @@
          [
           "ButtonBuilder",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ButtonBuilder:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ButtonBuilder:Class",
            "external": "discord.js"
           }
          ]
@@ -28417,7 +28417,7 @@
         [
          "ButtonBuilder",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ButtonBuilder:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ButtonBuilder:Class",
           "external": "discord.js"
          }
         ]
@@ -28445,7 +28445,7 @@
          [
           "ButtonBuilder",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ButtonBuilder:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ButtonBuilder:Class",
            "external": "discord.js"
           }
          ]
@@ -28461,7 +28461,7 @@
         [
          "ButtonBuilder",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ButtonBuilder:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ButtonBuilder:Class",
           "external": "discord.js"
          }
         ]
@@ -28510,7 +28510,7 @@
          [
           "PollData",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PollData:Interface",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PollData:Interface",
            "external": "discord.js"
           }
          ]
@@ -28538,7 +28538,7 @@
         [
          "PollData",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PollData:Interface",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PollData:Interface",
           "external": "discord.js"
          }
         ]
@@ -28791,7 +28791,7 @@
           [
            "ButtonBuilder",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ButtonBuilder:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ButtonBuilder:Class",
             "external": "discord.js"
            }
           ],
@@ -28825,7 +28825,7 @@
             [
              "ButtonBuilder",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ButtonBuilder:Class",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ButtonBuilder:Class",
               "external": "discord.js"
              }
             ]
@@ -28869,7 +28869,7 @@
         [
          "ButtonBuilder",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ButtonBuilder:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ButtonBuilder:Class",
           "external": "discord.js"
          }
         ],
@@ -29041,7 +29041,7 @@
     [
      "ActionRowBuilder",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ActionRowBuilder:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ActionRowBuilder:Class",
       "external": "discord.js"
      }
     ],
@@ -29051,7 +29051,7 @@
     [
      "ButtonBuilder",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ButtonBuilder:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ButtonBuilder:Class",
       "external": "discord.js"
      }
     ],
@@ -29061,7 +29061,7 @@
     [
      "ButtonBuilder",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ButtonBuilder:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ButtonBuilder:Class",
       "external": "discord.js"
      }
     ],
@@ -29071,7 +29071,7 @@
     [
      "PollData",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PollData:Interface",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PollData:Interface",
       "external": "discord.js"
      }
     ],
@@ -29216,7 +29216,7 @@
     [
      "ActionRowBuilder",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ActionRowBuilder:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ActionRowBuilder:Class",
       "external": "discord.js"
      }
     ],
@@ -29764,7 +29764,7 @@
           [
            "Guild",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
             "external": "discord.js"
            }
           ]
@@ -29804,7 +29804,7 @@
          [
           "GuildMember",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
            "external": "discord.js"
           }
          ],
@@ -29823,7 +29823,7 @@
         [
          "Guild",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
           "external": "discord.js"
          }
         ],
@@ -29843,7 +29843,7 @@
         [
          "GuildMember",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
           "external": "discord.js"
          }
         ],
@@ -29866,7 +29866,7 @@
           [
            "Client",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
             "external": "discord.js"
            }
           ]
@@ -29906,7 +29906,7 @@
          [
           "User",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
            "external": "discord.js"
           }
          ],
@@ -29925,7 +29925,7 @@
         [
          "Client",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
           "external": "discord.js"
          }
         ],
@@ -29945,7 +29945,7 @@
         [
          "User",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
           "external": "discord.js"
          }
         ],
@@ -29968,7 +29968,7 @@
           [
            "Guild",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
             "external": "discord.js"
            }
           ]
@@ -30008,7 +30008,7 @@
          [
           "Role",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Role:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Role:Class",
            "external": "discord.js"
           }
          ],
@@ -30027,7 +30027,7 @@
         [
          "Guild",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
           "external": "discord.js"
          }
         ],
@@ -30047,7 +30047,7 @@
         [
          "Role",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Role:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Role:Class",
           "external": "discord.js"
          }
         ],
@@ -30070,7 +30070,7 @@
           [
            "Client",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
             "external": "discord.js"
            }
           ]
@@ -30110,7 +30110,7 @@
          [
           "Channel",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Channel:TypeAlias",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Channel:TypeAlias",
            "external": "discord.js"
           }
          ],
@@ -30129,7 +30129,7 @@
         [
          "Client",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Client:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Client:Class",
           "external": "discord.js"
          }
         ],
@@ -30149,7 +30149,7 @@
         [
          "Channel",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Channel:TypeAlias",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Channel:TypeAlias",
           "external": "discord.js"
          }
         ],
@@ -30172,7 +30172,7 @@
           [
            "TextBasedChannel",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/TextBasedChannel:TypeAlias",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/TextBasedChannel:TypeAlias",
             "external": "discord.js"
            }
           ]
@@ -30212,7 +30212,7 @@
          [
           "Message",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Message:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Message:Class",
            "external": "discord.js"
           }
          ],
@@ -30231,7 +30231,7 @@
         [
          "TextBasedChannel",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/TextBasedChannel:TypeAlias",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/TextBasedChannel:TypeAlias",
           "external": "discord.js"
          }
         ],
@@ -30251,7 +30251,7 @@
         [
          "Message",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Message:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Message:Class",
           "external": "discord.js"
          }
         ],
@@ -30281,7 +30281,7 @@
     [
      "GuildMember",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
       "external": "discord.js"
      }
     ],
@@ -30301,7 +30301,7 @@
     [
      "User",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
       "external": "discord.js"
      }
     ],
@@ -30321,7 +30321,7 @@
     [
      "Role",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Role:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Role:Class",
       "external": "discord.js"
      }
     ],
@@ -30341,7 +30341,7 @@
     [
      "Channel",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Channel:TypeAlias",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Channel:TypeAlias",
       "external": "discord.js"
      }
     ],
@@ -30361,7 +30361,7 @@
     [
      "Message",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Message:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Message:Class",
       "external": "discord.js"
      }
     ],
@@ -30694,7 +30694,7 @@
     [
      "EmbedBuilder",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/EmbedBuilder:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/EmbedBuilder:Class",
       "external": "discord.js"
      }
     ],
@@ -30738,7 +30738,7 @@
     [
      "BaseMessageOptions",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/BaseMessageOptions:Interface",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/BaseMessageOptions:Interface",
       "external": "discord.js"
      }
     ],
@@ -30909,7 +30909,7 @@
       [
        "EmbedBuilder",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/EmbedBuilder:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/EmbedBuilder:Class",
         "external": "discord.js"
        }
       ]
@@ -30988,7 +30988,7 @@
           [
            "User",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
             "external": "discord.js"
            }
           ],
@@ -30998,7 +30998,7 @@
           [
            "GuildMember",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
             "external": "discord.js"
            }
           ]
@@ -31035,7 +31035,7 @@
         [
          "User",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
           "external": "discord.js"
          }
         ],
@@ -31045,7 +31045,7 @@
         [
          "GuildMember",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
           "external": "discord.js"
          }
         ],
@@ -31077,7 +31077,7 @@
           [
            "User",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
             "external": "discord.js"
            }
           ]
@@ -31121,7 +31121,7 @@
         [
          "User",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/User:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/User:Class",
           "external": "discord.js"
          }
         ],
@@ -31163,7 +31163,7 @@
           [
            "Guild",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
             "external": "discord.js"
            }
           ]
@@ -31200,7 +31200,7 @@
         [
          "Guild",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
           "external": "discord.js"
          }
         ],
@@ -31232,7 +31232,7 @@
           [
            "Guild",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
             "external": "discord.js"
            }
           ]
@@ -31269,7 +31269,7 @@
         [
          "Guild",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
           "external": "discord.js"
          }
         ],
@@ -31301,7 +31301,7 @@
           [
            "Guild",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
             "external": "discord.js"
            }
           ]
@@ -31338,7 +31338,7 @@
         [
          "Guild",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Guild:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Guild:Class",
           "external": "discord.js"
          }
         ],
@@ -31544,7 +31544,7 @@
           [
            "GuildMember",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
             "external": "discord.js"
            }
           ]
@@ -31556,7 +31556,7 @@
          [
           "VoiceBasedChannel",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/VoiceBasedChannel:TypeAlias",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/VoiceBasedChannel:TypeAlias",
            "external": "discord.js"
           }
          ],
@@ -31575,7 +31575,7 @@
         [
          "GuildMember",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
           "external": "discord.js"
          }
         ],
@@ -31585,7 +31585,7 @@
         [
          "VoiceBasedChannel",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/VoiceBasedChannel:TypeAlias",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/VoiceBasedChannel:TypeAlias",
           "external": "discord.js"
          }
         ],
@@ -31608,7 +31608,7 @@
           [
            "GuildMember",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
             "external": "discord.js"
            }
           ]
@@ -31632,7 +31632,7 @@
         [
          "GuildMember",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
           "external": "discord.js"
          }
         ],
@@ -31655,7 +31655,7 @@
           [
            "VoiceBasedChannel",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/VoiceBasedChannel:TypeAlias",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/VoiceBasedChannel:TypeAlias",
             "external": "discord.js"
            }
           ]
@@ -31677,7 +31677,7 @@
          [
           "GuildMember",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
            "external": "discord.js"
           }
          ],
@@ -31696,7 +31696,7 @@
         [
          "VoiceBasedChannel",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/VoiceBasedChannel:TypeAlias",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/VoiceBasedChannel:TypeAlias",
           "external": "discord.js"
          }
         ],
@@ -31716,7 +31716,7 @@
         [
          "GuildMember",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
           "external": "discord.js"
          }
         ],
@@ -31739,7 +31739,7 @@
           [
            "GuildMember",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
             "external": "discord.js"
            }
           ]
@@ -31751,7 +31751,7 @@
           [
            "VoiceBasedChannel",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/VoiceBasedChannel:TypeAlias",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/VoiceBasedChannel:TypeAlias",
             "external": "discord.js"
            }
           ],
@@ -31776,7 +31776,7 @@
          [
           "GuildMember",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
            "external": "discord.js"
           }
          ],
@@ -31795,7 +31795,7 @@
         [
          "GuildMember",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
           "external": "discord.js"
          }
         ],
@@ -31805,7 +31805,7 @@
         [
          "VoiceBasedChannel",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/VoiceBasedChannel:TypeAlias",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/VoiceBasedChannel:TypeAlias",
           "external": "discord.js"
          }
         ],
@@ -31825,7 +31825,7 @@
         [
          "GuildMember",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
           "external": "discord.js"
          }
         ],
@@ -31848,7 +31848,7 @@
           [
            "GuildMember",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
             "external": "discord.js"
            }
           ]
@@ -31870,7 +31870,7 @@
          [
           "GuildMember",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
            "external": "discord.js"
           }
          ],
@@ -31889,7 +31889,7 @@
         [
          "GuildMember",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
           "external": "discord.js"
          }
         ],
@@ -31909,7 +31909,7 @@
         [
          "GuildMember",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
           "external": "discord.js"
          }
         ],
@@ -31932,7 +31932,7 @@
           [
            "GuildMember",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
             "external": "discord.js"
            }
           ]
@@ -31973,7 +31973,7 @@
          [
           "GuildMember",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
            "external": "discord.js"
           }
          ],
@@ -31992,7 +31992,7 @@
         [
          "GuildMember",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
           "external": "discord.js"
          }
         ],
@@ -32012,7 +32012,7 @@
         [
          "GuildMember",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
           "external": "discord.js"
          }
         ],
@@ -32035,7 +32035,7 @@
           [
            "GuildMember",
            {
-            "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+            "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
             "external": "discord.js"
            }
           ]
@@ -32076,7 +32076,7 @@
          [
           "GuildMember",
           {
-           "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+           "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
            "external": "discord.js"
           }
          ],
@@ -32095,7 +32095,7 @@
         [
          "GuildMember",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
           "external": "discord.js"
          }
         ],
@@ -32115,7 +32115,7 @@
         [
          "GuildMember",
          {
-          "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+          "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
           "external": "discord.js"
          }
         ],
@@ -32135,7 +32135,7 @@
     [
      "VoiceBasedChannel",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/VoiceBasedChannel:TypeAlias",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/VoiceBasedChannel:TypeAlias",
       "external": "discord.js"
      }
     ],
@@ -32155,7 +32155,7 @@
     [
      "GuildMember",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
       "external": "discord.js"
      }
     ],
@@ -32175,7 +32175,7 @@
     [
      "GuildMember",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
       "external": "discord.js"
      }
     ],
@@ -32195,7 +32195,7 @@
     [
      "GuildMember",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
       "external": "discord.js"
      }
     ],
@@ -32215,7 +32215,7 @@
     [
      "GuildMember",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
       "external": "discord.js"
      }
     ],
@@ -32235,7 +32235,7 @@
     [
      "GuildMember",
      {
-      "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/GuildMember:Class",
+      "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/GuildMember:Class",
       "external": "discord.js"
      }
     ],
@@ -32403,7 +32403,7 @@
        [
         "ShardingManager",
         {
-         "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ShardingManager:Class",
+         "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ShardingManager:Class",
          "external": "discord.js"
         }
        ],
@@ -32450,7 +32450,7 @@
       [
        "ShardingManager",
        {
-        "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ShardingManager:Class",
+        "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ShardingManager:Class",
         "external": "discord.js"
        }
       ],
@@ -37920,7 +37920,7 @@
             [
              "PermissionResolvable",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
               "external": "discord.js"
              }
             ],
@@ -37937,7 +37937,7 @@
             [
              "PermissionResolvable",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
               "external": "discord.js"
              }
             ],
@@ -38218,7 +38218,7 @@
             [
              "PermissionResolvable",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
               "external": "discord.js"
              }
             ],
@@ -38235,7 +38235,7 @@
             [
              "PermissionResolvable",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
               "external": "discord.js"
              }
             ],
@@ -38489,7 +38489,7 @@
             [
              "PermissionResolvable",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
               "external": "discord.js"
              }
             ],
@@ -38506,7 +38506,7 @@
             [
              "PermissionResolvable",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
               "external": "discord.js"
              }
             ],
@@ -38760,7 +38760,7 @@
             [
              "PermissionResolvable",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
               "external": "discord.js"
              }
             ],
@@ -38777,7 +38777,7 @@
             [
              "PermissionResolvable",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
               "external": "discord.js"
              }
             ],
@@ -39048,7 +39048,7 @@
             [
              "PermissionResolvable",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
               "external": "discord.js"
              }
             ],
@@ -39065,7 +39065,7 @@
             [
              "PermissionResolvable",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
               "external": "discord.js"
              }
             ],
@@ -39396,7 +39396,7 @@
             [
              "PermissionResolvable",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
               "external": "discord.js"
              }
             ],
@@ -39413,7 +39413,7 @@
             [
              "PermissionResolvable",
              {
-              "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/PermissionResolvable:TypeAlias",
+              "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/PermissionResolvable:TypeAlias",
               "external": "discord.js"
              }
             ],
@@ -39927,7 +39927,7 @@
    "name": "Partials",
    "module": "@ix-xs/djs-bot",
    "link": {
-    "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Partials:Enum",
+    "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Partials:Enum",
     "external": "discord.js"
    }
   },
@@ -39935,7 +39935,7 @@
    "name": "Events",
    "module": "@ix-xs/djs-bot",
    "link": {
-    "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Events:Enum",
+    "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Events:Enum",
     "external": "discord.js"
    }
   },
@@ -39943,7 +39943,7 @@
    "name": "Colors",
    "module": "@ix-xs/djs-bot",
    "link": {
-    "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/Colors:Variable",
+    "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/Colors:Variable",
     "external": "discord.js"
    }
   },
@@ -39951,7 +39951,7 @@
    "name": "EmbedBuilder",
    "module": "@ix-xs/djs-bot",
    "link": {
-    "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/EmbedBuilder:Class",
+    "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/EmbedBuilder:Class",
     "external": "discord.js"
    }
   },
@@ -39959,7 +39959,7 @@
    "name": "AttachmentBuilder",
    "module": "@ix-xs/djs-bot",
    "link": {
-    "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/AttachmentBuilder:Class",
+    "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/AttachmentBuilder:Class",
     "external": "discord.js"
    }
   },
@@ -39967,7 +39967,7 @@
    "name": "ActionRowBuilder",
    "module": "@ix-xs/djs-bot",
    "link": {
-    "href": "https://discord.js.org/docs/packages/discord.js/14.28.0/ActionRowBuilder:Class",
+    "href": "https://discord.js.org/docs/packages/discord.js/14.28.1/ActionRowBuilder:Class",
     "external": "discord.js"
    }
   },

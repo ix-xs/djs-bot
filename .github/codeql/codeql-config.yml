@@ -1,0 +1,4 @@
+# The tests feed the framework hostile input on purpose (forged custom ids,
+# oversized values): they are not shipped, so they aren't scanned.
+paths-ignore:
+  - test
