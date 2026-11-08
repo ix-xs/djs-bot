@@ -145,35 +145,7 @@ export default defineJob({
 On a bot that is not sharded, both values behave the same. Everything else
 about shards is on the [Sharding](/production/sharding/) page.
 
-## Reference
-
-### `defineJob(input)`
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | - | A unique name, used in logs and by `djs-bot explain`. |
-| `schedule` | `string` | - | A duration, a 5-field cron expression or a macro. See [schedule syntax](#schedule-syntax). |
-| `timezone` | `string` | host local time | IANA zone a cron expression is evaluated in, for example `"Europe/Paris"`. Ignored for a duration. |
-| `concurrency` | `number` | `1` | How many runs may be active at once. A run that would exceed it is skipped. |
-| `runOnStart` | `boolean` | `false` | Also run once when the bot is ready, in addition to the schedule. |
-| `shard` | `"all" \| "first"` | `"all"` | On a sharded bot: every shard, or only the one that owns shard id 0. |
-| `run` | `(ctx: JobContext) => unknown` | - | The work to do on each run. May be async. |
-
-Returns a `JobDefinition` (`kind: "job"`), to export from a `.job` file or to
-list in a [feature](/architecture/features/). The schedule is parsed when
-`defineJob` is called.
-
-### `JobContext`
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `client` | `Client<true>` | The connected client. |
-| `services` | `ServiceMap` | Your [services](/architecture/services/), typed. |
-| `logger` | `Logger` | A logger tagged with the job name and the `correlationId` of this run. |
-| `signal` | `AbortSignal` | Aborted when the bot is shutting down. |
-| `correlationId` | `string` | A unique id for this run. Every line logged through `logger` carries it. |
-
-### Schedule syntax
+## Schedule syntax
 
 **Durations.** A number followed by a unit, without spaces: `ms`, `s`, `m`, `h`,
 `d` or `w`. Units can be combined (`"1h30m"`). A string made of digits only is a
@@ -219,21 +191,18 @@ the month, and every Monday.
 | `@monthly` | `0 0 1 * *` | On the 1st of every month at midnight. |
 | `@yearly`, `@annually` | `0 0 1 1 *` | On 1 January at midnight. |
 
-### `parseSchedule(schedule)`
+## Reference
 
-The parser used by `defineJob`, exported so you can validate a schedule that
-comes from a configuration file or from a user.
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-```ts title="scripts/check-schedule.ts"
-import { parseSchedule } from "@ix-xs/djs-bot";
-
-parseSchedule("5m"); // { type: "interval", ms: 300000 }
-parseSchedule("0 3 * * *"); // { type: "cron", fields: [...] }
-parseSchedule("every day"); // throws an Error that says what is wrong
-```
-
-It returns a `ParsedSchedule`: `{ type: "interval", ms }` for a duration,
-`{ type: "cron", fields }` for a cron expression or a macro.
+- `defineJob()`: Defines a scheduled job.
+- `JobDefinition`: A scheduled job.
+- `JobContext`: Context passed to scheduled jobs.
+- `ServiceMap`: Global service map.
+- `Logger`: Structured logger with level filtering and child bindings.
+- `s`: Slash-command option builders.
+- `parseSchedule()`: Parses a duration, a cron expression or a macro into a schedule descriptor.
+- `ParsedSchedule`: A schedule parsed into something the scheduler can evaluate.
 
 ## Limits and errors
 

@@ -13,12 +13,12 @@ const t = useT(locale);
 
 /** Pages offered first, in this order. Titles come from the pages themselves. */
 const STARTING_POINTS = [
-  "quick-start",
-  "commands/slash-commands",
+  "start/installation",
+  "bot/first-command",
   "commands/options",
   "components/buttons",
   "components/modals",
-  "api/errors",
+  "help/troubleshooting",
   "api/cli",
 ];
 /** Searches that show what the index knows: an API name, a concept, a command. */
@@ -28,7 +28,7 @@ const QUERIES = ["defineCommand", "customId", "autocomplete", "cooldown", "deplo
 function area(slug: string): string {
   const folder = slug.includes("/") ? slug.slice(0, slug.indexOf("/")) : "";
   if (folder === "") return t("area.start");
-  if (folder === "api" || folder === "help") return t("area.reference");
+  if (folder === "api" || folder === "help") return t("area.help");
   return t(`area.${folder}` as UiKey);
 }
 

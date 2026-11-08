@@ -1,0 +1,124 @@
+---
+/**
+ * A terminal that types a command and prints what it answers, line by line,
+ * once when it comes into view (and again from the replay button). Without
+ * JavaScript, or with reduced motion, the whole output is already there.
+ *
+ *   <TerminalDemo command="npx djs-bot dev" lines={[
+ *     { level: "info", text: "Ready user=my-bot#1234 guilds=1" },
+ *   ]} />
+ */
+interface Line {
+  text: string;
+  /** Colours the line like the logger does. */
+  level?: "info" | "warn" | "error" | "ok" | "dim" | "fail";
+  /** The time the logger prints first, "14:02:11". */
+  at?: string;
+  /** Waits this long before the line (a connection, a build). */
+  delay?: number;
+}
+
+interface Props {
+  command: string;
+  lines: Line[];
+  title?: string;
+}
+
+const fr = Astro.locals.starlightRoute?.locale === "fr";
+const { command, lines, title = fr ? "Terminal" : "Terminal" } = Astro.props;
+// "fail" is a red line that is not the logger's (an uncaught error).
+const LEVELS = { info: "INFO ", warn: "WARN ", error: "ERROR", ok: "", dim: "", fail: "" } as const;
+---
+
+<figure class="td not-content" data-td aria-label={`${title}: ${command}`}>
+  <div class="td-window" translate="no">
+    <div class="td-bar"><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><span aria-hidden="true">{title}</span><button class="dd-replay" type="button" data-td-replay hidden>
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.6-3.7M3 2.5v2.8h2.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+    {fr ? "Rejouer" : "Replay"}
+  </button></div>
+    <pre class="td-screen"><code><span class="td-line td-cmd"><span class="td-prompt">$ </span><span data-td-command data-text={command}>{command}</span><span class="td-caret" aria-hidden="true"></span></span>{lines.map((line) => (
+      <span class={`td-line td-${line.level ?? "plain"}`} data-td-line data-delay={line.delay ?? 0}>{line.at && <span class="td-time">{line.at} </span>}{line.level && LEVELS[line.level] && <span class="td-level">{LEVELS[line.level]}</span>}{line.text}</span>
+    ))}</code></pre>
+  </div>
+</figure>
+
+<script>
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+
+  for (const root of document.querySelectorAll<HTMLElement>("[data-td]")) {
+    const command = root.querySelector<HTMLElement>("[data-td-command]")!;
+    const lines = [...root.querySelectorAll<HTMLElement>("[data-td-line]")];
+    const screen = root.querySelector<HTMLElement>(".td-screen")!;
+    const replay = root.querySelector<HTMLButtonElement>("[data-td-replay]")!;
+    let run = 0;
+    const sleep = (ms: number, current: number) => new Promise<boolean>((resolve) => setTimeout(() => resolve(current === run), ms));
+
+    async function play(): Promise<void> {
+      const current = ++run;
+      // The screen keeps its full height, so that the page does not move.
+      screen.style.minHeight = `${screen.offsetHeight}px`;
+      for (const line of lines) line.removeAttribute("data-on");
+      root.setAttribute("data-playing", "");
+      command.textContent = "";
+      const text = command.dataset.text ?? "";
+      if (!(await sleep(300, current))) return;
+      for (const char of text) {
+        command.textContent += char;
+        if (!(await sleep(reduced.matches ? 0 : 40, current))) return;
+      }
+      if (!(await sleep(350, current))) return;
+      for (const line of lines) {
+        if (!(await sleep(Number(line.dataset.delay) || 160, current))) return;
+        line.setAttribute("data-on", "");
+      }
+      root.removeAttribute("data-playing");
+    }
+
+    for (const line of lines) line.setAttribute("data-on", "");
+    root.setAttribute("data-ready", "");
+    replay.hidden = false;
+    replay.addEventListener("click", () => void play());
+    if (reduced.matches) continue;
+    const watcher = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        watcher.disconnect();
+        void play();
+      },
+      { threshold: 0.6 },
+    );
+    watcher.observe(root);
+  }
+</script>
+
+<style is:global>
+  .td { margin: 1.75rem 0 0; }
+  .td-window { overflow: hidden; border: 1px solid var(--at-line); border-radius: var(--at-radius); background: #141413; }
+  .td-bar { display: flex; align-items: center; gap: 0.375rem; height: 2.25rem; padding: 0 0.875rem; border-bottom: 1px solid #2b2a26; }
+  .td-bar i { width: 0.625rem; height: 0.625rem; border-radius: 50%; background: #3a3934; }
+  .td-bar span { margin-left: 0.5rem; font-family: var(--sl-font-mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: #8f8c82; }
+  :root .sl-markdown-content .td pre.td-screen, .td pre.td-screen { margin: 0; padding: 1rem 1.25rem; border: 0; background: none; font-family: var(--sl-font-mono); font-size: 0.8125rem; line-height: 1.75; color: #e6e3da; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .td-screen code { display: grid; grid-template-columns: minmax(0, 1fr); padding: 0; background: none; font-size: inherit; color: inherit; }
+  .td-prompt { color: #8891f7; }
+  .td-caret { display: none; width: 0.55em; height: 1.1em; margin-left: 1px; vertical-align: -0.15em; background: #e6e3da; }
+  .td[data-playing] .td-caret { display: inline-block; animation: dd-blink 1s steps(1) infinite; }
+  .td[data-ready] .td-line[data-td-line] { display: none; }
+  .td[data-ready] .td-line[data-td-line][data-on] {
+    display: block;
+    transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out);
+    @starting-style { opacity: 0; transform: translateY(4px); }
+  }
+  .td-level { margin-right: 0.75ch; font-weight: 700; }
+  .td-time { color: #8f8c82; }
+  .td-info .td-level { color: #6cb6ff; }
+  .td-warn .td-level { color: #e3a35c; }
+  .td-error .td-level { color: #f47067; }
+  .td-ok { color: #4fbf8f; }
+  .td-fail { color: #f47067; }
+  .td-dim { color: #8f8c82; }
+  @keyframes dd-blink { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .td[data-ready] .td-line[data-td-line][data-on] { transition: opacity 180ms ease; @starting-style { opacity: 0; transform: none; } }
+    .td[data-playing] .td-caret { animation: none; }
+  }
+</style>

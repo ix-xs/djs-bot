@@ -163,78 +163,12 @@ toujours leurs vraies données.
 
 ## Référence
 
-### `createCache(options)`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-```ts
-createCache<K, V>(options?: TTLCacheOptions): TTLCache<K, V>
-```
-
-Crée un `TTLCache`. `K` est le type des clés et `V` celui des valeurs, les clés
-n'ont donc pas besoin d'être des chaînes.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `ttl` | `number \| string` | `"5m"` | Durée de vie d'une entrée : des millisecondes, ou une durée comme `"30s"`, `"5m"`, `"1h"`. |
-| `max` | `number` | `1000` | Nombre maximal d'entrées. Quand le cache est plein, ajouter une nouvelle clé en évince une. |
-| `staleWhileRevalidate` | `boolean` | `false` | Sert immédiatement une valeur expirée et la rafraîchit en arrière-plan. |
-
-Une chaîne de durée impossible à analyser retombe sur la valeur par défaut
-(`"5m"` dans les options, le TTL du cache dans `set` et `getOrFetch`).
-
-### `TTLCache<K, V>`
-
-La classe derrière `createCache`. `new TTLCache<K, V>(options)` est identique si
-vous la préférez.
-
-```ts
-import { TTLCache } from "@ix-xs/djs-bot";
-
-const perGuild = new TTLCache<string, Settings>({ ttl: "10m" });
-```
-
-| Méthode | Renvoie | Description |
-| --- | --- | --- |
-| `get(key)` | `V \| undefined` | La valeur, ou `undefined` si absente ou expirée. Marque l'entrée comme récemment utilisée. |
-| `set(key, value, ttl?)` | `void` | Stocke une valeur. `ttl` remplace le TTL du cache pour cette entrée. |
-| `has(key)` | `boolean` | Indique si `get(key)` renverrait une valeur. |
-| `delete(key)` | `void` | Supprime une entrée. |
-| `clear()` | `void` | Vide le cache. |
-| `getOrFetch(key, fetcher, ttl?)` | `Promise<V>` | La valeur en cache, ou exécute `fetcher` (synchrone ou asynchrone), met le résultat en cache et le renvoie. Les appels simultanés pour une clé partagent un seul fetch. |
-
-Comment les entrées quittent le cache :
-
-- Une entrée expirée est supprimée quand `get` ou `has` la lit (sauf si
-  `staleWhileRevalidate` est activé). Il n'y a pas de nettoyage en arrière-plan :
-  c'est `max` qui borne la mémoire.
-- Quand le cache contient `max` entrées et qu'une nouvelle clé est ajoutée,
-  l'entrée insérée, ou lue avec `get`, il y a le plus longtemps est évincée. Un
-  succès dans `getOrFetch` et l'écrasement d'une clé existante avec `set` ne
-  comptent pas comme une utilisation.
-
-### `resolve`
-
-Chaque helper lit le cache de discord.js et fait un fetch en cas d'absence.
-`force` vaut `false` par défaut. Avec `true`, le cache est ignoré.
-
-| Helper | Renvoie |
-| --- | --- |
-| `resolve.member(guild, id, force?)` | `Promise<GuildMember>` |
-| `resolve.user(client, id, force?)` | `Promise<User>` |
-| `resolve.role(guild, id, force?)` | `Promise<Role \| null>` |
-| `resolve.channel(client, id, force?)` | `Promise<Channel \| null>` |
-| `resolve.message(channel, id, force?)` | `Promise<Message>` |
-
-Le `channel` de `resolve.message` est un salon textuel, comme `ctx.channel`.
-
-### `isHiddenChannel(channel)`
-
-```ts
-isHiddenChannel(channel): boolean
-```
-
-`true` quand le salon porte l'indicateur « obfuscated » de Discord ou le nom de
-substitution `"___hidden___"`. Accepte n'importe quel objet salon, et renvoie
-`false` pour `null` ou `undefined`.
+- `createCache()` : Crée un `TTLCache`.
+- `TTLCache` : Un cache en mémoire TTL + LRU avec récupération en un seul appel (single-flight).
+- `resolve` : Utilitaires de récupération qui interrogent d'abord le cache.
+- `isHiddenChannel()` : Indique si un salon est un salon que le bot ne peut pas voir, envoyé par Discord sans son nom ni ses détails (« masqué »).
 
 ## Voir aussi
 

@@ -3,6 +3,29 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## Unreleased
+
+### Documentation
+
+- **A guide that builds one bot, page by page.** The site opens on it: create
+  the Discord application, install the project, then the configuration, the
+  first run, a first command, how the bot finds its files, how commands reach
+  Discord, events, and putting the bot online. Each step says what to do and
+  why. The topic pages follow, to read when needed.
+- **Animated Discord and terminal scenes** show what the code of a page does:
+  a command typed and answered, a button pressed, a menu opened, a form filled
+  in, the "is thinking" of a slow reply, the output of `djs-bot dev`.
+- **An API reference, one page per export**, built from the declarations of
+  the package: its signature, what each parameter accepts, what it returns,
+  its properties and methods, examples, the exports that use it, and the page
+  of the guide that explains it. Every type links to its page, or to
+  discord.js.org. In French too.
+- A name of the API written in code anywhere in the guide links to its page in
+  the reference. The topic pages lost their long tables of options, now in
+  the reference.
+- The old addresses (the landing page, the tutorial, the quick start, "All
+  exports") lead to their new places.
+
 ## 1.4.0
 
 The framework moves to `@ix-xs/node-comfort` 2.2, a security release, and

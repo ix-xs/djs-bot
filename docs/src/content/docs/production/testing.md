@@ -300,152 +300,7 @@ database opens it in the test too.
 The same validation runs outside the test suite with `npx djs-bot doctor`,
 described on the [CLI](/api/cli/) page.
 
-## Reference
-
-### `createHarness(bot)`
-
-Returns a `Harness`. `bot` is optional: pass a `Bot` on which `bot.load()` has
-completed to use its services, its `owners` and its `messages` as defaults.
-Without it, inject what each call needs.
-
-Every method below takes a definition and an optional input object, and (except
-`autocomplete` and `job`) resolves with a
-[`HarnessResult`](/production/testing/#harnessresult). The input accepts the
-[shared fields](/production/testing/#shared-input) plus the ones listed for the
-method.
-
-### `harness.command(def, input)`
-
-Runs a slash command, or one of its subcommands.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `options` | `Record<string, unknown>` | `{}` | The option values, by name: what `ctx.options` holds. |
-| `subcommand` | `string` | none | The subcommand to run. |
-| `group` | `string` | none | The group that subcommand belongs to. |
-
-### `harness.userCommand(def, input)`
-
-Runs a user context-menu command.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `targetUser` | `unknown` | `{ id: "target-user" }` | What `ctx.targetUser` holds. |
-| `targetMember` | `unknown` | `null` | What `ctx.targetMember` holds. |
-
-### `harness.messageCommand(def, input)`
-
-Runs a message context-menu command.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `targetMessage` | `unknown` | `{ id: "target-message", content: "" }` | What `ctx.targetMessage` holds. |
-
-### `harness.button(def, input)`
-
-Runs a button handler.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `params` | `Record<string, unknown>` | `{}` | What `ctx.params` holds. |
-
-### `harness.select(def, input)`
-
-Runs a select-menu handler, string or native.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `params` | `Record<string, unknown>` | `{}` | What `ctx.params` holds. |
-| `values` | `string[]` | `[]` | The picked values or ids: `ctx.values`. |
-| `resolved` | `{ users?, members?, roles?, channels? }` | none | What a native select resolved: `ctx.users` and `ctx.members` for a user or mentionable select, `ctx.roles` for a role or mentionable select, `ctx.channels` for a channel select. |
-
-The shared `roles` input keeps its usual meaning here: the role ids of the
-invoking member, for `hasRole()`. The roles the menu picked go in
-`resolved.roles`. `users`, `members` and `channels` are still accepted at the
-top level, but they are deprecated: use `resolved`.
-
-### `harness.modal(def, input)`
-
-Runs a modal handler. There is no `ctx.update` and no `ctx.showModal` here, as
-in a real modal submission.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `fields` | `Record<string, unknown>` | `{}` | The submitted values, by field name: `ctx.fields`. |
-| `params` | `Record<string, unknown>` | `{}` | What `ctx.params` holds. |
-
-### `harness.autocomplete(def, input)`
-
-Runs the autocomplete handler of one option of a slash command. Resolves with
-the `AutocompleteChoice[]` the bot would send. Guards do not run for
-autocomplete. Of the shared fields, only `userId`, `guildId`, `channelId`,
-`services` and `locale` apply.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `option` | `string` | required | The name of the option being typed. |
-| `value` | `string` | `""` | What the user has typed so far: `ctx.value`. |
-| `options` | `AutocompleteOptions` | `{}` | What the other options hold: `ctx.options`. The focused option is added to it. |
-| `subcommand` | `string` | none | The subcommand the option belongs to. |
-| `group` | `string` | none | The group of that subcommand. |
-
-### `harness.job(def, input)`
-
-Runs a job once and resolves with nothing. An error thrown by the job rejects
-the promise.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `services` | `Partial<ServiceMap>` | the bot's, or `{}` | What `ctx.services` holds. |
-| `signal` | `AbortSignal` | a signal that never aborts | What `ctx.signal` holds, to test how a job reacts to a shutdown. |
-
-### Shared input
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `userId` | `string` | `"test-user"` | The id of the invoking user. |
-| `guildId` | `string` | none (a DM) | A fake guild id. Without it `ctx.guild` and `ctx.member` are `null`. |
-| `channelId` | `string` | none | A fake channel id. |
-| `services` | `Partial<ServiceMap>` | the bot's, or `{}` | What `ctx.services` holds. It replaces the bot's services, it is not merged with them. |
-| `locale` | `string` | `"en"` | `ctx.locale`. |
-| `owners` | `string[]` | the bot's, or `[]` | `ctx.owners`, for `ownerOnly()`. |
-| `permissions` | `PermissionResolvable[]` | every permission | What the member holds, for `hasPermission()`. Needs `guildId`. |
-| `botPermissions` | `PermissionResolvable[]` | every permission | What the bot holds, for `botHasPermission()`. |
-| `roles` | `string[]` | `[]` | Role ids the member holds, for `hasRole()`. Needs `guildId`. |
-| `messages` | `FrameworkMessages` | the bot's | Message overrides, as in `defineBot({ messages })`. |
-| `interaction` | `Record<string, unknown>` | `{}` | Extra fields merged into the fake `ctx.interaction`. |
-| `runGuards` | `boolean` | `true` | Pass `false` to skip the guards and test the handler alone. |
-
-### `HarnessResult`
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `replies` | `CapturedReply[]` | Everything the handler sent, in order. |
-| `passedGuards` | `boolean` | Whether every guard passed. The handler runs only when it is `true`. |
-| `rejectionReason` | `string?` | The reason given by the guard that refused, if it gave one. |
-
-### `CapturedReply`
-
-An object `{ type, content? }`. `content` is the first argument of the call.
-The options of a semantic reply (`{ ephemeral: true }`, a title) are not
-recorded.
-
-| `type` | Recorded by |
-| --- | --- |
-| `reply` | `ctx.reply(...)` |
-| `success`, `error`, `info`, `warn` | `ctx.reply.success(...)` and its siblings |
-| `ephemeral` | `ctx.reply.ephemeral(...)` |
-| `defer` | `ctx.reply.defer()` or `ctx.update.defer()` |
-| `followUp` | `ctx.reply.followUp(...)` |
-| `editReply` | `ctx.reply.editReply(...)` |
-| `delete` | `ctx.reply.delete()` |
-| `update` | `ctx.update(...)` |
-| `update:disable` | `ctx.update.disable()` |
-| `modal` | `ctx.showModal(...)`. `content` is the built `ModalBuilder`. |
-
-`ctx.reply.fetch()` records nothing and resolves with `{ id: "test-reply" }`.
-
-### The fake `ctx`
+## The fake `ctx`
 
 What a handler finds on its context under the harness. The real one is
 described on [The ctx object](/basics/context/).
@@ -464,6 +319,25 @@ described on [The ctx object](/basics/context/).
 | `ctx.t(key)` | Returns the key, even when the bot has translations. |
 | `ctx.say(key, vars)` | The framework's wording, with the `messages` overrides. |
 | `ctx.audit(...)` | Does nothing. |
+
+## Reference
+
+Every option, property and type, with what it accepts and returns, is in the API reference:
+
+- `createHarness()`: Creates a test harness.
+- `Harness`: A harness bound to an optional `Bot` (for its services).
+- `Bot`: The bot application.
+- `HarnessResult`: The result of running a handler through the harness.
+- `subcommand()`: Defines one subcommand with its own typed options.
+- `hasRole()`: Requires the invoking member to hold **at least one** of the given roles.
+- `AutocompleteOptions`: What the user has filled in so far, by option name, as Discord sends it while they type: text, numbers and booleans as such, and the **id** of a user, role, channel, mentionable or attachment.
+- `ownerOnly()`: Restricts usage to specific user ids.
+- `hasPermission()`: Requires the invoking member to have all of the given permissions **in the current channel** (channel overwrites included, as computed by Discord).
+- `botHasPermission()`: Requires the *bot* to have all of the given permissions **in the current channel** (channel overwrites included, as computed by Discord).
+- `FrameworkMessages`: The overridable message table accepted by `defineBot({ messages })`.
+- `defineBot()`: Creates a `Bot`.
+- `CapturedReply`: A single captured response produced by a handler under test.
+- `guildOwnerOnly()`: Restricts usage to the owner of the server the interaction happens in.
 
 ## See also
 

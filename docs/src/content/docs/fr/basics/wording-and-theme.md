@@ -38,7 +38,7 @@ if (!process.env.DJSBOT_CLI) void bot.start();
 
 Une valeur est un modèle : `{seconds}`, `{permissions}` et les autres
 espaces réservés sont remplacés par les variables de ce message. Le
-[tableau des clés](#frameworkmessages) indique quelles variables chaque message
+[tableau des clés](/reference/framework-messages/) indique quelles variables chaque message
 reçoit. Pour un bot qui ne parle qu'une langue, de simples chaînes suffisent.
 
 ## Traduire selon l'utilisateur
@@ -137,89 +137,22 @@ hexadécimal. Les helpers eux-mêmes sont décrits dans
 
 ## Référence
 
-### `FrameworkMessages`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-Le type de `messages` dans [`defineBot`](/basics/configuration/#botconfig). Chaque
-clé est facultative et contient une [`MessageValue`](#messagevalue).
-
-| Clé | Variables | Texte par défaut | Affiché quand |
-| --- | --- | --- | --- |
-| `error` | aucune | `Something went wrong. The team has been notified.` | Un gestionnaire a levé une erreur et rien ne l'a traitée. |
-| `unknownCommand` | `{name}` | `Unknown command.` | Une commande slash ou de menu contextuel non enregistrée est arrivée au bot. |
-| `unknownSubcommand` | `{name}` | `Unknown subcommand.` | Une sous-commande non enregistrée est arrivée au bot. `name` inclut le groupe, s'il y en a un. |
-| `guardDenied` | aucune | `You can't do that.` | Une garde a échoué sans donner de raison. |
-| `guildOnly` | aucune | `This can only be used in a server.` | `inGuild()` a échoué, ou une garde de permission s'est exécutée hors d'un serveur. |
-| `dmOnly` | aucune | `This can only be used in DMs.` | `dmOnly()` a échoué. |
-| `missingPermissions` | `{permissions}` | `You need: {permissions}.` | `hasPermission()` a échoué. |
-| `botMissingPermissions` | `{permissions}` | `I need: {permissions}.` | `botHasPermission()` a échoué. |
-| `wrongChannel` | aucune | `This can't be used in this channel.` | `inChannel()` a échoué. |
-| `ownerOnly` | aucune | `You can't use this.` | `ownerOnly()` a échoué. |
-| `guildOwnerOnly` | aucune | `Only the server owner can use this.` | `guildOwnerOnly()` a échoué. |
-| `missingRole` | aucune | `You don't have the role required for this.` | `hasRole()` a échoué. |
-| `cooldown` | `{seconds}` | `Please wait {seconds}s before doing that again.` | `cooldown()` a échoué. |
-| `rateLimited` | `{seconds}` | `Rate limit reached. Try again in {seconds}s.` | `rateLimit()` a échoué. |
-| `slowDown` | `{seconds}` | `You're doing that too fast - please slow down.` | Le plugin `antiSpam` a refusé une interaction. |
-| `featureDisabled` | `{feature}` | `This feature is currently disabled here.` | `featureEnabled()` a échoué. |
-| `notAMember` | `{option}` | `That user is not a member of this server.` | Une option `s.member()` obligatoire a reçu un utilisateur qui n'est pas membre du serveur, ou la commande s'est exécutée hors d'un serveur. |
-| `confirm` | aucune | `Confirm` | Libellé du bouton de confirmation de `confirm()`. |
-| `cancel` | aucune | `Cancel` | Libellé du bouton d'annulation de `confirm()`. |
-
-Les variables :
-
-| Variable | Type | Valeur |
-| --- | --- | --- |
-| `name` | `string` | La commande reçue, ou la sous-commande avec son groupe. |
-| `permissions` | `string` | Les permissions manquantes, lisibles et séparées par des virgules : `Ban Members, Kick Members`. |
-| `seconds` | `number` | L'attente restante, en secondes entières, arrondie à l'entier supérieur. |
-| `feature` | `string` | Le nom du feature flag désactivé. |
-| `option` | `string` | Le nom de l'option de type membre. |
-
-Tous les messages sauf `confirm` et `cancel` sont envoyés avec `ctx.reply.error` :
-un embed éphémère dans la couleur `error` du thème.
-
-### `MessageValue`
-
-```ts
-type MessageValue<K extends MessageKey = MessageKey> =
-  | string
-  | ((vars: MessageVars[K], ctx?: BaseContext) => string);
-```
-
-| Forme | Comportement |
-| --- | --- |
-| `string` | Un modèle. Chaque `{placeholder}` qui désigne une variable du message est remplacé par sa valeur. Les autres espaces réservés restent tels qu'écrits. |
-| fonction | Appelée avec les variables et le `ctx`, quand il y en a un. Sa valeur de retour est utilisée telle quelle, sans remplacement d'espaces réservés. |
-
-`MessageKey` est l'union des dix-neuf clés ci-dessus, et `MessageVars` associe
-chaque clé au type de ses variables.
-
-### `ctx.say(key, vars?)`
-
-```ts
-say<K extends MessageKey>(key: K, vars?: MessageVars[K]): string
-```
-
-Produit un message en appliquant les redéfinitions de `defineBot({ messages })`,
-et retombe sur la valeur anglaise par défaut pour une clé que vous n'avez pas
-renseignée.
-
-### `DEFAULT_MESSAGES`
-
-La formulation anglaise intégrée : un objet avec une chaîne modèle par clé, aux
-textes du tableau ci-dessus.
-
-### `Theme`
-
-Le type derrière `theme`, qui accepte un `Partial<Theme>`.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `success` | `number` | `0x22c55e` | Couleur de `ctx.reply.success`. |
-| `error` | `number` | `0xef4444` | Couleur de `ctx.reply.error`, et donc de tous les refus du framework. |
-| `info` | `number` | `0x3b82f6` | Couleur de `ctx.reply.info`. |
-| `warn` | `number` | `0xf59e0b` | Couleur de `ctx.reply.warn`. |
-
-`DEFAULT_THEME` est exporté et contient ces quatre valeurs par défaut.
+- `FrameworkMessages` : La table de messages remplaçable acceptée par `defineBot({ messages })`.
+- `defineBot()` : Crée un `Bot`.
+- `MessageValue` : Un message : une chaîne modèle avec des `{placeholders}`, ou une fonction pour un contrôle total (traduction, pluralisation).
+- `inGuild()` : Exige que l'interaction ait lieu dans un serveur.
+- `dmOnly()` : Exige que l'interaction ait lieu en messages privés.
+- `hasPermission()` : Exige que le membre qui invoque possède toutes les permissions données **dans le salon courant** (surcharges du salon incluses, telles que calculées par Discord).
+- `botHasPermission()` : Exige que le *bot* possède toutes les permissions données **dans le salon courant** (surcharges du salon incluses, telles que calculées par Discord).
+- `inChannel()` : Restreint l'usage à des identifiants de salon précis.
+- `ownerOnly()` : Restreint l'usage à des identifiants d'utilisateur précis.
+- `guildOwnerOnly()` : Restreint l'usage au propriétaire du serveur où l'interaction a lieu.
+- `hasRole()` : Exige que le membre qui invoque possède **au moins un** des rôles donnés.
+- `cooldown()` : Cooldown par invocation.
+- `rateLimit()` : Une garde qui autorise `limit` utilisations par `window`, par portée (`"user"` par défaut).
+- `antiSpam()` : Rejette les interactions d'un utilisateur qui dépasse une limite de débit par fenêtre : commandes, composants et formulaires.
 
 ## Limites et erreurs
 

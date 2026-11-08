@@ -63,7 +63,8 @@ editors/vscode  VS Code snippets + extension manifest
   change typings, update those assertions.
 - **Every export needs a doc comment**, and so does every property a user can
   type or read: it is what their editor shows. After adding an export, run
-  `npm run docs:api` to refresh the "All exports" page of the docs.
+  `npm run docs:api` to refresh the API reference of the docs, and translate
+  its new sentences (`npm run docs:api -- --pending` lists them).
 
 ## Releasing
 

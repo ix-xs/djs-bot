@@ -195,54 +195,7 @@ Other activity types are not affected. A `presenceUpdate` listener that reads a
 custom status has to expect it to be missing.
 :::
 
-## Reference
-
-### `defineEvent(event, run, options?)`
-
-| Argument | Type | Default | Description |
-| --- | --- | --- | --- |
-| `event` | `keyof ClientEvents` | - | Any discord.js event name. |
-| `run` | `(...args, ctx: EventContext) => unknown` | - | The listener. Receives the event's own arguments, then the context. May be async. |
-| `options.once` | `boolean` | `false` | Run for the first occurrence only. |
-
-Returns an `EventDefinition` (`kind: "event"`, `event`, `once`, `run`), to
-export from an `.event` file or to list in a
-[feature](/architecture/features/).
-
-### `EventContext`
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `client` | `Client<true>` | The connected client. |
-| `services` | `ServiceMap` | Your [services](/architecture/services/), typed. |
-| `logger` | `Logger` | A logger tagged with the event name. |
-
-### `intents`
-
-The `intents` field of `defineBot`.
-
-| Value | Effect |
-| --- | --- |
-| `"auto"` (default) | Derives the intents and partials from your events and triggers. `Guilds` is always included. Warns when a privileged intent is in use. |
-| `{ add?, remove? }` | Same derivation, then adjusted. See `IntentAdjustments`. |
-| `GatewayIntentBits[]` | Used exactly as given. Nothing is derived or added, not even `Guilds`, no partial is derived, and no warning is logged. |
-
-### `IntentAdjustments`
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `add` | `GatewayIntentBits[]` | `[]` | Intents to request on top of the derived ones, for example `DirectMessages`. |
-| `remove` | `GatewayIntentBits[]` | `[]` | Derived intents to drop. Typically `MessageContent`, when a `messageCreate` listener does not read the text. Applied after `add`. |
-
-### `partials`
-
-The `partials` field of `defineBot`.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `partials` | `Partials[]` | derived | Extra partials. Merged with the derived ones in automatic mode. With an `intents` array, they are the only partials enabled. |
-
-### Event to intent map
+## Event to intent map
 
 Every event the autopilot knows, grouped by the intent it requests.
 
@@ -269,7 +222,7 @@ Every event the autopilot knows, grouped by the intent it requests.
 Registering at least one [trigger](/events/triggers/) adds `GuildMessages`,
 `MessageContent` and `DirectMessages`.
 
-### Event to partial map
+## Event to partial map
 
 | Events | Partials enabled |
 | --- | --- |
@@ -287,39 +240,19 @@ Two more rules apply after the events are read:
   `Channel` is enabled, because a direct message channel is never cached up
   front.
 
-### `computeIntents(events, options?)`
+## Reference
 
-The function behind the autopilot, exported so you can check a set of events in
-a script or a test.
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-| Argument | Type | Default | Description |
-| --- | --- | --- | --- |
-| `events` | `EventDefinition[]` | - | The listeners to analyse. |
-| `options.hasTriggers` | `boolean` | `false` | Also request what message triggers need. |
-| `options.add` | `GatewayIntentBits[]` | `[]` | Same as `IntentAdjustments`. |
-| `options.remove` | `GatewayIntentBits[]` | `[]` | Same as `IntentAdjustments`. |
-
-It returns a `ComputedIntents` object:
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `intents` | `GatewayIntentBits[]` | The intents to connect with. |
-| `partials` | `Partials[]` | The partials to enable. |
-| `privileged` | `string[]` | Names of the privileged intents in the list. |
-
-```ts title="scripts/check-intents.ts"
-import { computeIntents, defineEvent, GatewayIntentBits } from "@ix-xs/djs-bot";
-
-const { intents, partials, privileged } = computeIntents(
-  [defineEvent("guildMemberRemove", () => {})],
-  { add: [GatewayIntentBits.DirectMessages] },
-);
-
-console.log(intents.map((intent) => GatewayIntentBits[intent]));
-// ["Guilds", "GuildMembers", "DirectMessages"]
-console.log(partials.length, privileged);
-// 2 ["GuildMembers"]
-```
+- `defineEvent()`: Defines a gateway event listener.
+- `EventDefinition`: A registered gateway event listener.
+- `EventContext`: Context passed to gateway event handlers (after the event's own args).
+- `ServiceMap`: Global service map.
+- `Logger`: Structured logger with level filtering and child bindings.
+- `defineBot()`: Creates a `Bot`.
+- `IntentAdjustments`: Fine-tunes the automatic selection without giving it up.
+- `computeIntents()`: Derives the minimal set of intents and partials for the given events.
+- `ComputedIntents`: Result of `computeIntents`.
 
 ## Limits and errors
 

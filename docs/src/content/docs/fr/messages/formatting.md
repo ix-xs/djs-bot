@@ -254,59 +254,12 @@ defineBot({
 
 ## Référence
 
-### `mention`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-| Membre | Renvoie | S'affiche comme |
-| --- | --- | --- |
-| `mention.user(id)` | `<@id>` | @nomdutilisateur |
-| `mention.channel(id)` | `<#id>` | #salon |
-| `mention.role(id)` | `<@&id>` | @rôle |
-| `mention.everyone` | `@everyone` | @everyone |
-| `mention.here` | `@here` | @here |
-| `mention.command(name, id, subcommand?)` | `</name:id>` ou `</name subcommand:id>` | Un `/command` cliquable |
-
-Tous les identifiants sont des chaînes.
-
-### `timestamp(date, style?)`
-
-```ts
-timestamp(date: Date | number, style?: TimestampStylesString): string
-```
-
-| Paramètre | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `date` | `Date \| number` | obligatoire | Une `Date`, des millisecondes Unix ou des secondes Unix. |
-| `style` | `TimestampStylesString` | aucun | Une valeur de `TimestampStyles` ou sa lettre. Sans lui, Discord utilise `f`. |
-
-Renvoie `<t:seconds>` ou `<t:seconds:style>`. Les fractions de seconde sont
-supprimées.
-
-### `TimestampStyles`
-
-La constante de discord.js, réexportée. Ses valeurs sont listées dans
-[Horodatages](/messages/formatting/#timestamps).
-
-### `emoji`
-
-| Membre | Renvoie | Description |
-| --- | --- | --- |
-| `emoji.custom(name, id, animated?)` | `string` | `<:name:id>`, ou `<a:name:id>` quand `animated` vaut `true`. `false` par défaut. |
-| `emoji.format(e)` | `string` | Le même résultat à partir d'un objet `{ name, id, animated? }`. |
-| `emoji.parse(input)` | `{ animated, name, id } \| null` | Relit le balisage d'un émoji personnalisé pour en retrouver les parties. |
-| `emoji.find(guild, name)` | `GuildEmoji \| undefined` | Trouve un émoji personnalisé d'un serveur par son nom, depuis le cache. |
-
-### `allowedMentions`
-
-| Membre | Renvoie | Effet |
-| --- | --- | --- |
-| `allowedMentions.none()` | `{ parse: [] }` | Ne notifie personne. |
-| `allowedMentions.all()` | `{ parse: ["everyone", "users", "roles"] }` | Notifie tout ce qui est mentionné : `@everyone`, `@here`, utilisateurs et rôles. |
-| `allowedMentions.users(...ids)` | `{ users: ids }` | Ne notifie que ces utilisateurs. |
-| `allowedMentions.roles(...ids)` | `{ roles: ids }` | Ne notifie que ces rôles. |
-| `allowedMentions.repliedUser(ping)` | `{ repliedUser: ping }` | Indique si une réponse notifie l'auteur du message auquel on répond. |
-
-Le résultat va dans la propriété `allowedMentions` de tout ce qui envoie un
-message : `ctx.reply`, `ctx.update`, `channel.send`, `message.reply`.
+- `mention` : Constructeurs de mentions : renvoient exactement le balisage que Discord affiche comme une mention.
+- `timestamp()` : Produit un horodatage Discord (localisé automatiquement dans le client de chaque utilisateur).
+- `emoji` : Utilitaires pour les émojis personnalisés : construire le balisage, puis le relire.
+- `allowedMentions` : Constructeurs pour `allowed_mentions`, qui contrôle qui un message peut mentionner.
 
 ## Voir aussi
 

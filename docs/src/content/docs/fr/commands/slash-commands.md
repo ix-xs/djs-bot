@@ -135,32 +135,15 @@ Un utilisateur français tape alors `/aide sujet:...`. Votre code ne change pas 
 
 ## Référence
 
-### `defineCommand(input)`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-Prend un `CommandInput` et renvoie un `CommandDefinition`, un objet simple marqué `kind: "command"`.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | obligatoire | Ce que les utilisateurs tapent après `/`. Minuscules, 1-32 caractères. |
-| `description` | `string` | obligatoire | Affichée dans le sélecteur de commandes. 1-100 caractères. |
-| `options` | `OptionMap` | `{}` | Options typées, construites avec `s.*`. Pilote `ctx.options`. À omettre quand on utilise des sous-commandes. Voir [Options et autocomplétion](/commands/options/). |
-| `run` | `(ctx) => unknown` | - | Le gestionnaire, synchrone ou asynchrone. Facultatif uniquement quand la commande a des sous-commandes. |
-| `guards` | `Guard[]` | `[]` | Conditions préalables vérifiées avant `run`, et avant toute sous-commande. Voir [Gardes](/commands/guards/). |
-| `subcommands` | `Record<string, SubcommandDefinition>` | - | Sous-commandes, indexées par nom. Voir [Sous-commandes](/commands/subcommands/). |
-| `groups` | `Record<string, SubcommandGroupDefinition>` | - | Groupes de sous-commandes, indexés par nom. |
-| `defer` | `DeferOption` | `defaults.defer` | Accuse réception de l'interaction pour un gestionnaire lent. Voir [Différé automatique](/basics/automatic-deferral/). |
-| `defaultMemberPermissions` | `PermissionResolvable` | - | Permissions dont un membre a besoin pour voir et utiliser la commande par défaut. |
-| `nsfw` | `boolean` | - | Marque la commande comme réservée aux adultes. |
-| `integrationTypes` | `("guild" \| "user")[]` | défini par Discord | Où la commande peut être installée. Voir [Contextes d'installation](/commands/install-contexts/). |
-| `contexts` | `("guild" \| "botDm" \| "privateChannel")[]` | défini par Discord | Où la commande peut être utilisée. |
-| `dmPermission` | `boolean` | - | Déprécié par Discord au profit de `contexts`. Utilisez `contexts: ["guild"]` pour garder une commande hors des messages privés. |
-| `nameLocalizations` | `LocalizationMap` | - | Nom de la commande par langue, par exemple `{ fr: "aide" }`. |
-| `descriptionLocalizations` | `LocalizationMap` | - | Description par langue. |
-| `guilds` | `string[]` | - | Déploie la commande uniquement sur ces identifiants de serveur. À omettre pour une commande globale. Voir [Déployer les commandes](/production/deploying/). |
-
-Le gestionnaire reçoit un `CommandContext` : tout ce que reçoit chaque gestionnaire, plus `ctx.options` (typé d'après `options`) et `ctx.showModal`. Tout est décrit dans [L'objet ctx](/basics/context/). Ce que `run` renvoie est ignoré. Une promesse renvoyée est attendue, et tout ce qu'elle lève part vers la barrière d'erreurs décrite dans [Erreurs](/api/errors/).
-
-`CommandInput` et `CommandDefinition` sont exportés en tant que types, pour le code qui construit ou inspecte des commandes.
+- `defineCommand()` : Définit une commande slash avec des options typées, ou avec des sous-commandes et des groupes.
+- `CommandInput` : Entrée acceptée par `defineCommand`.
+- `CommandDefinition` : Une commande slash enregistrée (simple, avec sous-commandes ou avec groupes).
+- `OptionMap` : Une table de correspondance nom d'option → descripteur, telle que transmise à `defineCommand`.
+- `s` : Constructeurs d'options de commande slash.
+- `DeferOption` : Quand et comment une interaction est acquittée à votre place.
+- `CommandContext` : Contexte passé aux gestionnaires de commandes slash.
 
 ## Limites et erreurs
 

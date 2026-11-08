@@ -163,27 +163,10 @@ autre réponse.
 
 ## Référence
 
-### `DeferOption`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-Le type de `defer` sur une définition et de `defaults.defer` dans
-[`defineBot`](/basics/configuration/#botconfig).
-
-| Valeur | Accuse réception avec | Après |
-| --- | --- | --- |
-| `true` | Un état de chargement public. | 2 s |
-| `"ephemeral"` | Un état de chargement visible par vous seul. | 2 s |
-| `"update"` | Aucun message de chargement, sur les composants. Un état de chargement public ailleurs. | 2 s |
-| `{ after?, ephemeral?, update? }` | Ce que disent les champs. | `after` |
-| `false` | Rien : jamais différé. | - |
-| non défini | Le `defer` de la commande parente, puis `defaults.defer`, puis rien. | - |
-
-La forme objet :
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `after` | `number \| string` | `2000` | Combien de temps le gestionnaire peut s'exécuter avant l'envoi du différé : des millisecondes, ou une durée sous forme de chaîne comme `"1s"`. `0` diffère immédiatement. Une chaîne qui ne peut pas être interprétée retombe sur la valeur par défaut. |
-| `ephemeral` | `boolean` | `false` | Rend l'état de chargement, et avec lui la réponse finale, visible uniquement par l'utilisateur qui a lancé l'interaction. |
-| `update` | `boolean` | `false` | Sur un bouton ou un menu de sélection, accuse réception sans message de chargement, pour modifier le message d'origine. Prend le pas sur `ephemeral` dans ce cas. |
+- `DeferOption` : Quand et comment une interaction est acquittée à votre place.
+- `defineBot()` : Crée un `Bot`.
 
 ## Limites et erreurs
 

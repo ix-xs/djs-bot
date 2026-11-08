@@ -1,0 +1,91 @@
+---
+// One way of calling a function or a method: the call itself, each parameter
+// with what it accepts, and what comes back.
+import type { Signature, Token } from "../../reference/model";
+import { find, pathOf, translate, untranslated, words } from "../../reference/model";
+import { href } from "../../reference/markdown";
+import { render } from "../../reference/markdown";
+import Tokens from "./Tokens.astro";
+import Fields from "./Fields.astro";
+
+interface Props {
+  signature: Signature;
+  /** The key of the function in the translation table ("defineCommand", "s.string"). */
+  owner: string;
+  locale: string | undefined;
+  /** "function" before the name, for a top-level function. */
+  keyword?: string;
+  /** Shows the parameters and the return value under the call. */
+  details?: boolean;
+}
+
+const { signature, owner, locale, keyword, details = true } = Astro.props;
+const w = words(locale);
+const params = await Promise.all(
+  signature.params.map(async (param) => ({
+    ...param,
+    html: await render(translate(`${owner}(${param.name})`, param.doc, locale), locale, { inline: true }),
+    pending: untranslated(`${owner}(${param.name})`, param.doc, locale),
+    // A parameter typed with an interface of the package: what it accepts is
+    // shown here too, so that the page answers without a click.
+    shape: shapeOf(param.type),
+  })),
+);
+function shapeOf(type: Signature["params"][number]["type"]) {
+  const refs = type.filter((t) => t[1]?.ref);
+  if (refs.length !== 1) return undefined;
+  const target = find(refs[0][1]!.ref!);
+  if (!target || target.kind !== "interface" || !(target.properties?.length || target.methods?.length)) return undefined;
+  // Methods are listed as properties whose type is the call: `run(ctx): ...`.
+  const methods = (target.methods ?? []).map((method) => {
+    const [head, ...tail] = method.overloads[0]?.code ?? [];
+    const type = head ? [[head[0].slice(method.name.length)] as Token, ...tail] : [];
+    return { name: method.name, optional: method.optional, text: method.text, inheritedFrom: method.inheritedFrom, type };
+  });
+  return { name: target.name, fields: [...(target.properties ?? []), ...methods] };
+}
+const returnsKey = `${owner}#returns`;
+const returnsHtml = await render(translate(returnsKey, signature.returns.doc, locale), locale, { inline: true });
+const returnsVoid = /^(void|Promise<void>)$/.test(signature.returns.type.map((t) => t[0]).join(""));
+---
+
+<pre class="rf-code" translate="no"><code>{keyword && <span class="rf-kw">{keyword} </span>}<Tokens tokens={signature.code} locale={locale} keywords /></code></pre>
+
+{details && params.length > 0 && (
+  <dl class="rf-params" aria-label={w.parameters}>
+    {params.map((param) => (
+      <div class="rf-param">
+        <dt>
+          <code class="rf-name" translate="no">{param.rest ? "..." : ""}{param.name}</code>
+          <code class="rf-type" translate="no"><Tokens tokens={param.type} locale={locale} /></code>
+          {param.optional && <span class="rf-tag">{w.optional}</span>}
+        </dt>
+        <dd>
+          {param.html && <p set:html={param.html} lang={param.pending && locale ? "en" : undefined} />}
+          {param.default && <p class="rf-default">{w.default} <code translate="no">{param.default}</code></p>}
+          {param.shape && (
+            <details class="rf-accepts" open={params.length === 1}>
+              <summary>{w.accepts}</summary>
+              <Fields fields={param.shape.fields} owner={param.shape.name} locale={locale} />
+              <p class="rf-more-link"><a href={href(pathOf(param.shape.name), locale)} translate="no">{param.shape.name}</a> →</p>
+            </details>
+          )}
+          {param.fields && (
+            <details class="rf-accepts" open={params.length === 1}>
+              <summary>{w.accepts}</summary>
+              <Fields fields={param.fields} owner={`${owner}(${param.name})`} locale={locale} />
+            </details>
+          )}
+        </dd>
+      </div>
+    ))}
+  </dl>
+)}
+
+{details && !returnsVoid && (
+  <p class="rf-returns">
+    <span class="rf-label">{w.returns}</span>
+    <code class="rf-type" translate="no"><Tokens tokens={signature.returns.type} locale={locale} /></code>
+    {returnsHtml && <span set:html={returnsHtml} />}
+  </p>
+)}

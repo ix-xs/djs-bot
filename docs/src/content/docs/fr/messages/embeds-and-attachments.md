@@ -194,68 +194,10 @@ renvoyer un fichier reçu, passez l'`Attachment` lui-même dans `files`.
 
 ## Référence
 
-### `EmbedBuilder`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-La classe de discord.js, réexportée telle quelle. `Colors` (des constantes de
-couleurs nommées comme `Colors.Blurple`) est réexporté aussi.
-
-| Méthode | Argument | Description |
-| --- | --- | --- |
-| `setTitle(title)` | `string` | Titre en gras. Devient un lien quand une URL est définie. |
-| `setURL(url)` | `string` | Rend le titre cliquable. |
-| `setDescription(text)` | `string` | Texte principal, markdown autorisé. |
-| `setColor(color)` | nombre, chaîne hexadécimale, `Colors.*` | Couleur du bord gauche. |
-| `setAuthor(author)` | `{ name, iconURL?, url? }` | Petite ligne au-dessus du titre. |
-| `setThumbnail(url)` | `string` | Petite image dans le coin supérieur droit. |
-| `setImage(url)` | `string` | Grande image sous les champs. |
-| `addFields(...fields)` | `{ name, value, inline? }` | Ajoute des champs. `inline` place les champs côte à côte. |
-| `setFields(...fields)` | idem | Remplace tous les champs. |
-| `spliceFields(index, deleteCount, ...fields)` | idem | Supprime ou insère des champs à une position. |
-| `setFooter(footer)` | `{ text, iconURL? }` | Petite ligne en bas. |
-| `setTimestamp(date?)` | `Date \| number` | Heure affichée à côté du pied de page, dans le fuseau horaire du lecteur. Maintenant si omise. |
-| `EmbedBuilder.from(embed)` | un embed existant | Copie un embed pour que vous puissiez le modifier, par exemple `message.embeds[0]`. |
-
-### `AttachmentBuilder`
-
-La classe de discord.js, réexportée telle quelle.
-
-```ts
-new AttachmentBuilder(content, data?)
-```
-
-| Argument | Type | Description |
-| --- | --- | --- |
-| `content` | `Buffer \| string \| Stream` | Les octets, un chemin local, une URL, ou un flux lisible. |
-| `data.name` | `string` | Nom du fichier avec son extension. Utilisé par `attachment://name`. |
-| `data.description` | `string` | Texte alternatif lu par les lecteurs d'écran. |
-
-| Méthode | Description |
-| --- | --- |
-| `setName(name)` | Définit le nom du fichier. |
-| `setDescription(text)` | Définit le texte alternatif. |
-| `setSpoiler(spoiler?)` | Masque le fichier derrière un spoiler. `true` par défaut. |
-| `setFile(content, name?)` | Remplace le contenu, et éventuellement le nom. |
-
-`files` accepte aussi directement un chemin, une URL ou un `Buffer`. Le builder
-permet de choisir le nom, le texte alternatif et l'état de spoiler.
-
-### `Attachment`
-
-Ce que vous donnent `s.attachment` et `field.files`. Les propriétés les plus
-utiles :
-
-| Propriété | Type | Description |
-| --- | --- | --- |
-| `id` | `string` | L'identifiant de la pièce jointe. |
-| `name` | `string` | Nom du fichier. |
-| `contentType` | `string \| null` | Type MIME, par exemple `image/png`. |
-| `size` | `number` | Taille en octets. |
-| `url` | `string` | Lien de téléchargement signé. |
-| `proxyURL` | `string` | Le même fichier via le proxy média de Discord. |
-| `width`, `height` | `number \| null` | Dimensions, pour les images et les vidéos. |
-| `description` | `string \| null` | Texte alternatif, si l'expéditeur en a écrit un. |
-| `spoiler` | `boolean` | Indique s'il a été marqué comme spoiler. |
-| `ephemeral` | `boolean` | Indique si Discord supprimera le fichier au bout d'un moment. |
+- `s` : Constructeurs d'options de commande slash.
+- `field` : Constructeurs de composants de modale.
 
 ## Limites et erreurs
 

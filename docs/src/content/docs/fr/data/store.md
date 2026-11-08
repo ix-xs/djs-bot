@@ -301,87 +301,14 @@ de code.
 
 ## Référence
 
-### `KVStore<V>`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-L'interface que tout store implémente. `V` est le type des valeurs et vaut
-`unknown` par défaut. `ttl` est toujours facultatif : des millisecondes, une
-chaîne de durée comme `"10m"`, ou rien pour aucune expiration.
-
-| Méthode | Renvoie | Description |
-| --- | --- | --- |
-| `get(key)` | `Promise<V \| undefined>` | Lit une valeur. `undefined` si absente ou expirée. |
-| `set(key, value, ttl?)` | `Promise<void>` | Écrit une valeur et remplace son expiration. |
-| `has(key)` | `Promise<boolean>` | Indique si une valeur vivante existe. |
-| `delete(key)` | `Promise<boolean>` | Supprime une clé. `true` si quelque chose a été supprimé. |
-| `getOrSet(key, factory, ttl?)` | `Promise<V>` | Lit, ou exécute `factory` et stocke le résultat en cas d'absence. Un seul appel de la fabrique pour des lecteurs simultanés. |
-| `increment(key, by?, ttl?)` | `Promise<number>` | Ajoute `by` (`1` par défaut) à une clé numérique et renvoie la nouvelle valeur. Une clé absente compte pour `0`. |
-| `update(key, fn, ttl?)` | `Promise<V>` | Lit, transforme et réécrit en une seule étape. `fn` reçoit la valeur actuelle ou `undefined` et peut être asynchrone. Renvoie la nouvelle valeur. |
-| `getMany(keys)` | `Promise<Map<string, V>>` | Plusieurs clés d'un coup. Les clés absentes ne figurent pas dans la map. |
-| `setMany(entries, ttl?)` | `Promise<void>` | Plusieurs écritures partageant un même TTL. Accepte un objet ou un itérable de paires `[key, value]`. Une seule transaction avec `sqliteStore` : toutes les clés sont écrites ou aucune. |
-| `keys()` | `Promise<string[]>` | Toutes les clés vivantes de ce store (avec espace de noms), sans le préfixe de l'espace de noms. |
-| `entries()` | `Promise<[string, V][]>` | Toutes les paires `[key, value]` vivantes de ce store. Une seule requête avec `sqliteStore`. |
-| `size()` | `Promise<number>` | Le nombre de clés vivantes que contient ce store. |
-| `clear()` | `Promise<void>` | Supprime toutes les clés de ce store (avec espace de noms). |
-| `namespace<T>(prefix)` | `KVStore<T>` | Une vue limitée à `prefix:`. Synchrone. `T` vaut `V` par défaut. |
-| `close()` | `Promise<void>` | Libère le descripteur de fichier ou la connexion. Peut être appelée deux fois sans risque. Appelée pour vous à l'arrêt pour le store du bot. |
-
-### `memoryStore()`
-
-```ts
-memoryStore<V = unknown>(): KVStore<V>
-```
-
-Un store en mémoire. Aucune configuration, local au processus, perdu au
-redémarrage. `close()` le vide.
-
-### `sqliteStore(path)`
-
-```ts
-sqliteStore<V = unknown>(path?: string): KVStore<V>
-```
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `path` | `string` | `"data/store.sqlite"` | Le fichier de base de données. Le dossier parent est créé. `":memory:"` donne une base transitoire. |
-
-### `createStore(backend)`
-
-```ts
-createStore<V = unknown>(backend: KVBackend): KVStore<V>
-```
-
-Construit un `KVStore` complet à partir d'un `KVBackend`.
-
-### `KVBackend`
-
-Le contrat minimal qu'un backend de stockage remplit. Chaque fonction peut être
-synchrone ou asynchrone.
-
-| Méthode | Obligatoire | Description |
-| --- | --- | --- |
-| `get(key)` | Oui | La valeur brute, ou `undefined` si absente ou expirée. |
-| `set(key, value, ttlMs)` | Oui | Écrit une valeur. `ttlMs` vaut `0` quand la clé n'expire jamais. |
-| `delete(key)` | Oui | Supprime une clé et indique si quelque chose a été supprimé. |
-| `keys(prefix)` | Oui | Toutes les clés vivantes qui commencent par `prefix` (`""` signifie toutes les clés). |
-| `clear(prefix)` | Non | Un raccourci rapide pour supprimer toutes les clés sous `prefix`. Sans lui, `clear()` se rabat sur `keys` puis `delete`. |
-| `setMany(entries, ttlMs)` | Non | Un raccourci rapide pour écrire plusieurs clés d'un coup, en une seule étape quand le backend le permet (une transaction, un pipeline). `entries` est un `ReadonlyArray<readonly [key: string, value: unknown]>`. Sans lui, `setMany()` se rabat sur `set`, une clé à la fois. |
-| `entries(prefix)` | Non | Un raccourci rapide pour renvoyer en une fois toutes les paires `[key, value]` vivantes sous `prefix`. Sans lui, `entries()` se rabat sur `keys` puis `get`. |
-| `close()` | Non | Nettoyage, appelé une fois par `store.close()`. |
-
-### `defineStore(token, store)`
-
-```ts
-defineStore(token: string, store: KVStore): ServiceDefinition<KVStore>
-```
-
-Enveloppe un store dans une définition de service, pour qu'un fichier
-`*.service.ts` puisse l'exporter et que les gestionnaires le lisent comme
-`ctx.services.<token>`.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `token` | `string` | obligatoire | Le nom du service. |
-| `store` | `KVStore` | obligatoire | N'importe quel store : un adaptateur livré avec le framework ou le vôtre. |
+- `KVStore` : Un store clé-valeur asynchrone.
+- `sqliteStore()` : Crée un `KVStore` durable reposant sur SQLite (via le `node:sqlite` intégré de node-comfort).
+- `memoryStore()` : Crée un `KVStore` en mémoire (rapide, non durable).
+- `createStore()` : Construit un `KVStore` complet à partir d'un `KVBackend` minimal.
+- `KVBackend` : Le contrat minimal qu'un backend de stockage doit remplir.
+- `defineStore()` : Enveloppe un `KVStore` dans une définition de service pour qu'il soit injectable sous `ctx.services.<token>` et découvert depuis un fichier `*.service.ts`.
 
 ## Voir aussi
 

@@ -1,0 +1,121 @@
+---
+title: "Putting the bot online"
+description: "Running the bot all the time on a server: production mode, hosting, secrets."
+sidebar:
+  order: 7
+---
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+import TerminalDemo from '../../../components/demo/TerminalDemo.astro';
+
+The bot only lives while `djs-bot dev` runs. For it to answer at any hour,
+it must run on a machine that is always on: a server.
+
+## Production mode
+
+On the server, you run `start` instead of `dev`:
+
+<TerminalDemo
+  command="NODE_ENV=production npx djs-bot start"
+  lines={[
+    { text: '{"level":"info","time":"2026-11-08T14:40:12.031Z","msg":"Ready","user":"my-bot#1234","guilds":1,"version":"1.4.0"}', delay: 900 },
+  ]}
+/>
+
+| | `dev` | `start` in production |
+| --- | --- | --- |
+| Restarts on every change | yes | no |
+| Registers the commands at startup | yes, on your test server | no, you run `deploy` |
+| Logs | in colors, for you | in JSON, for the server's tools |
+
+## Where to host it
+
+On any machine that runs Node 22.23.4+, 24.22.1+ or 26.12.1+:
+
+<Tabs>
+  <TabItem label="A Linux server (VPS)">
+    Copy the project, run `npm ci`, then hand the bot over to systemd, which
+    starts it with the machine and restarts it if it stops:
+
+    ```ini title="/etc/systemd/system/mybot.service"
+    [Unit]
+    Description=My Discord bot
+    After=network.target
+
+    [Service]
+    WorkingDirectory=/srv/my-bot
+    ExecStart=/usr/bin/npx djs-bot start
+    Environment=NODE_ENV=production
+    EnvironmentFile=/srv/my-bot/.env
+    Restart=always
+    RestartSec=5
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+    ```bash
+    sudo systemctl enable --now mybot
+    sudo journalctl -u mybot -f
+    ```
+
+    The second command shows the logs live.
+  </TabItem>
+  <TabItem label="Docker">
+    ```dockerfile title="Dockerfile"
+    FROM node:26-alpine
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm ci
+    COPY . .
+    ENV NODE_ENV=production
+    CMD ["npx", "djs-bot", "start"]
+    ```
+
+    Give the token at startup (`docker run -e DISCORD_TOKEN=...`), never in
+    the image: an image gets shared.
+  </TabItem>
+  <TabItem label="A platform (Railway, Fly...)">
+    Start command: `npx djs-bot start`. Variables:
+    `DISCORD_TOKEN`, `DISCORD_CLIENT_ID`, `NODE_ENV=production`. Publish the
+    commands once from your computer with `npx djs-bot deploy`.
+  </TabItem>
+</Tabs>
+
+Full comparison: [Hosting in production](/recipes/hosting/).
+
+## Secrets in production
+
+`.env` stays on your computer. On the server, the token comes from the
+hosting: systemd's `EnvironmentFile`, Docker's `-e`, or the platform's
+variables screen. `env("DISCORD_TOKEN")` reads it the same way.
+
+<Aside type="danger">
+Token visible where it should not be? **Reset Token** in the Developer
+Portal, then put the new one on the server.
+</Aside>
+
+## Publishing the first version
+
+<Steps>
+
+1. `npx djs-bot deploy` from your computer.
+2. `npx djs-bot clear --guild <id of your test server>` to remove the duplicates.
+3. On the server: `NODE_ENV=production npx djs-bot start`.
+4. In Discord: the bot is online, `/ping` answers.
+
+</Steps>
+
+Then, for each version: update the code on the server, restart the bot, and
+run `deploy` again only if a command has changed.
+
+## What next
+
+Your bot is complete. The rest of the guide can be read in whatever order
+suits you:
+
+- **[Commands](/commands/slash-commands/)**: options, subcommands,
+  right-click, guards.
+- **[Components](/components/buttons/)**: buttons, menus, forms.
+- **[Data](/data/store/)**: remembering information, translating the bot.
+- **[Production](/production/deploying/)**: logs, health, growth.

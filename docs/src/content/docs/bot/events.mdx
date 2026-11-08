@@ -1,0 +1,81 @@
+---
+title: "Reacting to events"
+description: "Making the bot react to what happens on a server, without being asked."
+sidebar:
+  order: 6
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TerminalDemo from '../../../components/demo/TerminalDemo.astro';
+import DiscordDemo from '../../../components/demo/DiscordDemo.astro';
+
+A command waits to be called. An **event** arrives on its own: a member
+joins, a message is deleted, someone enters a voice channel. Let's welcome
+every new member.
+
+## Listening to an event
+
+```ts title="src/features/welcome/welcome.event.ts"
+import { defineEvent } from "@ix-xs/djs-bot";
+
+export default defineEvent("guildMemberAdd", async (member, ctx) => {
+  ctx.logger.info({ id: member.id }, "member joined");
+  const channel = member.guild.systemChannel;
+  if (channel) await channel.send(`Welcome ${member}.`);
+});
+```
+
+<DiscordDemo
+  steps={[
+    { do: "join", user: "Mallory" },
+    { do: "reply", text: "Welcome @Mallory." },
+  ]}
+/>
+
+`defineEvent()` takes:
+
+- **the name of the event**, as discord.js names it (`guildMemberAdd`: a
+  member joins). Your editor suggests the list;
+- **the function to call**, which receives what the event carries (here the
+  member), then `ctx` **last**.
+
+<Aside type="note" title="No ctx.reply here">
+Nobody is waiting for a reply to an event. You speak with the objects it
+provides: `channel.send()`, `member.send()`...
+</Aside>
+
+## Intents, again
+
+`guildMemberAdd` is only sent to bots that ask for the `GuildMembers`
+intent. With `intents: "auto"`, the bot asks for it on its own, and reminds
+you that it is privileged:
+
+<TerminalDemo
+  command="npx djs-bot dev"
+  lines={[
+    { at: "14:30:02", level: "warn", text: 'Privileged intents in use - enable them in the Developer Portal (Bot > Privileged Gateway Intents) privileged=["GuildMembers"]' },
+    { at: "14:30:03", level: "info", text: "Ready user=my-bot#1234 guilds=1 version=1.4.0" },
+    { at: "14:31:40", level: "info", text: "member joined id=1122334455667788990", delay: 1500 },
+  ]}
+/>
+
+That is why you turned on **Server Members** when creating the application.
+Otherwise, Discord refuses the connection (`Used disallowed intents`) and
+`npx djs-bot doctor` tells you which one to turn on.
+
+## Other useful events
+
+| Event | When | The function receives |
+| --- | --- | --- |
+| `guildMemberAdd` | a member joins | the member |
+| `guildMemberRemove` | a member leaves | the member |
+| `messageCreate` | a message is posted | the message |
+| `messageDelete` | a message is deleted | the message |
+| `voiceStateUpdate` | someone moves in voice | the state before, the state after |
+| `clientReady` | the bot has just connected | the client |
+
+`ctx` always comes after **all** the arguments:
+`(oldState, newState, ctx) => ...`, even if `oldState` is not used.
+
+To answer a word in messages, prefer [triggers](/events/triggers/). To act
+at a set time, [scheduled jobs](/events/jobs/).

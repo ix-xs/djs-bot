@@ -153,59 +153,12 @@ intent is added for you, see [Events and intents](/events/events-and-intents/).
 
 ## Reference
 
-### `ui`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-| Helper | Returns | Description |
-| --- | --- | --- |
-| `ui.row(...components)` | `ActionRowBuilder` | A row of buttons, or a single select menu. |
-| `ui.linkButton(label, url, emoji?)` | `ButtonBuilder` | A button that opens a URL. No handler, no customId. |
-| `ui.premiumButton(skuId)` | `ButtonBuilder` | A button that opens the purchase flow of one of your app's SKUs. Discord supplies the label, and no handler runs on your side. |
-| `ui.container(...children)` | `ContainerBuilder` | Groups display components into one visual block. |
-| `ui.container(options, ...children)` | `ContainerBuilder` | The same, with an accent colour or behind a spoiler. |
-| `ui.text(content)` | `TextDisplayBuilder` | A markdown text block. |
-| `ui.separator(options?)` | `SeparatorBuilder` | A gap, with or without a divider line. |
-| `ui.section(options)` | `SectionBuilder` | Text on the left, a thumbnail or a button on the right. |
-| `ui.thumbnail(url, description?)` | `ThumbnailBuilder` | A thumbnail accessory for a section, with an optional description of the image. |
-| `ui.gallery(...urls)` | `MediaGalleryBuilder` | A gallery of images or videos. Accepts `attachment://name`. |
-| `ui.file(attachmentUrl)` | `FileBuilder` | A file display component. Takes an `attachment://name` reference. |
-| `ui.poll(question, answers, options?)` | `PollData` | A native poll, for the `poll` field of a message. |
-
-### `ui.container(options?, ...children)`
-
-`options` is a `ContainerOptions`. It is recognised because it is a plain
-object, while every child is a builder.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `accent` | `number` | - | Colour of the bar on the left edge, for example `0x5865f2` or `Colors.Blurple`. |
-| `spoiler` | `boolean` | `false` | Hide the whole container behind a spoiler. |
-
-A child is a `ContainerChild`: the result of `ui.text`, `ui.separator`,
-`ui.section`, `ui.gallery`, `ui.file` or `ui.row`.
-
-### `ui.separator(options?)`
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `divider` | `boolean` | `true` | Whether a visible line is drawn. |
-| `spacing` | `"small" \| "large"` | `"small"` | How much empty space the separator takes. |
-
-### `ui.section(options)`
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `text` | `string \| string[]` | required | The text on the left: one block of markdown, or up to three. |
-| `accessory` | `ThumbnailBuilder \| ButtonBuilder` | required | What sits on the right: `ui.thumbnail(url)` or a button. |
-
-### `ui.poll(question, answers, options?)`
-
-`answers` is an array of strings or `{ text: string; emoji?: string }` objects.
-`options` is a `PollOptions`:
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `hours` | `number` | `24` | How long the poll stays open, 1 to 768. |
-| `multiple` | `boolean` | `false` | Let people pick several answers. |
+- `ui`: Terse component factories.
+- `ContainerOptions`: Appearance options for a `ui.container`.
+- `ContainerChild`: A display component that can live inside a `ui.container`: a text block, separator, section, media gallery, file, or an action row of buttons/selects.
+- `PollOptions`: Options for `ui.poll`.
 
 ## Limits and errors
 

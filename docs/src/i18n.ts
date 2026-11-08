@@ -6,7 +6,7 @@ import { withBase, withLocale } from "../plugins/base-links.mjs";
 const en = {
   // Header
   "nav.sections": "Sections",
-  "nav.docs": "Docs",
+  "nav.docs": "Guide",
   "nav.recipes": "Recipes",
   "nav.reference": "Reference",
   "nav.github": "GitHub repository",
@@ -14,7 +14,7 @@ const en = {
   "nav.language": "Language",
 
   // Names of the parts of the documentation, as the sidebar writes them
-  "area.start": "Start",
+  "area.start": "Getting started",
   "area.reference": "Reference",
   "area.basics": "Basics",
   "area.commands": "Commands",
@@ -26,6 +26,8 @@ const en = {
   "area.production": "Production",
   "area.recipes": "Recipes",
   "area.tutorial": "Tutorial",
+  "area.bot": "Your bot",
+  "area.help": "Help",
 
   // Search
   "search.recent": "Recently opened",
@@ -36,29 +38,21 @@ const en = {
   "search.open": "open",
   "search.close": "close",
 
-  // Landing page
-  "hero.eyebrow": "A TypeScript framework for discord.js",
-  "hero.copy": "Copy the install command",
-  "hero.facts": "Open source, MIT|Node 22 and later|discord.js 14",
 
-  // Discord previews
-  "discord.message": "Discord message from {author}",
-  "discord.used": "{user} used",
-  "discord.today": "Today at 14:02",
 } as const;
 
 export type UiKey = keyof typeof en;
 
 const fr: Record<UiKey, string> = {
   "nav.sections": "Rubriques",
-  "nav.docs": "Docs",
+  "nav.docs": "Guide",
   "nav.recipes": "Recettes",
   "nav.reference": "Référence",
   "nav.github": "Dépôt GitHub",
   "nav.theme": "Basculer entre sombre et clair",
   "nav.language": "Langue",
 
-  "area.start": "Démarrer",
+  "area.start": "Pour commencer",
   "area.reference": "Référence",
   "area.basics": "Bases",
   "area.commands": "Commandes",
@@ -70,6 +64,8 @@ const fr: Record<UiKey, string> = {
   "area.production": "Production",
   "area.recipes": "Recettes",
   "area.tutorial": "Tutoriel",
+  "area.bot": "Votre bot",
+  "area.help": "Aide",
 
   "search.recent": "Ouvertes récemment",
   "search.clear": "Effacer",
@@ -79,13 +75,7 @@ const fr: Record<UiKey, string> = {
   "search.open": "ouvrir",
   "search.close": "fermer",
 
-  "hero.eyebrow": "Un framework TypeScript pour discord.js",
-  "hero.copy": "Copier la commande d'installation",
-  "hero.facts": "Open source, MIT|Node 22 et suivants|discord.js 14",
 
-  "discord.message": "Message Discord de {author}",
-  "discord.used": "{user} a utilisé",
-  "discord.today": "Aujourd'hui à 14:02",
 };
 
 const DICTIONARIES: Record<string, Record<UiKey, string>> = { en, fr };
@@ -97,7 +87,7 @@ export const LANGUAGES = [
 ] as const;
 
 /**
- * The translator for a page: `t("search.clear")`, `t("discord.used", { user: "Jo" })`.
+ * The translator for a page: `t("search.clear")`, `t("nav.language")`.
  * `locale` is Starlight's (`undefined` for English).
  */
 export function useT(locale: string | undefined) {

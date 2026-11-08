@@ -38,7 +38,7 @@ if (!process.env.DJSBOT_CLI) void bot.start();
 
 A value is a template: `{seconds}`, `{permissions}` and the other placeholders
 are replaced by the variables of that message. The
-[table of keys](#frameworkmessages) lists which variables each message
+[table of keys](/reference/framework-messages/) lists which variables each message
 receives. For a bot that speaks a single language, plain strings are enough.
 
 ## Translate per user
@@ -135,88 +135,22 @@ themselves are described in [The ctx object](/basics/context/).
 
 ## Reference
 
-### `FrameworkMessages`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-The type of `messages` in [`defineBot`](/basics/configuration/#botconfig). Every
-key is optional and holds a [`MessageValue`](#messagevalue).
-
-| Key | Variables | Default text | Shown when |
-| --- | --- | --- | --- |
-| `error` | none | `Something went wrong. The team has been notified.` | A handler threw and nothing handled the error. |
-| `unknownCommand` | `{name}` | `Unknown command.` | A slash or context-menu command reached the bot that is not registered. |
-| `unknownSubcommand` | `{name}` | `Unknown subcommand.` | A subcommand reached the bot that is not registered. `name` includes the group, if any. |
-| `guardDenied` | none | `You can't do that.` | A guard failed without giving a reason. |
-| `guildOnly` | none | `This can only be used in a server.` | `inGuild()` failed, or a permission guard ran outside a server. |
-| `dmOnly` | none | `This can only be used in DMs.` | `dmOnly()` failed. |
-| `missingPermissions` | `{permissions}` | `You need: {permissions}.` | `hasPermission()` failed. |
-| `botMissingPermissions` | `{permissions}` | `I need: {permissions}.` | `botHasPermission()` failed. |
-| `wrongChannel` | none | `This can't be used in this channel.` | `inChannel()` failed. |
-| `ownerOnly` | none | `You can't use this.` | `ownerOnly()` failed. |
-| `guildOwnerOnly` | none | `Only the server owner can use this.` | `guildOwnerOnly()` failed. |
-| `missingRole` | none | `You don't have the role required for this.` | `hasRole()` failed. |
-| `cooldown` | `{seconds}` | `Please wait {seconds}s before doing that again.` | `cooldown()` failed. |
-| `rateLimited` | `{seconds}` | `Rate limit reached. Try again in {seconds}s.` | `rateLimit()` failed. |
-| `slowDown` | `{seconds}` | `You're doing that too fast - please slow down.` | The `antiSpam` plugin refused an interaction. |
-| `featureDisabled` | `{feature}` | `This feature is currently disabled here.` | `featureEnabled()` failed. |
-| `notAMember` | `{option}` | `That user is not a member of this server.` | A required `s.member()` option was given a user who is not a member of the server, or the command ran outside a server. |
-| `confirm` | none | `Confirm` | Label of the confirm button of `confirm()`. |
-| `cancel` | none | `Cancel` | Label of the cancel button of `confirm()`. |
-
-The variables:
-
-| Variable | Type | Value |
-| --- | --- | --- |
-| `name` | `string` | The command that was received, or the subcommand with its group. |
-| `permissions` | `string` | The missing permissions, readable and comma-separated: `Ban Members, Kick Members`. |
-| `seconds` | `number` | The remaining wait, in whole seconds, rounded up. |
-| `feature` | `string` | The name of the flag that is off. |
-| `option` | `string` | The name of the member option. |
-
-Every message except `confirm` and `cancel` is sent with `ctx.reply.error`: an
-ephemeral embed in the `error` colour of the theme.
-
-### `MessageValue`
-
-```ts
-type MessageValue<K extends MessageKey = MessageKey> =
-  | string
-  | ((vars: MessageVars[K], ctx?: BaseContext) => string);
-```
-
-| Form | Behaviour |
-| --- | --- |
-| `string` | A template. Each `{placeholder}` that names a variable of the message is replaced by its value. Other placeholders are left as written. |
-| function | Called with the variables and the `ctx`, when there is one. Its return value is used as is, without placeholder replacement. |
-
-`MessageKey` is the union of the nineteen keys above, and `MessageVars` maps
-each key to the type of its variables.
-
-### `ctx.say(key, vars?)`
-
-```ts
-say<K extends MessageKey>(key: K, vars?: MessageVars[K]): string
-```
-
-Renders a message with the overrides of `defineBot({ messages })`, falling back
-to the English default for a key you did not set.
-
-### `DEFAULT_MESSAGES`
-
-The built-in English wording: an object with one template string per key, with
-the texts of the table above.
-
-### `Theme`
-
-The type behind `theme`, which accepts a `Partial<Theme>`.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `success` | `number` | `0x22c55e` | Colour of `ctx.reply.success`. |
-| `error` | `number` | `0xef4444` | Colour of `ctx.reply.error`, and so of every framework refusal. |
-| `info` | `number` | `0x3b82f6` | Colour of `ctx.reply.info`. |
-| `warn` | `number` | `0xf59e0b` | Colour of `ctx.reply.warn`. |
-
-`DEFAULT_THEME` is exported and holds these four defaults.
+- `FrameworkMessages`: The overridable message table accepted by `defineBot({ messages })`.
+- `defineBot()`: Creates a `Bot`.
+- `MessageValue`: One message: a template string with `{placeholders}`, or a function for full control (translation, pluralisation).
+- `inGuild()`: Requires the interaction to happen inside a guild.
+- `dmOnly()`: Requires the interaction to happen in DMs.
+- `hasPermission()`: Requires the invoking member to have all of the given permissions **in the current channel** (channel overwrites included, as computed by Discord).
+- `botHasPermission()`: Requires the *bot* to have all of the given permissions **in the current channel** (channel overwrites included, as computed by Discord).
+- `inChannel()`: Restricts usage to specific channel ids.
+- `ownerOnly()`: Restricts usage to specific user ids.
+- `guildOwnerOnly()`: Restricts usage to the owner of the server the interaction happens in.
+- `hasRole()`: Requires the invoking member to hold **at least one** of the given roles.
+- `cooldown()`: Per-invocation cooldown.
+- `rateLimit()`: A guard that allows `limit` uses per `window`, per scope (default `"user"`).
+- `antiSpam()`: Rejects the interactions of a user who exceeds a per-window rate limit: commands, components and forms.
 
 ## Limits and errors
 

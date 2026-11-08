@@ -260,131 +260,19 @@ embarque le plugin.
 
 ## Référence
 
-### `definePlugin(input)`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | - | Un nom unique, utilisé dans les journaux, dans les messages d'erreur et par `djs-bot explain`. |
-| `version` | `string` | aucune | La version propre au plugin. Informative, affichée par `djs-bot explain`. |
-| `requires` | `string[]` | `[]` | Capacités qui doivent exister, sinon le démarrage échoue avec [`DJSBOT_E040`](/api/errors/#djsbot_e040). |
-| `provides` | `string[]` | `[]` | Capacités que ce plugin offre, que d'autres peuvent lister dans `requires`. |
-| `conflicts` | `string[]` | `[]` | Capacités que rien d'autre ne peut fournir tant que ce plugin est chargé, sinon le démarrage échoue avec [`DJSBOT_E041`](/api/errors/#djsbot_e041). |
-| `setup` | `(app: PluginApp) => unknown` | - | Appelé une fois au démarrage, avant que le bot se connecte et avant que les services soient construits. Peut être asynchrone. Enregistrez-y les hooks et les services. |
-| `teardown` | `(app: PluginApp) => unknown` | aucun | Appelé pendant l'arrêt propre. Libère ce que `setup` a ouvert. Un échec est journalisé et l'arrêt continue. |
-
-Renvoie un `PluginDefinition` (`kind: "plugin"`). Un `setup` qui lève une erreur
-arrête le démarrage. La façon dont `requires`, `provides` et `conflicts` sont
-vérifiés est décrite sous
-[Contrats de capacités](/architecture/services/#capability-contracts).
-
-### `PluginApp`
-
-L'objet transmis à `setup` et à `teardown`.
-
-| Membre | Type | Description |
-| --- | --- | --- |
-| `app.logger` | `Logger` | Un logger étiqueté avec le nom du plugin. |
-| `app.hooks` | `HookRegistrar` | Enregistre les middlewares et les hooks de cycle de vie. |
-| `app.config` | `Readonly<BotConfig>` | La configuration passée à `defineBot`, en lecture seule. |
-| `app.services.register(token, value)` | `void` | Enregistre une valeur déjà construite sous un token. |
-| `app.services.has(token)` | `boolean` | Indique si un token existe, comme définition de service ou comme valeur enregistrée. |
-
-### `HookRegistrar`
-
-| Méthode | Callback | Description |
-| --- | --- | --- |
-| `beforeInteraction(fn)` | `(ctx: BaseContext, next: () => Promise<void>) => Promise<void> \| void` | Middleware autour des gardes et du gestionnaire. Arrêtez l'interaction en n'appelant pas `next`. Le type du callback est exporté sous le nom `MiddlewareFn`. |
-| `afterInteraction(fn)` | `(ctx: BaseContext, info: { durationMs: number }) => unknown` | Après un gestionnaire réussi. `durationMs` couvre les middlewares, les gardes et le gestionnaire. |
-| `onError(fn)` | `(error: unknown, ctx?: BaseContext) => unknown` | Quand un gestionnaire d'interaction, un écouteur d'événement, un déclencheur ou une tâche planifiée lève une erreur. `ctx` n'est défini que pour une interaction. |
-| `onReady(fn)` | `(client: Client<true>) => unknown` | Une fois le client prêt. |
-| `onShutdown(fn)` | `() => unknown` | Pendant l'arrêt propre. |
-
-### `antiSpam(options?)`
-
-Rejette les interactions d'un utilisateur qui dépasse une limite de débit. La
-limite est comptée par utilisateur sur toutes les commandes, tous les composants
-et tous les envois de modales, quels que soient la commande ou le serveur, et elle
-est conservée en mémoire. Un utilisateur rejeté reçoit une réponse d'erreur, et
-ni les gardes ni le gestionnaire ne s'exécutent. Les requêtes d'autocomplétion ne
-sont pas comptées, car une autocomplétion ne peut pas être refusée par un message.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `max` | `number` | `5` | Interactions autorisées par fenêtre, par utilisateur. |
-| `window` | `number \| string` | `"10s"` | Durée de la fenêtre : des millisecondes ou une durée. |
-| `message` | `string` | le message `slowDown` du framework | Affiché à un utilisateur limité. Reformulez la valeur par défaut dans [Formulations et thème](/basics/wording-and-theme/). |
-| `allow` | `string[]` | `[]` | Identifiants d'utilisateurs qui ne sont jamais limités (propriétaires, équipe). |
-
-```ts
-antiSpam({ max: 10, window: "30s", allow: env.list("OWNER_IDS") });
-```
-
-### `commandLogger(options?)`
-
-Écrit une ligne structurée par interaction, via le logger de cette interaction,
-de sorte que la ligne porte son `correlationId`. Les champs sont `kind`, `name`,
-`guildId` et, avec `timing`, `ms`.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `timing` | `boolean` | `true` | Journalise aussi la durée en millisecondes, gardes comprises. |
-
-```text
-14:22:07 INFO  interaction handled correlationId=8f3a kind=command name="config set" guildId=123 ms=143
-```
-
-La ligne est écrite une fois que le gestionnaire a rendu la main. Une interaction
-dont le gestionnaire a levé une erreur est journalisée par la barrière d'erreurs,
-pas par ce plugin.
-
-### `errorReporter(options)`
-
-Transmet les erreurs à votre outil de remontée : Sentry, un webhook, ce que vous
-voulez. Il est enregistré comme hook `onError` : il reçoit donc les erreurs
-d'interaction avec leur `ctx`, et celles des événements, des déclencheurs et des
-tâches planifiées sans `ctx`. Il s'exécute en parallèle de la barrière d'erreurs
-du framework : l'utilisateur reçoit toujours la réponse d'erreur habituelle.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `report` | `(error: unknown, ctx?: BaseContext) => void \| Promise<void>` | - | Obligatoire. Où envoyer l'erreur. |
-
-```ts
-errorReporter({
-  report: (error, ctx) => {
-    const where = ctx ? describeInteraction(ctx.interaction) : undefined;
-    Sentry.captureException(error, { tags: { interaction: where?.name, guild: ctx?.guildId } });
-  },
-});
-```
-
-Un outil de remontée qui lève une erreur est ignoré : la remontée ne doit jamais
-faire tomber le bot.
-
-### `maintenance(options?)`
-
-Répond à chaque commande, chaque composant et chaque envoi de modale par un avis
-et l'arrête, sauf pour les utilisateurs que vous autorisez. Les requêtes
-d'autocomplétion reçoivent toujours leurs suggestions, car une autocomplétion ne
-peut pas être refusée par un message.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `enabled` | `boolean \| (() => boolean)` | `true` | Indique si le mode maintenance est actif. Une fonction est rappelée à chaque interaction : vous pouvez donc basculer le mode sans redémarrer. |
-| `message` | `string` | `"🔧 The bot is under maintenance - please try again soon."` | Affiché aux utilisateurs bloqués. |
-| `allow` | `string[]` | `[]` | Identifiants d'utilisateurs qui peuvent continuer à utiliser le bot. |
-
-```ts
-let down = false; // basculez-le depuis une commande réservée aux propriétaires
-
-maintenance({ enabled: () => down, allow: env.list("OWNER_IDS") });
-```
-
-:::caution[Actif par défaut]
-`maintenance()` sans option `enabled` bloque tout le monde immédiatement. Passez
-`enabled: false` ou une fonction quand le plugin reste en permanence dans votre
-liste `plugins`.
-:::
+- `definePlugin()` : Définit un plugin transversal (hooks, middleware, capacités).
+- `PluginDefinition` : Un plugin transversal.
+- `PluginApp` : La façade restreinte transmise aux plugins dans `setup()`.
+- `Logger` : Logger structuré avec filtrage par niveau et liaisons enfants.
+- `HookRegistrar` : Permet aux plugins d'enregistrer des hooks sans toucher au cœur.
+- `defineBot()` : Crée un `Bot`.
+- `MiddlewareFn` : Un middleware s'exécute autour de chaque interaction ; appelez `next()` pour continuer.
+- `antiSpam()` : Rejette les interactions d'un utilisateur qui dépasse une limite de débit par fenêtre : commandes, composants et formulaires.
+- `commandLogger()` : Journalise une ligne structurée pour chaque interaction (avec sa durée), à l'aide du logger de corrélation propre à l'interaction.
+- `errorReporter()` : Transmet chaque erreur d'interaction non gérée à votre outil de suivi d'erreurs (par exemple Sentry).
+- `maintenance()` : Bloque toutes les interactions avec un avis de maintenance, sauf pour les utilisateurs de la liste d'autorisation.
 
 ## Voir aussi
 

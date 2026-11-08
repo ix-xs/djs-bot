@@ -186,66 +186,15 @@ a flag directly: keep a plain variable that an admin command flips, as in
 
 ## Reference
 
-### `FeatureFlagsOptions`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-The value of `flags` in `defineBot`, and the argument of `createFeatureFlags`.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `defaults` | `Record<string, boolean>` | `{}` | The state of each flag when no override exists. |
-| `store` | `KVStore` | see below | Where overrides are persisted. |
-
-In `defineBot`, `store` defaults to the bot's own `store`, and to an in-memory
-store when the bot has none. In `createFeatureFlags`, it defaults to an
-in-memory store.
-
-Overrides are written at the root of the store under the keys
-`flag:<name>:global` and `flag:<name>:guild:<guildId>`, with a boolean value.
-To keep them apart from your own keys, pass a namespace:
-`flags: { store: store.namespace("flags") }`.
-
-### `featureEnabled(name)`
-
-```ts
-featureEnabled(name: string): Guard
-```
-
-A [guard](/commands/guards/) that refuses the interaction when the flag is off
-for `ctx.guildId`. It passes when `flags` is not configured. The refusal uses
-the `featureDisabled` message ("This feature is currently disabled here." by
-default), which you can reword or translate: see
-[Wording and theme](/basics/wording-and-theme/).
-
-### `FeatureFlags`
-
-The type of `ctx.services.flags` and of the value `createFeatureFlags` returns.
-
-| Method | Returns | Description |
-| --- | --- | --- |
-| `isEnabled(name, scope?)` | `Promise<boolean>` | Resolves a flag for a `FlagScope`. |
-| `enable(name, scope?)` | `Promise<void>` | Turns a flag on globally, or for one guild with `{ guildId }`. |
-| `disable(name, scope?)` | `Promise<void>` | Turns a flag off globally, or for one guild with `{ guildId }`. |
-| `clear(name, scope?)` | `Promise<void>` | Removes an override, so the flag falls back to the next level. |
-| `setDefault(name, enabled)` | `void` | Changes a default. Synchronous, in memory only: it is not persisted. |
-| `list(guildId?)` | `Promise<Record<string, boolean>>` | The defaults merged with the global overrides and, with a `guildId`, that guild's overrides. |
-
-`list` only contains flags that have a default or a stored override. A flag
-that was never declared nor toggled is absent, and reads as `false`.
-
-### `FlagScope`
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `guildId` | `string \| null` | The guild whose own setting is used. Without one, the global value applies. |
-| `userId` | `string` | Reserved. Not used by the resolution. |
-
-### `createFeatureFlags(options)`
-
-```ts
-createFeatureFlags(options?: FeatureFlagsOptions): FeatureFlags
-```
-
-Creates the service on its own. `defineBot({ flags })` calls it for you.
+- `FeatureFlagsOptions`: Options for `createFeatureFlags`.
+- `defineBot()`: Creates a `Bot`.
+- `createFeatureFlags()`: Creates a `FeatureFlags` service.
+- `KVStore`: An async key-value store.
+- `featureEnabled()`: A guard that blocks a command/component when a feature flag is off for the guild.
+- `FeatureFlags`: A runtime feature-flag service.
+- `FlagScope`: A scope for reading/writing a flag.
 
 ## See also
 

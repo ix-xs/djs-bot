@@ -186,54 +186,13 @@ capability are not a conflict by themselves: declare `conflicts` to forbid it.
 
 ## Reference
 
-### `defineService(token, options)`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `token` | `string` | - | The name used to resolve and inject the service. First argument. |
-| `deps` | `string[]` | `[]` | Tokens of the services this one needs. They are resolved first. |
-| `factory` | `(deps) => T \| Promise<T>` | - | Builds the instance. `deps` is an object keyed by the tokens you listed, typed from `ServiceMap` (`unknown` for a token you did not declare). |
-| `dispose` | `(instance: T) => unknown` | none | Called with the instance during graceful shutdown. May be async. |
-
-Returns a `ServiceDefinition<T>` (`kind: "service"`, `name`, `deps`, `factory`,
-`dispose`), to export from a `.service` file or to list in a
-[feature](/architecture/features/).
-
-### `ServiceMap`
-
-The interface behind `ctx.services`. It declares `store: KVStore`,
-`audit: AuditLog` and `flags: FeatureFlags`, and any other token as `unknown`.
-Augment it as shown in [Type your services](#type-your-services).
-
-`ctx.services` is a live, read-only view of the container:
-
-| Operation | Result |
-| --- | --- |
-| `ctx.services.db` | The instance. Throws [`DJSBOT_E031`](/api/errors/#djsbot_e031) if the token is not registered, including a built-in token whose option is not set. |
-| `"db" in ctx.services` | `true` when the token is registered. Use it for an optional service. |
-| `Object.keys(ctx.services)` | The registered tokens. |
-
-### `Container`
-
-The container behind all of this is exposed as `bot.container`. You rarely need
-it, but nothing is hidden.
-
-| Method | Returns | Description |
-| --- | --- | --- |
-| `register(def)` | `void` | Registers a `ServiceDefinition`. |
-| `registerValue(token, value)` | `void` | Registers an already built value. This is what `app.services.register` calls. |
-| `has(token)` | `boolean` | Whether a token is known, as a definition or as a value. |
-| `tokens()` | `string[]` | Every registered token. |
-| `resolve(token)` | `Promise<unknown>` | Resolves one service, building its dependencies on demand. Throws `DJSBOT_E031` for an unknown token and `DJSBOT_E030` on a cycle. |
-| `resolveAll()` | `Promise<void>` | Builds every definition. Called once at startup. |
-| `disposeAll(onError?)` | `Promise<void>` | Runs every `dispose`, most recently built first. A failure is passed to `onError(error, token)` and does not stop the others. Called on shutdown. |
-| `view()` | `ServiceMap` | The read-only view exposed as `ctx.services`. |
-
-```ts
-await bot.load(); // discovers the files and builds the services, without connecting
-console.log(bot.container.tokens()); // ["db", "tickets", "store"]
-const db = await bot.container.resolve("db");
-```
+- `defineService()`: Defines an injectable service with explicit dependencies.
+- `ServiceMap`: Global service map.
+- `ServiceDefinition`: A service definition.
+- `Container`: Resolves service definitions and holds their singleton instances.
+- `resolve`: Cache-first fetch helpers.
 
 ## Limits and errors
 

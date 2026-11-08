@@ -1,0 +1,122 @@
+---
+title: "La configuration"
+description: "Où ranger le token, et ce que dit chaque ligne de defineBot()."
+sidebar:
+  order: 1
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TerminalDemo from '../../../../components/demo/TerminalDemo.astro';
+
+Le bot a besoin de trois valeurs pour démarrer : son token, l'Application ID
+et l'identifiant de votre serveur de test. On les range, puis on lit le
+fichier qui configure le bot.
+
+## Les secrets vont dans `.env`
+
+Un secret ne s'écrit jamais dans le code : le code finit sur GitHub, sur un
+serveur, dans un message d'aide... et le token avec lui. Il va dans un fichier
+`.env`, que djs-bot lit tout seul au démarrage.
+
+Remplissez `.env` avec les valeurs de la [page précédente](/start/discord-app/) :
+
+```bash title=".env"
+# Bot token: Developer Portal > your app > Bot > Reset Token
+DISCORD_TOKEN=your-token-here
+# Application id: Developer Portal > your app > General Information
+DISCORD_CLIENT_ID=1234567890123456789
+# Your test server id (right-click the server > Copy Server ID).
+# Commands appear there instantly while you develop.
+DISCORD_DEV_GUILD=9876543210987654321
+```
+
+<Aside type="danger" title=".env ne doit jamais être publié">
+`init` l'a mis dans `.gitignore` : laissez-le. Pour montrer quoi remplir,
+partagez `.env.example` (les mêmes noms, sans les valeurs).
+</Aside>
+
+## Le fichier de configuration du bot
+
+`src/index.ts` décrit le bot **en entier**. Le reste du projet ne contient
+que des fonctionnalités.
+
+```ts title="src/index.ts"
+import { defineBot, env } from "@ix-xs/djs-bot";
+
+const bot = defineBot({
+  token: env("DISCORD_TOKEN"),
+  clientId: env.optional("DISCORD_CLIENT_ID"),
+  features: `${import.meta.dirname}/features`,
+  intents: "auto",
+  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
+  // Acknowledge slow handlers automatically, so they never hit the 3 s limit.
+  defaults: { defer: true },
+});
+
+export default bot;
+
+// Start only when run directly (the CLI imports this file for tooling).
+if (!process.env.DJSBOT_CLI) void bot.start();
+```
+
+| Ligne | Ce qu'elle fait |
+| --- | --- |
+| `token` | le token, lu dans `.env` |
+| `clientId` | l'Application ID, pour présenter les commandes à Discord |
+| `features` | le dossier où sont vos fonctionnalités ([détails](/bot/finding-files/)) |
+| `intents: "auto"` | demande à Discord exactement les événements que votre code écoute |
+| `deploy.devGuildId` | votre serveur de test, où les commandes apparaissent à l'instant ([détails](/bot/registering-commands/)) |
+| `defaults: { defer: true }` | prévient Discord quand une réponse va prendre du temps ([détails](/bot/first-command/#when-the-reply-takes-time)) |
+| `export default bot` | permet aux outils (`deploy`, `doctor`...) de lire le bot sans le connecter |
+| la dernière ligne | lance le bot, sauf quand c'est un outil qui lit le fichier |
+
+## Lire une variable : `env()`
+
+`env("DISCORD_TOKEN")` lit une variable. Si elle manque, le bot s'arrête
+**tout de suite** avec un message clair, au lieu d'échouer plus loin sans
+explication :
+
+<TerminalDemo
+  command="npx djs-bot dev"
+  lines={[
+    { text: 'Error: Missing required environment variable "DISCORD_TOKEN". Add it to your environment or a .env file.', level: "fail" },
+  ]}
+/>
+
+| Fonction | Rend | Si la variable manque |
+| --- | --- | --- |
+| `env("NAME")` | du texte | s'arrête |
+| `env.optional("NAME")` | du texte ou `undefined` | `undefined` |
+| `env.number("NAME", 10)` | un nombre | la valeur de repli, sinon s'arrête |
+| `env.boolean("NAME")` | `true` ou `false` | `false` |
+| `env.list("NAME")` | une liste (`a,b,c`) | une liste vide |
+
+Une valeur mal écrite (`env.number` qui reçoit `abc`) arrête aussi le bot au
+démarrage.
+
+## Vérifier que tout est en ordre
+
+<TerminalDemo
+  command="npx djs-bot doctor"
+  lines={[
+    { text: "djs-bot doctor v1.4.0" },
+    { text: "" },
+    { text: "✓ Node 26.13.0", level: "ok" },
+    { text: "✓ discord.js 14.28.0", level: "ok" },
+    { text: "✓ DISCORD_TOKEN is set", level: "ok" },
+    { text: "✓ DISCORD_CLIENT_ID is set", level: "ok" },
+    { text: "✓ DISCORD_DEV_GUILD is set", level: "ok" },
+    { text: "✓ .env is git-ignored", level: "ok" },
+    { text: "✓ Loaded 1 command(s), 0 component(s), 0 event(s), 0 job(s), 0 service(s)", level: "ok" },
+    { text: "✓ No privileged intents required", level: "ok" },
+  ]}
+/>
+
+`doctor` vérifie tout avant le premier lancement. Une ligne rouge dit quoi
+corriger.
+
+<Aside type="tip" title="Toutes les options">
+`defineBot()` accepte d'autres réglages (journaux, présence, traductions...).
+Ils sont tous sur la page de `BotConfig`, et expliqués dans le guide quand
+ils deviennent utiles.
+</Aside>

@@ -1,0 +1,208 @@
+---
+// The page of one export: what it is, how to import it, its declaration, then
+// its parameters, properties and methods, its examples, and where it is used.
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { Code } from "@astrojs/starlight/components";
+import type { ApiSymbol } from "../../reference/model";
+import { find, kindOf, pathOf, sidebar, topicOf, translate, untranslated, words } from "../../reference/model";
+import { href, render } from "../../reference/markdown";
+import { getEntry } from "astro:content";
+import Tokens from "./Tokens.astro";
+import Callable from "./Callable.astro";
+
+interface Props {
+  symbol: ApiSymbol;
+  locale: string | undefined;
+}
+
+const { symbol, locale } = Astro.props;
+const w = words(locale);
+const kind = kindOf(symbol);
+const name = symbol.name;
+const isType = symbol.kind === "interface" || symbol.kind === "type";
+
+const text = translate(name, symbol.text, locale);
+const pending = untranslated(name, symbol.text, locale);
+// The first paragraph leads the page; the rest follows the declaration.
+const [first = "", ...rest] = (text ?? "").split(/\n\s*\n/);
+const leadHtml = await render(first, locale, { inline: true });
+const moreHtml = await render(rest.join("\n\n"), locale);
+const deprecatedHtml = symbol.deprecated
+  ? await render(typeof symbol.deprecated === "string" ? translate(`${name}#deprecated`, symbol.deprecated, locale) : "", locale, { inline: true })
+  : "";
+
+const importLine = `import ${isType ? "type " : ""}{ ${name} } from "${symbol.module}";`;
+const examples = symbol.examples ?? symbol.overloads?.flatMap((o) => o.doc?.examples ?? []) ?? [];
+
+/** A member of an interface, a class or an object, ready to show. */
+async function member<T extends { name: string; text?: string; details?: string; inheritedFrom?: string }>(item: T) {
+  // An inherited member is translated once, under the export it comes from.
+  const key = `${item.inheritedFrom ?? name}.${item.name}`;
+  return {
+    ...item,
+    key,
+    html: await render(translate(key, item.text, locale), locale),
+    detailsHtml: item.details ? await render(translate(`${key}#details`, item.details, locale), locale) : "",
+    pending: untranslated(key, item.text, locale),
+  };
+}
+const properties = await Promise.all((symbol.properties ?? []).map(member));
+const methods = await Promise.all((symbol.methods ?? []).map(member));
+
+const guideId = symbol.guide?.split("/").filter(Boolean).join("/");
+const guideEntry = guideId ? ((await getEntry("docs", locale ? `${locale}/${guideId}` : guideId)) ?? (await getEntry("docs", guideId))) : undefined;
+const guideTitle = guideEntry?.data.title;
+const usedBy = (symbol.usedBy ?? []).map(find).filter((s): s is ApiSymbol => Boolean(s));
+
+const headings = [
+  ...(symbol.overloads?.length ? [{ depth: 2, slug: "parameters", text: w.parameters }] : []),
+  ...(symbol.ctor ? [{ depth: 2, slug: "constructor", text: w.constructor }] : []),
+  ...(symbol.values?.length ? [{ depth: 2, slug: "values", text: w.values }] : []),
+  ...(examples.length ? [{ depth: 2, slug: "example", text: examples.length > 1 ? w.examples : w.example }] : []),
+  ...(properties.length ? [{ depth: 2, slug: "properties", text: w.properties }, ...properties.map((p) => ({ depth: 3, slug: p.name, text: p.name }))] : []),
+  ...(methods.length ? [{ depth: 2, slug: "methods", text: w.methods }, ...methods.map((m) => ({ depth: 3, slug: m.name, text: `${m.name}()` }))] : []),
+  ...(usedBy.length ? [{ depth: 2, slug: "used-by", text: w.usedBy }] : []),
+];
+---
+
+<StarlightPage
+  frontmatter={{
+    title: name,
+    description: first.replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/`/g, "").replace(/\s+/g, " ").slice(0, 200),
+    tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
+    editUrl: false,
+    pagefind: true,
+  }}
+  sidebar={sidebar(locale)}
+  headings={headings}
+>
+  <div class="rf-meta">
+    <span class="rf-kind" data-kind={kind}>{w.kinds[kind]}</span>
+    <code class="rf-module" translate="no">{symbol.module}</code>
+    <a class="rf-source" href={symbol.source} rel="noopener">{w.source}<span aria-hidden="true"> ↗</span></a>
+  </div>
+
+  {symbol.deprecated && (
+    <aside class="rf-deprecated">
+      <strong>{w.deprecated}</strong>
+      {deprecatedHtml && <span set:html={deprecatedHtml} />}
+    </aside>
+  )}
+
+  {leadHtml && <p class="at-lead rf-lead" set:html={leadHtml} lang={pending && locale ? "en" : undefined} />}
+
+  <Code code={importLine} lang="ts" />
+
+  {symbol.overloads ? (
+    symbol.overloads.map((signature, i) => (
+      <section class="rf-section" aria-labelledby={i === 0 ? "parameters" : undefined}>
+        {i === 0 && <h2 id="parameters">{w.parameters}</h2>}
+        {symbol.overloads!.length > 1 && <p class="rf-form">{w.form} {i + 1}</p>}
+        <Callable signature={signature} owner={name} locale={locale} keyword="function" />
+      </section>
+    ))
+  ) : symbol.code ? (
+    <pre class="rf-code rf-declaration" translate="no"><code><Tokens tokens={symbol.code} locale={locale} keywords /></code></pre>
+  ) : null}
+
+  {moreHtml && <div class="rf-more" set:html={moreHtml} lang={pending && locale ? "en" : undefined} />}
+
+  {symbol.guide && (
+    <a class="rf-guide" href={href(symbol.guide, locale)}>
+      <span class="rf-label">{w.guide}</span>
+      <span class="rf-guide-title" data-guide={symbol.guide}>{guideTitle}</span>
+      <span aria-hidden="true">→</span>
+    </a>
+  )}
+
+  {symbol.ctor && (
+    <section class="rf-section">
+      <h2 id="constructor">{w.constructor}</h2>
+      <Callable signature={symbol.ctor} owner={`${name}#constructor`} locale={locale} />
+    </section>
+  )}
+
+  {symbol.values?.length ? (
+    <section class="rf-section">
+      <h2 id="values">{w.values}</h2>
+      <ul class="rf-values" translate="no">
+        {symbol.values.map((value) => <li><code>{symbol.kind === "enum" ? value : `"${value}"`}</code></li>)}
+      </ul>
+    </section>
+  ) : null}
+
+  {examples.length > 0 && (
+    <section class="rf-section">
+      <h2 id="example">{examples.length > 1 ? w.examples : w.example}</h2>
+      {examples.map((code) => <Code code={code} lang="ts" />)}
+    </section>
+  )}
+
+  {properties.length > 0 && (
+    <section class="rf-section">
+      <h2 id="properties">{w.properties}</h2>
+      {properties.map((prop) => (
+        <article class="rf-member">
+          <h3 id={prop.name} translate="no">
+            <a href={`#${prop.name}`}>{prop.name}</a>
+          </h3>
+          <span class="rf-tags">
+            {prop.static && <span class="rf-tag">{w.static}</span>}
+            {prop.readonly && <span class="rf-tag">{w.readonly}</span>}
+            {prop.optional && <span class="rf-tag">{w.optional}</span>}
+            {prop.deprecated && <span class="rf-tag rf-tag-warn">{w.deprecated}</span>}
+          </span>
+          <pre class="rf-code rf-small" translate="no"><code>{prop.name}{prop.optional ? "?" : ""}: <Tokens tokens={prop.type} locale={locale} keywords /></code></pre>
+          {prop.html && <div class="rf-text" set:html={prop.html} lang={prop.pending && locale ? "en" : undefined} />}
+          {prop.default && <p class="rf-default">{w.default} <code translate="no">{prop.default}</code></p>}
+          {prop.inheritedFrom && (
+            <p class="rf-inherited">{w.inherited} <a href={href(pathOf(prop.inheritedFrom), locale)} translate="no">{prop.inheritedFrom}</a></p>
+          )}
+          {prop.examples?.map((code) => <Code code={code} lang="ts" />)}
+        </article>
+      ))}
+    </section>
+  )}
+
+  {methods.length > 0 && (
+    <section class="rf-section">
+      <h2 id="methods">{w.methods}</h2>
+      {methods.map((method) => (
+        <article class="rf-member">
+          <h3 id={method.name} translate="no">
+            <a href={`#${method.name}`}>{method.name}()</a>
+          </h3>
+          <span class="rf-tags">
+            {method.static && <span class="rf-tag">{w.static}</span>}
+            {method.optional && <span class="rf-tag">{w.optional}</span>}
+            {method.deprecated && <span class="rf-tag rf-tag-warn">{w.deprecated}</span>}
+          </span>
+          {method.html && <div class="rf-text" set:html={method.html} lang={method.pending && locale ? "en" : undefined} />}
+          {method.overloads.map((signature, i) => (
+            <>
+              {method.overloads.length > 1 && <p class="rf-form">{w.form} {i + 1}</p>}
+              <Callable signature={signature} owner={method.key} locale={locale} />
+            </>
+          ))}
+          {method.detailsHtml && <div class="rf-text rf-details" set:html={method.detailsHtml} />}
+          {method.inheritedFrom && (
+            <p class="rf-inherited">{w.inherited} <a href={href(pathOf(method.inheritedFrom), locale)} translate="no">{method.inheritedFrom}</a></p>
+          )}
+          {method.examples?.map((code) => <Code code={code} lang="ts" />)}
+        </article>
+      ))}
+    </section>
+  )}
+
+  {usedBy.length > 0 && (
+    <section class="rf-section">
+      <h2 id="used-by">{w.usedBy}</h2>
+      <p class="rf-hint">{w.usedByText}</p>
+      <ul class="rf-chips" translate="no">
+        {usedBy.map((other) => (
+          <li><a href={href(pathOf(other.name), locale)} data-kind={kindOf(other)}>{other.name}</a></li>
+        ))}
+      </ul>
+    </section>
+  )}
+</StarlightPage>

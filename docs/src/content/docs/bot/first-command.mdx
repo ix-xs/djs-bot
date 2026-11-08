@@ -1,0 +1,180 @@
+---
+title: "Your first command"
+description: "What a command file contains, how to reply, and how to ask for a piece of information with an option."
+sidebar:
+  order: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import DiscordDemo from '../../../components/demo/DiscordDemo.astro';
+
+Let's open the `/ping` command, then write two more: `/server`, and `/user`,
+which asks you to pick someone.
+
+## Reading the `/ping` command
+
+```ts title="src/features/ping/ping.command.ts"
+import { defineCommand } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "ping",
+  description: "Check the bot is alive",
+  run: (ctx) => ctx.reply.success(`Pong! 🏓 ${Math.round(ctx.client.ws.ping)} ms`),
+});
+```
+
+| Field | What it is for |
+| --- | --- |
+| `name` | what you type after `/`, lowercase and with no spaces |
+| `description` | the text shown under the name in Discord's list |
+| `run` | the function called when someone runs the command |
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "ping", description: "Check the bot is alive" },
+    { do: "reply", embed: { color: "#22c55e", description: "Pong! 🏓 42 ms" } },
+  ]}
+/>
+
+## `ctx`, everything `run` needs
+
+`run` receives `ctx` (the *context*): the situation, and the means to reply.
+
+| What you write | What it is |
+| --- | --- |
+| `ctx.user` | who ran the command |
+| `ctx.guild` | the server (`null` in a direct message) |
+| `ctx.channel` | the channel |
+| `ctx.member` | the person as a member (roles, nickname) |
+| `ctx.client` | the bot's discord.js client |
+| `ctx.reply(...)` | reply |
+
+These are the real discord.js objects. Everything else is on the
+`CommandContext` page.
+
+## A `/server` command
+
+Create this file:
+
+```ts title="src/features/info/server.command.ts"
+import { defineCommand } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "server",
+  description: "Show information about this server",
+  run: (ctx) => ctx.reply(`This server is ${ctx.guild?.name} and has ${ctx.guild?.memberCount} members.`),
+});
+```
+
+Save: `dev` restarts the bot, which finds the file and presents `/server` to
+Discord. Nothing else to do.
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "server", description: "Show information about this server" },
+    { do: "reply", text: "This server is My server and has 12 members." },
+  ]}
+/>
+
+The `?.` in `ctx.guild?.name` covers direct messages, where there is no
+server. Without it, your editor underlines the line.
+
+## The ways to reply
+
+```ts
+await ctx.reply.success("Settings saved.");
+await ctx.reply.info("The next event starts in 2 hours.");
+await ctx.reply.warn("This channel is almost full.");
+await ctx.reply.error("You can't use this here.");
+```
+
+Each variant puts the text in a colored frame (an *embed*), so the tone
+shows at a glance:
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "settings", description: "Change the bot settings" },
+    { do: "reply", embed: { color: "#22c55e", description: "Settings saved." } },
+    { do: "command", name: "settings", description: "Change the bot settings" },
+    { do: "reply", embed: { color: "#ef4444", description: "You can't use this here." }, ephemeral: true },
+  ]}
+/>
+
+An error is shown **only to the person it concerns**. To do the same with
+any reply: `ctx.reply.ephemeral("...")`, or the `{ ephemeral: true }`
+option.
+
+## Asking for information: options
+
+An **option** is a value the user gives when running the command (a member,
+a number, some text). You declare it with the builders from `s`:
+
+```ts title="src/features/info/user.command.ts"
+import { defineCommand, s } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "user",
+  description: "Show information about a user",
+  options: {
+    target: s.user({ description: "The user to show", required: true }),
+  },
+  run: (ctx) => {
+    const user = ctx.options.target;
+    return ctx.reply.info(`${user.username} joined Discord on ${user.createdAt.toDateString()}.`);
+  },
+});
+```
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "user", description: "Show information about a user", options: [{ name: "target", value: "@Mallory", suggestions: ["@Mallory", "@Max", "@Mona"] }] },
+    { do: "reply", embed: { color: "#3b82f6", description: "mallory joined Discord on Tue Mar 14 2023." } },
+  ]}
+/>
+
+Thanks to `s.user()` and `required: true`, `ctx.options.target` **is** a
+user, never `undefined`: no check to write, and a typo is underlined before
+the bot starts.
+
+There is one builder per kind of value: `s.string()`, `s.integer()`,
+`s.number()`, `s.boolean()`, `s.user()`, `s.member()`, `s.channel()`,
+`s.role()`, `s.mentionable()`, `s.attachment()`. Details:
+[Options and autocomplete](/commands/options/).
+
+## When the reply takes time
+
+Discord gives you **3 seconds** to reply, otherwise it shows "The
+application did not respond". A command that waits for a database or an API
+quickly goes past that:
+
+```ts title="src/features/info/slow.command.ts"
+import { defineCommand } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "slow",
+  description: "Take a while to answer",
+  run: async (ctx) => {
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await ctx.reply("Done, after five seconds.");
+  },
+});
+```
+
+With `defaults: { defer: true }` (in `src/index.ts`), djs-bot tells Discord
+after 2 seconds. Discord shows "is thinking...", then the reply takes its
+place:
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "slow", description: "Take a while to answer" },
+    { do: "reply", text: "Done, after five seconds.", thinking: 2600 },
+  ]}
+/>
+
+Nothing to change in the command. Fine-tuning:
+[Automatic deferral](/basics/automatic-deferral/).
+
+<Aside type="tip" title="If a command crashes">
+The bot stays online. The error is written to the terminal, and the user
+gets an error message visible only to them.
+</Aside>

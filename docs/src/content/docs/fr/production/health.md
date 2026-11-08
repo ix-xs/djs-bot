@@ -224,59 +224,14 @@ export function metricsText(): string {
 
 ## Référence
 
-### `health`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-Le champ `health` de [`defineBot`](/basics/configuration/) : un numéro de port,
-ou des `HealthOptions`. Omettez-le et aucun serveur n'est démarré.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `port` | `number` | `3000` | Port d'écoute. |
-| `host` | `string` | toutes les interfaces | Interface à laquelle se lier. |
-| `onError` | `(error: Error) => void` | écrit sur stderr | Appelé quand le serveur ne peut pas se lier. Dans `defineBot`, le bot journalise d'abord l'échec, puis l'appelle. |
-
-### `startHealthServer(getStatus, options)`
-
-Démarre le serveur et renvoie le `http.Server` de Node. `getStatus` est une
-fonction qui renvoie un [`HealthStatus`](/production/health/#healthstatus) et qui est appelée
-une fois par requête. `options` est le tableau `HealthOptions` ci-dessus et peut
-être omis. Le serveur ne maintient pas le processus en vie, et un échec de liaison
-est transmis à `onError` au lieu d'être levé.
-
-### `HealthStatus`
-
-La forme renvoyée par `/metrics`, et l'argument de `toPrometheus`.
-
-| Champ | Type | Description |
-| --- | --- | --- |
-| `ready` | `boolean` | Indique si le bot est connecté et prêt. Pilote `/readyz`. |
-| `uptimeMs` | `number` | Millisecondes de fonctionnement. Avec `defineBot`, compté depuis la création du bot. |
-| `metrics` | `Record<string, number>` | Les compteurs. Toute clé que vous ajoutez en mode autonome est exportée aussi. |
-| `shard` | `{ id: number; count: number }?` | Le shard, quand le bot est shardé. |
-
-### `toPrometheus(status)`
-
-Produit un `HealthStatus` au format d'exposition texte de Prometheus et renvoie
-la chaîne. Servez-la avec le type de contenu
-`text/plain; version=0.0.4; charset=utf-8`.
-
-### `bot.stats()`
-
-Renvoie un instantané `BotStats`. Il fonctionne avant que le bot ait démarré,
-avec tous les compteurs à zéro.
-
-| Champ | Type | Description |
-| --- | --- | --- |
-| `uptimeMs` | `number` | Millisecondes écoulées depuis que ce processus a créé le bot. |
-| `interactions` | `number` | Interactions reçues, de tout type. |
-| `commands` | `number` | Commandes slash et de menu contextuel acheminées vers un gestionnaire. |
-| `components` | `number` | Interactions de boutons et de menus de sélection acheminées vers un gestionnaire. |
-| `modals` | `number` | Soumissions de modales acheminées vers un gestionnaire. |
-| `autocompletes` | `number` | Requêtes d'autocomplétion auxquelles il a été répondu. |
-| `guardRejections` | `number` | Interactions refusées par une garde. |
-| `errors` | `number` | Gestionnaires, événements, déclencheurs, tâches planifiées et hooks qui ont levé une erreur. |
-| `handlerAvgMs` | `number` | Durée moyenne d'un gestionnaire en millisecondes, arrondie à deux décimales. |
-| `handlerMaxMs` | `number` | Gestionnaire le plus lent observé, en millisecondes. |
+- `defineBot()` : Crée un `Bot`.
+- `HealthOptions` : Options de `startHealthServer`.
+- `startHealthServer()` : Démarre le serveur de santé.
+- `HealthStatus` : Statut en direct renvoyé par le serveur, produit à chaque requête.
+- `toPrometheus()` : Produit un statut au format texte d'exposition de Prometheus, afin que le point d'accès puisse être interrogé directement sans exporter.
+- `BotStats` : Un instantané des compteurs d'exécution, tel que renvoyé par `Bot.stats`.
 
 ## Voir aussi
 

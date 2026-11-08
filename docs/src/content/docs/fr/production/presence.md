@@ -149,60 +149,9 @@ Le statut est le point coloré :
 
 ## Référence
 
-### `presence`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-```ts
-presence?: PresenceData
-```
-
-La présence avec laquelle le bot se connecte. Par défaut : en ligne, sans
-activité. Quand elle n'est pas définie, c'est la `presence` donnée dans l'option
-`client` de `defineBot` qui est utilisée.
-
-### `presenceRotation`
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `interval` | `string \| number` | requis | Durée pendant laquelle chaque présence reste : une chaîne de durée ou des millisecondes. Une chaîne qui ne peut pas être lue comme une durée revient à 60 secondes. |
-| `items` | `PresenceData[]` | requis | Les présences à parcourir, dans l'ordre. Une liste vide désactive la rotation. |
-
-### `PresenceData`
-
-Le type discord.js utilisé par chaque option et méthode de cette page.
-
-| Champ | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `status` | `"online" \| "idle" \| "dnd" \| "invisible"` | le statut actuel | Le point de statut. |
-| `activities` | `{ name, type?, state?, url? }[]` | les activités actuelles | Ce que fait le bot. Un tableau vide efface l'activité. |
-| `afk` | `boolean` | `false` | Marque le bot comme éloigné du clavier. |
-| `shardId` | `number \| number[]` | tous les shards | Limite le changement à certains shards de ce processus. |
-
-Dans une activité, `name` est obligatoire, `type` est un `ActivityType`, `url`
-est le lien du flux pour `Streaming`, et `state` est le texte d'une activité
-`Custom` (quand il est omis, `name` est utilisé).
-
-### `bot.setPresence(presence)`
-
-```ts
-bot.setPresence(presence: PresenceData): void
-```
-
-Remplace la présence. Les champs omis conservent leur valeur actuelle, comme
-décrit plus haut.
-
-### `bot.setActivity(name, options?)`
-
-```ts
-bot.setActivity(name: string, options?: { type?: ActivityType; url?: string; status?: PresenceStatusData }): void
-```
-
-Un raccourci pour une présence avec exactement une activité.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `type` | `ActivityType` | `ActivityType.Playing` | Les mots affichés avant le nom. |
-| `url` | `string` | aucun | Une URL Twitch ou YouTube, pour `ActivityType.Streaming`. |
-| `status` | `"online" \| "idle" \| "dnd" \| "invisible"` | le statut actuel | Le point de statut. |
+- `defineBot()` : Crée un `Bot`.
 
 ## Limites et erreurs
 

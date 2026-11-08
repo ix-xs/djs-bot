@@ -251,101 +251,19 @@ export default defineService("weather", {
 
 ## Reference
 
-Durations are a number of milliseconds or a string such as `"30s"`, `"5m"` or
-`"1h"`.
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-### `rateLimit(options)`
-
-Returns a guard that allows `limit` uses per `window`.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `limit` | `number` | required | Uses allowed per window. |
-| `window` | `number \| string` | required | Length of the window. |
-| `scope` | `"user" \| "guild" \| "channel" \| "global"` | `"user"` | What shares one budget: each user, each server, each channel, or everyone. |
-
-Outside a server, the `"guild"` scope counts per user. So does `"channel"` when
-the interaction has no channel.
-
-### `createRateLimiter(options)`
-
-Returns a `RateLimiter`. `new RateLimiter(options)` does the same.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `limit` | `number` | required | Hits allowed per window. |
-| `window` | `number \| string` | required | Length of the window. A string that cannot be read as a duration counts as one minute. |
-
-| Member | Returns | Description |
-| --- | --- | --- |
-| `consume(key, cost?)` | `RateLimitResult` | Records a hit of `cost` (default `1`) for `key` and reports whether it fits. |
-| `reset(key)` | `void` | Forgets the window of a key. |
-| `size` | `number` | How many keys have an open window. |
-
-`RateLimitResult`:
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `allowed` | `boolean` | Whether this hit is within the limit. |
-| `remaining` | `number` | Hits left in the current window. |
-| `resetMs` | `number` | Milliseconds until the window closes. |
-
-### `createCircuitBreaker(options)`
-
-Returns a `CircuitBreaker`. `new CircuitBreaker(options)` does the same. Every
-option is optional.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `failureThreshold` | `number` | `5` | Failures in a row before the circuit opens. |
-| `resetTimeout` | `number \| string` | `"30s"` | How long it stays open before a trial. A string that cannot be read as a duration counts as 30 seconds. |
-| `successThreshold` | `number` | `1` | Successful trials needed to close it again. |
-| `isFailure` | `(error: unknown) => boolean` | every error counts | Return `false` for an error that should not count. |
-| `onOpen` | `() => void` | none | Called each time the circuit opens. |
-| `onClose` | `() => void` | none | Called when it closes. |
-
-| Member | Returns | Description |
-| --- | --- | --- |
-| `execute(fn)` | `Promise<T>` | Runs `fn` (sync or async) through the breaker and resolves with its result. Rejects with `CircuitOpenError` while open, or with the error of `fn`. |
-| `status` | `CircuitState` | `"closed"`, `"open"` or `"half-open"`. |
-
-### `CircuitOpenError`
-
-The error `execute` rejects with while the circuit is open. Its `name` is
-`"CircuitOpenError"`. Test it with `instanceof` to tell "the service is down"
-apart from an error of the call itself.
-
-### `retry(fn, options)`
-
-Calls `fn` (sync or async) until it succeeds, and resolves with its result.
-Rejects with the last error. An attempt that fails with an error named
-`AbortError` is not tried again. `options` is `RetryOptions`:
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `attempts` | `number` | `3` | Total attempts, the first one included. |
-| `delay` | `number \| string` | `200` | Wait before the second attempt: milliseconds, or text such as `"1s"`. |
-| `backoff` | `number` | `2` | Multiplies the wait after each failure. `2` turns 200 into 200, 400, 800. |
-| `maxDelay` | `number \| string` | no cap | Upper bound of the wait: milliseconds, or text such as `"30s"`. |
-| `jitter` | `number` | `0.2` | Randomises each wait: `0` for none, up to `1` for anywhere between zero and twice the delay. |
-| `shouldRetry` | `(error: unknown, attempt: number) => boolean` | retry every error | Return `false` to give up at once. |
-| `onRetry` | `(error: unknown, attempt: number) => void` | none | Called before each wait. `attempt` is the one that failed, starting at 1. |
-| `signal` | `AbortSignal` | none | Once aborted, no further attempt is made and the call rejects with an `AbortError`. The attempt in progress is not interrupted. |
-
-A `delay` or a `maxDelay` that cannot be read as a duration rejects with a
-`TypeError`.
-
-### `timeout(promise, ms, message)`
-
-Resolves with the value of `promise` if it settles within `ms`, and rejects
-with a `TimeoutError` otherwise. An `ms` that cannot be read as a duration
-throws a `TypeError`.
-
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `promise` | `Promise<T> \| ((signal: AbortSignal) => Promise<T>)` | required | The work to bound, or a function that starts it. The function receives a signal that aborts when the time is up. |
-| `ms` | `number \| string` | required | The time allowed: milliseconds (`5000`) or text (`"5s"`). |
-| `message` | `string` | `Operation timed out after <ms>ms` | The message of the rejection. |
+- `rateLimit()`: A guard that allows `limit` uses per `window`, per scope (default `"user"`).
+- `createRateLimiter()`: Creates a `RateLimiter`.
+- `RateLimiter`: A fixed-window rate limiter, keyed by an arbitrary string.
+- `RateLimitResult`: The outcome of a `RateLimiter.consume` call.
+- `createCircuitBreaker()`: Creates a `CircuitBreaker`.
+- `CircuitBreaker`: A circuit breaker: after too many failures it "opens" and fails fast for a cool-off period, then tries again ("half-open") before fully recovering.
+- `CircuitOpenError`: Error thrown when calls are rejected because the circuit is open.
+- `CircuitState`: The state of a `CircuitBreaker`.
+- `retry()`: Retries an async function with exponential backoff + jitter.
+- `RetryOptions`: Options for `retry`.
+- `timeout()`: Rejects if `promise` doesn't settle within `ms` (milliseconds, or text such as `"5s"`).
 
 ## See also
 

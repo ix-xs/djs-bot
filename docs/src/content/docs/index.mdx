@@ -1,51 +1,82 @@
 ---
-title: djs-bot
-description: "Discord bots, fully typed. A TypeScript-first framework on top of discord.js: typed commands, buttons and forms, automatic intents and deferral, i18n, jobs, a store and a CLI."
-template: splash
-hero:
-  title: Discord bots, <em>fully typed.</em>
-  tagline: djs-bot is a TypeScript-first framework on top of discord.js. Typed commands, typed buttons and forms, intents and deferral handled for you, a store, jobs and a CLI. Ready for production on day one, with nothing hidden.
-  actions:
-    - text: Quick start
-      link: /quick-start/
-      variant: primary
-    - text: Build your first bot
-      link: /tutorial/what-you-need/
-      variant: secondary
+title: "Introduction"
+description: "What djs-bot is, what you will build, and what you should know before you start."
+sidebar:
+  order: 1
 ---
 
-import Showcase from '../../components/showcase/Showcase.astro';
+import { Aside } from '@astrojs/starlight/components';
+import DiscordDemo from '../../components/demo/DiscordDemo.astro';
 
-<div class="at-landing not-content">
+This guide teaches you how to build a Discord bot with **djs-bot**, from
+installation to putting it online. Each step tells you **what to do** and
+**why**.
 
-<section class="at-section">
-  <header data-reveal><span>01</span><h2>One file, one feature</h2></header>
-  <p data-reveal>A file exports a definition. The framework finds it, registers it with Discord, routes the interaction to it and hands you typed values. Pick a kind of feature, then play it: each thing the framework does lights the lines that asked for it.</p>
-  <div data-reveal><Showcase /></div>
-</section>
+## What djs-bot is
 
-<section class="at-section">
-  <header data-reveal><span>02</span><h2>What you stop writing</h2></header>
-  <ul class="at-points">
-    <li data-reveal><h3>Casts and null checks</h3><p>Options, customId params, modal fields, services and config are typed from their declaration. <code>required: true</code> makes the value non-optional.</p></li>
-    <li data-reveal><h3>Registration and intents</h3><p>Commands are diffed and deployed for you, and the gateway intents are derived from the events you listen to.</p></li>
-    <li data-reveal><h3>"The application did not respond"</h3><p>Turn on automatic deferral once. A slow handler is acknowledged for you, and it never collides with your own reply.</p></li>
-    <li data-reveal><h3>String parsing in buttons</h3><p>A button carries typed data in its customId. The click comes back to your handler decoded, with no <code>split("_")</code>.</p></li>
-    <li data-reveal><h3>The production checklist</h3><p>Error boundary, graceful shutdown, structured logs, sharding, health checks, metrics, rate limits and a store with atomic counters are built in.</p></li>
-    <li data-reveal><h3>A test server for every change</h3><p>Handlers are plain functions. The harness runs a command, a button or a form and captures the reply, with no token and no network.</p></li>
-  </ul>
-</section>
+A Discord bot is a program that connects to Discord. Discord sends it what
+is happening ("someone typed `/ping`"), and the program responds.
 
-<section class="at-section">
-  <header data-reveal><span>03</span><h2>Where to go next</h2></header>
-  <ul class="at-paths">
-    <li data-reveal><a href="/tutorial/what-you-need/"><span>01</span><div><strong>Tutorial</strong><small>From nothing to a bot that is online, step by step. No prior experience assumed.</small></div></a></li>
-    <li data-reveal><a href="/quick-start/"><span>02</span><div><strong>Quick start</strong><small>Install, scaffold and run, in five minutes, if you already know Node.</small></div></a></li>
-    <li data-reveal><a href="/commands/slash-commands/"><span>03</span><div><strong>Commands</strong><small>Slash commands, typed options, autocomplete, subcommands, guards.</small></div></a></li>
-    <li data-reveal><a href="/components/buttons/"><span>04</span><div><strong>Components</strong><small>Buttons, select menus, modals, Components V2, pagination.</small></div></a></li>
-    <li data-reveal><a href="/recipes/moderation/"><span>05</span><div><strong>Recipes</strong><small>Complete features to copy: moderation, tickets, role menu, levelling, hosting.</small></div></a></li>
-    <li data-reveal><a href="/api/exports/"><span>06</span><div><strong>Reference</strong><small>Every export, every error code, the CLI, troubleshooting.</small></div></a></li>
-  </ul>
-</section>
+To talk to Discord from Node.js, you use
+[discord.js](https://discord.js.org). But discord.js leaves all the wiring to
+you: sorting every interaction you receive, presenting your commands to
+Discord, choosing the events to listen to, checking every option.
 
-</div>
+**djs-bot does that wiring for you.** You write one file per thing the bot
+does, and that's it:
+
+```ts title="src/features/ping/ping.command.ts"
+import { defineCommand } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "ping",
+  description: "Check the bot is alive",
+  run: (ctx) => ctx.reply.success("Pong! 🏓"),
+});
+```
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "ping", description: "Check the bot is alive" },
+    { do: "reply", embed: { color: "#22c55e", description: "Pong! 🏓" } },
+  ]}
+/>
+
+No list to keep up to date, no registration script: the file exists, so the
+command exists.
+
+## What you will build
+
+A single bot, page after page:
+
+1. **Getting started**: the application on Discord, then the project on your
+   computer.
+2. **Your bot**: the configuration, starting it, a first command, events,
+   then putting it online.
+3. **Going further**: buttons, menus, forms, data, production. Read these
+   when you need them.
+
+The [reference](/reference/) describes every function and every type in the
+package.
+
+## What you should know first
+
+- **The basics of JavaScript**: functions, objects, `import`, `async`/`await`.
+- **How to open a terminal** in a folder and type a command there.
+
+You do not need to know discord.js or TypeScript. The guide uses TypeScript
+(your editor then spots mistakes before the bot starts), but everything also
+works in JavaScript: just leave the types out.
+
+<Aside type="tip" title="Already know discord.js?">
+Everything still applies: `ctx.interaction`, `ctx.guild` or `ctx.client` are
+the real discord.js objects.
+</Aside>
+
+## How to read this guide
+
+- A code block with a **file name** is a file to create at that location.
+- An API name written as code, like `defineCommand()`, leads to its page in
+  the reference.
+- The demos play on screen; **Replay** runs them again.
+- **Next**, at the bottom of the page, takes you to the following step.

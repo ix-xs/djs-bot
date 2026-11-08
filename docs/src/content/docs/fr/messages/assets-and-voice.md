@@ -60,7 +60,7 @@ l'utilisateur chez Discord la première fois, puis construit l'URL. Il se résou
 de le donner à `setImage`.
 
 Chaque helper accepte les mêmes options d'image : une `size`, une `extension` et
-`forceStatic`. Elles sont listées sous [`ImageOptions`](/messages/assets-and-voice/#imageoptions).
+`forceStatic`. Elles sont listées sous [`ImageOptions`](/reference/image-options/).
 
 ## Images de serveur et d'émoji
 
@@ -180,45 +180,11 @@ cast vers `VoiceBasedChannel`.
 
 ## Référence
 
-### `assets`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-| Helper | Renvoie | Description |
-| --- | --- | --- |
-| `assets.avatar(userOrMember, options?)` | `string` | Le meilleur avatar : l'avatar de serveur pour un membre, sinon l'avatar global, sinon l'image par défaut. |
-| `assets.banner(user, options?)` | `Promise<string \| null>` | La bannière de profil de l'utilisateur. Récupère l'utilisateur quand la bannière n'est pas encore connue. |
-| `assets.guildIcon(guild, options?)` | `string \| null` | L'icône du serveur. |
-| `assets.guildBanner(guild, options?)` | `string \| null` | La bannière du serveur. |
-| `assets.guildSplash(guild, options?)` | `string \| null` | L'image d'arrière-plan d'invitation. |
-| `assets.emoji(id, options?)` | `string` | L'image d'un émoji personnalisé. Options : `{ animated?: boolean; size?: ImageSize }`. |
-
-`options` est un objet [`ImageOptions`](/messages/assets-and-voice/#imageoptions) partout,
-sauf pour `assets.emoji`, qui n'accepte que `animated` et `size`.
-
-### `ImageOptions`
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `size` | `ImageSize` | La valeur par défaut de Discord | Une puissance de deux de 16 à 4096 : `16`, `32`, `64`, `128`, `256`, `512`, `1024`, `2048`, `4096`. |
-| `extension` | `"webp" \| "png" \| "jpg" \| "jpeg" \| "gif"` | `"webp"` | Format de l'image. |
-| `forceStatic` | `boolean` | `false` | Renvoie une image fixe même quand la ressource est animée. |
-
-### `voice`
-
-| Helper | Renvoie | Permission | Description |
-| --- | --- | --- | --- |
-| `voice.channelOf(member)` | `VoiceBasedChannel \| null` | aucune | Le salon vocal où se trouve le membre. |
-| `voice.isConnected(member)` | `boolean` | aucune | Indique s'il est dans un salon vocal quelconque. |
-| `voice.membersIn(channel)` | `Collection<string, GuildMember>` | aucune | Les membres actuellement dans un salon, par identifiant. |
-| `voice.move(member, channel)` | `Promise<GuildMember>` | Déplacer des membres | Le déplace. `null` le déconnecte. |
-| `voice.disconnect(member)` | `Promise<GuildMember>` | Déplacer des membres | Le retire du vocal. |
-| `voice.mute(member, muted?, reason?)` | `Promise<GuildMember>` | Rendre muet des membres | Mute serveur. `muted` vaut `true` par défaut ; passez `false` pour rétablir le micro. |
-| `voice.deafen(member, deafened?, reason?)` | `Promise<GuildMember>` | Mettre en sourdine des membres | Sourdine serveur. `deafened` vaut `true` par défaut ; passez `false` pour l'annuler. |
-
-`reason` est consignée dans le journal d'audit du serveur. `voice.move` et
-`voice.disconnect` n'acceptent pas de raison.
-
-Tous les helpers prennent un `GuildMember`. Dans un gestionnaire, c'est
-`ctx.member`, qui vaut `null` en dehors d'un serveur.
+- `assets` : Utilitaires pour les URL de ressources.
+- `ImageOptions` : Options pour les URL d'images.
+- `voice` : Utilitaires pour l'état vocal.
 
 ## Voir aussi
 

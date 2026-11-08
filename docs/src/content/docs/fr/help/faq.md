@@ -153,7 +153,7 @@ premier lancement.
 ### Comment l'héberger ?
 
 Tout ce qui fait tourner l'une des versions de Node indiquées plus haut : un VPS
-avec systemd ou pm2, Docker, Fly, Railway, Render. Voir [Passer en production](/tutorial/going-live/) pour un parcours
+avec systemd ou pm2, Docker, Fly, Railway, Render. Voir [Mettre le bot en ligne](/bot/going-live/) pour un parcours
 complet.
 
 ### Quand ai-je besoin du sharding ?

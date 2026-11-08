@@ -120,54 +120,18 @@ export default defineUserCommand({
 
 ## Reference
 
-### `defineUserCommand(input)`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-Takes a `UserCommandInput` and returns a `UserCommandDefinition`, tagged
-`kind: "userCommand"`.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | required | The label in the Apps menu of a user. 1-32 characters, spaces and capitals allowed. |
-| `run` | `(ctx: UserCommandContext) => unknown` | required | The handler, sync or async. |
-| `guards` | `Guard[]` | `[]` | Preconditions checked before `run`. |
-| `defer` | `DeferOption` | `defaults.defer` | See [Automatic deferral](/basics/automatic-deferral/). |
-| `defaultMemberPermissions` | `PermissionResolvable` | - | Permissions a member needs to see the entry by default. |
-| `integrationTypes` | `("guild" \| "user")[]` | set by Discord | Where it can be installed. |
-| `contexts` | `("guild" \| "botDm" \| "privateChannel")[]` | set by Discord | Where it can be used. |
-| `dmPermission` | `boolean` | - | Deprecated by Discord in favour of `contexts`. |
-| `nameLocalizations` | `LocalizationMap` | - | The label per locale. See [Localized names](/commands/slash-commands/#localized-names). |
-| `guilds` | `string[]` | - | Deploy to these guild ids only. Leave out for a global command. |
-
-There is no `description`, no `descriptionLocalizations`, no `options` and no
-`nsfw`: Discord does not have them for context menus.
-
-### `defineMessageCommand(input)`
-
-Takes a `MessageCommandInput` and returns a `MessageCommandDefinition`, tagged
-`kind: "messageCommand"`. The options are the same as for `defineUserCommand`,
-except that `run` receives a `MessageCommandContext` and `name` is the label in
-the Apps menu of a message.
-
-### `UserCommandContext`
-
-Everything in [the ctx object](/basics/context/), plus:
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `targetUser` | `User` | The user the command was used on. |
-| `targetMember` | `GuildMember \| null` | The same user as a member of the server. `null` in DMs, in a server the bot is not in, and when the user is no longer a member. |
-| `showModal` | `ShowModalFn` | Opens a modal as the response. |
-| `interaction` | `UserContextMenuCommandInteraction` | The raw discord.js interaction. |
-
-### `MessageCommandContext`
-
-Everything in [the ctx object](/basics/context/), plus:
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `targetMessage` | `Message` | The message the command was used on. |
-| `showModal` | `ShowModalFn` | Opens a modal as the response. |
-| `interaction` | `MessageContextMenuCommandInteraction` | The raw discord.js interaction. |
+- `defineUserCommand()`: Defines a user context-menu command.
+- `UserCommandInput`: Input accepted by `defineUserCommand`.
+- `UserCommandDefinition`: A registered user context-menu command (right-click a user → Apps).
+- `DeferOption`: When and how an interaction is acknowledged for you.
+- `defineMessageCommand()`: Defines a message context-menu command.
+- `MessageCommandInput`: Input accepted by `defineMessageCommand`.
+- `MessageCommandDefinition`: A registered message context-menu command (right-click a message → Apps).
+- `MessageCommandContext`: Context passed to message context-menu command handlers.
+- `UserCommandContext`: Context passed to user context-menu command handlers.
+- `ShowModalFn`: Opens a modal as the response to an interaction.
 
 ## Limits and errors
 

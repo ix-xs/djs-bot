@@ -16,13 +16,11 @@ const t = useT(locale);
 const base = normalizeBase(import.meta.env.BASE_URL);
 // Where this page is, whatever its language.
 const path = switchLocale(Astro.url.pathname.slice(base.length) || "/", undefined);
-const inRecipes = path.startsWith("/recipes/");
-const inReference = path.startsWith("/api/") || path.startsWith("/help/");
+const inReference = path.startsWith("/reference/") || path.startsWith("/api/");
 
 const areas = [
-  { label: t("nav.docs"), href: "/introduction/", current: !inRecipes && !inReference && path !== "/" },
-  { label: t("nav.recipes"), href: "/recipes/moderation/", current: inRecipes },
-  { label: t("nav.reference"), href: "/api/exports/", current: inReference },
+  { label: t("nav.docs"), href: "/", current: !inReference },
+  { label: t("nav.reference"), href: "/reference/", current: inReference },
 ];
 // The host serves one "not found" page, the English one, whatever the address
 // asked for. Under a translation, it hands over to that language's own.
@@ -62,30 +60,102 @@ const version = pkg.version.split(".").slice(0, 2).join(".");
 <SearchExtras />
 
 <script>
-  // Copy buttons outside code blocks (the install line on the landing page).
-  document.addEventListener("click", (event) => {
-    const button = (event.target as Element | null)?.closest<HTMLElement>("[data-copy]");
-    if (!button) return;
-    navigator.clipboard?.writeText(button.dataset.copy ?? "").catch(() => {});
-    button.setAttribute("data-copied", "");
-    window.setTimeout(() => button.removeAttribute("data-copied"), 1600);
-  });
+  // The sidebar's scrollbar: a thin thumb over the list, shown while it
+  // scrolls or under the pointer, gone shortly after. Touch screens keep their
+  // own, which already behaves so.
+  const pane = document.querySelector<HTMLElement>(".sidebar-pane");
+  if (pane && matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    pane.classList.add("at-scroll");
+    const thumb = document.createElement("div");
+    thumb.className = "at-scroll-thumb";
+    thumb.setAttribute("aria-hidden", "true");
+    document.body.append(thumb);
+    let hideTimer = 0;
+    let hovered = false;
+    const draw = () => {
+      const box = pane.getBoundingClientRect();
+      const visible = pane.clientHeight;
+      const total = pane.scrollHeight;
+      if (total <= visible + 1 || box.width === 0) {
+        thumb.removeAttribute("data-on");
+        thumb.style.display = "none";
+        return false;
+      }
+      thumb.style.display = "";
+      const size = Math.max(32, (visible / total) * visible);
+      const top = box.top + (pane.scrollTop / (total - visible)) * (visible - size);
+      thumb.style.height = `${size}px`;
+      thumb.style.transform = `translate(${box.right - 7}px, ${top}px)`;
+      return true;
+    };
+    const reveal = () => {
+      if (!draw()) return;
+      thumb.setAttribute("data-on", "");
+      window.clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(() => {
+        if (!hovered) thumb.removeAttribute("data-on");
+      }, 700);
+    };
+    pane.addEventListener("scroll", reveal, { passive: true });
+    pane.addEventListener("pointerenter", () => ((hovered = true), reveal()));
+    pane.addEventListener("pointerleave", () => {
+      hovered = false;
+      reveal();
+    });
+    addEventListener("resize", () => draw());
+    draw();
+  }
 
-  // Sections of the landing page come into view once, as they are reached
-  // (the styles are under [data-reveal]).
-  const reveals = document.querySelectorAll("[data-reveal]");
-  if (reveals.length > 0) {
-    const watcher = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          entry.target.setAttribute("data-revealed", "");
-          watcher.unobserve(entry.target);
+  // "On this page": a marker that slides along the hairline to the heading
+  // being read. Starlight marks that heading's link (aria-current); the marker
+  // follows it, without moving on its first placement.
+  const tocList = document.querySelector<HTMLElement>(".right-sidebar starlight-toc nav > ul");
+  if (tocList) {
+    const marker = document.createElement("span");
+    marker.className = "at-toc-marker";
+    marker.setAttribute("aria-hidden", "true");
+    tocList.prepend(marker);
+    const links = [...tocList.querySelectorAll<HTMLElement>("a")];
+    const targets = links
+      .map((link) => [link, document.getElementById(decodeURIComponent(link.getAttribute("href")?.slice(1) ?? ""))] as const)
+      .filter((pair): pair is readonly [HTMLElement, HTMLElement] => pair[1] !== null && pair[1].id !== "_top");
+    const follow = () => {
+      // Before the first scroll, nothing is marked yet: the top of the page is
+      // being read. At the very bottom, the last section is, even when it is
+      // too short to reach the top of the window, where Starlight looks.
+      const atBottom = innerHeight + scrollY >= document.documentElement.scrollHeight - 4 && scrollY > 0;
+      let current = links[0];
+      if (atBottom) current = links[links.length - 1];
+      else {
+        // The last heading that has passed a third of the way down the window.
+        for (const [link, heading] of targets) {
+          if (heading.getBoundingClientRect().top <= innerHeight / 3) current = link;
+          else break;
         }
+      }
+      for (const link of links) link.toggleAttribute("data-at-current", link === current);
+      marker.style.opacity = current ? "1" : "0";
+      if (!current) return;
+      const top = current.getBoundingClientRect().top - tocList.getBoundingClientRect().top;
+      marker.style.transform = `translateY(${top}px) scaleY(${current.offsetHeight})`;
+      if (!marker.hasAttribute("data-ready")) requestAnimationFrame(() => marker.setAttribute("data-ready", ""));
+    };
+    follow();
+    new MutationObserver(follow).observe(tocList, { subtree: true, attributes: true, attributeFilter: ["aria-current"] });
+    addEventListener("resize", follow);
+    let queued = false;
+    addEventListener(
+      "scroll",
+      () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => {
+          queued = false;
+          follow();
+        });
       },
-      { rootMargin: "0px 0px -8% 0px" },
+      { passive: true },
     );
-    for (const element of reveals) watcher.observe(element);
   }
 
   // A sliding marker under the selected tab. It slides for a pointer, and jumps

@@ -160,38 +160,15 @@ translate what your handler replies: that is the job of `ctx.t()`, described in
 
 ## Reference
 
-### `defineCommand(input)`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-Takes a `CommandInput` and returns a `CommandDefinition`, a plain object tagged
-`kind: "command"`.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | required | What users type after `/`. Lowercase, 1-32 characters. |
-| `description` | `string` | required | Shown in the command picker. 1-100 characters. |
-| `options` | `OptionMap` | `{}` | Typed options, built with `s.*`. Drives `ctx.options`. Leave out when using subcommands. See [Options and autocomplete](/commands/options/). |
-| `run` | `(ctx) => unknown` | - | The handler, sync or async. Optional only when the command has subcommands. |
-| `guards` | `Guard[]` | `[]` | Preconditions checked before `run`, and before any subcommand. See [Guards](/commands/guards/). |
-| `subcommands` | `Record<string, SubcommandDefinition>` | - | Subcommands, keyed by name. See [Subcommands](/commands/subcommands/). |
-| `groups` | `Record<string, SubcommandGroupDefinition>` | - | Subcommand groups, keyed by name. |
-| `defer` | `DeferOption` | `defaults.defer` | Acknowledges the interaction for a slow handler. See [Automatic deferral](/basics/automatic-deferral/). |
-| `defaultMemberPermissions` | `PermissionResolvable` | - | Permissions a member needs to see and use the command by default. |
-| `nsfw` | `boolean` | - | Marks the command as age-restricted. |
-| `integrationTypes` | `("guild" \| "user")[]` | set by Discord | Where the command can be installed. See [Install contexts](/commands/install-contexts/). |
-| `contexts` | `("guild" \| "botDm" \| "privateChannel")[]` | set by Discord | Where the command can be used. |
-| `dmPermission` | `boolean` | - | Deprecated by Discord in favour of `contexts`. Use `contexts: ["guild"]` to keep a command out of DMs. |
-| `nameLocalizations` | `LocalizationMap` | - | Command name per locale, for example `{ fr: "aide" }`. |
-| `descriptionLocalizations` | `LocalizationMap` | - | Description per locale. |
-| `guilds` | `string[]` | - | Deploy the command to these guild ids only. Leave out for a global command. See [Deploying commands](/production/deploying/). |
-
-The handler receives a `CommandContext`: everything every handler gets, plus
-`ctx.options` (typed from `options`) and `ctx.showModal`. All of it is described
-in [The ctx object](/basics/context/). What `run` returns is ignored. A returned
-promise is awaited, and anything it throws goes to the error boundary described
-in [Errors](/api/errors/).
-
-`CommandInput` and `CommandDefinition` are exported as types, for code that
-builds or inspects commands.
+- `defineCommand()`: Defines a slash command with typed options, or with subcommands/groups.
+- `CommandInput`: Input accepted by `defineCommand`.
+- `CommandDefinition`: A registered slash command (flat, with subcommands, or with groups).
+- `OptionMap`: A map of option name → descriptor, as passed to `defineCommand`.
+- `s`: Slash-command option builders.
+- `DeferOption`: When and how an interaction is acknowledged for you.
+- `CommandContext`: Context passed to slash-command handlers.
 
 ## Limits and errors
 

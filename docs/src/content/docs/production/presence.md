@@ -147,60 +147,9 @@ The status is the coloured dot:
 
 ## Reference
 
-### `presence`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-```ts
-presence?: PresenceData
-```
-
-The presence the bot connects with. Default: online, no activity. When it is
-not set, a `presence` given in the `client` option of `defineBot` is used
-instead.
-
-### `presenceRotation`
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `interval` | `string \| number` | required | How long each presence stays: a duration string or milliseconds. A string that cannot be read as a duration falls back to 60 seconds. |
-| `items` | `PresenceData[]` | required | The presences to cycle through, in order. An empty list disables the rotation. |
-
-### `PresenceData`
-
-The discord.js type used by every option and method on this page.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `status` | `"online" \| "idle" \| "dnd" \| "invisible"` | the current status | The status dot. |
-| `activities` | `{ name, type?, state?, url? }[]` | the current activities | What the bot is doing. An empty array clears the activity. |
-| `afk` | `boolean` | `false` | Marks the bot as away from keyboard. |
-| `shardId` | `number \| number[]` | every shard | Limits the change to some shards of this process. |
-
-In an activity, `name` is required, `type` is an `ActivityType`, `url` is the
-stream link for `Streaming`, and `state` is the text of a `Custom` activity
-(when it is left out, `name` is used).
-
-### `bot.setPresence(presence)`
-
-```ts
-bot.setPresence(presence: PresenceData): void
-```
-
-Replaces the presence. Fields left out keep their current value, as described
-above.
-
-### `bot.setActivity(name, options?)`
-
-```ts
-bot.setActivity(name: string, options?: { type?: ActivityType; url?: string; status?: PresenceStatusData }): void
-```
-
-A shortcut for a presence with exactly one activity.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `type` | `ActivityType` | `ActivityType.Playing` | The words shown before the name. |
-| `url` | `string` | none | A Twitch or YouTube URL, for `ActivityType.Streaming`. |
-| `status` | `"online" \| "idle" \| "dnd" \| "invisible"` | the current status | The status dot. |
+- `defineBot()`: Creates a `Bot`.
 
 ## Limits and errors
 

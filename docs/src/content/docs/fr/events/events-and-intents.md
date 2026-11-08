@@ -203,54 +203,7 @@ Un écouteur `presenceUpdate` qui lit un statut personnalisé doit s'attendre à
 qu'il soit absent.
 :::
 
-## Référence
-
-### `defineEvent(event, run, options?)`
-
-| Argument | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `event` | `keyof ClientEvents` | - | N'importe quel nom d'événement discord.js. |
-| `run` | `(...args, ctx: EventContext) => unknown` | - | L'écouteur. Reçoit les arguments propres à l'événement, puis le contexte. Peut être asynchrone. |
-| `options.once` | `boolean` | `false` | Ne s'exécute que pour la première occurrence. |
-
-Renvoie un `EventDefinition` (`kind: "event"`, `event`, `once`, `run`), à
-exporter depuis un fichier `.event` ou à lister dans une
-[feature](/architecture/features/).
-
-### `EventContext`
-
-| Propriété | Type | Description |
-| --- | --- | --- |
-| `client` | `Client<true>` | Le client connecté. |
-| `services` | `ServiceMap` | Vos [services](/architecture/services/), typés. |
-| `logger` | `Logger` | Un logger étiqueté avec le nom de l'événement. |
-
-### `intents`
-
-Le champ `intents` de `defineBot`.
-
-| Valeur | Effet |
-| --- | --- |
-| `"auto"` (par défaut) | Déduit les intents et les partials de vos événements et déclencheurs. `Guilds` est toujours inclus. Avertit quand un intent privilégié est utilisé. |
-| `{ add?, remove? }` | Même déduction, puis ajustée. Voir `IntentAdjustments`. |
-| `GatewayIntentBits[]` | Utilisé exactement tel quel. Rien n'est déduit ni ajouté, pas même `Guilds`, aucun partial n'est déduit et aucun avertissement n'est écrit. |
-
-### `IntentAdjustments`
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `add` | `GatewayIntentBits[]` | `[]` | Intents à demander en plus de ceux qui sont déduits, par exemple `DirectMessages`. |
-| `remove` | `GatewayIntentBits[]` | `[]` | Intents déduits à retirer. Typiquement `MessageContent`, quand un écouteur `messageCreate` ne lit pas le texte. Appliqué après `add`. |
-
-### `partials`
-
-Le champ `partials` de `defineBot`.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `partials` | `Partials[]` | déduits | Partials supplémentaires. Fusionnés avec ceux qui sont déduits en mode automatique. Avec un tableau `intents`, ce sont les seuls partials activés. |
-
-### Correspondance événement-intent
+## Correspondance événement-intent
 
 Tous les événements que connaît le pilote automatique, regroupés par l'intent
 qu'ils demandent.
@@ -278,7 +231,7 @@ qu'ils demandent.
 Enregistrer au moins un [déclencheur](/events/triggers/) ajoute `GuildMessages`,
 `MessageContent` et `DirectMessages`.
 
-### Correspondance événement-partial
+## Correspondance événement-partial
 
 | Événements | Partials activés |
 | --- | --- |
@@ -296,39 +249,19 @@ Deux règles de plus s'appliquent une fois les événements lus :
   `Channel` est activé, car un salon de messages privés n'est jamais mis en cache
   à l'avance.
 
-### `computeIntents(events, options?)`
+## Référence
 
-La fonction qui se cache derrière le pilote automatique, exportée pour que vous
-puissiez vérifier un ensemble d'événements dans un script ou un test.
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-| Argument | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `events` | `EventDefinition[]` | - | Les écouteurs à analyser. |
-| `options.hasTriggers` | `boolean` | `false` | Demande aussi ce dont les déclencheurs de messages ont besoin. |
-| `options.add` | `GatewayIntentBits[]` | `[]` | Comme `IntentAdjustments`. |
-| `options.remove` | `GatewayIntentBits[]` | `[]` | Comme `IntentAdjustments`. |
-
-Elle renvoie un objet `ComputedIntents` :
-
-| Propriété | Type | Description |
-| --- | --- | --- |
-| `intents` | `GatewayIntentBits[]` | Les intents avec lesquels se connecter. |
-| `partials` | `Partials[]` | Les partials à activer. |
-| `privileged` | `string[]` | Les noms des intents privilégiés présents dans la liste. |
-
-```ts title="scripts/check-intents.ts"
-import { computeIntents, defineEvent, GatewayIntentBits } from "@ix-xs/djs-bot";
-
-const { intents, partials, privileged } = computeIntents(
-  [defineEvent("guildMemberRemove", () => {})],
-  { add: [GatewayIntentBits.DirectMessages] },
-);
-
-console.log(intents.map((intent) => GatewayIntentBits[intent]));
-// ["Guilds", "GuildMembers", "DirectMessages"]
-console.log(partials.length, privileged);
-// 2 ["GuildMembers"]
-```
+- `defineEvent()` : Définit un écouteur d'événement de la passerelle.
+- `EventDefinition` : Un écouteur d'événement de la passerelle enregistré.
+- `EventContext` : Contexte transmis aux gestionnaires d'événements de la passerelle (après les arguments propres à l'événement).
+- `ServiceMap` : Table globale des services. Étendez-la dans votre projet pour un typage de bout en bout :
+- `Logger` : Logger structuré avec filtrage par niveau et liaisons enfants.
+- `defineBot()` : Crée un `Bot`.
+- `IntentAdjustments` : Affine la sélection automatique sans y renoncer.
+- `computeIntents()` : Déduit l'ensemble minimal d'intents et de partials pour les événements donnés.
+- `ComputedIntents` : Résultat de `computeIntents`.
 
 ## Limites et erreurs
 

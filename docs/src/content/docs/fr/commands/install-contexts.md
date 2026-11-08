@@ -76,30 +76,10 @@ Cela change le comportement de certaines [gardes](/commands/guards/). `inGuild()
 
 ## Référence
 
-### `integrationTypes`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-`InstallContext[]`. Où la commande peut être installée. Envoyé à Discord sous le nom `integration_types`.
-
-| Valeur | Nom Discord | Signification |
-| --- | --- | --- |
-| `"guild"` | `GuildInstall` | Installée sur un serveur, pour ses membres. |
-| `"user"` | `UserInstall` | Installée sur un compte utilisateur, pour cet utilisateur partout. |
-
-### `contexts`
-
-`InteractionContext[]`. Où la commande peut être utilisée. Envoyé à Discord sous le nom `contexts`.
-
-| Valeur | Nom Discord | Signification |
-| --- | --- | --- |
-| `"guild"` | `Guild` | Dans les serveurs. |
-| `"botDm"` | `BotDM` | Dans le message privé entre l'utilisateur et le bot. |
-| `"privateChannel"` | `PrivateChannel` | Dans les autres messages privés et dans les groupes privés. |
-
-### `dmPermission`
-
-`boolean`. Indique si une commande globale est disponible en message privé. Déprécié par Discord au profit de `contexts`.
-
-`InstallContext` et `InteractionContext` sont exportés en tant que types.
+- `InstallContext` : Où une commande d'application peut être installée : sur des serveurs, et/ou sur un compte utilisateur.
+- `InteractionContext` : Où une commande d'application peut être utilisée : dans des serveurs, dans les messages privés du bot, ou dans les groupes de messages privés et autres messages privés.
 
 ## Limites et erreurs
 

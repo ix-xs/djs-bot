@@ -230,142 +230,22 @@ déploiement ne la liste jamais comme supprimée, la renvoie telle quelle, et
 
 ## Référence
 
-### `deploy`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-Le champ `deploy` de [`defineBot`](/basics/configuration/), de type `DeployConfig`.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `devGuildId` | `string` | `DISCORD_DEV_GUILD` | Le serveur qui reçoit toutes les commandes en développement. Lisible via `bot.devGuildId`. |
-| `autoDeploy` | `boolean` | `true` sauf si `NODE_ENV` vaut `production` | Déployer quand le bot devient prêt. |
-
-### `bot.deploy(options)`
-
-Charge le bot si nécessaire, puis déploie. Renvoie un [`DeployResult`](/production/deploying/#deployresult).
-Sans `guildId`, il suit le plan et met à jour le fichier d'état. Lève
-[`DJSBOT_E001`](/api/errors/#djsbot_e001) sans token et
-[`DJSBOT_E002`](/api/errors/#djsbot_e002) sans identifiant client. `options` est
-de type `DeployCallOptions` et peut être omis.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `guildId` | `string` | aucun | Placer toutes les commandes sur ce seul serveur et ignorer `guilds`. Le fichier d'état n'est ni lu ni écrit. |
-| `dryRun` | `boolean` | `false` | Calculer les listes sans écrire. Le fichier d'état n'est pas mis à jour. |
-
-### `bot.clear(options)`
-
-Supprime toutes les commandes d'une portée. Renvoie un
-[`DeployTargetResult`](/production/deploying/#deploytargetresult) dont `removed` liste ce
-qui s'y trouvait. Mêmes identifiants et mêmes erreurs que `bot.deploy`.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `guildId` | `string` | aucun | Le serveur à vider. Omettez-le pour vider la portée globale. |
-| `dryRun` | `boolean` | `false` | Indiquer ce qui serait supprimé sans écrire. |
-
-### `DeployResult`
-
-| Champ | Type | Description |
-| --- | --- | --- |
-| `targets` | `DeployTargetResult[]` | Une entrée par portée visitée : la portée globale, chaque serveur du plan, puis chaque serveur vidé. |
-| `applied` | `boolean` | Indique si au moins une portée a été écrite. |
-| `deployedGuilds` | `string[]` | Les identifiants des serveurs ciblés par le plan (ou du seul serveur forcé). C'est ce que le fichier d'état stocke. |
-
-### `DeployTargetResult`
-
-| Champ | Type | Description |
-| --- | --- | --- |
-| `scope` | `"global" \| "guild"` | De quel genre de portée il s'agit. |
-| `guildId` | `string?` | Le serveur, quand `scope` vaut `"guild"`. |
-| `added` | `string[]` | Noms des commandes qui n'existaient pas sur Discord. |
-| `changed` | `string[]` | Noms des commandes dont la définition diffère. |
-| `removed` | `string[]` | Noms des commandes qui ne sont plus dans votre code. |
-| `unchanged` | `string[]` | Noms des commandes déjà à jour. |
-| `applied` | `boolean` | Indique si cette portée a été écrite. `false` lors d'une simulation ou quand rien ne diffère. |
-
-### `deployCommands(registry, options)`
-
-La fonction derrière `bot.deploy`, pour le cas où vous détenez vous-même un
-`Registry` (`bot.registry` après `bot.load()`). Elle vérifie les [limites](/production/deploying/#limits-and-errors)
-de chaque portée avant la première requête, traite la portée globale, puis les
-serveurs cinq par cinq, puis les serveurs à vider. Renvoie un `DeployResult`.
-`options` est de type `DeployOptions` :
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `token` | `string` | requis | Le token du bot. |
-| `clientId` | `string` | requis | L'identifiant d'application. |
-| `guildId` | `string` | aucun | Placer toutes les commandes sur ce seul serveur. |
-| `knownGuilds` | `string[]` | `[]` | Serveurs sur lesquels on a déjà déployé. Ceux qui sont absents du plan sont vidés. Ignoré avec `guildId`. |
-| `dryRun` | `boolean` | `false` | Calculer les listes sans écrire. |
-| `logger` | `Logger` | aucun | Reçoit une ligne par portée. |
-
-```ts title="scripts/plan.ts"
-import { deployCommands, env, planDeployment } from "@ix-xs/djs-bot";
-
-process.env.DJSBOT_CLI = "introspect";
-const { default: bot } = await import("../src/index.js");
-await bot.load();
-
-const plan = planDeployment(bot.registry);
-console.log("global:", plan.global.map((command) => command.name));
-for (const [guildId, commands] of plan.guilds) {
-  console.log(guildId, commands.map((command) => command.name));
-}
-
-const result = await deployCommands(bot.registry, {
-  token: env("DISCORD_TOKEN"),
-  clientId: env("DISCORD_CLIENT_ID"),
-  dryRun: true,
-});
-console.log(result.targets);
-```
-
-### `clearCommands(options)`
-
-La fonction derrière `bot.clear`. Renvoie un `DeployTargetResult`. Elle prend
-des `ClearOptions` :
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `token` | `string` | requis | Le token du bot. |
-| `clientId` | `string` | requis | L'identifiant d'application. |
-| `guildId` | `string` | aucun | Le serveur à vider. Omettez-le pour la portée globale. |
-| `dryRun` | `boolean` | `false` | Indiquer ce qui serait supprimé sans écrire. |
-| `logger` | `Logger` | aucun | Reçoit la ligne de progression. |
-
-### `planDeployment(registry)`
-
-Répartit les commandes d'un registre par portée et renvoie un `DeploymentPlan`.
-C'est ce qu'affiche `djs-bot explain` et ce que `bot.describe()` renvoie sous
-`deployment`.
-
-| Champ | Type | Description |
-| --- | --- | --- |
-| `global` | `RESTPostAPIApplicationCommandsJSONBody[]` | Les commandes sans `guilds`. |
-| `guilds` | `Map<string, RESTPostAPIApplicationCommandsJSONBody[]>` | Les commandes de chaque identifiant de serveur. |
-
-### `buildCommandTree(registry)`
-
-Renvoie le corps de requête de chaque commande (slash, utilisateur et message),
-sans tenir compte de `guilds`. C'est la liste envoyée quand `guildId` force un
-serveur.
-
-### `commandToJSON(command)`
-
-Convertit la définition d'une commande slash en corps que Discord attend. Les
-options obligatoires sont placées avant les facultatives, comme Discord
-l'exige, donc l'ordre dans lequel vous les déclarez n'a jamais d'importance.
-
-### `commandsEqual(desired, existing, options)`
-
-Indique si un corps local et une commande renvoyée par Discord décrivent la même
-chose, avec la normalisation décrite [plus haut](/production/deploying/#what-a-deploy-changes). Utile pour
-écrire votre propre contrôle de déploiement.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `guildScope` | `boolean` | `false` | Comparer comme des commandes de serveur, où `dm_permission`, `integration_types` et `contexts` n'existent pas. |
+- `defineBot()` : Crée un `Bot`.
+- `DeployConfig` : Configuration du déploiement.
+- `DeployResult` : Le résultat d'un déploiement sur toutes les cibles.
+- `DeployCallOptions` : Options de `Bot.deploy`.
+- `DeployTargetResult` : Ce qui a changé pour une cible de déploiement (globale, ou un serveur précis).
+- `deployCommands()` : Déploie les commandes en respectant la portée propre à chacune : - les commandes sans `guilds` sont **globales**, - les commandes avec `guilds` vont dans **ces serveurs**.
+- `Registry` : Contient toutes les définitions et expose des recherches typées.
+- `DeployOptions` : Options de `deployCommands`.
+- `Logger` : Logger structuré avec filtrage par niveau et liaisons enfants.
+- `clearCommands()` : Supprime **toutes** les commandes de l'application d'une portée (un serveur, ou global).
+- `ClearOptions` : Options de `clearCommands`.
+- `planDeployment()` : Répartit les commandes du registre en un ensemble global et des ensembles par serveur, d'après le champ `guilds` de chaque commande.
+- `DeploymentPlan` : Un plan de déploiement résolu : quelles commandes sont globales, et lesquelles vont dans quel serveur.
+- `buildCommandTree()` : Construit l'arbre de commandes complet souhaité (sans tenir compte de la portée propre à chaque commande).
 
 ## Limites et erreurs
 

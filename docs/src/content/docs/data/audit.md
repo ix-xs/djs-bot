@@ -237,103 +237,22 @@ await audit.query({ action: "member.ban" });   // [entry]
 
 ## Reference
 
-### `audit` in `defineBot`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `sink` | `AuditSink` | none | A single destination. |
-| `sinks` | `AuditSink[]` | none | Several destinations. All of them receive every entry. |
-| `autoRecordCommands` | `boolean` | `false` | Record every slash command use as `command:<name>`. |
-
-`sink` and `sinks` can be combined: `sink` comes first. With neither, a
-`memoryAuditSink()` is used.
-
-### `ctx.audit(action, details?)`
-
-```ts
-ctx.audit(action: string, details?: {
-  targetId?: string;
-  metadata?: Record<string, unknown>;
-}): Promise<void>
-```
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `action` | `string` | required | What happened, for example `"member.ban"`. |
-| `details.targetId` | `string` | none | The id of what the action was applied to: a user, a message, a channel. |
-| `details.metadata` | `Record<string, unknown>` | none | Anything else worth keeping, for example `{ reason }`. |
-
-`actorId` is the id of the user behind the interaction and `guildId` its guild
-(`null` in a DM).
-
-### `AuditEntry`
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `id` | `string` | Unique id, generated for you. |
-| `timestamp` | `number` | Unix milliseconds. |
-| `action` | `string` | What happened, for example `"member.ban"` or `"command:ban"`. |
-| `actorId` | `string?` | Who did it. |
-| `targetId` | `string?` | Who or what it was done to. |
-| `guildId` | `string \| null?` | Where. |
-| `metadata` | `Record<string, unknown>?` | Any structured context. |
-
-### `memoryAuditSink(max)`
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `max` | `number` | `5000` | How many entries are kept. Past that, the oldest is dropped. |
-
-### `storeAuditSink(store, options)`
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `store` | `KVStore` | required | The store entries are written to, one key per entry (the entry id). |
-| `options.namespace` | `string` | `"audit"` | The store namespace entries live under. |
-| `options.ttl` | `number \| string` | none | How long an entry is kept, in milliseconds or as a duration such as `"90d"`. Forever by default. |
-
-### `loggerAuditSink(logger)`
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `logger` | `Logger` | `createLogger()` | The logger entries are written to. Write-only: this sink cannot be queried. |
-
-### `AuditSink`
-
-| Method | Required | Description |
-| --- | --- | --- |
-| `record(entry)` | Yes | Stores one `AuditEntry`. May be async. |
-| `query()` | No | Returns every stored entry, in any order. Its presence makes the sink readable by `AuditLog.query`. |
-
-### `AuditLog`
-
-The type of `ctx.services.audit` and of the value `createAuditLog` returns.
-
-| Method | Returns | Description |
-| --- | --- | --- |
-| `record(action, data?)` | `Promise<AuditEntry>` | Writes an entry to every sink and returns it. `data` takes any `AuditEntry` field except `action`. `id` and `timestamp` are generated unless you pass them. |
-| `query(filter?)` | `Promise<AuditEntry[]>` | Reads entries, newest first, from the first sink that has a `query` function. An empty array when none has. |
-
-### `AuditFilter`
-
-Every field is optional, and the fields combine with "and".
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `action` | `string` | any | Only entries with this exact action name. |
-| `actorId` | `string` | any | Only entries triggered by this user id. |
-| `guildId` | `string` | any | Only entries recorded in this guild. |
-| `since` | `number` | none | Only entries at or after this time, in Unix milliseconds. |
-| `limit` | `number` | no limit | The maximum number of entries, counted from the newest. |
-
-### `createAuditLog(options)`
-
-```ts
-createAuditLog(options?: AuditLogOptions): AuditLog
-```
-
-`AuditLogOptions` has the `sink` and `sinks` fields described above.
-`autoRecordCommands` belongs to `defineBot` only.
+- `defineBot()`: Creates a `Bot`.
+- `AuditSink`: A destination audit entries are written to.
+- `memoryAuditSink()`: An in-memory sink (bounded ring buffer).
+- `AuditEntry`: A single audit record.
+- `timestamp()`: Renders a Discord timestamp (auto-localised in each user's client).
+- `storeAuditSink()`: A sink that persists entries in a `KVStore` (one key per entry).
+- `KVStore`: An async key-value store.
+- `loggerAuditSink()`: A sink that writes each entry to the structured logger.
+- `Logger`: Structured logger with level filtering and child bindings.
+- `createLogger()`: Creates a root `Logger`.
+- `AuditLog`: A configured audit log.
+- `createAuditLog()`: Creates an `AuditLog`.
+- `AuditFilter`: Filter for `AuditLog.query`.
+- `AuditLogOptions`: Options for `createAuditLog`.
 
 ## See also
 

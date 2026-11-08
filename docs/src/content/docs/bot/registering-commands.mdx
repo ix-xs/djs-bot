@@ -1,0 +1,106 @@
+---
+title: "Registering commands"
+description: "Why Discord must know your commands in advance, and how to publish them for every server."
+sidebar:
+  order: 5
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+import TerminalDemo from '../../../components/demo/TerminalDemo.astro';
+
+Your commands appear in Discord on their own. Here is what happens, and how
+to publish them for real.
+
+## Why Discord must know your commands
+
+When you type `/`, it is **Discord** that shows the list, the descriptions
+and the fields to fill in, before the bot even hears about it. So it must
+know your commands **in advance**.
+
+Registering a command means sending Discord its name, its description and
+its options. The code of `run` never leaves your machine.
+
+## Two scopes: your server, or everywhere
+
+| Scope | Appears | For |
+| --- | --- | --- |
+| **One server** | on that server, right away | developing |
+| **Global** | on every server the bot is in | publishing |
+
+That is what `DISCORD_DEV_GUILD` is for: in development, everything goes to
+your test server.
+
+## What `djs-bot dev` does
+
+At each startup, the bot compares your commands with the ones Discord knows
+and **only sends the differences**:
+
+<TerminalDemo
+  command="npx djs-bot dev"
+  lines={[
+    { at: "14:21:07", level: "info", text: "Ready user=my-bot#1234 guilds=1 version=1.4.0" },
+    { at: "14:21:08", level: "info", text: 'Commands deployed scope=guild guildId=9876543210987654321 added=[] changed=["user"] removed=[]' },
+  ]}
+/>
+
+Here, only `/user` has changed. Discord limits the number of registrations
+per day: sending everything at each startup would end up blocking the bot.
+
+Delete a file, and the command disappears from Discord too at the next
+startup (`removed=[...]`).
+
+## Publishing for every server
+
+<Steps>
+
+1. See what would be sent, without sending anything:
+
+   <TerminalDemo
+     command="npx djs-bot deploy --dry-run"
+     lines={[
+       { text: "" },
+       { text: "✓ global (dry run)", level: "ok" },
+       { text: "  + ping, server, user", level: "ok" },
+     ]}
+   />
+
+2. Publish:
+
+   <TerminalDemo
+     command="npx djs-bot deploy"
+     lines={[
+       { text: "" },
+       { text: "✓ global", level: "ok" },
+       { text: "  + ping, server, user", level: "ok" },
+       { text: "" },
+       { text: "WARN  Your dev guild (9876543210987654321) still holds the command mirror from `djs-bot dev`. These global commands will appear as DUPLICATES there until you clear it:", level: "warn" },
+       { text: "  djs-bot clear --guild 9876543210987654321", level: "dim" },
+     ]}
+   />
+
+3. Your test server now has every command twice (the one from `dev` and the
+   global one). Clear the ones from `dev`:
+
+   ```bash
+   npx djs-bot clear --guild 9876543210987654321
+   ```
+
+</Steps>
+
+Run `deploy` again only when a command changes (name, description,
+options).
+
+<Aside type="caution" title="Global commands are not instant">
+They can take up to an hour to appear everywhere. Never develop by
+publishing globally.
+</Aside>
+
+## If a command does not appear
+
+1. `npx djs-bot explain`: did the bot find the file?
+2. Does the terminal show `Commands deployed` or
+   `Commands already up to date`? If not, is `DISCORD_DEV_GUILD` filled in?
+3. Was the bot invited with `applications.commands`?
+4. In Discord, `Ctrl+R` reloads the list.
+
+To go further: [Deploying commands](/production/deploying/).

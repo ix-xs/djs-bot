@@ -260,126 +260,22 @@ Events, triggers and jobs are not interactions, so their context has no
 
 ## Reference
 
-### `BaseContext`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-Shared by every interaction handler.
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `interaction` | the raw interaction | The discord.js interaction, typed for the handler (a `ButtonInteraction` in a button, and so on). |
-| `client` | `Client<true>` | The connected discord.js client. |
-| `user` | `User` | Who triggered the interaction. |
-| `guild` | `Guild \| null` | The guild, or `null` in DMs and in servers the bot is not in. |
-| `guildId` | `string \| null` | The guild id. Set even when the bot is not a member (user-installed apps). |
-| `channel` | `TextBasedChannel \| null` | The originating channel, when resolvable. |
-| `channelId` | `string \| null` | The originating channel id. |
-| `member` | `GuildMember \| null` | The member, in a server the bot is in. `null` in DMs and for user-installed apps used elsewhere. |
-| `services` | `ServiceMap` | Injected services. |
-| `logger` | `Logger` | A child logger bound to `correlationId` and to the user id. |
-| `correlationId` | `string` | Unique per interaction. Every log line from this handler carries it. |
-| `locale` | `string` | The user's Discord client language, for example `"fr"` or `"en-US"`. |
-| `owners` | `readonly string[]` | The ids from `defineBot({ owners })`. |
-| `reply` | `ReplyFn` | The reply helper. |
-
-| Method | Returns | Description |
-| --- | --- | --- |
-| `t(key, vars?)` | `string` | Translates one of your messages for `locale`. Returns the key when i18n is not configured. |
-| `say(key, vars?)` | `string` | Renders one of the framework's messages, honouring `defineBot({ messages })`. The key and its variables are type-checked. |
-| `audit(action, details?)` | `Promise<void>` | Records an audit entry. `details` is `{ targetId?: string; metadata?: Record<string, unknown> }`. |
-
-### `ReplyFn`
-
-The type of `ctx.reply`. `content` is a `ReplyContent`: a string, or the full
-discord.js `InteractionReplyOptions`.
-
-| Call | Behaviour |
-| --- | --- |
-| `ctx.reply(content)` | Replies, edits the deferred reply, or follows up, depending on the state of the interaction. |
-| `ctx.reply.success(message, options?)` | Green embed. Public by default. |
-| `ctx.reply.info(message, options?)` | Blue embed. Public by default. |
-| `ctx.reply.warn(message, options?)` | Amber embed. Public by default. |
-| `ctx.reply.error(message, options?)` | Red embed. Ephemeral by default. |
-| `ctx.reply.ephemeral(content)` | Any content, visible only to the invoking user. |
-| `ctx.reply.defer(options?)` | Shows the loading state. `options` is `{ ephemeral?: boolean }`. Does nothing if already acknowledged. |
-| `ctx.reply.followUp(content)` | Always sends an additional message. |
-| `ctx.reply.editReply(content)` | Always edits the current reply, deferred or sent. |
-| `ctx.reply.fetch()` | Resolves to the `Message` that was sent as the reply. |
-| `ctx.reply.delete()` | Deletes the reply. |
-
-Every call returns a promise. All of them resolve to nothing, except `fetch()`.
-
-### `SemanticReplyOptions`
-
-Accepted by `success`, `info`, `warn` and `error`. The message becomes the
-description of the embed. The colours come from the theme: see
-[Wording and theme](/basics/wording-and-theme/).
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `ephemeral` | `boolean` | `false`, `true` for `error` | Only the invoking user sees the message. |
-| `title` | `string` | none | A title shown above the message. |
-
-### `UpdateFn`
-
-The type of `ctx.update`, present on button and select menu contexts only.
-
-| Call | Behaviour |
-| --- | --- |
-| `ctx.update(content)` | Replaces the content, embeds or components of the message the component is on. |
-| `ctx.update.defer()` | Acknowledges silently. Does nothing if already acknowledged. |
-| `ctx.update.disable()` | Disables every component on the source message. |
-
-### `ShowModalFn`
-
-The type of `ctx.showModal`, present on command, context menu, button and
-select menu contexts.
-
-```ts
-type ShowModalFn = <Args extends unknown[]>(
-  modal: { build(...args: Args): ModalBuilder },
-  ...args: Args
-) => Promise<void>;
-```
-
-### `CommandContext<Options>`
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `options` | `Options` | The resolved options, typed from the `options` map of the command. Required options are non-nullable, optional ones are `T \| undefined`. |
-| `showModal` | `ShowModalFn` | Opens a modal as the response. |
-
-### `ButtonContext<Params>`
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `params` | `Params` | The typed values decoded from the customId. See [Buttons](/components/buttons/). |
-| `update` | `UpdateFn` | Edits the source message. |
-| `showModal` | `ShowModalFn` | Opens a modal in response to the click. |
-
-### `ModalContext<Fields>`
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `fields` | `Fields` | The submitted values, keyed by field name and typed by the kind of each field. See [Modals](/components/modals/). |
-| `params` | typed from the modal | The params decoded from the modal's customId. |
-
-The contexts of select menus and of context menus are described with their
-definitions: [`SelectMenuContext`](/components/select-menus/),
-[`UserCommandContext` and `MessageCommandContext`](/commands/context-menus/).
-
-### `describeInteraction(interaction)`
-
-```ts
-function describeInteraction(interaction: RepliableInteraction): InteractionSummary
-```
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `kind` | `"command" \| "userCommand" \| "messageCommand" \| "button" \| "select" \| "modal" \| "other"` | What kind of interaction it is. |
-| `name` | `string` | The command name with its group and subcommand (`"config set"`), or the routing id of a component or modal, without its encoded params. |
-
-It never throws: an interaction it does not recognise, including a hand-built
-one in a test, gives `{ kind: "other", name: "unknown" }`.
+- `BaseContext`: Fields shared by every interaction context.
+- `ServiceMap`: Global service map.
+- `Logger`: Structured logger with level filtering and child bindings.
+- `defineBot()`: Creates a `Bot`.
+- `ReplyFn`: Callable reply helper with semantic shortcuts.
+- `ReplyContent`: Content accepted by reply helpers: a plain string or full reply options.
+- `SemanticReplyOptions`: Extra options for the semantic reply helpers.
+- `UpdateFn`: Callable component-update helper (edits the source message).
+- `ShowModalFn`: Opens a modal as the response to an interaction.
+- `CommandContext`: Context passed to slash-command handlers.
+- `ButtonContext`: Context passed to button handlers.
+- `ModalContext`: Context passed to modal handlers.
+- `SelectMenuContext`: Context passed to select-menu handlers (string and native selects).
+- `UserCommandContext`: Context passed to user context-menu command handlers.
 
 ## See also
 

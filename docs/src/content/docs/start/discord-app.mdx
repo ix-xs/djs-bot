@@ -1,0 +1,109 @@
+---
+title: "Create the Discord application"
+description: "Give your bot an identity on Discord: the application, its token, its intents, and the invitation to your server."
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+import DiscordDemo from '../../../components/demo/DiscordDemo.astro';
+
+Before the code, your bot must exist **on Discord's side**: a name, and a
+**token**, the password your program will use to connect. You do this once,
+in the **Developer Portal**.
+
+You need a Discord account and a server you manage. The simplest way: create
+a test server (the **+** in the server list, then **Create My Own**).
+
+## Create the application
+
+<Steps>
+
+1. Open the [Developer Portal](https://discord.com/developers/applications),
+   click **New Application**, give it your bot's name, then **Create**.
+
+2. On **General Information**, copy the **Application ID** (a long number).
+   It is public: it identifies your application.
+
+</Steps>
+
+## Get the token
+
+<Steps>
+
+1. Open the **Bot** tab.
+
+2. **Reset Token**, then **Copy**. Discord will not show it again.
+
+</Steps>
+
+<Aside type="danger" title="The token is a password">
+Anyone who has the token controls the bot. Never publish it (GitHub, Discord,
+a screenshot). If it leaks, **Reset Token**: the old one stops working right
+away.
+</Aside>
+
+## Turn on the intents you will need
+
+Discord only sends a bot the categories of events it asks for: the
+**intents**. djs-bot works them out for you. Three are **privileged** and
+must be allowed here, in the **Bot** tab:
+
+| Intent | Turn it on if the bot needs to... |
+| --- | --- |
+| **Server Members** | see members join and leave |
+| **Message Content** | read the text of messages |
+| **Presence** | see who is online |
+
+For this guide, turn on **Server Members**.
+
+## Invite the bot to your server
+
+<Steps>
+
+1. Open **OAuth2**, then **URL Generator**.
+
+2. Check the scopes `bot` **and** `applications.commands`.
+
+3. Check the permissions `Send Messages`, `Embed Links` and
+   `Read Message History`.
+
+4. Open the generated URL and choose your server.
+
+</Steps>
+
+<Aside type="caution" title="Don't forget applications.commands">
+Without this scope, Discord never shows the bot's commands. It is the number
+one cause of "my command does not show up".
+</Aside>
+
+The bot joins your server. It is offline: no program has connected with its
+token yet.
+
+<DiscordDemo
+  steps={[{ do: "join", user: "djs-bot" }]}
+/>
+
+## Copy your server's ID
+
+While you develop, the bot will present its commands **to this server
+only**, where they show up instantly.
+
+<Steps>
+
+1. In Discord, turn on **User Settings > Advanced > Developer Mode**.
+
+2. Right-click your server, **Copy Server ID**.
+
+</Steps>
+
+## What you have now
+
+| Value | Secret? |
+| --- | --- |
+| the bot's **token** | **yes** |
+| the **Application ID** | no |
+| your **server's ID** | no |
+
+They will go into the project's configuration file, which you create on the
+next page.

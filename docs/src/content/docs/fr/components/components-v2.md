@@ -157,59 +157,12 @@ ajouté pour vous, voir [Événements et intents](/events/events-and-intents/).
 
 ## Référence
 
-### `ui`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-| Helper | Renvoie | Description |
-| --- | --- | --- |
-| `ui.row(...components)` | `ActionRowBuilder` | Une rangée de boutons, ou un seul menu de sélection. |
-| `ui.linkButton(label, url, emoji?)` | `ButtonBuilder` | Un bouton qui ouvre une URL. Pas de gestionnaire, pas de customId. |
-| `ui.premiumButton(skuId)` | `ButtonBuilder` | Un bouton qui ouvre le parcours d'achat d'un des SKU de votre application. Discord fournit le libellé, et aucun gestionnaire ne s'exécute de votre côté. |
-| `ui.container(...children)` | `ContainerBuilder` | Regroupe des composants d'affichage en un seul bloc visuel. |
-| `ui.container(options, ...children)` | `ContainerBuilder` | Pareil, avec une couleur d'accent ou derrière un spoiler. |
-| `ui.text(content)` | `TextDisplayBuilder` | Un bloc de texte markdown. |
-| `ui.separator(options?)` | `SeparatorBuilder` | Un espace, avec ou sans trait de séparation. |
-| `ui.section(options)` | `SectionBuilder` | Du texte à gauche, une vignette ou un bouton à droite. |
-| `ui.thumbnail(url, description?)` | `ThumbnailBuilder` | Une vignette en accessoire d'une section, avec une description facultative de l'image. |
-| `ui.gallery(...urls)` | `MediaGalleryBuilder` | Une galerie d'images ou de vidéos. Accepte `attachment://name`. |
-| `ui.file(attachmentUrl)` | `FileBuilder` | Un composant d'affichage de fichier. Prend une référence `attachment://name`. |
-| `ui.poll(question, answers, options?)` | `PollData` | Un sondage natif, pour le champ `poll` d'un message. |
-
-### `ui.container(options?, ...children)`
-
-`options` est un `ContainerOptions`. Il est reconnu parce que c'est un objet
-simple, alors que chaque enfant est un builder.
-
-| Option | Type | Par défaut | Description |
-| --- | --- | --- | --- |
-| `accent` | `number` | - | Couleur de la barre sur le bord gauche, par exemple `0x5865f2` ou `Colors.Blurple`. |
-| `spoiler` | `boolean` | `false` | Masque tout le conteneur derrière un spoiler. |
-
-Un enfant est un `ContainerChild` : le résultat de `ui.text`, `ui.separator`,
-`ui.section`, `ui.gallery`, `ui.file` ou `ui.row`.
-
-### `ui.separator(options?)`
-
-| Option | Type | Par défaut | Description |
-| --- | --- | --- | --- |
-| `divider` | `boolean` | `true` | Indique si un trait visible est dessiné. |
-| `spacing` | `"small" \| "large"` | `"small"` | La quantité d'espace vide que prend le séparateur. |
-
-### `ui.section(options)`
-
-| Option | Type | Par défaut | Description |
-| --- | --- | --- | --- |
-| `text` | `string \| string[]` | requis | Le texte à gauche : un bloc de markdown, ou trois au plus. |
-| `accessory` | `ThumbnailBuilder \| ButtonBuilder` | requis | Ce qui se trouve à droite : `ui.thumbnail(url)` ou un bouton. |
-
-### `ui.poll(question, answers, options?)`
-
-`answers` est un tableau de chaînes ou d'objets `{ text: string; emoji?: string }`.
-`options` est un `PollOptions` :
-
-| Option | Type | Par défaut | Description |
-| --- | --- | --- | --- |
-| `hours` | `number` | `24` | Durée pendant laquelle le sondage reste ouvert, de 1 à 768. |
-| `multiple` | `boolean` | `false` | Permet de choisir plusieurs réponses. |
+- `ui` : Fabriques de composants concises.
+- `ContainerOptions` : Options d'apparence d'un `ui.container`.
+- `ContainerChild` : Un composant d'affichage pouvant se placer dans un `ui.container` : un bloc de texte, un séparateur, une section, une galerie de médias, un fichier, ou une rangée d'actions de boutons/menus de sélection.
+- `PollOptions` : Options de `ui.poll`.
 
 ## Limites et erreurs
 

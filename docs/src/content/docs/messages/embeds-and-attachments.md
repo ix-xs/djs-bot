@@ -189,67 +189,10 @@ need to keep instead of saving the URL. To send a received file back, pass the
 
 ## Reference
 
-### `EmbedBuilder`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-The discord.js class, re-exported unchanged. `Colors` (named colour constants
-such as `Colors.Blurple`) is re-exported too.
-
-| Method | Argument | Description |
-| --- | --- | --- |
-| `setTitle(title)` | `string` | Bold heading. Becomes a link when a URL is set. |
-| `setURL(url)` | `string` | Makes the title clickable. |
-| `setDescription(text)` | `string` | Main text, markdown allowed. |
-| `setColor(color)` | number, hex string, `Colors.*` | Colour of the left edge. |
-| `setAuthor(author)` | `{ name, iconURL?, url? }` | Small line above the title. |
-| `setThumbnail(url)` | `string` | Small image in the top right corner. |
-| `setImage(url)` | `string` | Large image under the fields. |
-| `addFields(...fields)` | `{ name, value, inline? }` | Appends fields. `inline` puts fields side by side. |
-| `setFields(...fields)` | same | Replaces every field. |
-| `spliceFields(index, deleteCount, ...fields)` | same | Removes or inserts fields at a position. |
-| `setFooter(footer)` | `{ text, iconURL? }` | Small line at the bottom. |
-| `setTimestamp(date?)` | `Date \| number` | Time shown next to the footer, in the reader's timezone. Now when omitted. |
-| `EmbedBuilder.from(embed)` | an existing embed | Copies an embed so you can change it, for example `message.embeds[0]`. |
-
-### `AttachmentBuilder`
-
-The discord.js class, re-exported unchanged.
-
-```ts
-new AttachmentBuilder(content, data?)
-```
-
-| Argument | Type | Description |
-| --- | --- | --- |
-| `content` | `Buffer \| string \| Stream` | The bytes, a local path, a URL, or a readable stream. |
-| `data.name` | `string` | File name with its extension. Used by `attachment://name`. |
-| `data.description` | `string` | Alt text shown by screen readers. |
-
-| Method | Description |
-| --- | --- |
-| `setName(name)` | Sets the file name. |
-| `setDescription(text)` | Sets the alt text. |
-| `setSpoiler(spoiler?)` | Hides the file behind a spoiler. Default `true`. |
-| `setFile(content, name?)` | Replaces the content, and optionally the name. |
-
-`files` also accepts a path, a URL or a `Buffer` directly. The builder is what
-lets you choose the name, the alt text and the spoiler state.
-
-### `Attachment`
-
-What `s.attachment` and `field.files` hand you. The most useful properties:
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `id` | `string` | The attachment id. |
-| `name` | `string` | File name. |
-| `contentType` | `string \| null` | MIME type, for example `image/png`. |
-| `size` | `number` | Size in bytes. |
-| `url` | `string` | Signed download link. |
-| `proxyURL` | `string` | The same file through Discord's media proxy. |
-| `width`, `height` | `number \| null` | Dimensions, for images and videos. |
-| `description` | `string \| null` | Alt text, if the sender wrote one. |
-| `spoiler` | `boolean` | Whether it was marked as a spoiler. |
-| `ephemeral` | `boolean` | Whether Discord will remove the file after a while. |
+- `s`: Slash-command option builders.
+- `field`: Modal component builders.
 
 ## Limits and errors
 

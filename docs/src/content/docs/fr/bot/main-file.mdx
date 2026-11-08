@@ -1,0 +1,90 @@
+---
+title: "Lancer le bot"
+description: "Démarrer le bot, comprendre ce qu'il fait au démarrage, et l'arrêter proprement."
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+import TerminalDemo from '../../../../components/demo/TerminalDemo.astro';
+import DiscordDemo from '../../../../components/demo/DiscordDemo.astro';
+
+Le bot est configuré : on le lance.
+
+## Le lancer
+
+<TerminalDemo
+  command="npx djs-bot dev"
+  lines={[
+    { at: "14:02:10", level: "info", text: "Ready user=my-bot#1234 guilds=1 version=1.4.0", delay: 900 },
+    { at: "14:02:11", level: "info", text: 'Commands deployed scope=guild guildId=9876543210987654321 added=["ping"] changed=[] removed=[]', delay: 500 },
+  ]}
+/>
+
+(`npm run dev` fait la même chose.) Le bot est **en ligne**. Tapez `/ping` sur
+votre serveur :
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "ping", description: "Check the bot is alive" },
+    { do: "reply", embed: { color: "#22c55e", description: "Pong! 🏓 42 ms" } },
+  ]}
+/>
+
+Cette commande est celle que `init` a créée. La page suivante l'ouvre.
+
+## Ce qui se passe au démarrage
+
+<Steps>
+
+1. **Il lit vos fichiers** dans `features`, et note ce que chacun déclare :
+   ici, une commande `ping`.
+
+2. **Il calcule les intents** à partir de ce que votre code écoute.
+
+3. **Il se connecte** avec le token. Discord répond : c'est la ligne `Ready`.
+
+4. **Il présente les commandes** à votre serveur de test, en n'envoyant que ce
+   qui a changé : c'est la ligne `Commands deployed`. Au lancement suivant,
+   sans changement, il écrit `Commands already up to date`.
+
+</Steps>
+
+Si une étape échoue (token invalide, intent non autorisé), le bot s'arrête
+et dit quoi faire.
+
+## Le mode développement
+
+`dev` surveille vos fichiers : à chaque enregistrement, le bot redémarre tout
+seul.
+
+<TerminalDemo
+  command="npx djs-bot dev"
+  lines={[
+    { at: "14:02:10", level: "info", text: "Ready user=my-bot#1234 guilds=1 version=1.4.0" },
+    { at: "14:02:11", level: "info", text: "Commands already up to date scope=guild guildId=9876543210987654321 commands=1" },
+    { text: "Restarting 'src/index.ts'", level: "dim", delay: 1200 },
+    { at: "14:05:32", level: "info", text: "Ready user=my-bot#1234 guilds=1 version=1.4.0", delay: 700 },
+  ]}
+/>
+
+<Aside type="note" title="Pourquoi la commande n'est pas renvoyée ?">
+Discord ne connaît que le nom, la description et les options d'une commande.
+Modifier ce qu'elle **fait** ne change rien pour lui.
+</Aside>
+
+## L'arrêter
+
+`Ctrl+C`. Le bot finit ce qui était en cours, se déconnecte, puis s'arrête.
+
+<TerminalDemo
+  command="^C"
+  lines={[
+    { at: "14:09:51", level: "info", text: "Signal received - shutting down signal=SIGINT" },
+    { at: "14:09:51", level: "info", text: "Shutdown complete" },
+  ]}
+/>
+
+Terminal fermé, bot hors ligne : il ne vit que tant que le programme tourne.
+Le garder en ligne en permanence est l'objet de la
+[dernière page de cette partie](/bot/going-live/).

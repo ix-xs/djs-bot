@@ -221,141 +221,22 @@ it as removed, sends it back untouched, and `clear` keeps it too.
 
 ## Reference
 
-### `deploy`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-The `deploy` field of [`defineBot`](/basics/configuration/), typed `DeployConfig`.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `devGuildId` | `string` | `DISCORD_DEV_GUILD` | The guild that receives every command in development. Readable as `bot.devGuildId`. |
-| `autoDeploy` | `boolean` | `true` unless `NODE_ENV` is `production` | Deploy when the bot becomes ready. |
-
-### `bot.deploy(options)`
-
-Loads the bot if needed, then deploys. Returns a [`DeployResult`](/production/deploying/#deployresult).
-Without `guildId` it follows the plan and updates the state file. Throws
-[`DJSBOT_E001`](/api/errors/#djsbot_e001) without a token and
-[`DJSBOT_E002`](/api/errors/#djsbot_e002) without a client id. `options` is
-typed `DeployCallOptions` and may be omitted.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `guildId` | `string` | none | Put every command on this one guild and ignore `guilds`. The state file is neither read nor written. |
-| `dryRun` | `boolean` | `false` | Compute the lists without writing. The state file is not updated. |
-
-### `bot.clear(options)`
-
-Removes every command of one scope. Returns a
-[`DeployTargetResult`](/production/deploying/#deploytargetresult) whose `removed` lists what was
-there. Same credentials and errors as `bot.deploy`.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `guildId` | `string` | none | The guild to empty. Omit it to empty the global scope. |
-| `dryRun` | `boolean` | `false` | Report what would be removed without writing. |
-
-### `DeployResult`
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `targets` | `DeployTargetResult[]` | One entry per scope visited: the global scope, each guild of the plan, then each guild that was emptied. |
-| `applied` | `boolean` | Whether at least one scope was written. |
-| `deployedGuilds` | `string[]` | The guild ids the plan targets (or the single forced guild). This is what the state file stores. |
-
-### `DeployTargetResult`
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `scope` | `"global" \| "guild"` | Which kind of scope this is. |
-| `guildId` | `string?` | The guild, when `scope` is `"guild"`. |
-| `added` | `string[]` | Names of the commands that did not exist on Discord. |
-| `changed` | `string[]` | Names of the commands whose definition differs. |
-| `removed` | `string[]` | Names of the commands that are no longer in your code. |
-| `unchanged` | `string[]` | Names of the commands already up to date. |
-| `applied` | `boolean` | Whether this scope was written. `false` on a dry run or when nothing differs. |
-
-### `deployCommands(registry, options)`
-
-The function behind `bot.deploy`, for when you hold a `Registry` yourself
-(`bot.registry` after `bot.load()`). It checks the [limits](/production/deploying/#limits-and-errors)
-of every scope before the first request, handles the global scope, then the
-guilds five at a time, then the guilds to empty. Returns a `DeployResult`.
-`options` is typed `DeployOptions`:
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `token` | `string` | required | The bot token. |
-| `clientId` | `string` | required | The application id. |
-| `guildId` | `string` | none | Put every command on this one guild. |
-| `knownGuilds` | `string[]` | `[]` | Guilds deployed to earlier. Those absent from the plan are emptied. Ignored with `guildId`. |
-| `dryRun` | `boolean` | `false` | Compute the lists without writing. |
-| `logger` | `Logger` | none | Receives one line per scope. |
-
-```ts title="scripts/plan.ts"
-import { deployCommands, env, planDeployment } from "@ix-xs/djs-bot";
-
-process.env.DJSBOT_CLI = "introspect";
-const { default: bot } = await import("../src/index.js");
-await bot.load();
-
-const plan = planDeployment(bot.registry);
-console.log("global:", plan.global.map((command) => command.name));
-for (const [guildId, commands] of plan.guilds) {
-  console.log(guildId, commands.map((command) => command.name));
-}
-
-const result = await deployCommands(bot.registry, {
-  token: env("DISCORD_TOKEN"),
-  clientId: env("DISCORD_CLIENT_ID"),
-  dryRun: true,
-});
-console.log(result.targets);
-```
-
-### `clearCommands(options)`
-
-The function behind `bot.clear`. Returns a `DeployTargetResult`. It takes
-`ClearOptions`:
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `token` | `string` | required | The bot token. |
-| `clientId` | `string` | required | The application id. |
-| `guildId` | `string` | none | The guild to empty. Omit it for the global scope. |
-| `dryRun` | `boolean` | `false` | Report what would be removed without writing. |
-| `logger` | `Logger` | none | Receives the progress line. |
-
-### `planDeployment(registry)`
-
-Splits the commands of a registry by scope and returns a `DeploymentPlan`. This
-is what `djs-bot explain` prints and what `bot.describe()` returns under
-`deployment`.
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `global` | `RESTPostAPIApplicationCommandsJSONBody[]` | The commands without `guilds`. |
-| `guilds` | `Map<string, RESTPostAPIApplicationCommandsJSONBody[]>` | The commands of each guild id. |
-
-### `buildCommandTree(registry)`
-
-Returns the request body of every command (slash, user and message), ignoring
-`guilds`. This is the list sent when `guildId` forces one guild.
-
-### `commandToJSON(command)`
-
-Converts one slash command definition into the body Discord expects. Required
-options are placed before optional ones, as Discord demands, so the order you
-declare them in never matters.
-
-### `commandsEqual(desired, existing, options)`
-
-Whether a local body and a command returned by Discord describe the same thing,
-with the normalisation described [above](/production/deploying/#what-a-deploy-changes). Useful to
-write your own deploy check.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `guildScope` | `boolean` | `false` | Compare as guild commands, where `dm_permission`, `integration_types` and `contexts` do not exist. |
+- `defineBot()`: Creates a `Bot`.
+- `DeployConfig`: Deployment configuration.
+- `DeployResult`: The outcome of a deploy across all targets.
+- `DeployCallOptions`: Options for `Bot.deploy`.
+- `DeployTargetResult`: What changed for one deploy target (global, or a specific guild).
+- `deployCommands()`: Deploys commands, honouring per-command scoping: - commands with no `guilds` go **global**, - commands with `guilds` go to **those guilds**.
+- `Registry`: Holds every definition and exposes typed lookups.
+- `DeployOptions`: Options for `deployCommands`.
+- `Logger`: Structured logger with level filtering and child bindings.
+- `clearCommands()`: Removes **all** of the app's commands from one scope (a guild, or global).
+- `ClearOptions`: Options for `clearCommands`.
+- `planDeployment()`: Partitions the registry's commands into a global set and per-guild sets based on each command's `guilds` field.
+- `DeploymentPlan`: A resolved deployment plan: which commands go global, and which go to which guild.
+- `buildCommandTree()`: Builds the full desired command tree (ignoring per-command scoping).
 
 ## Limits and errors
 

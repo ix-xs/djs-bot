@@ -1,0 +1,38 @@
+---
+// A piece of code whose type names link to their pages: to the page of the
+// export for a type of the package, to discord.js.org for a discord.js type.
+import type { Token } from "../../reference/model";
+import { pathOf } from "../../reference/model";
+import { href } from "../../reference/markdown";
+
+interface Props {
+  tokens: Token[];
+  locale: string | undefined;
+  /** Colours the keywords, for a declaration. */
+  keywords?: boolean;
+}
+
+const { tokens, locale, keywords = false } = Astro.props;
+const KEYWORDS = /\b(function|const|let|class|interface|type|extends|implements|new|readonly|keyof|typeof|infer|true|false|undefined|null|void|string|number|boolean|unknown|never|any|bigint|symbol|object)\b/g;
+const STRINGS = /("[^"]*"|'[^']*'|`[^`]*`)/g;
+
+/** Plain text, escaped, with keywords and string literals marked. */
+function paint(text: string): string {
+  const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  if (!keywords) return escaped;
+  return escaped
+    .split(STRINGS)
+    .map((part, i) => (i % 2 === 1 ? `<span class="rf-str">${part}</span>` : part.replace(KEYWORDS, '<span class="rf-kw">$1</span>')))
+    .join("");
+}
+---
+
+{tokens.map(([text, link]) =>
+  link?.ref ? (
+    <a class="rf-ref" href={href(pathOf(link.ref), locale)} translate="no">{text}</a>
+  ) : link?.href ? (
+    <a class="rf-ext" href={link.href} translate="no" rel="noopener">{text}</a>
+  ) : (
+    <Fragment set:html={paint(text)} />
+  ),
+)}

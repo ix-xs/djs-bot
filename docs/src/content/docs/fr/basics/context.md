@@ -264,128 +264,22 @@ contexte n'a donc ni helper `reply` ni `interaction` :
 
 ## Référence
 
-### `BaseContext`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-Partagé par tous les gestionnaires d'interactions.
-
-| Propriété | Type | Description |
-| --- | --- | --- |
-| `interaction` | l'interaction brute | L'interaction discord.js, typée pour le gestionnaire (une `ButtonInteraction` dans un bouton, et ainsi de suite). |
-| `client` | `Client<true>` | Le client discord.js connecté. |
-| `user` | `User` | Qui a déclenché l'interaction. |
-| `guild` | `Guild \| null` | Le serveur, ou `null` en message privé et dans les serveurs où le bot n'est pas présent. |
-| `guildId` | `string \| null` | L'identifiant du serveur. Renseigné même quand le bot n'en est pas membre (applications installées par l'utilisateur). |
-| `channel` | `TextBasedChannel \| null` | Le salon d'origine, quand il est résolvable. |
-| `channelId` | `string \| null` | L'identifiant du salon d'origine. |
-| `member` | `GuildMember \| null` | Le membre, dans un serveur où se trouve le bot. `null` en message privé et pour les applications installées par l'utilisateur utilisées ailleurs. |
-| `services` | `ServiceMap` | Les services injectés. |
-| `logger` | `Logger` | Un logger enfant lié à `correlationId` et à l'identifiant de l'utilisateur. |
-| `correlationId` | `string` | Unique par interaction. Chaque ligne de journal de ce gestionnaire le porte. |
-| `locale` | `string` | La langue du client Discord de l'utilisateur, par exemple `"fr"` ou `"en-US"`. |
-| `owners` | `readonly string[]` | Les identifiants de `defineBot({ owners })`. |
-| `reply` | `ReplyFn` | Le helper de réponse. |
-
-| Méthode | Retourne | Description |
-| --- | --- | --- |
-| `t(key, vars?)` | `string` | Traduit l'un de vos messages pour `locale`. Renvoie la clé quand i18n n'est pas configuré. |
-| `say(key, vars?)` | `string` | Produit l'un des messages du framework, en respectant `defineBot({ messages })`. La clé et ses variables sont vérifiées par le typage. |
-| `audit(action, details?)` | `Promise<void>` | Enregistre une entrée d'audit. `details` est `{ targetId?: string; metadata?: Record<string, unknown> }`. |
-
-### `ReplyFn`
-
-Le type de `ctx.reply`. `content` est un `ReplyContent` : une chaîne, ou les
-`InteractionReplyOptions` complètes de discord.js.
-
-| Appel | Comportement |
-| --- | --- |
-| `ctx.reply(content)` | Répond, modifie la réponse différée, ou envoie un message de suivi, selon l'état de l'interaction. |
-| `ctx.reply.success(message, options?)` | Embed vert. Public par défaut. |
-| `ctx.reply.info(message, options?)` | Embed bleu. Public par défaut. |
-| `ctx.reply.warn(message, options?)` | Embed ambre. Public par défaut. |
-| `ctx.reply.error(message, options?)` | Embed rouge. Éphémère par défaut. |
-| `ctx.reply.ephemeral(content)` | N'importe quel contenu, visible uniquement par l'utilisateur qui a lancé l'interaction. |
-| `ctx.reply.defer(options?)` | Affiche l'état de chargement. `options` est `{ ephemeral?: boolean }`. Ne fait rien si l'interaction a déjà reçu un accusé de réception. |
-| `ctx.reply.followUp(content)` | Envoie toujours un message supplémentaire. |
-| `ctx.reply.editReply(content)` | Modifie toujours la réponse en cours, différée ou envoyée. |
-| `ctx.reply.fetch()` | Se résout avec le `Message` envoyé comme réponse. |
-| `ctx.reply.delete()` | Supprime la réponse. |
-
-Chaque appel renvoie une promesse. Toutes se résolvent sans valeur, sauf `fetch()`.
-
-### `SemanticReplyOptions`
-
-Accepté par `success`, `info`, `warn` et `error`. Le message devient la
-description de l'embed. Les couleurs viennent du thème : voir
-[Formulations et thème](/basics/wording-and-theme/).
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `ephemeral` | `boolean` | `false`, `true` pour `error` | Seul l'utilisateur qui a lancé l'interaction voit le message. |
-| `title` | `string` | aucun | Un titre affiché au-dessus du message. |
-
-### `UpdateFn`
-
-Le type de `ctx.update`, présent uniquement dans les contextes de boutons et de
-menus de sélection.
-
-| Appel | Comportement |
-| --- | --- |
-| `ctx.update(content)` | Remplace le contenu, les embeds ou les composants du message sur lequel se trouve le composant. |
-| `ctx.update.defer()` | Accuse réception en silence. Ne fait rien si l'interaction a déjà reçu un accusé de réception. |
-| `ctx.update.disable()` | Désactive tous les composants du message d'origine. |
-
-### `ShowModalFn`
-
-Le type de `ctx.showModal`, présent dans les contextes de commandes, de menus
-contextuels, de boutons et de menus de sélection.
-
-```ts
-type ShowModalFn = <Args extends unknown[]>(
-  modal: { build(...args: Args): ModalBuilder },
-  ...args: Args
-) => Promise<void>;
-```
-
-### `CommandContext<Options>`
-
-| Propriété | Type | Description |
-| --- | --- | --- |
-| `options` | `Options` | Les options résolues, typées à partir de la table `options` de la commande. Les options obligatoires ne sont pas nullables, les facultatives sont `T \| undefined`. |
-| `showModal` | `ShowModalFn` | Ouvre une modale comme réponse. |
-
-### `ButtonContext<Params>`
-
-| Propriété | Type | Description |
-| --- | --- | --- |
-| `params` | `Params` | Les valeurs typées décodées depuis le customId. Voir [Boutons](/components/buttons/). |
-| `update` | `UpdateFn` | Modifie le message d'origine. |
-| `showModal` | `ShowModalFn` | Ouvre une modale en réponse au clic. |
-
-### `ModalContext<Fields>`
-
-| Propriété | Type | Description |
-| --- | --- | --- |
-| `fields` | `Fields` | Les valeurs soumises, indexées par nom de champ et typées selon le type de chaque champ. Voir [Modales](/components/modals/). |
-| `params` | typé d'après la modale | Les paramètres décodés depuis le customId de la modale. |
-
-Les contextes des menus de sélection et des menus contextuels sont décrits avec
-leurs définitions : [`SelectMenuContext`](/components/select-menus/),
-[`UserCommandContext` et `MessageCommandContext`](/commands/context-menus/).
-
-### `describeInteraction(interaction)`
-
-```ts
-function describeInteraction(interaction: RepliableInteraction): InteractionSummary
-```
-
-| Champ | Type | Description |
-| --- | --- | --- |
-| `kind` | `"command" \| "userCommand" \| "messageCommand" \| "button" \| "select" \| "modal" \| "other"` | Le type de l'interaction. |
-| `name` | `string` | Le nom de la commande avec son groupe et sa sous-commande (`"config set"`), ou l'identifiant de routage d'un composant ou d'une modale, sans ses paramètres encodés. |
-
-Elle ne lève jamais d'erreur : une interaction qu'elle ne reconnaît pas, y compris
-une interaction construite à la main dans un test, donne
-`{ kind: "other", name: "unknown" }`.
+- `BaseContext` : Champs communs à tous les contextes d'interaction.
+- `ServiceMap` : Table globale des services. Étendez-la dans votre projet pour un typage de bout en bout :
+- `Logger` : Logger structuré avec filtrage par niveau et liaisons enfants.
+- `defineBot()` : Crée un `Bot`.
+- `ReplyFn` : Aide de réponse appelable, avec des raccourcis sémantiques.
+- `ReplyContent` : Contenu accepté par les aides de réponse : une chaîne simple ou des options de réponse complètes.
+- `SemanticReplyOptions` : Options supplémentaires pour les aides de réponse sémantiques.
+- `UpdateFn` : Aide de mise à jour de composant appelable (modifie le message source).
+- `ShowModalFn` : Ouvre une modale en réponse à une interaction.
+- `CommandContext` : Contexte passé aux gestionnaires de commandes slash.
+- `ButtonContext` : Contexte passé aux gestionnaires de bouton.
+- `ModalContext` : Contexte passé aux gestionnaires de modale.
+- `SelectMenuContext` : Contexte passé aux gestionnaires de menu de sélection (menus de sélection de chaînes et natifs).
+- `UserCommandContext` : Contexte passé aux gestionnaires de commandes de menu contextuel utilisateur.
 
 ## Voir aussi
 

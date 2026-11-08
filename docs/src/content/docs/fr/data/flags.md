@@ -194,66 +194,15 @@ qu'une commande d'administration bascule, comme dans
 
 ## Référence
 
-### `FeatureFlagsOptions`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-La valeur de `flags` dans `defineBot`, et l'argument de `createFeatureFlags`.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `defaults` | `Record<string, boolean>` | `{}` | L'état de chaque flag quand aucune surcharge n'existe. |
-| `store` | `KVStore` | voir ci-dessous | Où les surcharges sont conservées. |
-
-Dans `defineBot`, `store` prend par défaut le `store` du bot, et un store en
-mémoire quand le bot n'en a pas. Dans `createFeatureFlags`, il prend par défaut
-un store en mémoire.
-
-Les surcharges sont écrites à la racine du store sous les clés
-`flag:<name>:global` et `flag:<name>:guild:<guildId>`, avec une valeur
-booléenne. Pour les séparer de vos propres clés, passez un espace de noms :
-`flags: { store: store.namespace("flags") }`.
-
-### `featureEnabled(name)`
-
-```ts
-featureEnabled(name: string): Guard
-```
-
-Une [garde](/commands/guards/) qui refuse l'interaction quand le flag est
-désactivé pour `ctx.guildId`. Elle laisse passer quand `flags` n'est pas
-configuré. Le refus utilise le message `featureDisabled` (« This feature is
-currently disabled here. » par défaut), que vous pouvez reformuler ou traduire :
-voir [Formulations et thème](/basics/wording-and-theme/).
-
-### `FeatureFlags`
-
-Le type de `ctx.services.flags` et de la valeur renvoyée par `createFeatureFlags`.
-
-| Méthode | Renvoie | Description |
-| --- | --- | --- |
-| `isEnabled(name, scope?)` | `Promise<boolean>` | Résout un flag pour un `FlagScope`. |
-| `enable(name, scope?)` | `Promise<void>` | Active un flag globalement, ou pour un serveur avec `{ guildId }`. |
-| `disable(name, scope?)` | `Promise<void>` | Désactive un flag globalement, ou pour un serveur avec `{ guildId }`. |
-| `clear(name, scope?)` | `Promise<void>` | Supprime une surcharge, le flag retombe alors sur le niveau suivant. |
-| `setDefault(name, enabled)` | `void` | Change une valeur par défaut. Synchrone, en mémoire seulement : elle n'est pas persistée. |
-| `list(guildId?)` | `Promise<Record<string, boolean>>` | Les valeurs par défaut fusionnées avec les surcharges globales et, avec un `guildId`, celles de ce serveur. |
-
-`list` ne contient que les flags qui ont une valeur par défaut ou une surcharge
-stockée. Un flag jamais déclaré ni basculé est absent, et se lit comme `false`.
-
-### `FlagScope`
-
-| Champ | Type | Description |
-| --- | --- | --- |
-| `guildId` | `string \| null` | Le serveur dont le réglage propre est utilisé. Sans lui, la valeur globale s'applique. |
-| `userId` | `string` | Réservé. Non utilisé par la résolution. |
-
-### `createFeatureFlags(options)`
-
-```ts
-createFeatureFlags(options?: FeatureFlagsOptions): FeatureFlags
-```
-
-Crée le service de façon autonome. `defineBot({ flags })` l'appelle pour vous.
+- `FeatureFlagsOptions` : Options de `createFeatureFlags`.
+- `defineBot()` : Crée un `Bot`.
+- `createFeatureFlags()` : Crée un service `FeatureFlags`.
+- `KVStore` : Un store clé-valeur asynchrone.
+- `featureEnabled()` : Une garde qui bloque une commande/un composant lorsqu'un feature flag est désactivé pour le serveur.
+- `FeatureFlags` : Un service de drapeaux de fonctionnalité à l'exécution.
+- `FlagScope` : Une portée pour lire ou écrire un drapeau.
 
 ## Voir aussi
 

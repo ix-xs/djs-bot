@@ -4,26 +4,46 @@ An [Astro Starlight](https://starlight.astro.build) site for `@ix-xs/djs-bot`.
 
 | Section | Source | Tracked |
 | --- | --- | --- |
-| Tutorial | `src/content/docs/tutorial/*.mdx`, written by hand | yes |
+| The guide's path | `src/content/docs/index.mdx`, `start/`, `bot/`: one bot built page by page, written by hand | yes |
 | Topic pages | `src/content/docs/{basics,commands,components,events,architecture,data,messages,production}/`, one page per topic, written by hand | yes |
 | Errors, CLI | `src/content/docs/api/errors.md`, `api/cli.md`, written by hand | yes |
-| All exports | `src/content/docs/api/exports.md`, generated from the source code | yes |
-| Recipes, Help | `src/content/docs/recipes/`, `src/content/docs/help/` | yes |
+| API reference | `src/pages/reference/`, one page per export, built from `src/data/api.json` | yes (the JSON) |
+| Complete examples, Help | `src/content/docs/recipes/`, `src/content/docs/help/` | yes |
 
-Each topic has exactly one page, and each fact has one home: a page links to
-the page that owns something instead of explaining it again. A page has the
-same shape everywhere: a first example, one section per need, a `Reference`
-section, limits and errors, then `See also`. The `description` in the
-frontmatter is shown as the lead paragraph under the title.
+The sidebar of the guide is written out in `astro.config.mjs`, in reading
+order. The guide's path comes first and is read in order; the topic pages are
+read when needed. Each fact has one home: a page links to the page that owns
+something instead of explaining it again.
+
+A page of the path opens with its own first paragraph (the `description` is
+then used only for search engines and link previews). A topic page shows its
+`description` as the lead, then a first example, one section per need, a short
+`Reference` section that lists its exports with a link to each in the API
+reference, limits and errors, then `See also`.
+
+The animated Discord and terminal scenes are `src/components/demo/`: a page
+describes what happens in a few steps (`DiscordDemo`, `TerminalDemo`). What
+they print must be what the program prints. `/dev/worst/` on the dev server
+shows them with the worst realistic data (`fixtures.ts`); it is never built.
 
 When a page moves, add its old address to [`redirects.mjs`](./redirects.mjs).
 `/api/errors/` must never move: published versions of the package print links
 to its anchors.
 
-The "All exports" page lists every symbol with the first sentence of its doc
-comment. After adding or documenting an export, run `npm run docs:api` from the
-repository root and commit the result; the test suite fails when the page is
-out of date.
+## The API reference
+
+`src/data/api.json` describes every export of the package: its kind, its
+signature, its doc comment, its parameters, properties and methods, and the
+types they mention, each linked to its page (or to discord.js.org). It is
+written from the TypeScript declarations by `scripts/api-model.mjs`; which
+page of the guide explains each export is set in `scripts/api-pages.mjs`.
+
+After adding or documenting an export, run `npm run docs:api` from the
+repository root and commit the result; `npm test` fails when the JSON is out of
+date, or when an export has no doc comment or no page of the guide.
+
+In the guide, a name of the API written in code (`defineCommand()`,
+`ctx.reply`) links to its reference page by itself (`plugins/api-links.mjs`).
 
 ## Languages
 
@@ -45,32 +65,27 @@ A translation changes the prose and nothing else:
 (frontmatter keys, headings, code, link targets) and the deploy workflow runs
 it. After changing an English page, change its translations in the same commit.
 
-The words of the interface (header, search suggestions, landing page) are in
-`src/i18n.ts` and `src/showcase/scenes.ts`; Starlight translates its own. The
+The words of the interface (header, search suggestions, demos) are in
+`src/i18n.ts` and the demo components; Starlight translates its own. The
 texts of the search results are in `src/content/i18n/<language>.json`: the
 search library leaves them in English otherwise.
 
-The exports page is generated (`npm run docs:api`, at the root). Its
-descriptions come from the doc comments of the source, in English; each
-translation keeps its own in `scripts/api-descriptions.<language>.json`, as the
-English sentence and its translation. When a doc comment changes or an export
-is added, the generator stops and names what is to translate, and so does
-`npm test`: `npm run docs:api -- --pending` prints the entries to fill in.
+The API reference is translated sentence by sentence: `src/data/api.<language>.json`
+holds each sentence of the doc comments with its translation, used only while
+the English is unchanged. When a doc comment changes or an export is added,
+`npm test` fails and names what is to translate;
+`npm run docs:api -- --pending` prints the entries to fill in.
 
 What a translated page still says in English is deliberate: code, the messages
 a program prints (error messages, what Discord shows), and names of things.
 
 To add a language, add it to `LOCALES` in `plugins/base-links.mjs`, to
 `locales` in `astro.config.mjs`, to `LANGUAGES` and the dictionary in
-`src/i18n.ts`, to the generator of the exports page (`scripts/api-index.mjs`,
-with its file of descriptions), to `LABELS` in `plugins/wrap-tables.mjs`, add
+`src/i18n.ts`, to `TRANSLATIONS` in `scripts/api-model.mjs` (with its
+`src/data/api.<language>.json`), to the words of `src/reference/model.ts`, to `LABELS` in `plugins/wrap-tables.mjs`, add
 `src/content/i18n/<language>.json`, then translate the pages, `404.md`
 included: a missing address under a language is sent to that language's own
 "not found" page.
-
-The samples of the landing page's showcase are real files
-(`src/showcase/samples/`), compiled against the package by `npm run test:types`
-at the root.
 
 The site icon is drawn in `public/favicon.svg`. After changing it, run
 `node scripts/icons.mjs` and commit the two PNG files it writes.
@@ -80,7 +95,7 @@ The site icon is drawn in `public/favicon.svg`. After changing it, run
 ```bash
 cd docs
 npm install
-npm run dev        # serves http://localhost:4321/djs-bot
+npm run dev        # serves http://localhost:4321/djs-bot/
 ```
 
 ## Build and check

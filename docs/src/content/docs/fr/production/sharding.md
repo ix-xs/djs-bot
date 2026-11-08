@@ -186,66 +186,14 @@ n'est pas définie. La même valeur est disponible sous la forme
 
 ## Référence
 
-### `sharding`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-Le champ `sharding` de [`defineBot`](/basics/configuration/).
-
-| Valeur | Effet |
-| --- | --- |
-| omis, `false` | Pas de sharding : un processus, une connexion. |
-| `true`, `"auto"` | Sharding avec toutes les valeurs par défaut ci-dessous. |
-| `ShardingOptions` | Sharding avec vos réglages. Les champs omis prennent leur valeur par défaut. |
-
-### `ShardingOptions`
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `totalShards` | `number \| "auto"` | `"auto"` | Combien de shards démarrer. `"auto"` laisse Discord décider. |
-| `mode` | `"process" \| "worker"` | `"process"` | `"process"` crée un processus enfant par shard. `"worker"` utilise des worker threads dans un seul processus. |
-| `respawn` | `boolean` | `true` | Redémarrer un shard quand il s'arrête. |
-
-### `normalizeSharding(input)`
-
-Transforme la valeur souple de `sharding` (`true`, `"auto"` ou des options
-partielles) en `ShardingOptions` complètes avec les valeurs par défaut
-ci-dessus.
-
-### `isShardChild()`
-
-Renvoie `true` dans un processus ou un thread démarré par un gestionnaire de
-shards, qui doit exécuter le bot, et `false` dans le gestionnaire (et dans un
-bot qui n'est pas shardé). Utilisez-le pour garder le travail réservé au
-gestionnaire hors des shards.
-
-Dans le gestionnaire, la réponse reste `false`, avant comme après `bot.start()`.
-
-```ts title="src/index.ts"
-import { defineBot, env, isShardChild } from "@ix-xs/djs-bot";
-
-const bot = defineBot({ token: env("DISCORD_TOKEN"), sharding: "auto" });
-
-export default bot;
-
-if (!process.env.DJSBOT_CLI) {
-  if (!isShardChild()) bot.logger.info({}, "Starting the shard manager");
-  await bot.start();
-}
-```
-
-### `launchShardManager(entryFile, token, options, logger)`
-
-Ce que `bot.start()` appelle dans le gestionnaire. Elle crée un
-`ShardingManager` de discord.js pour `entryFile`, transmet aux enfants les
-options actuelles de Node, journalise la vie de chaque shard, et se résout avec
-le gestionnaire une fois que tous les shards ont été démarrés. Ne l'appelez vous-même
-que si vous écrivez votre propre lanceur.
-
-| Paramètre | Type | Description |
-| --- | --- | --- |
-| `entryFile` | `string` | Le fichier que chaque shard exécute. `bot.start()` passe le fichier avec lequel le processus a été lancé. |
-| `token` | `string` | Le token du bot. |
-| `options` | `ShardingOptions` | Nombre de shards, mode et redémarrage. |
-| `logger` | `Logger` | Reçoit les événements des shards. |
+- `defineBot()` : Crée un `Bot`.
+- `ShardingOptions` : Configuration du sharding.
+- `normalizeSharding()` : Normalise la configuration `sharding` souple en options complètes.
+- `isShardChild()` : Vrai lorsque le processus courant est un shard enfant lancé par un gestionnaire (il doit donc exécuter le bot), et non le gestionnaire lui-même.
+- `launchShardManager()` : Lance un `ShardingManager` pour le fichier d'entrée donné. À appeler uniquement depuis le processus du manager ; se résout une fois que tous les shards ont été lancés.
+- `Logger` : Logger structuré avec filtrage par niveau et liaisons enfants.
 
 ## Voir aussi
 

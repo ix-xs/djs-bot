@@ -1,0 +1,14 @@
+---
+// The API reference in English. Its French twin is ../fr/reference/.
+import IndexPage from "../../components/reference/IndexPage.astro";
+import SymbolPage from "../../components/reference/SymbolPage.astro";
+import { slugOf, symbols } from "../../reference/model";
+
+export function getStaticPaths() {
+  return [{ params: { slug: undefined } }, ...symbols.map((symbol) => ({ params: { slug: slugOf(symbol.name) }, props: { symbol } }))];
+}
+
+const { symbol } = Astro.props;
+---
+
+{symbol ? <SymbolPage symbol={symbol} locale={undefined} /> : <IndexPage locale={undefined} />}

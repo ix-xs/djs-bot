@@ -33,9 +33,9 @@
   --sl-nav-height: 3.75rem;
   --sl-sidebar-width: 17.5rem;
   --sl-content-width: 46rem;
-  --sl-text-h1: clamp(2.5rem, 6vw, 3.75rem);
-  --sl-text-h2: 1.75rem;
-  --sl-text-h3: 1.25rem;
+  --sl-text-h1: clamp(2.125rem, 4vw, 2.75rem);
+  --sl-text-h2: 1.5rem;
+  --sl-text-h3: 1.1875rem;
   --sl-text-h4: 1.0625rem;
   --sl-line-height: 1.7;
   --sl-line-height-headings: 1.15;
@@ -238,51 +238,92 @@ site-search .dialog-frame { scrollbar-width: thin; scrollbar-color: var(--at-lin
 }
 
 /* -------------------------------- Sidebar -------------------------------- */
-.sidebar-pane { border-inline-end: 1px solid var(--at-line); scrollbar-width: thin; scrollbar-color: var(--at-line) transparent; }
-.sidebar-content { padding: 2rem 1rem 3rem 1.5rem; gap: 0; }
-.sidebar-content ul.top-level { counter-reset: at-group; }
-.sidebar-content ul.top-level > li { counter-increment: at-group; margin-top: 0; }
-.sidebar-content ul.top-level > li + li { margin-top: 1.5rem; }
-.sidebar-content ul.top-level > li > details > summary { padding: 0.125rem 0; }
-.sidebar-content ul.top-level > li > details > summary .group-label { display: flex; align-items: baseline; gap: 0.5rem; min-width: 0; }
-.sidebar-content ul.top-level > li > details > summary .group-label::before {
-  content: counter(at-group, decimal-leading-zero);
-  font-family: var(--sl-font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.04em;
-  color: var(--at-accent);
+/* Group titles in the text colour, pages in a quieter one. A soft tint comes
+   under the pointer at once and leaves gently; the current page keeps a blue
+   tint, with a mark on the thread that links the pages of a group. The
+   scrollbar only shows while the list moves (Header.astro draws it). */
+.sidebar-pane { border-inline-end: 1px solid var(--at-line); }
+.sidebar-pane.at-scroll { scrollbar-width: none; }
+.sidebar-pane.at-scroll::-webkit-scrollbar { display: none; }
+@media (min-width: 50rem) {
+  .sidebar-pane { mask-image: linear-gradient(to bottom, transparent, #000 0.75rem, #000 calc(100% - 0.75rem), transparent); }
 }
+.sidebar-content { padding: 1.25rem 0.875rem 3rem; gap: 0; }
+.sidebar-content ul.top-level > li { margin-top: 0; }
+.sidebar-content ul.top-level > li + li { margin-top: 1rem; }
+.sidebar-content summary { padding: 0.5rem 0.625rem; border-radius: 8px; }
+.sidebar-content summary .group-label { display: flex; min-width: 0; }
 .sidebar-content .large, .sidebar-content summary .large {
-  font-family: var(--at-display);
+  font-family: var(--sl-font);
   font-weight: 600;
-  font-size: 0.9375rem;
-  letter-spacing: -0.005em;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0;
   color: var(--at-fg);
   overflow-wrap: anywhere;
 }
-.sidebar-content summary { border-radius: 4px; }
-.sidebar-content summary .caret { width: 0.875rem; height: 0.875rem; opacity: 0.55; }
-.sidebar-content details > ul { margin: 0.5rem 0 0 0.3rem; padding: 0; border-inline-start: 1px solid var(--at-line); }
+.sidebar-content summary .caret { width: 1rem; height: 1rem; opacity: 0.5; }
+/* The pages of a group hang from a thread. */
+.sidebar-content details > ul {
+  display: grid;
+  gap: 2px;
+  margin: 0.125rem 0 0;
+  padding: 0;
+  border: 0;
+  background: linear-gradient(var(--at-line), var(--at-line)) no-repeat 0.875rem 0 / 1px 100%;
+}
 .sidebar-content details > ul > li { margin: 0; padding: 0; border: 0; }
 .sidebar-content details > ul a {
   display: block;
-  margin-inline-start: -1px;
-  padding: 0.3rem 0 0.3rem 1.1rem;
-  border-inline-start: 1px solid transparent;
-  border-radius: 0;
+  margin: 0;
+  padding: 0.5rem 0.625rem 0.5rem 1.625rem;
+  border: 0;
+  border-radius: 8px;
   background: none;
   color: var(--at-muted);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 400;
-  line-height: 1.35;
+  line-height: 1.25rem;
   overflow-wrap: anywhere;
+  transition: background-color 150ms ease, color 150ms ease;
 }
-.sidebar-content details > ul a[aria-current="page"] { border-inline-start-color: var(--at-accent); background: none; color: var(--at-fg); font-weight: 600; }
-/* A group inside a group (the tutorial inside Start). */
-.sidebar-content details details > summary { padding: 0.3rem 0 0.3rem 1.1rem; }
-.sidebar-content details details > summary .large { font-family: var(--sl-font); font-weight: 400; font-size: 0.9rem; color: var(--at-muted); }
-.sidebar-content details details > ul { margin: 0.125rem 0 0.25rem 1.4rem; }
+.sidebar-content details > ul a[aria-current="page"] {
+  background:
+    linear-gradient(var(--at-accent), var(--at-accent)) no-repeat 0.875rem 0.5rem / 1px calc(100% - 1rem),
+    color-mix(in srgb, var(--at-accent) 12%, transparent);
+  color: var(--at-accent);
+  font-weight: 500;
+}
+/* A link at the top level has no thread to mark: the tint alone says it is current. */
+.sidebar-content ul.top-level > li > a[aria-current="page"] {
+  background: color-mix(in srgb, var(--at-accent) 12%, transparent);
+  color: var(--at-accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .sidebar-content summary:hover,
+  .sidebar-content details > ul a:not([aria-current="page"]):hover,
+  .sidebar-content ul.top-level > li > a:not([aria-current="page"]):hover {
+    background-color: color-mix(in srgb, var(--at-fg) 6%, transparent);
+    color: var(--at-fg);
+    transition: none;
+  }
+}
 .mobile-preferences { border-top: 1px solid var(--at-line); }
+
+/* The scrollbar drawn over the list. */
+.at-scroll-thumb {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  width: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--at-fg) 28%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 400ms ease;
+}
+.at-scroll-thumb[data-on] { opacity: 1; transition-duration: 120ms; }
 
 /* ------------------------------ Page title ------------------------------- */
 .at-eyebrow { margin: 0; font-family: var(--sl-font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--at-accent); overflow-wrap: anywhere; }
@@ -291,14 +332,14 @@ site-search .dialog-frame { scrollbar-width: thin; scrollbar-color: var(--at-lin
   font-family: var(--at-display);
   font-weight: 700;
   font-size: var(--sl-text-h1);
-  line-height: 1.02;
-  letter-spacing: -0.035em;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
   font-optical-sizing: auto;
   color: var(--at-fg);
   text-wrap: balance;
   overflow-wrap: anywhere;
 }
-.at-lead { margin: 1.5rem 0 0; max-width: 38rem; font-size: 1.1875rem; line-height: 1.55; color: var(--at-muted); }
+.at-lead { margin: 1rem 0 0; max-width: 44rem; font-size: 1.0625rem; line-height: 1.6; color: var(--at-muted); text-wrap: pretty; }
 .main-pane .content-panel { border: 0; }
 .main-pane .content-panel:first-of-type { padding-top: 4rem; padding-bottom: 0; }
 @media (max-width: 49.99rem) {
@@ -318,13 +359,13 @@ site-search .dialog-frame { scrollbar-width: thin; scrollbar-color: var(--at-lin
    with its anchor link: the rule and the count belong to that wrapper. */
 [data-has-sidebar] .sl-markdown-content > .sl-heading-wrapper.level-h2 {
   counter-increment: at-section;
-  margin-top: 4.5rem;
+  margin-top: 3rem;
   padding-top: 1.5rem;
   padding-inline-start: 2.25rem;
   text-indent: -2.25rem;
   border-top: 1px solid var(--at-line);
 }
-[data-has-sidebar] .sl-markdown-content > .sl-heading-wrapper.level-h2:first-child { margin-top: 3.5rem; }
+[data-has-sidebar] .sl-markdown-content > .sl-heading-wrapper.level-h2:first-child { margin-top: 2.5rem; }
 [data-has-sidebar] .sl-markdown-content > .sl-heading-wrapper.level-h2 > h2::before {
   content: counter(at-section, decimal-leading-zero);
   display: inline-block;
@@ -369,12 +410,16 @@ site-search .dialog-frame { scrollbar-width: thin; scrollbar-color: var(--at-lin
     linear-gradient(to right, rgb(0 0 0 / 0.22), transparent) left / 0.75rem 100% no-repeat scroll,
     linear-gradient(to left, rgb(0 0 0 / 0.22), transparent) right / 0.75rem 100% no-repeat scroll;
 }
-.sl-markdown-content .at-table table { display: table; width: 100%; min-width: 34rem; margin: 0; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.sl-markdown-content .at-table table { display: table; width: 100%; min-width: 0; margin: 0; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .sl-markdown-content :is(th, td) { background: none; border: 0; }
-.sl-markdown-content th { padding: 0 1.25rem 0.6rem 0; font-family: var(--sl-font-mono); font-weight: 400; font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; text-align: start; white-space: nowrap; color: var(--at-faint); border-bottom: 1px solid var(--at-fg); }
-.sl-markdown-content td { padding: 0.85rem 1.25rem 0.85rem 0; vertical-align: top; font-size: 0.9375rem; color: var(--at-muted); border-bottom: 1px solid var(--at-line); }
-.sl-markdown-content td:first-child { min-width: 8rem; }
-.sl-markdown-content td:last-child { min-width: 14rem; padding-inline-end: 0; }
+.sl-markdown-content th { padding: 0 1.25rem 0.6rem 0; font-family: var(--sl-font-mono); font-weight: 400; font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; text-align: start; white-space: nowrap; color: var(--at-faint); border-bottom: 1px solid color-mix(in srgb, var(--at-fg) 35%, transparent); }
+.sl-markdown-content td { padding: 0.6rem 1.25rem 0.6rem 0; vertical-align: top; font-size: 0.9375rem; line-height: 1.55; color: var(--at-muted); border-bottom: 1px solid var(--at-line); }
+/* Only a table of three columns or more is worth a sideways scroll on a phone;
+   two columns share the width, and the text wraps. */
+.sl-markdown-content .at-table table:has(th:nth-child(3)) { min-width: 34rem; }
+.sl-markdown-content td:first-child { min-width: 7rem; }
+.sl-markdown-content td:last-child { padding-inline-end: 0; }
+.sl-markdown-content table:has(th:nth-child(3)) td:last-child { min-width: 14rem; }
 .sl-markdown-content th:last-child { padding-inline-end: 0; }
 .sl-markdown-content tr:nth-child(2n):not(:where(.not-content *)) { background: none; }
 
@@ -429,88 +474,70 @@ code, pre, kbd, .expressive-code .ec-line { font-variant-ligatures: none; font-f
 :root .sl-link-button.secondary { border-color: var(--at-line); }
 
 /* --------------------------- On this page (right) ------------------------ */
+/* A narrow column against the right edge, so that the text in the middle
+   gets the room. The page's headings hang from one hairline, and a blue
+   marker slides along it to the section being read (placed by the script in
+   Header.astro). */
+@media (min-width: 72rem) {
+  :root { --at-toc-width: 15rem; --sl-content-width: 50rem; }
+  .right-sidebar-container { width: var(--at-toc-width); }
+  /* Fixed, so its width would be the window's: it is the column's. */
+  .right-sidebar { width: var(--at-toc-width); }
+  .right-sidebar-panel .sl-container { width: auto; }
+  [data-has-sidebar][data-has-toc] .main-pane {
+    --sl-content-margin-inline: auto;
+    width: calc(100% - var(--at-toc-width));
+  }
+}
 .right-sidebar { border: 0; }
-.right-sidebar-panel { padding-top: 4.5rem; }
-.right-sidebar-panel h2 { font-family: var(--sl-font-mono); font-weight: 400; font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--at-faint); }
-.right-sidebar starlight-toc ul { padding: 0; }
-.right-sidebar starlight-toc a { display: flex; gap: 0.6rem; padding: 0.25rem 0; --pad-inline: 0rem; border-radius: 0; color: var(--at-muted); font-size: 0.875rem; overflow-wrap: anywhere; }
-.right-sidebar starlight-toc a::before { content: ""; flex-shrink: 0; width: 0.75rem; height: 1px; margin-top: 0.75em; background: var(--at-line); }
-.right-sidebar starlight-toc ul ul a { padding-inline-start: 2.1rem; font-size: 0.8125rem; }
-.right-sidebar starlight-toc ul ul a::before { display: none; }
-.right-sidebar starlight-toc a[aria-current="true"] { color: var(--at-fg); }
-.right-sidebar starlight-toc a[aria-current="true"]::before { background: var(--at-accent); }
-mobile-.right-sidebar starlight-toc nav { border-bottom: 1px solid var(--at-line); }
+.right-sidebar-panel { padding: 4.5rem 2rem 2rem 0; }
+.right-sidebar-panel h2 { margin-bottom: 0.75rem; font-family: var(--sl-font-mono); font-weight: 400; font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--at-faint); }
+.right-sidebar starlight-toc nav > ul { position: relative; padding: 0; border-inline-start: 1px solid var(--at-line); }
+.right-sidebar starlight-toc ul ul { padding: 0; }
+.right-sidebar starlight-toc li { margin: 0; }
+.right-sidebar starlight-toc a { display: block; padding: 0.3rem 0 0.3rem 0.875rem; --pad-inline: 0rem; border-radius: 0; color: var(--at-muted); font-size: 0.8125rem; line-height: 1.4; overflow-wrap: anywhere; }
+.right-sidebar starlight-toc ul ul a { padding-inline-start: 1.625rem; font-size: 0.78125rem; }
+/* The section being read is the one the marker points at (Header.astro). */
+.right-sidebar starlight-toc a[aria-current="true"] { color: var(--at-muted); }
+.right-sidebar starlight-toc a[data-at-current] { color: var(--at-accent); }
+.at-toc-marker {
+  position: absolute;
+  top: 0;
+  left: -1px;
+  width: 2px;
+  height: 1px;
+  border-radius: 1px;
+  background: var(--at-accent);
+  transform-origin: top;
+  pointer-events: none;
+}
+.at-toc-marker[data-ready] { transition: transform 220ms var(--ease-out), opacity 150ms ease; }
+@media (prefers-reduced-motion: reduce) {
+  .at-toc-marker[data-ready] { transition: opacity 150ms ease; }
+}
 
 /* ------------------------------ Page footer ------------------------------ */
-.pagination-links { gap: 1rem; margin-top: 2rem; border-top: 1px solid var(--at-fg); }
-.pagination-links a { padding: 1.25rem 0; border: 0; border-radius: 0; box-shadow: none; color: var(--at-muted); font-size: 0.8125rem; overflow-wrap: anywhere; }
+/* Previous and next: two cards, the whole card is the link. */
+.pagination-links { gap: 0.75rem; margin-top: 2.5rem; }
+.pagination-links a {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--at-line);
+  border-radius: 10px;
+  box-shadow: none;
+  color: var(--at-muted);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+  transition: transform 160ms var(--ease-out);
+}
+.pagination-links a:active { transform: scale(0.985); }
 .pagination-links a svg { display: none; }
-.pagination-links .link-title { margin-top: 0.15rem; font-family: var(--at-display); font-weight: 650; font-size: 1.25rem; line-height: 1.2; letter-spacing: -0.015em; color: var(--at-fg); }
+.pagination-links a[rel="prev"] .link-title::before { content: "← "; color: var(--at-faint); }
+.pagination-links a[rel="next"] .link-title::after { content: " →"; color: var(--at-faint); }
+.pagination-links .link-title { font-family: var(--at-display); font-weight: 650; font-size: 1.0625rem; line-height: 1.3; letter-spacing: -0.01em; color: var(--at-fg); }
 footer .meta { font-size: 0.8125rem; color: var(--at-faint); }
-
-/* ------------------------------- Landing --------------------------------- */
-/* minmax(0, 1fr): a grid track otherwise grows to its widest line of code. */
-.at-landing { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6rem; padding-block: 1rem 6rem; }
-/* The opening: one centred column, and nothing next to it. */
-.at-hero { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; padding-block: clamp(1.5rem, 7vh, 5rem) clamp(0rem, 3vh, 2rem); text-align: center; }
-/* Each line settles in turn; the title also comes into focus. */
-.at-hero > * { opacity: 0; transform: translateY(10px); animation: at-rise 500ms var(--ease-out) forwards; }
-.at-hero > :nth-child(2) { animation-name: at-focus; animation-duration: 700ms; animation-delay: 60ms; }
-.at-hero > :nth-child(3) { animation-delay: 160ms; }
-.at-hero > :nth-child(4) { animation-delay: 230ms; }
-.at-hero > :nth-child(5) { animation-delay: 300ms; }
-.at-hero > :nth-child(6) { animation-delay: 370ms; }
-@keyframes at-rise { to { opacity: 1; transform: none; } }
-@keyframes at-focus { from { opacity: 0; transform: translateY(14px); filter: blur(10px); } to { opacity: 1; transform: none; filter: none; } }
-.at-hero h1 { max-width: 14ch; text-wrap: balance; overflow-wrap: anywhere; margin: 1.25rem 0 0; font-family: var(--at-display); font-weight: 750; font-size: clamp(2.75rem, 9.5vw, 6.5rem); line-height: 0.96; letter-spacing: -0.04em; font-optical-sizing: auto; color: var(--at-fg); }
-/* At this size the blue itself is legible on both grounds. */
-.at-hero h1 em { font-style: normal; color: var(--at-accent-fill); }
-.at-hero .at-lead { max-width: 39rem; margin-top: 1.75rem; text-wrap: pretty; }
-.at-hero-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.75rem 1.25rem; margin-top: 1.75rem; }
-.at-facts { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.375rem 1.5rem; margin: 2.5rem 0 0; padding: 0; list-style: none; font-family: var(--sl-font-mono); font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--at-faint); }
-.at-facts li + li::before { content: "/"; margin-inline-end: 1.5rem; color: var(--at-line); }
-.at-install { display: flex; align-items: center; gap: 0.75rem; margin-top: 2.25rem; text-align: start; padding: 0.75rem 0.75rem 0.75rem 1rem; max-width: 100%; border: 1px solid var(--at-line); border-radius: var(--at-radius); background: var(--at-surface); font-family: var(--sl-font-mono); font-size: 0.8125rem; color: var(--at-fg); }
-.at-install code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; scrollbar-width: none; background: none; padding: 0; }
-.at-install code::before { content: "$ "; color: var(--at-faint); }
-.at-copy { position: relative; flex-shrink: 0; width: 2rem; height: 2rem; border: 0; border-radius: 4px; background: none; color: var(--at-faint); cursor: pointer; }
-.at-copy span { position: absolute; inset: 0; display: grid; place-items: center; transition: opacity 200ms ease, filter 200ms ease; }
-.at-copy .at-copy-done { opacity: 0; filter: blur(2px); }
-.at-copy[data-copied] .at-copy-idle { opacity: 0; filter: blur(2px); }
-.at-copy[data-copied] .at-copy-done { opacity: 1; filter: none; }
-
-/* Sections come into view once, as they are reached. Only when scripts run
-   (they are what brings them in) and when motion is welcome. */
-@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
-  [data-reveal] { transition: opacity 600ms var(--ease-out), transform 600ms var(--ease-out); }
-  [data-reveal]:not([data-revealed]) { opacity: 0; transform: translateY(16px); }
-  :is(.at-points, .at-paths) li:nth-child(2) { transition-delay: 60ms; }
-  :is(.at-points, .at-paths) li:nth-child(3) { transition-delay: 120ms; }
-  :is(.at-points, .at-paths) li:nth-child(4) { transition-delay: 180ms; }
-  :is(.at-points, .at-paths) li:nth-child(5) { transition-delay: 240ms; }
-  :is(.at-points, .at-paths) li:nth-child(6) { transition-delay: 300ms; }
-}
-
-.at-section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--at-line); }
-.at-section > header { display: flex; align-items: baseline; gap: 1rem; }
-.at-section > header span { font-family: var(--sl-font-mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--at-accent); }
-.at-section > header h2 { margin: 0; font-family: var(--at-display); font-weight: 650; font-size: clamp(1.75rem, 4vw, 2.5rem); line-height: 1.08; letter-spacing: -0.03em; color: var(--at-fg); }
-.at-section > p { margin: -1rem 0 0; max-width: 40rem; color: var(--at-muted); }
-.at-points { display: grid; gap: 0 3rem; margin: 0; padding: 0; list-style: none; }
-.at-points li { padding: 1.25rem 0; border-top: 1px solid var(--at-line); }
-.at-points li:first-child { border-top: 0; padding-top: 0; }
-.at-points h3 { margin: 0; font-family: var(--at-display); font-weight: 650; font-size: 1.1875rem; letter-spacing: -0.012em; color: var(--at-fg); }
-.at-points p { margin: 0.35rem 0 0; color: var(--at-muted); font-size: 0.9375rem; line-height: 1.6; }
-.at-points code { font-size: 0.875em; color: var(--at-fg); background: none; padding: 0; }
-@media (min-width: 50rem) {
-  .at-points { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .at-points li:nth-child(2) { border-top: 0; padding-top: 0; }
-}
-.at-paths { display: grid; gap: 0 3rem; margin: 0; padding: 0; list-style: none; }
-.at-paths a { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); align-items: baseline; padding: 1.1rem 0; border-top: 1px solid var(--at-line); color: inherit; text-decoration: none; }
-.at-paths a > span { font-family: var(--sl-font-mono); font-size: 0.75rem; color: var(--at-faint); }
-.at-paths strong { display: block; font-family: var(--at-display); font-weight: 650; font-size: 1.1875rem; letter-spacing: -0.012em; color: var(--at-fg); }
-.at-paths small { display: block; margin-top: 0.2rem; font-size: 0.9375rem; color: var(--at-muted); }
-@media (min-width: 50rem) { .at-paths { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* ----------------------------- Small screens ----------------------------- */
 /* The navigation sheet: a short fade and settle from under the header, gone faster than it came. */
@@ -535,12 +562,11 @@ footer .meta { font-size: 0.8125rem; color: var(--at-faint); }
 
 /* --------------------------- Pointer and motion -------------------------- */
 @media (hover: hover) and (pointer: fine) {
-  .at-toplinks a, .sidebar-content details > ul a, .sidebar-content summary .large, .right-sidebar starlight-toc a, .at-icon-btn, starlight-tabs [role="tab"], .at-copy { transition: color 150ms ease; }
+  .at-toplinks a, .right-sidebar starlight-toc a, .at-icon-btn, starlight-tabs [role="tab"] { transition: color 150ms ease; }
   .at-lang a { transition: color 150ms ease; }
   .at-lang a:hover { color: var(--at-fg); }
-  .at-toplinks a:hover, .sidebar-content details > ul a:hover, .sidebar-content details details > summary:hover .large, .right-sidebar starlight-toc a:hover, .at-icon-btn:hover, starlight-tabs [role="tab"]:hover, .at-copy:hover, site-search button[data-open-modal]:hover { color: var(--at-fg); }
-  .sidebar-content details > ul a:hover, .sidebar-content summary:hover { background: none; }
-  .pagination-links a:hover { border: 0; }
+  .at-toplinks a:hover, .right-sidebar starlight-toc a:not([data-at-current]):hover, .at-icon-btn:hover, starlight-tabs [role="tab"]:hover, site-search button[data-open-modal]:hover { color: var(--at-fg); }
+  .pagination-links a:hover { border-color: color-mix(in srgb, var(--at-accent) 55%, var(--at-line)); background: color-mix(in srgb, var(--at-accent) 5%, transparent); }
   .at-suggest a:hover { background: color-mix(in srgb, var(--at-fg) 7%, transparent); }
   #starlight__search .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)):hover, #starlight__search .pagefind-ui__result-nested:hover { background: color-mix(in srgb, var(--at-fg) 7%, var(--at-bg)); }
   /* The press feedback of .at-press stays in the list: a later `transition` replaces it whole. */
@@ -548,8 +574,8 @@ footer .meta { font-size: 0.8125rem; color: var(--at-faint); }
   .at-suggest [data-at-forget] { transition: color 150ms ease; }
   .at-queries button:hover { border-color: var(--at-faint); color: var(--at-fg); }
   .at-suggest [data-at-forget]:hover { color: var(--at-fg); }
-  .pagination-links a:hover .link-title, .at-paths a:hover strong, .sl-link-card:hover .title { color: var(--at-accent); }
-  .pagination-links .link-title, .at-paths strong, .sl-link-card .title { transition: color 150ms ease; }
+  .pagination-links a:hover .link-title, .sl-link-card:hover .title { color: var(--at-accent); }
+  .pagination-links .link-title, .sl-link-card .title { transition: color 150ms ease; }
   .sl-link-card:hover { border-color: var(--at-line); background: none; }
 }
 
@@ -557,7 +583,6 @@ footer .meta { font-size: 0.8125rem; color: var(--at-faint); }
   .at-press, .sl-link-button, site-search button[data-open-modal], .sl-menu-button { transition: none; }
   .at-press:active, .sl-link-button:active, site-search button[data-open-modal]:active, .sl-menu-button:active, .expressive-code .copy button:active { transform: none; }
   [data-at-ready] > .at-tab-indicator { transition: none; }
-  .at-hero > * { transform: none; filter: none; animation: at-fade 200ms ease forwards; animation-delay: 0ms; }
   @media (max-width: 49.99rem) {
     .sidebar-pane, .sidebar-pane:popover-open { transform: none; }
     @starting-style {
@@ -565,7 +590,6 @@ footer .meta { font-size: 0.8125rem; color: var(--at-faint); }
     }
   }
 }
-@keyframes at-fade { to { opacity: 1; } }
 
 @media (prefers-reduced-transparency: reduce) {
   header.header { background: var(--at-bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
@@ -634,3 +658,14 @@ html { scroll-behavior: auto; }
 :root .starlight-aside code { padding: 0; background: none; color: var(--at-fg); }
 /* In a table, code wraps at spaces only: the table scrolls if it has to. */
 .sl-markdown-content .at-table :is(td, th) code { overflow-wrap: normal; }
+/* The "On this page" bar of phones is a material, like the header: the page
+   scrolls under it blurred, never legible through it. */
+mobile-starlight-toc nav {
+  background: color-mix(in srgb, var(--at-bg) 82%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+  border-bottom: 1px solid var(--at-line);
+}
+@media (prefers-reduced-transparency: reduce) {
+  mobile-starlight-toc nav { background: var(--at-bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}

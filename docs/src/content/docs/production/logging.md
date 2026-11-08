@@ -243,51 +243,13 @@ platforms and process managers already do.
 
 ## Reference
 
-### `defineBot({ logger })`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `level` | `LogLevel` | `"info"` | The least severe level that is written. |
-| `pretty` | `boolean` | `true` unless `NODE_ENV=production` | Coloured, readable lines instead of JSON. |
-
-### `createLogger(options?)`
-
-```ts
-createLogger(options?: LoggerOptions): Logger
-```
-
-Creates a root logger. `new Logger(options)` does the same thing.
-
-### `LoggerOptions`
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `level` | `LogLevel` | `"info"` | The least severe level that is written. |
-| `pretty` | `boolean` | `true` unless `NODE_ENV=production` | Force pretty (`true`) or JSON (`false`) output. |
-| `bindings` | `Record<string, unknown>` | `{}` | Fields merged into every line. |
-
-### `Logger`
-
-| Method | Description |
-| --- | --- |
-| `debug(obj, msg?)` | Verbose detail. Hidden at the default level. |
-| `info(obj, msg?)` | Normal operation. |
-| `warn(obj, msg?)` | Something suspicious that the bot survived. |
-| `error(obj, msg?)` | A failure. |
-| `child(bindings)` | A new logger that also includes `bindings` on every line. |
-
-`obj` is a message string, an `Error`, or an object of fields. `msg` is an
-optional message string. The level and format of a logger cannot be changed
-after it is created.
-
-### `LogLevel`
-
-```ts
-type LogLevel = "debug" | "info" | "warn" | "error" | "silent";
-```
-
-Ordered from the most to the least verbose. A logger writes its own level and
-everything after it; `silent` writes nothing.
+- `defineBot()`: Creates a `Bot`.
+- `LogLevel`: Ordered log levels.
+- `createLogger()`: Creates a root `Logger`.
+- `LoggerOptions`: Options for creating a `Logger`.
+- `Logger`: Structured logger with level filtering and child bindings.
 
 ## See also
 

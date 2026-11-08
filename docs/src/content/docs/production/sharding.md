@@ -176,63 +176,14 @@ set. The same value is available as `workerData.SHARDS` from
 
 ## Reference
 
-### `sharding`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-The `sharding` field of [`defineBot`](/basics/configuration/).
-
-| Value | Effect |
-| --- | --- |
-| omitted, `false` | No sharding: one process, one connection. |
-| `true`, `"auto"` | Sharding with every default below. |
-| `ShardingOptions` | Sharding with your settings. Omitted fields take their default. |
-
-### `ShardingOptions`
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `totalShards` | `number \| "auto"` | `"auto"` | How many shards to spawn. `"auto"` lets Discord decide. |
-| `mode` | `"process" \| "worker"` | `"process"` | `"process"` forks one child process per shard. `"worker"` uses worker threads inside one process. |
-| `respawn` | `boolean` | `true` | Start a shard again when it dies. |
-
-### `normalizeSharding(input)`
-
-Turns the loose `sharding` value (`true`, `"auto"` or partial options) into
-complete `ShardingOptions` with the defaults above.
-
-### `isShardChild()`
-
-Returns `true` in a process or thread spawned by a shard manager, which should
-run the bot, and `false` in the manager (and in a bot that is not sharded). Use
-it to keep manager-only work out of the shards.
-
-In the manager the answer stays `false`, before and after `bot.start()`.
-
-```ts title="src/index.ts"
-import { defineBot, env, isShardChild } from "@ix-xs/djs-bot";
-
-const bot = defineBot({ token: env("DISCORD_TOKEN"), sharding: "auto" });
-
-export default bot;
-
-if (!process.env.DJSBOT_CLI) {
-  if (!isShardChild()) bot.logger.info({}, "Starting the shard manager");
-  await bot.start();
-}
-```
-
-### `launchShardManager(entryFile, token, options, logger)`
-
-What `bot.start()` calls in the manager. It creates a discord.js
-`ShardingManager` for `entryFile`, passes the current Node flags to the
-children, logs the life of each shard, and resolves with the manager once every
-shard has been spawned. Call it yourself only when you write your own launcher.
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `entryFile` | `string` | The file each shard runs. `bot.start()` passes the file the process was launched with. |
-| `token` | `string` | The bot token. |
-| `options` | `ShardingOptions` | Shard count, mode and respawn. |
-| `logger` | `Logger` | Receives the shard events. |
+- `defineBot()`: Creates a `Bot`.
+- `ShardingOptions`: Sharding configuration.
+- `normalizeSharding()`: Normalises the loose `sharding` config into full options.
+- `isShardChild()`: True when the current process is a shard child spawned by a manager (so it should run the bot), rather than the manager itself.
+- `launchShardManager()`: Launches a `ShardingManager` for the given entry file.
+- `Logger`: Structured logger with level filtering and child bindings.
 
 ## See also
 

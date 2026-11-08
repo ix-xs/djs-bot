@@ -20,7 +20,13 @@ function trail(entries: Entry[], path: string[] = []): string[] | undefined {
 
 const { entry, sidebar } = Astro.locals.starlightRoute;
 const groups = trail(sidebar) ?? [];
-const lead = entry.data.description;
+// A page of the API reference sets its own lead, with its code and its links.
+const symbolPage = /\/reference\/[^/]+\/$/.test(Astro.url.pathname);
+// The pages of the guide's path open with their own first paragraph: the
+// description would repeat it. It stays for search engines and link previews.
+const path = Astro.url.pathname.slice(import.meta.env.BASE_URL.replace(/\/$/, "").length).replace(/^\/fr(?=\/)/, "");
+const guidePath = path === "/" || path === "" || path.startsWith("/start/") || path.startsWith("/bot/");
+const lead = symbolPage || guidePath ? undefined : entry.data.description;
 ---
 
 {groups.length > 0 && <p class="at-eyebrow">{groups.join(" / ")}</p>}

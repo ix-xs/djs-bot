@@ -1,0 +1,180 @@
+---
+title: "Votre première commande"
+description: "Ce que contient un fichier de commande, comment répondre, et comment demander une information avec une option."
+sidebar:
+  order: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import DiscordDemo from '../../../../components/demo/DiscordDemo.astro';
+
+On ouvre la commande `/ping`, puis on en écrit deux autres : `/server`, et
+`/user` qui demande de choisir quelqu'un.
+
+## Lire la commande `/ping`
+
+```ts title="src/features/ping/ping.command.ts"
+import { defineCommand } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "ping",
+  description: "Check the bot is alive",
+  run: (ctx) => ctx.reply.success(`Pong! 🏓 ${Math.round(ctx.client.ws.ping)} ms`),
+});
+```
+
+| Champ | Rôle |
+| --- | --- |
+| `name` | ce qu'on tape après `/`, en minuscules et sans espace |
+| `description` | le texte affiché sous le nom dans la liste de Discord |
+| `run` | la fonction appelée quand quelqu'un lance la commande |
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "ping", description: "Check the bot is alive" },
+    { do: "reply", embed: { color: "#22c55e", description: "Pong! 🏓 42 ms" } },
+  ]}
+/>
+
+## `ctx`, tout ce dont `run` a besoin
+
+`run` reçoit `ctx` (le *contexte*) : la situation, et de quoi répondre.
+
+| Vous écrivez | C'est |
+| --- | --- |
+| `ctx.user` | qui a lancé la commande |
+| `ctx.guild` | le serveur (`null` en message privé) |
+| `ctx.channel` | le salon |
+| `ctx.member` | la personne en tant que membre (rôles, pseudo) |
+| `ctx.client` | le client discord.js du bot |
+| `ctx.reply(...)` | répondre |
+
+Ce sont les vrais objets de discord.js. Tout le reste est sur la page de
+`CommandContext`.
+
+## Une commande `/server`
+
+Créez ce fichier :
+
+```ts title="src/features/info/server.command.ts"
+import { defineCommand } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "server",
+  description: "Show information about this server",
+  run: (ctx) => ctx.reply(`This server is ${ctx.guild?.name} and has ${ctx.guild?.memberCount} members.`),
+});
+```
+
+Enregistrez : `dev` redémarre le bot, qui trouve le fichier et présente
+`/server` à Discord. Rien d'autre à faire.
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "server", description: "Show information about this server" },
+    { do: "reply", text: "This server is Mon serveur and has 12 members." },
+  ]}
+/>
+
+Le `?.` de `ctx.guild?.name` couvre le message privé, où il n'y a pas de
+serveur. Sans lui, votre éditeur souligne la ligne.
+
+## Les façons de répondre
+
+```ts
+await ctx.reply.success("Settings saved.");
+await ctx.reply.info("The next event starts in 2 hours.");
+await ctx.reply.warn("This channel is almost full.");
+await ctx.reply.error("You can't use this here.");
+```
+
+Chaque variante met le texte dans un cadre de couleur (un *embed*), pour que
+le ton se voie d'un coup d'œil :
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "settings", description: "Change the bot settings" },
+    { do: "reply", embed: { color: "#22c55e", description: "Settings saved." } },
+    { do: "command", name: "settings", description: "Change the bot settings" },
+    { do: "reply", embed: { color: "#ef4444", description: "You can't use this here." }, ephemeral: true },
+  ]}
+/>
+
+Une erreur n'est montrée **qu'à la personne concernée**. Pour faire pareil
+avec n'importe quelle réponse : `ctx.reply.ephemeral("...")`, ou l'option
+`{ ephemeral: true }`.
+
+## Demander une information : les options
+
+Une **option** est une valeur que l'utilisateur donne en lançant la commande
+(un membre, un nombre, un texte). On la déclare avec les constructeurs de `s` :
+
+```ts title="src/features/info/user.command.ts"
+import { defineCommand, s } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "user",
+  description: "Show information about a user",
+  options: {
+    target: s.user({ description: "The user to show", required: true }),
+  },
+  run: (ctx) => {
+    const user = ctx.options.target;
+    return ctx.reply.info(`${user.username} joined Discord on ${user.createdAt.toDateString()}.`);
+  },
+});
+```
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "user", description: "Show information about a user", options: [{ name: "target", value: "@Mallory", suggestions: ["@Mallory", "@Max", "@Mona"] }] },
+    { do: "reply", embed: { color: "#3b82f6", description: "mallory joined Discord on Tue Mar 14 2023." } },
+  ]}
+/>
+
+Grâce à `s.user()` et `required: true`, `ctx.options.target` **est** un
+utilisateur, jamais `undefined` : pas de vérification à écrire, et une faute
+de frappe est soulignée avant le lancement.
+
+Il existe un constructeur par sorte de valeur : `s.string()`, `s.integer()`,
+`s.number()`, `s.boolean()`, `s.user()`, `s.member()`, `s.channel()`,
+`s.role()`, `s.mentionable()`, `s.attachment()`. Détails :
+[Options et autocomplétion](/commands/options/).
+
+## Quand la réponse prend du temps
+
+Discord laisse **3 secondes** pour répondre, sinon il affiche
+« L'application ne répond plus ». Une commande qui attend une base de données
+ou une API dépasse vite ce délai :
+
+```ts title="src/features/info/slow.command.ts"
+import { defineCommand } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "slow",
+  description: "Take a while to answer",
+  run: async (ctx) => {
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await ctx.reply("Done, after five seconds.");
+  },
+});
+```
+
+Avec `defaults: { defer: true }` (dans `src/index.ts`), djs-bot prévient
+Discord au bout de 2 secondes. Discord affiche « réfléchit... », puis la
+réponse prend sa place :
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "slow", description: "Take a while to answer" },
+    { do: "reply", text: "Done, after five seconds.", thinking: 2600 },
+  ]}
+/>
+
+Rien à changer dans la commande. Réglages fins :
+[Différé automatique](/basics/automatic-deferral/).
+
+<Aside type="tip" title="Si une commande plante">
+Le bot reste en ligne. L'erreur est écrite dans le terminal, et l'utilisateur
+reçoit un message d'erreur visible de lui seul.
+</Aside>

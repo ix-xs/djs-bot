@@ -1,0 +1,98 @@
+---
+// The front page of the reference: how to read it, where to start, then every
+// export, grouped by topic.
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import { grouped, kindOf, model, pathOf, sidebar, translate, words } from "../../reference/model";
+import type { ApiSymbol } from "../../reference/model";
+import { href, render } from "../../reference/markdown";
+
+interface Props {
+  locale: string | undefined;
+}
+
+const { locale } = Astro.props;
+const w = words(locale);
+
+/** The first sentence of a description, for a row of a list. */
+function firstSentence(text = ""): string {
+  const paragraph = text.split(/\n\s*\n/)[0].replace(/\s+/g, " ").trim();
+  const stop = /[.!?](?=\s+[A-Z`*\[]|$)/g;
+  for (let match; (match = stop.exec(paragraph)); ) {
+    if (/\b(e\.g|i\.e|p\. ex)$/.test(paragraph.slice(0, match.index))) continue;
+    return paragraph.slice(0, match.index + 1);
+  }
+  return paragraph;
+}
+
+async function row(symbol: ApiSymbol) {
+  return {
+    symbol,
+    kind: kindOf(symbol),
+    html: await render(firstSentence(translate(symbol.name, symbol.text, locale)), locale, { inline: true }),
+  };
+}
+
+const groups = await Promise.all(grouped().map(async (group) => ({ ...group, rows: await Promise.all(group.symbols.map(row)) })));
+const legend = await Promise.all(
+  (["function", "variable", "class", "interface", "type"] as const).map(async (kind) => ({
+    kind,
+    html: await render(w.kindHelp[kind], locale, { inline: true }),
+  })),
+);
+const intro = await render(w.reexportedText, locale, { inline: true });
+
+const headings = [
+  { depth: 2, slug: "how-to-read", text: w.howToRead },
+  ...groups.map((group) => ({ depth: 2, slug: group.topic, text: w.topics[group.topic] })),
+  { depth: 2, slug: "entry-points", text: w.modules },
+];
+---
+
+<StarlightPage
+  frontmatter={{ title: w.title, description: w.lead, editUrl: false, pagefind: true }}
+  sidebar={sidebar(locale)}
+  headings={headings}
+>
+  <h2 id="how-to-read">{w.howToRead}</h2>
+  <p>{w.howToReadText}</p>
+  <dl class="rf-legend">
+    {legend.map((item) => (
+      <div>
+        <dt><span class="rf-kind" data-kind={item.kind}>{w.kinds[item.kind]}</span></dt>
+        <dd set:html={item.html} />
+      </div>
+    ))}
+  </dl>
+
+  {groups.map((group) => (
+    <section class="rf-topic">
+      <h2 id={group.topic}>{w.topics[group.topic]}</h2>
+      <ul class="rf-list">
+        {group.rows.map(({ symbol, kind, html }) => (
+          <li>
+            <a href={href(pathOf(symbol.name), locale)} data-kind={kind} translate="no">{symbol.name}</a>
+            <span set:html={html} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+
+  <h2 id="entry-points">{w.modules}</h2>
+  <p>{w.modulesText}</p>
+  <ul class="rf-list rf-modules">
+    {model.modules.map((module) => (
+      <li><code translate="no">{module.name}</code><span>{module.intro[locale ?? "en"] ?? module.intro.en}</span></li>
+    ))}
+  </ul>
+
+  <h3>{w.reexported}</h3>
+  <p set:html={intro} />
+  <ul class="rf-chips" translate="no">
+    {model.reexported
+      .filter((item, i, all) => all.findIndex((other) => other.name === item.name) === i)
+      .map((item) => (
+        <li>{item.link?.href ? <a href={item.link.href} rel="noopener">{item.name}</a> : <code>{item.name}</code>}</li>
+      ))}
+  </ul>
+</StarlightPage>

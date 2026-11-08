@@ -1,0 +1,89 @@
+---
+title: "Run the bot"
+description: "Start the bot, understand what it does when it starts, and stop it cleanly."
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+import TerminalDemo from '../../../components/demo/TerminalDemo.astro';
+import DiscordDemo from '../../../components/demo/DiscordDemo.astro';
+
+The bot is configured: let's start it.
+
+## Start it
+
+<TerminalDemo
+  command="npx djs-bot dev"
+  lines={[
+    { at: "14:02:10", level: "info", text: "Ready user=my-bot#1234 guilds=1 version=1.4.0", delay: 900 },
+    { at: "14:02:11", level: "info", text: 'Commands deployed scope=guild guildId=9876543210987654321 added=["ping"] changed=[] removed=[]', delay: 500 },
+  ]}
+/>
+
+(`npm run dev` does the same thing.) The bot is **online**. Type `/ping` on
+your server:
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "ping", description: "Check the bot is alive" },
+    { do: "reply", embed: { color: "#22c55e", description: "Pong! 🏓 42 ms" } },
+  ]}
+/>
+
+This command is the one `init` created. The next page opens it.
+
+## What happens when it starts
+
+<Steps>
+
+1. **It reads your files** in `features`, and notes what each one declares:
+   here, a `ping` command.
+
+2. **It works out the intents** from what your code listens to.
+
+3. **It connects** with the token. Discord answers: that is the `Ready` line.
+
+4. **It presents the commands** to your test server, sending only what has
+   changed: that is the `Commands deployed` line. The next time it starts,
+   with no change, it writes `Commands already up to date`.
+
+</Steps>
+
+If a step fails (invalid token, intent not allowed), the bot stops and tells
+you what to do.
+
+## Development mode
+
+`dev` watches your files: each time you save, the bot restarts on its own.
+
+<TerminalDemo
+  command="npx djs-bot dev"
+  lines={[
+    { at: "14:02:10", level: "info", text: "Ready user=my-bot#1234 guilds=1 version=1.4.0" },
+    { at: "14:02:11", level: "info", text: "Commands already up to date scope=guild guildId=9876543210987654321 commands=1" },
+    { text: "Restarting 'src/index.ts'", level: "dim", delay: 1200 },
+    { at: "14:05:32", level: "info", text: "Ready user=my-bot#1234 guilds=1 version=1.4.0", delay: 700 },
+  ]}
+/>
+
+<Aside type="note" title="Why wasn't the command sent again?">
+Discord only knows a command's name, description and options. Changing what
+it **does** changes nothing for Discord.
+</Aside>
+
+## Stop it
+
+`Ctrl+C`. The bot finishes what was in progress, disconnects, then stops.
+
+<TerminalDemo
+  command="^C"
+  lines={[
+    { at: "14:09:51", level: "info", text: "Signal received - shutting down signal=SIGINT" },
+    { at: "14:09:51", level: "info", text: "Shutdown complete" },
+  ]}
+/>
+
+Terminal closed, bot offline: it only lives while the program runs. Keeping
+it online all the time is the subject of the
+[last page of this part](/bot/going-live/).

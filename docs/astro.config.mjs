@@ -1,7 +1,8 @@
 import { defineConfig } from "astro/config";
 import { unified } from "@astrojs/markdown-remark";
 import starlight from "@astrojs/starlight";
-import { normalizeBase, remarkBaseLinks, withBase } from "./plugins/base-links.mjs";
+import { LOCALES, normalizeBase, remarkBaseLinks, withBase } from "./plugins/base-links.mjs";
+import { remarkApiLinks } from "./plugins/api-links.mjs";
 import { rehypeSharedHeadingIds } from "./plugins/heading-ids.mjs";
 import { rehypeWrapTables } from "./plugins/wrap-tables.mjs";
 import { MOVED } from "./redirects.mjs";
@@ -21,19 +22,32 @@ import { atelierDark, atelierLight } from "./src/styles/code-themes.mjs";
 const site = process.env.DOCS_SITE || "https://ix-xs.github.io";
 const base = normalizeBase(process.env.DOCS_BASE || "/djs-bot");
 
-/** One section of the sidebar, listing every page of a folder in its own order. */
-const section = (label, fr, directory, collapsed = true) => ({ label, translations: { fr }, collapsed, items: [{ autogenerate: { directory } }] });
+/** One group of the sidebar, its pages in reading order. */
+const group = (label, fr, items, collapsed = true) => ({
+  label,
+  translations: { fr },
+  collapsed,
+  items: items.map((item) => (typeof item === "string" ? { slug: item } : item)),
+});
 
 // https://starlight.astro.build/reference/configuration/
 export default defineConfig({
   site,
   base: base || "/",
-  // Addresses of the previous structure, each pointing at its new home.
-  redirects: Object.fromEntries(Object.entries(MOVED).map(([from, to]) => [from, withBase(to, base)])),
+  // Addresses of the previous structure, each pointing at its new home, in
+  // every language.
+  redirects: Object.fromEntries(
+    Object.entries(MOVED).flatMap(([from, to]) => [
+      [from, withBase(to, base)],
+      ...LOCALES.map((code) => [`/${code}${from}`, withBase(`/${code}${to === "/" ? "/" : to}`, base)]),
+    ]),
+  ),
   markdown: {
     // The two plugins below are written for unified, not for Astro's default processor.
     processor: unified({
-      remarkPlugins: [[remarkBaseLinks, { base }]],
+      // Names of exports in code become links to the reference, then every
+      // internal link gets the language of its page and the base.
+      remarkPlugins: [remarkApiLinks, [remarkBaseLinks, { base }]],
       rehypePlugins: [rehypeSharedHeadingIds, rehypeWrapTables],
     }),
   },
@@ -68,13 +82,13 @@ export default defineConfig({
         "@fontsource/fragment-mono/400.css",
         "@fontsource/fragment-mono/400-italic.css",
         "./src/styles/atelier.css",
+        "./src/styles/reference.css",
       ],
       components: {
         Header: "./src/components/Header.astro",
         ThemeSelect: "./src/components/ThemeSelect.astro",
         LanguageSelect: "./src/components/LanguageSelect.astro",
         PageTitle: "./src/components/PageTitle.astro",
-        Hero: "./src/components/Hero.astro",
       },
       expressiveCode: {
         themes: [atelierDark, atelierLight],
@@ -105,39 +119,77 @@ export default defineConfig({
       },
       tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
       lastUpdated: false,
-      // One page per topic, grouped by what you are trying to do.
+      // The guide, in reading order: first the setup, then one bot built page
+      // by page, then the topics to read when they are needed.
       sidebar: [
-        {
-          label: "Start",
-          translations: { fr: "Démarrer" },
-          items: [
-            { slug: "introduction" },
-            { slug: "quick-start" },
-            section("Tutorial", "Tutoriel", "tutorial"),
-          ],
-        },
-        section("Basics", "Bases", "basics", false),
-        section("Commands", "Commandes", "commands"),
-        section("Components", "Composants", "components"),
-        section("Events", "Événements", "events"),
-        section("Architecture", "Architecture", "architecture"),
-        section("Data", "Données", "data"),
-        section("Messages", "Messages", "messages"),
-        section("Production", "Production", "production"),
-        section("Recipes", "Recettes", "recipes"),
-        {
-          label: "Reference",
-          translations: { fr: "Référence" },
-          collapsed: true,
-          items: [
-            { slug: "api/exports" },
-            { slug: "api/errors" },
-            { slug: "api/cli" },
-            { slug: "help/troubleshooting" },
-            { slug: "help/faq" },
-            { slug: "help/glossary" },
-          ],
-        },
+        group("Getting started", "Pour commencer", [
+          { slug: "index", label: "Introduction" },
+          "start/discord-app",
+          "start/installation",
+        ], false),
+        group("Your bot", "Votre bot", [
+          "bot/configuration",
+          "bot/main-file",
+          "bot/first-command",
+          "bot/finding-files",
+          "bot/registering-commands",
+          "bot/events",
+          "bot/going-live",
+        ], false),
+        group("Commands", "Commandes", [
+          "commands/slash-commands",
+          "commands/options",
+          "commands/subcommands",
+          "commands/context-menus",
+          "commands/guards",
+          "commands/install-contexts",
+        ]),
+        group("Replying", "Répondre", [
+          "basics/context",
+          "basics/automatic-deferral",
+          "messages/embeds-and-attachments",
+          "messages/formatting",
+          "messages/assets-and-voice",
+          "basics/wording-and-theme",
+        ]),
+        group("Components", "Composants", [
+          "components/buttons",
+          "components/select-menus",
+          "components/modals",
+          "components/components-v2",
+          "components/pagination",
+        ]),
+        group("Events and automation", "Événements et automatisations", [
+          "events/events-and-intents",
+          "events/triggers",
+          "events/jobs",
+        ]),
+        group("Organising your code", "Organiser son code", [
+          "basics/project-layout",
+          "architecture/services",
+          "architecture/plugins",
+          "architecture/features",
+        ]),
+        group("Data", "Données", ["data/store", "data/cache", "data/i18n", "data/flags", "data/audit"]),
+        group("Production", "Production", [
+          { slug: "basics/configuration", label: "All the configuration", translations: { fr: "Toute la configuration" } },
+          "basics/lifecycle",
+          "production/deploying",
+          "production/logging",
+          "production/health",
+          "production/presence",
+          "production/resilience",
+          "production/sharding",
+          "production/testing",
+          "recipes/hosting",
+        ]),
+        group("Complete examples", "Exemples complets", [
+          "recipes/moderation",
+          "recipes/ticket-system",
+          "recipes/role-menu",
+          "recipes/levelling",
+        ]),
+        group("Help", "Aide", ["help/troubleshooting", "help/faq", "help/glossary", "api/errors", "api/cli"]),
       ],
     }),
   ],

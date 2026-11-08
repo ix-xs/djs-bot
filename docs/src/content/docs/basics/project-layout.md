@@ -8,7 +8,7 @@ sidebar:
 A bot is one entry file that calls `defineBot`, plus a folder of small files that
 each export a definition (a command, a button, an event...). You point the bot at
 the folder and the loader finds the files by their name. To create this structure
-in one command, see [Quick start](/quick-start/).
+in one command, see [Install the project](/start/installation/).
 
 ## A typical project
 
@@ -182,36 +182,22 @@ Definitions given to `bot.use()` are registered first, then the entries of
 
 ## Reference
 
-### `FeatureSource`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-The type of one entry of `features`. The option takes one of them, or an array
-of them.
-
-| Form | Type | Description |
-| --- | --- | --- |
-| A directory | `string` | Discovered by the loader as described above. Relative paths start at the working directory. |
-| A definition | `Registrable` | Any `define*()` result, including a `defineFeature()` bundle. |
-| A list | `Registrable[]` | Several definitions at once. |
-
-### `Registrable`
-
-Any object the registry accepts. The loader recognises one by its `kind`
-property and ignores every other export.
-
-| `kind` | Created by |
-| --- | --- |
-| `"command"` | `defineCommand` |
-| `"userCommand"` | `defineUserCommand` |
-| `"messageCommand"` | `defineMessageCommand` |
-| `"event"` | `defineEvent` |
-| `"trigger"` | `defineTrigger` |
-| `"button"` | `defineButton` |
-| `"select"` | `defineSelectMenu`, `defineUserSelect`, `defineRoleSelect`, `defineChannelSelect`, `defineMentionableSelect` |
-| `"modal"` | `defineModal` |
-| `"service"` | `defineService` |
-| `"job"` | `defineJob` |
-| `"plugin"` | `definePlugin` |
-| `"feature"` | `defineFeature` |
+- `FeatureSource`: Where features come from: a directory to auto-discover, or explicit definitions.
+- `Registrable`: A registrable item: any definition or a whole feature.
+- `defineFeature()`: Bundles a set of definitions into a reusable, publishable feature.
+- `defineCommand()`: Defines a slash command with typed options, or with subcommands/groups.
+- `defineUserCommand()`: Defines a user context-menu command.
+- `defineMessageCommand()`: Defines a message context-menu command.
+- `defineEvent()`: Defines a gateway event listener.
+- `defineTrigger()`: Defines a message trigger - an auto-responder that fires on `messageCreate`.
+- `defineButton()`: Defines a button.
+- `defineSelectMenu()`: Defines a string select menu (a custom list of options).
+- `defineUserSelect()`: Defines a native user select menu.
+- `defineRoleSelect()`: Defines a native role select menu.
+- `defineChannelSelect()`: Defines a native channel select menu.
+- `defineMentionableSelect()`: Defines a native mentionable (users + roles) select menu.
 
 ## Limits and errors
 
@@ -228,7 +214,7 @@ All of these happen while the bot loads, before it connects to Discord: see
 
 ## See also
 
-- [Quick start](/quick-start/): install the package and scaffold this layout.
+- [Install the project](/start/installation/): install the package and scaffold this layout.
 - [Configuration](/basics/configuration/): every option of `defineBot`.
 - [Features](/architecture/features/): bundle related definitions into a reusable pack.
 - [Services](/architecture/services/): share state between the files of a feature.

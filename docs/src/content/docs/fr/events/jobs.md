@@ -153,35 +153,7 @@ Sur un bot qui n'est pas shardé, les deux valeurs se comportent de la même fa�
 Tout le reste au sujet des shards se trouve sur la page
 [Sharding](/production/sharding/).
 
-## Référence
-
-### `defineJob(input)`
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | - | Un nom unique, utilisé dans les journaux et par `djs-bot explain`. |
-| `schedule` | `string` | - | Une durée, une expression cron à 5 champs ou une macro. Voir la [syntaxe des planifications](#schedule-syntax). |
-| `timezone` | `string` | heure locale de l'hôte | Fuseau IANA dans lequel une expression cron est évaluée, par exemple `"Europe/Paris"`. Ignoré pour une durée. |
-| `concurrency` | `number` | `1` | Combien d'exécutions peuvent être actives en même temps. Une exécution qui dépasserait cette limite est ignorée. |
-| `runOnStart` | `boolean` | `false` | Exécute aussi une fois quand le bot est prêt, en plus de la planification. |
-| `shard` | `"all" \| "first"` | `"all"` | Sur un bot shardé : chaque shard, ou uniquement celui qui possède l'identifiant de shard 0. |
-| `run` | `(ctx: JobContext) => unknown` | - | Le travail à faire à chaque exécution. Peut être asynchrone. |
-
-Renvoie un `JobDefinition` (`kind: "job"`), à exporter depuis un fichier `.job`
-ou à lister dans une [feature](/architecture/features/). La planification est
-analysée quand `defineJob` est appelé.
-
-### `JobContext`
-
-| Propriété | Type | Description |
-| --- | --- | --- |
-| `client` | `Client<true>` | Le client connecté. |
-| `services` | `ServiceMap` | Vos [services](/architecture/services/), typés. |
-| `logger` | `Logger` | Un logger étiqueté avec le nom de la tâche et le `correlationId` de cette exécution. |
-| `signal` | `AbortSignal` | Interrompu quand le bot s'arrête. |
-| `correlationId` | `string` | Un identifiant unique pour cette exécution. Chaque ligne journalisée via `logger` le porte. |
-
-### Syntaxe des planifications
+## Syntaxe des planifications
 
 **Durées.** Un nombre suivi d'une unité, sans espaces : `ms`, `s`, `m`, `h`, `d`
 ou `w`. Les unités peuvent être combinées (`"1h30m"`). Une chaîne composée
@@ -227,21 +199,18 @@ semaine sont restreints, la tâche s'exécute dès que l'un des deux correspond 
 | `@monthly` | `0 0 1 * *` | Le 1er de chaque mois à minuit. |
 | `@yearly`, `@annually` | `0 0 1 1 *` | Le 1er janvier à minuit. |
 
-### `parseSchedule(schedule)`
+## Référence
 
-L'analyseur utilisé par `defineJob`, exporté pour que vous puissiez valider une
-planification qui vient d'un fichier de configuration ou d'un utilisateur.
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-```ts title="scripts/check-schedule.ts"
-import { parseSchedule } from "@ix-xs/djs-bot";
-
-parseSchedule("5m"); // { type: "interval", ms: 300000 }
-parseSchedule("0 3 * * *"); // { type: "cron", fields: [...] }
-parseSchedule("every day"); // lève une Error qui dit ce qui ne va pas
-```
-
-Elle renvoie un `ParsedSchedule` : `{ type: "interval", ms }` pour une durée,
-`{ type: "cron", fields }` pour une expression cron ou une macro.
+- `defineJob()` : Définit une tâche planifiée.
+- `JobDefinition` : Une tâche planifiée.
+- `JobContext` : Contexte transmis aux tâches planifiées.
+- `ServiceMap` : Table globale des services. Étendez-la dans votre projet pour un typage de bout en bout :
+- `Logger` : Logger structuré avec filtrage par niveau et liaisons enfants.
+- `s` : Constructeurs d'options de commande slash.
+- `parseSchedule()` : Analyse une durée, une expression cron ou une macro pour produire un descripteur de planification.
+- `ParsedSchedule` : Une planification analysée sous une forme que le planificateur peut évaluer.
 
 ## Limites et erreurs
 

@@ -259,51 +259,13 @@ que font déjà les plateformes d'hébergement et les gestionnaires de processus
 
 ## Référence
 
-### `defineBot({ logger })`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `level` | `LogLevel` | `"info"` | Le niveau le moins sévère qui est écrit. |
-| `pretty` | `boolean` | `true` sauf si `NODE_ENV=production` | Des lignes colorées et lisibles au lieu de JSON. |
-
-### `createLogger(options?)`
-
-```ts
-createLogger(options?: LoggerOptions): Logger
-```
-
-Crée un logger racine. `new Logger(options)` fait la même chose.
-
-### `LoggerOptions`
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `level` | `LogLevel` | `"info"` | Le niveau le moins sévère qui est écrit. |
-| `pretty` | `boolean` | `true` sauf si `NODE_ENV=production` | Forcer la sortie lisible (`true`) ou JSON (`false`). |
-| `bindings` | `Record<string, unknown>` | `{}` | Champs fusionnés dans chaque ligne. |
-
-### `Logger`
-
-| Méthode | Description |
-| --- | --- |
-| `debug(obj, msg?)` | Détail verbeux. Masqué au niveau par défaut. |
-| `info(obj, msg?)` | Fonctionnement normal. |
-| `warn(obj, msg?)` | Quelque chose de suspect que le bot a surmonté. |
-| `error(obj, msg?)` | Un échec. |
-| `child(bindings)` | Un nouveau logger qui inclut aussi `bindings` sur chaque ligne. |
-
-`obj` est une chaîne de message, une `Error`, ou un objet de champs. `msg` est
-une chaîne de message facultative. Le niveau et le format d'un logger ne peuvent
-pas être modifiés après sa création.
-
-### `LogLevel`
-
-```ts
-type LogLevel = "debug" | "info" | "warn" | "error" | "silent";
-```
-
-Classés du plus verbeux au moins verbeux. Un logger écrit son propre niveau et
-tous ceux qui suivent ; `silent` n'écrit rien.
+- `defineBot()` : Crée un `Bot`.
+- `LogLevel` : Niveaux de journalisation ordonnés.
+- `createLogger()` : Crée un `Logger` racine.
+- `LoggerOptions` : Options de création d'un `Logger`.
+- `Logger` : Logger structuré avec filtrage par niveau et liaisons enfants.
 
 ## Voir aussi
 

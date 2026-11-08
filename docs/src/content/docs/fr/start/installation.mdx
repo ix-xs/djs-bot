@@ -1,0 +1,112 @@
+---
+title: "Installer le projet"
+description: "Installer Node.js, créer le dossier du bot, installer djs-bot et générer les fichiers de départ."
+sidebar:
+  order: 3
+---
+
+import { Aside, FileTree } from '@astrojs/starlight/components';
+import TerminalDemo from '../../../../components/demo/TerminalDemo.astro';
+
+Le bot existe sur Discord. Il lui faut maintenant un programme sur votre
+ordinateur : Node.js pour l'exécuter, un dossier, et quelques paquets.
+
+## Installer Node.js
+
+Node.js exécute le JavaScript hors du navigateur : c'est lui qui fera tourner
+le bot. Installez la version **LTS** de [nodejs.org](https://nodejs.org), puis
+vérifiez :
+
+<TerminalDemo
+  command="node --version"
+  lines={[{ text: "v26.13.0" }]}
+/>
+
+| Branche | Version minimale |
+| --- | --- |
+| Node 22 | 22.23.4 |
+| Node 24 | 24.22.1 |
+| Node 26 | 26.12.1 |
+
+Node 23 et 25 ne sont pas pris en charge. Les versions plus anciennes ont une
+faille dans leur `fetch()` qui permet d'arrêter le programme à distance.
+
+Prenez aussi un éditeur : [VS Code](https://code.visualstudio.com) est gratuit
+et comprend TypeScript tout seul.
+
+## Créer le dossier du projet
+
+<TerminalDemo
+  command="mkdir my-bot && cd my-bot && npm init -y"
+  lines={[
+    { text: "Wrote to /home/you/my-bot/package.json", level: "dim" },
+  ]}
+/>
+
+`package.json` décrit le projet et la liste de ses paquets.
+
+## Installer les paquets
+
+```bash
+npm install @ix-xs/djs-bot discord.js
+npm install -D tsx typescript @types/node
+```
+
+| Paquet | Rôle |
+| --- | --- |
+| `@ix-xs/djs-bot` | le framework |
+| `discord.js` | la bibliothèque qui parle à Discord |
+| `tsx` | lance vos fichiers TypeScript sans compilation |
+| `typescript` | vérifie le code, fait marcher l'autocomplétion |
+| `@types/node` | décrit Node.js à TypeScript |
+
+La seconde ligne (`-D`) installe des outils pour **écrire** le bot, pas pour
+le faire tourner.
+
+## Générer les fichiers de départ
+
+<TerminalDemo
+  command="npx djs-bot init"
+  lines={[
+    { text: "✓ Created src/index.ts", level: "ok" },
+    { text: "✓ Created src/features/ping/ping.command.ts", level: "ok" },
+    { text: "✓ Created src/types.d.ts", level: "ok" },
+    { text: "✓ Created tsconfig.json", level: "ok" },
+    { text: "✓ Created .env", level: "ok" },
+    { text: "✓ Created .env.example", level: "ok" },
+    { text: "✓ Created .gitignore", level: "ok" },
+    { text: "✓ Updated package.json (\"type\": \"module\"; scripts dev, start, deploy, doctor, explain, typecheck)", level: "ok" },
+    { text: "" },
+    { text: "✓ Starter created. Next:", level: "ok" },
+    { text: "  1. put your token, client id and test server id in .env", level: "dim" },
+    { text: "  2. npm i @ix-xs/djs-bot discord.js && npm i -D tsx typescript @types/node", level: "dim" },
+    { text: "  3. npx djs-bot doctor", level: "dim" },
+    { text: "  4. npx djs-bot dev", level: "dim" },
+  ]}
+/>
+
+<FileTree>
+- my-bot/
+  - .env                    vos secrets (le token), jamais publiés
+  - .env.example            le même fichier, vide, publiable
+  - .gitignore              ce que git ignore, dont `.env`
+  - package.json            le projet et ses scripts
+  - tsconfig.json           les réglages de TypeScript
+  - src/
+    - index.ts              le bot lui-même
+    - types.d.ts            vos services, plus tard
+    - features/             une fonctionnalité par dossier
+      - ping/
+        - ping.command.ts   la commande `/ping`
+</FileTree>
+
+<Aside type="note" title="Et en JavaScript ?">
+Renommez les fichiers en `.js` et retirez les annotations de type : le reste
+est identique, et l'autocomplétion reste (le paquet fournit ses propres
+types). `require` marche aussi bien que `import`.
+</Aside>
+
+`init` n'écrase aucun fichier existant. Il ajoute des scripts à
+`package.json` (`npm run dev`...) et le passe en modules ES.
+
+Le projet est prêt, mais `.env` est encore vide : c'est la page suivante.

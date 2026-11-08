@@ -1,0 +1,295 @@
+---
+title: "Options and autocomplete"
+description: "Options are the inputs of a slash command. The s builders declare them once, for Discord and for TypeScript, and an autocomplete handler suggests values while the user types."
+sidebar:
+  order: 2
+---
+
+import DiscordDemo from '../../../components/demo/DiscordDemo.astro';
+
+`s` is one of three small builder objects. `s` describes command options
+(`ctx.options`), `p` describes the parameters carried by a
+[button](/components/buttons/) (`ctx.params`) and `field` describes the
+components of a [modal](/components/modals/) (`ctx.fields`). All three work the
+same way: what you declare is what the handler receives, with no casting.
+
+## A first option
+
+```ts title="features/general/repeat.command.ts"
+import { defineCommand, s } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "repeat",
+  description: "Repeat a message",
+  options: {
+    text: s.string({ description: "What to repeat", required: true, maxLength: 200 }),
+    times: s.integer({ description: "How many times", min: 1, max: 5 }),
+  },
+  run: (ctx) => {
+    // ctx.options.text:  string               (required)
+    // ctx.options.times: number | undefined   (optional)
+    const times = ctx.options.times ?? 1;
+    return ctx.reply(Array(times).fill(ctx.options.text).join("\n"));
+  },
+});
+```
+
+<DiscordDemo
+  steps={[
+    {
+      do: "command",
+      name: "repeat",
+      description: "Repeat a message",
+      options: [
+        {
+          name: "text",
+          value: "Hello!"
+        },
+        {
+          name: "times",
+          value: "3"
+        }
+      ]
+    },
+    {
+      do: "reply",
+      text: "Hello!<br>Hello!<br>Hello!"
+    }
+  ]}
+/>
+
+The key of each entry is the option name the user sees. The framework reads the
+value from the interaction, resolves it (a user id becomes a `User`, a channel
+id becomes a channel) and puts it in `ctx.options` under the same key.
+
+`required: true` makes the value non-optional in `ctx.options`. Anything else
+makes it `T | undefined`. That one flag drives both Discord and TypeScript.
+
+## Every option type
+
+| Builder | `ctx.options` type | Extra settings | Notes |
+| --- | --- | --- | --- |
+| `s.string()` | `string` | `minLength`, `maxLength`, `choices`, `autocomplete` | Text. |
+| `s.integer()` | `number` | `min`, `max`, `choices`, `autocomplete` | Whole numbers. |
+| `s.number()` | `number` | `min`, `max`, `choices`, `autocomplete` | Decimals allowed. |
+| `s.boolean()` | `boolean` | | A true/false toggle. |
+| `s.user()` | `User` | | Any user, including one who is not in the server. |
+| `s.member()` | `GuildMember` | | The picked user, as a member of the server. |
+| `s.channel()` | `GuildBasedChannel` | `channelTypes` | A channel of the server. |
+| `s.role()` | `Role` | | |
+| `s.mentionable()` | `Role \| User \| GuildMember` | | Whatever the user picks: a user or a role. |
+| `s.attachment()` | `Attachment` | `fileTypes` | An uploaded file. |
+
+Every builder also accepts `description`, `required` and the two localization
+maps: see the [reference](#reference).
+
+Two things are handled for you:
+
+- **Order.** Discord rejects a command whose optional options come before
+  required ones. Required options are sent first at deploy time, so the order
+  you write them in never matters.
+- **Description.** An option without a `description` is deployed with
+  `"No description provided."`. Write one anyway: it is the only help the user
+  gets in the picker.
+
+:::note[`s.member()` and users who are not members]
+Discord has no "member" option type, so `s.member()` is deployed as a user
+option and resolved to a member afterwards. When the picked user is not in the
+server, or the command runs outside a server, a required option refuses the
+command before the handler runs, with the `notAMember`
+[message](/basics/wording-and-theme/) ("That user is not a member of this
+server."). A required member is therefore never `undefined` in the handler. An
+optional `s.member()` is `undefined` in that case.
+:::
+
+## Choices and ranges
+
+Most invalid input can be refused by Discord before it reaches your handler.
+
+```ts title="features/shop/subscribe.command.ts"
+import { defineCommand, s, ChannelType } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "subscribe",
+  description: "Subscribe a channel to a plan",
+  options: {
+    plan: s.string({
+      description: "Subscription plan",
+      required: true,
+      choices: [
+        { name: "Free", value: "free" },
+        { name: "Pro", value: "pro" },
+      ],
+    }),
+    seats: s.integer({ description: "How many seats", min: 1, max: 100 }),
+    channel: s.channel({ description: "Where to post", channelTypes: [ChannelType.GuildText] }),
+    logo: s.attachment({ description: "Your logo", fileTypes: ["image"] }),
+    contract: s.attachment({ description: "The signed contract", fileTypes: [".pdf", ".docx"] }),
+  },
+  run: (ctx) => ctx.reply.success(`Plan: ${ctx.options.plan}, seats: ${ctx.options.seats ?? 1}`),
+});
+```
+
+- `choices` is a fixed list of up to 25 values that Discord renders itself. The
+  user sees `name`, your handler receives `value`. The type stays `string` or
+  `number`: it is not narrowed to the listed values.
+- `min` and `max` bound a number. `minLength` and `maxLength` bound a text.
+- `channelTypes` limits the channel picker to the types you list.
+- `fileTypes` limits what may be attached: `"image"`, `"video"`, `"audio"`, or
+  an extension such as `".pdf"`. Discord filters the file picker and refuses
+  anything else. Matching is on the file extension only, so still check
+  `contentType` if the type really matters. Reading the uploaded file is
+  covered in [Embeds and attachments](/messages/embeds-and-attachments/).
+
+:::tip[Strings can span several lines]
+Since September 2026 users can type line breaks into a string option. There is
+nothing to turn on: any string option can receive them, and `maxLength` counts
+each one. If a value ends up somewhere single-line (an embed title, a channel
+name), strip them: `value.replace(/\s+/g, " ")`.
+:::
+
+## Autocomplete
+
+A list of `choices` stops at 25 values and cannot change. When the list is
+long, comes from a database or depends on who is typing, give the option an
+`autocomplete` handler instead. It is called on every keystroke and returns the
+suggestions to show. It works on `s.string`, `s.integer` and `s.number`, in
+commands and in [subcommands](/commands/subcommands/). An option takes either
+`choices` or `autocomplete`, never both.
+
+```ts title="features/fruit/fruit.command.ts"
+import { defineCommand, s } from "@ix-xs/djs-bot";
+
+const FRUITS = ["apple", "apricot", "banana", "cherry"];
+
+export default defineCommand({
+  name: "fruit",
+  description: "Pick a fruit",
+  options: {
+    name: s.string({
+      description: "Fruit",
+      required: true,
+      autocomplete: (ctx) => FRUITS.filter((fruit) => fruit.startsWith(ctx.value.toLowerCase())),
+    }),
+  },
+  run: (ctx) => ctx.reply.success(`You picked ${ctx.options.name}`),
+});
+```
+
+`ctx.value` is what the user has typed so far. The `ctx` of an autocomplete
+handler is typed, with nothing to annotate, and it is not a command context:
+there is no `ctx.reply`, the handler returns the suggestions instead. Its
+properties are listed under [`AutocompleteContext`](/reference/autocomplete-context/).
+
+The handler may return any of these, directly or as a promise:
+
+| Return | Shown as | Sent to your command as |
+| --- | --- | --- |
+| `["apple", "banana"]` | `apple`, `banana` | the same text |
+| `[10, 20]` | `10`, `20` | the same number |
+| `[{ name: "Apple (3 left)", value: "apple" }]` | `Apple (3 left)` | `"apple"` |
+
+To make suggestions depend on an option the user has already filled in, read it
+from `ctx.options`:
+
+```ts
+options: {
+  category: s.string({ description: "Category", required: true, choices: CATEGORIES }),
+  item: s.string({
+    description: "Item",
+    required: true,
+    autocomplete: async (ctx) => {
+      const items = await ctx.services.shop.search(ctx.options.category, ctx.value);
+      return items.map((item) => ({ name: `${item.label} - ${item.price} coins`, value: item.id }));
+    },
+  }),
+}
+```
+
+While the user types, Discord has not resolved anything yet. `ctx.options`
+holds text, numbers and booleans as such, and only the **id** of a user, role,
+channel, mentionable or attachment.
+
+To test a handler without Discord, call
+`h.autocomplete(command, { option, value, options })` from the harness
+described in [Testing](/production/testing/).
+
+## Autocomplete rules
+
+One invalid suggestion makes Discord refuse the whole list, so the framework
+makes each one valid before sending it:
+
+| Discord's rule | What the framework does |
+| --- | --- |
+| At most 25 suggestions | Sends the first 25. |
+| A name of 1 to 100 characters | Cuts a longer name, leaves out an empty one. |
+| The value has the type of the option | Converts it: a number for `s.integer` and `s.number`, text for `s.string`. Leaves out what cannot be converted, such as `"abc"` for a number. |
+| A text value of at most 100 characters | Leaves the suggestion out. |
+| An answer within 3 seconds, not deferrable | Nothing: this part is yours. |
+
+Suggestions that had to be left out are reported in the logs, once per option
+rather than on every keystroke.
+
+Three things remain your responsibility:
+
+- **Keep it fast.** Discord waits 3 seconds at most and an autocomplete answer
+  cannot be deferred. Query an index or a cache, not a slow API. `TTLCache`,
+  described in [Cache and entity resolution](/data/cache/), is made for this.
+- **Failures are silent for the user.** If the handler throws, the error is
+  logged and an empty list is shown, so a failing lookup never breaks the
+  command.
+- **A suggestion is not a validation.** The user can ignore the list and send
+  whatever they typed. Check the value again in `run`.
+
+## Reference
+
+Every option, property and type, with what it accepts and returns, is in the API reference:
+
+- `s`: Slash-command option builders.
+- `OptionDef`: Internal descriptor for a single option.
+- `toAutocompleteChoices()`: Turns what an autocomplete handler returned into suggestions Discord accepts.
+- `AutocompleteContext`: Context passed to an option's autocomplete handler.
+- `AutocompleteOptions`: What the user has filled in so far, by option name, as Discord sends it while they type: text, numbers and booleans as such, and the **id** of a user, role, channel, mentionable or attachment.
+- `ServiceMap`: Global service map.
+- `Logger`: Structured logger with level filtering and child bindings.
+- `AutocompleteHandler`: An option's autocomplete handler.
+- `AutocompleteResult`: What an autocomplete handler may return (auto-mapped to choices).
+- `NormalizedChoices`: What `toAutocompleteChoices` produced, and what it had to leave out.
+- `InferOptions`: Infers the typed `ctx.options` object from an `OptionMap`.
+- `OptionMap`: A map of option name → descriptor, as passed to `defineCommand`.
+- `OptionKind`: Every supported slash-command option kind.
+- `FileType`: What a file may be: one of Discord's categories, or a dot-prefixed extension.
+
+## Limits and errors
+
+These are checked when the command is defined, and raise an error that names
+the command and the option.
+
+| Rule | Limit | Error |
+| --- | --- | --- |
+| Option name | 1-32 characters, lowercase, letters, digits, `-` and `_` | [`DJSBOT_E012`](/api/errors/#djsbot_e012) |
+| Option description, longest localization included | 1-100 characters | [`DJSBOT_E015`](/api/errors/#djsbot_e015) |
+| Options per command or subcommand | 25 | [`DJSBOT_E015`](/api/errors/#djsbot_e015) |
+| Choices per option | 25 | [`DJSBOT_E015`](/api/errors/#djsbot_e015) |
+| Choice name | 1-100 characters | [`DJSBOT_E015`](/api/errors/#djsbot_e015) |
+| Choice value, when it is text | 100 characters | [`DJSBOT_E015`](/api/errors/#djsbot_e015) |
+| `choices` together with `autocomplete` | not allowed | [`DJSBOT_E015`](/api/errors/#djsbot_e015) |
+| `minLength` / `maxLength` | 0-6000 / 1-6000, and `minLength` not above `maxLength` | [`DJSBOT_E015`](/api/errors/#djsbot_e015) |
+| `min` / `max` | `min` not above `max` | [`DJSBOT_E015`](/api/errors/#djsbot_e015) |
+| `fileTypes` | 10 entries, each a category or an extension | [`DJSBOT_E015`](/api/errors/#djsbot_e015) |
+
+Option names, descriptions and choices also count towards the 8000 characters
+allowed for a whole command: see
+[Slash commands](/commands/slash-commands/#limits-and-errors).
+
+Autocomplete has no definition-time errors. Its limits (25 suggestions, names
+of 1-100 characters, 3 seconds to answer) are handled at runtime as described
+in [Autocomplete rules](#autocomplete-rules).
+
+## See also
+
+- [Slash commands](/commands/slash-commands/)
+- [Subcommands](/commands/subcommands/)
+- [Cache and entity resolution](/data/cache/)
+- [Embeds and attachments](/messages/embeds-and-attachments/)
+- [Testing](/production/testing/)

@@ -154,27 +154,10 @@ cancel the pending automatic deferral like any other answer.
 
 ## Reference
 
-### `DeferOption`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-The type of `defer` on a definition and of `defaults.defer` in
-[`defineBot`](/basics/configuration/#botconfig).
-
-| Value | Acknowledges with | After |
-| --- | --- | --- |
-| `true` | A public loading state. | 2 s |
-| `"ephemeral"` | An only-you loading state. | 2 s |
-| `"update"` | No loading message, on components. A public loading state elsewhere. | 2 s |
-| `{ after?, ephemeral?, update? }` | What the fields say. | `after` |
-| `false` | Nothing: never deferred. | - |
-| not set | The `defer` of the parent command, then `defaults.defer`, then nothing. | - |
-
-The object form:
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `after` | `number \| string` | `2000` | How long the handler may run before the deferral is sent: milliseconds, or a duration string such as `"1s"`. `0` defers immediately. A string that cannot be parsed falls back to the default. |
-| `ephemeral` | `boolean` | `false` | Make the loading state, and with it the eventual reply, visible to the invoking user only. |
-| `update` | `boolean` | `false` | On a button or select menu, acknowledge without a loading message, to edit the source message. Takes precedence over `ephemeral` there. |
+- `DeferOption`: When and how an interaction is acknowledged for you.
+- `defineBot()`: Creates a `Bot`.
 
 ## Limits and errors
 

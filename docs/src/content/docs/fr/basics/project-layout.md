@@ -9,7 +9,7 @@ Un bot, c'est un fichier d'entrée qui appelle `defineBot`, plus un dossier de
 petits fichiers qui exportent chacun une définition (une commande, un bouton, un
 événement...). Vous indiquez le dossier au bot et le chargeur retrouve les
 fichiers grâce à leur nom. Pour créer cette structure en une seule commande,
-voyez [Démarrage rapide](/quick-start/).
+voyez [Installer le projet](/start/installation/).
 
 ## Un projet typique
 
@@ -187,36 +187,22 @@ premier, puis les entrées de `features` dans l'ordre où vous les avez écrites
 
 ## Référence
 
-### `FeatureSource`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-Le type d'une entrée de `features`. L'option accepte l'une d'elles, ou un
-tableau d'entrées.
-
-| Forme | Type | Description |
-| --- | --- | --- |
-| Un dossier | `string` | Découvert par le chargeur comme décrit plus haut. Les chemins relatifs partent du répertoire de travail. |
-| Une définition | `Registrable` | Tout résultat d'un `define*()`, y compris un lot `defineFeature()`. |
-| Une liste | `Registrable[]` | Plusieurs définitions à la fois. |
-
-### `Registrable`
-
-Tout objet que le registre accepte. Le chargeur en reconnaît un grâce à sa
-propriété `kind` et ignore tous les autres exports.
-
-| `kind` | Créé par |
-| --- | --- |
-| `"command"` | `defineCommand` |
-| `"userCommand"` | `defineUserCommand` |
-| `"messageCommand"` | `defineMessageCommand` |
-| `"event"` | `defineEvent` |
-| `"trigger"` | `defineTrigger` |
-| `"button"` | `defineButton` |
-| `"select"` | `defineSelectMenu`, `defineUserSelect`, `defineRoleSelect`, `defineChannelSelect`, `defineMentionableSelect` |
-| `"modal"` | `defineModal` |
-| `"service"` | `defineService` |
-| `"job"` | `defineJob` |
-| `"plugin"` | `definePlugin` |
-| `"feature"` | `defineFeature` |
+- `FeatureSource` : D'où viennent les features : un répertoire à découvrir automatiquement, ou des définitions explicites.
+- `Registrable` : Un élément enregistrable : n'importe quelle définition ou une fonctionnalité entière.
+- `defineFeature()` : Regroupe un ensemble de définitions en une fonctionnalité réutilisable et publiable.
+- `defineCommand()` : Définit une commande slash avec des options typées, ou avec des sous-commandes et des groupes.
+- `defineUserCommand()` : Définit une commande de menu contextuel d'utilisateur.
+- `defineMessageCommand()` : Définit une commande de menu contextuel de message.
+- `defineEvent()` : Définit un écouteur d'événement de la passerelle.
+- `defineTrigger()` : Définit un déclencheur de message : un répondeur automatique qui se déclenche sur `messageCreate`.
+- `defineButton()` : Définit un bouton.
+- `defineSelectMenu()` : Définit un menu de sélection de chaînes (une liste personnalisée d'options).
+- `defineUserSelect()` : Définit un menu de sélection d'utilisateurs natif.
+- `defineRoleSelect()` : Définit un menu de sélection de rôles natif.
+- `defineChannelSelect()` : Définit un menu de sélection de salons natif.
+- `defineMentionableSelect()` : Définit un menu de sélection d'éléments mentionnables (utilisateurs + rôles) natif.
 
 ## Limites et erreurs
 
@@ -233,7 +219,7 @@ voir [Cycle de vie](/basics/lifecycle/).
 
 ## Voir aussi
 
-- [Démarrage rapide](/quick-start/) : installer le paquet et générer cette structure.
+- [Installer le projet](/start/installation/) : installer le paquet et générer cette structure.
 - [Configuration](/basics/configuration/) : toutes les options de `defineBot`.
 - [Features](/architecture/features/) : regrouper des définitions liées en un pack réutilisable.
 - [Services](/architecture/services/) : partager un état entre les fichiers d'une fonctionnalité.

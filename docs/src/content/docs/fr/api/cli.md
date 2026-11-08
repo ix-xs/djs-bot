@@ -42,7 +42,7 @@ npx djs-bot doctor    # le vérifie, une fois .env rempli
 npx djs-bot dev       # le lance
 ```
 
-Le [Démarrage rapide](/quick-start/) détaille ces étapes.
+La page [Installer le projet](/start/installation/) détaille ces étapes.
 
 ## Le fichier d'entrée
 
@@ -443,7 +443,7 @@ possède actuellement.
 
 ## Voir aussi
 
-- [Démarrage rapide](/quick-start/) pour le premier lancement, pas à pas.
+- [Installer le projet](/start/installation/) pour le premier lancement, pas à pas.
 - [Structure du projet](/basics/project-layout/) pour les suffixes de fichiers sur lesquels `generate` s'appuie.
 - [Déployer les commandes](/production/deploying/) pour les portées, le miroir de développement et le déploiement depuis le code.
 - [Erreurs](/api/errors/) pour chaque code que la CLI peut afficher.

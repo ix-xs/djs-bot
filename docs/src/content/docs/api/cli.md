@@ -42,7 +42,7 @@ npx djs-bot doctor    # checks it, once .env is filled in
 npx djs-bot dev       # runs it
 ```
 
-[Quick start](/quick-start/) walks through these steps.
+[Install the project](/start/installation/) walks through these steps.
 
 ## The entry file
 
@@ -428,7 +428,7 @@ the client id, because it reads the commands Discord currently holds.
 
 ## See also
 
-- [Quick start](/quick-start/) for the first run, step by step.
+- [Install the project](/start/installation/) for the first run, step by step.
 - [Project layout](/basics/project-layout/) for the file suffixes `generate` relies on.
 - [Deploying commands](/production/deploying/) for scopes, the dev mirror and deployment from code.
 - [Errors](/api/errors/) for every code the CLI can print.

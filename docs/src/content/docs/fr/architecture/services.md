@@ -192,54 +192,13 @@ fournissent la même capacité ne sont pas un conflit en soi : déclarez
 
 ## Référence
 
-### `defineService(token, options)`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `token` | `string` | - | Le nom utilisé pour résoudre et injecter le service. Premier argument. |
-| `deps` | `string[]` | `[]` | Tokens des services dont celui-ci a besoin. Ils sont résolus en premier. |
-| `factory` | `(deps) => T \| Promise<T>` | - | Construit l'instance. `deps` est un objet indexé par les tokens que vous avez listés, typé à partir de `ServiceMap` (`unknown` pour un token non déclaré). |
-| `dispose` | `(instance: T) => unknown` | aucun | Appelé avec l'instance pendant l'arrêt propre. Peut être asynchrone. |
-
-Renvoie un `ServiceDefinition<T>` (`kind: "service"`, `name`, `deps`, `factory`,
-`dispose`), à exporter depuis un fichier `.service` ou à lister dans une
-[feature](/architecture/features/).
-
-### `ServiceMap`
-
-L'interface derrière `ctx.services`. Elle déclare `store: KVStore`,
-`audit: AuditLog` et `flags: FeatureFlags`, et tout autre token comme `unknown`.
-Augmentez-la comme indiqué dans [Typer vos services](#type-your-services).
-
-`ctx.services` est une vue vivante et en lecture seule du conteneur :
-
-| Opération | Résultat |
-| --- | --- |
-| `ctx.services.db` | L'instance. Lève [`DJSBOT_E031`](/api/errors/#djsbot_e031) si le token n'est pas enregistré, y compris un token intégré dont l'option n'est pas définie. |
-| `"db" in ctx.services` | `true` quand le token est enregistré. À utiliser pour un service facultatif. |
-| `Object.keys(ctx.services)` | Les tokens enregistrés. |
-
-### `Container`
-
-Le conteneur qui se trouve derrière tout cela est exposé sous `bot.container`.
-Vous en aurez rarement besoin, mais rien n'est caché.
-
-| Méthode | Renvoie | Description |
-| --- | --- | --- |
-| `register(def)` | `void` | Enregistre un `ServiceDefinition`. |
-| `registerValue(token, value)` | `void` | Enregistre une valeur déjà construite. C'est ce qu'appelle `app.services.register`. |
-| `has(token)` | `boolean` | Indique si un token est connu, comme définition ou comme valeur. |
-| `tokens()` | `string[]` | Chaque token enregistré. |
-| `resolve(token)` | `Promise<unknown>` | Résout un service, en construisant ses dépendances à la demande. Lève `DJSBOT_E031` pour un token inconnu et `DJSBOT_E030` en cas de cycle. |
-| `resolveAll()` | `Promise<void>` | Construit chaque définition. Appelé une fois au démarrage. |
-| `disposeAll(onError?)` | `Promise<void>` | Exécute chaque `dispose`, le plus récemment construit en premier. Un échec est transmis à `onError(error, token)` et n'arrête pas les autres. Appelé à l'arrêt. |
-| `view()` | `ServiceMap` | La vue en lecture seule exposée sous `ctx.services`. |
-
-```ts
-await bot.load(); // découvre les fichiers et construit les services, sans se connecter
-console.log(bot.container.tokens()); // ["db", "tickets", "store"]
-const db = await bot.container.resolve("db");
-```
+- `defineService()` : Définit un service injectable avec des dépendances explicites.
+- `ServiceMap` : Table globale des services. Étendez-la dans votre projet pour un typage de bout en bout :
+- `ServiceDefinition` : Une définition de service.
+- `Container` : Résout les définitions de services et conserve leurs instances singleton.
+- `resolve` : Utilitaires de récupération qui interrogent d'abord le cache.
 
 ## Limites et erreurs
 

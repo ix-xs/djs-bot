@@ -94,33 +94,10 @@ interaction, and avoid fetching channels, members or roles the bot cannot see.
 
 ## Reference
 
-### `integrationTypes`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-`InstallContext[]`. Where the command can be installed. Sent to Discord as
-`integration_types`.
-
-| Value | Discord name | Meaning |
-| --- | --- | --- |
-| `"guild"` | `GuildInstall` | Installed on a server, for its members. |
-| `"user"` | `UserInstall` | Installed on a user account, for that user everywhere. |
-
-### `contexts`
-
-`InteractionContext[]`. Where the command can be used. Sent to Discord as
-`contexts`.
-
-| Value | Discord name | Meaning |
-| --- | --- | --- |
-| `"guild"` | `Guild` | In servers. |
-| `"botDm"` | `BotDM` | In the DM between the user and the bot. |
-| `"privateChannel"` | `PrivateChannel` | In other DMs and in group DMs. |
-
-### `dmPermission`
-
-`boolean`. Whether a global command is available in DMs. Deprecated by Discord
-in favour of `contexts`.
-
-`InstallContext` and `InteractionContext` are exported as types.
+- `InstallContext`: Where an app command can be installed: on servers, and/or on a user account.
+- `InteractionContext`: Where an app command can be used: in servers, the bot's DMs, or group DMs / other DMs.
 
 ## Limits and errors
 

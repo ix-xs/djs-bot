@@ -1,0 +1,140 @@
+---
+title: "How the bot finds your files"
+description: "Why creating a file is enough to add a command, and how to organize a project that grows."
+sidebar:
+  order: 4
+---
+
+import { Aside, FileTree } from '@astrojs/starlight/components';
+import TerminalDemo from '../../../components/demo/TerminalDemo.astro';
+import DiscordDemo from '../../../components/demo/DiscordDemo.astro';
+
+`/server` and `/user` appeared without being "plugged in" anywhere. Here is
+how, and what it changes for organizing your project.
+
+## The problem it solves
+
+In a discord.js bot written by hand, adding a command means touching several
+places: the file, a list that gathers them, the code that calls the right
+one, the script that sends them to Discord. Forget one, and the command does
+not appear. With djs-bot, only **the file** is left.
+
+## The file name is how it is found
+
+At startup, the bot goes through `features` and its subfolders, and loads
+every file that ends with one of these suffixes:
+
+| Suffix | What it contains |
+| --- | --- |
+| `.command.ts` | a slash command |
+| `.user.ts` / `.message.ts` | a right-click action on a member / a message |
+| `.button.ts` | a button |
+| `.select.ts` | a select menu |
+| `.modal.ts` | a form |
+| `.event.ts` | an event listener |
+| `.trigger.ts` | an automatic reply to a message |
+| `.job.ts` | a scheduled task |
+| `.service.ts` | a shared service |
+| `.plugin.ts` / `.feature.ts` | a plugin / a grouped feature |
+
+`.js`, `.mjs` and `.cjs` work too. Everything else is ignored (`utils.ts`,
+`ping.command.test.ts`, `.d.ts` files): keep your helper code next to it
+without worry.
+
+## The `define` function says what it is
+
+The suffix is used to **find** the file. The `define...` function you used is
+what says what it contains, and a file can export several:
+
+```ts title="src/features/tickets/ticket.command.ts"
+import { defineButton, defineCommand, ui } from "@ix-xs/djs-bot";
+
+// A button, declared in the same file as the command: it is loaded too.
+export const close = defineButton({
+  id: "ticket-close",
+  label: "Close",
+  run: (ctx) => ctx.update({ content: "Ticket closed.", components: [] }),
+});
+
+export default defineCommand({
+  name: "ticket",
+  description: "Open a support ticket",
+  run: (ctx) => ctx.reply({ content: "Ticket opened.", components: [ui.row(close.build())] }),
+});
+```
+
+<DiscordDemo
+  steps={[
+    { do: "command", name: "ticket", description: "Open a support ticket" },
+    { do: "reply", text: "Ticket opened.", buttons: [{ label: "Close" }] },
+    { do: "click", button: "Close" },
+    { do: "reply", text: "Ticket closed.", edit: true },
+  ]}
+/>
+
+Importing a file triggers nothing: it only **describes**. That is what lets
+the tools read the bot without connecting it.
+
+## Organizing a project that grows
+
+The location does not matter to the bot: organize for humans, **one folder
+per feature**.
+
+<FileTree>
+- src/
+  - index.ts
+  - features/
+    - ping/
+      - ping.command.ts
+    - info/
+      - server.command.ts
+      - user.command.ts
+    - tickets/
+      - ticket.command.ts      opens a ticket
+      - close.button.ts        closes it
+      - tickets.service.ts     stores them
+      - format.ts              helper code, ignored
+    - welcome/
+      - welcome.event.ts
+</FileTree>
+
+Where is the tickets code? In `tickets/`. Remove the feature? Delete the
+folder.
+
+## Creating a file without starting from scratch
+
+<TerminalDemo
+  command="npx djs-bot generate command weather"
+  lines={[{ text: "✓ Created src/features/weather/weather.command.ts", level: "ok" }]}
+/>
+
+Available templates: `command`, `user`, `message`, `button`, `select`,
+`modal`, `event`, `trigger`, `job`, `service`, `plugin`, `feature`.
+
+## Seeing what the bot has loaded
+
+A command does not appear? First check that the bot found it:
+
+<TerminalDemo
+  command="npx djs-bot explain"
+  lines={[
+    { text: "" },
+    { text: "Intents (1)" },
+    { text: "  Guilds", level: "dim" },
+    { text: "Partials (0)" },
+    { text: "Commands (3)" },
+    { text: "  ping, server, user", level: "dim" },
+    { text: "Buttons (0)" },
+    { text: "Events (0)" },
+    { text: "Deployment plan" },
+    { text: "  global: ping, server, user", level: "dim" },
+  ]}
+/>
+
+Not in the list: check the suffix and the folder. In the list but not
+visible in Discord: see the next page.
+
+<Aside type="note" title="Without a folder">
+You can also give the definitions straight to `defineBot()`. See
+[Project layout](/basics/project-layout/).
+</Aside>

@@ -258,102 +258,19 @@ export default defineService("weather", {
 
 ## Référence
 
-Les durées sont un nombre de millisecondes ou une chaîne comme `"30s"`, `"5m"` ou
-`"1h"`.
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-### `rateLimit(options)`
-
-Renvoie une garde qui autorise `limit` utilisations par `window`.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `limit` | `number` | requis | Utilisations autorisées par fenêtre. |
-| `window` | `number \| string` | requis | Durée de la fenêtre. |
-| `scope` | `"user" \| "guild" \| "channel" \| "global"` | `"user"` | Ce qui partage un même budget : chaque utilisateur, chaque serveur, chaque salon, ou tout le monde. |
-
-En dehors d'un serveur, la portée `"guild"` compte par utilisateur. Il en va de
-même pour `"channel"` quand l'interaction n'a pas de salon.
-
-### `createRateLimiter(options)`
-
-Renvoie un `RateLimiter`. `new RateLimiter(options)` fait la même chose.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `limit` | `number` | requis | Appels autorisés par fenêtre. |
-| `window` | `number \| string` | requis | Durée de la fenêtre. Une chaîne qui ne peut pas être lue comme une durée compte pour une minute. |
-
-| Membre | Renvoie | Description |
-| --- | --- | --- |
-| `consume(key, cost?)` | `RateLimitResult` | Enregistre un appel de coût `cost` (`1` par défaut) pour `key` et indique s'il rentre dans la limite. |
-| `reset(key)` | `void` | Oublie la fenêtre d'une clé. |
-| `size` | `number` | Nombre de clés qui ont une fenêtre ouverte. |
-
-`RateLimitResult` :
-
-| Champ | Type | Description |
-| --- | --- | --- |
-| `allowed` | `boolean` | Indique si cet appel est dans la limite. |
-| `remaining` | `number` | Appels restants dans la fenêtre en cours. |
-| `resetMs` | `number` | Millisecondes avant la fermeture de la fenêtre. |
-
-### `createCircuitBreaker(options)`
-
-Renvoie un `CircuitBreaker`. `new CircuitBreaker(options)` fait la même chose.
-Toutes les options sont facultatives.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `failureThreshold` | `number` | `5` | Échecs d'affilée avant que le circuit s'ouvre. |
-| `resetTimeout` | `number \| string` | `"30s"` | Durée pendant laquelle il reste ouvert avant un essai. Une chaîne qui ne peut pas être lue comme une durée compte pour 30 secondes. |
-| `successThreshold` | `number` | `1` | Essais réussis nécessaires pour le refermer. |
-| `isFailure` | `(error: unknown) => boolean` | toute erreur compte | Renvoyez `false` pour une erreur qui ne doit pas compter. |
-| `onOpen` | `() => void` | aucun | Appelé chaque fois que le circuit s'ouvre. |
-| `onClose` | `() => void` | aucun | Appelé quand il se ferme. |
-
-| Membre | Renvoie | Description |
-| --- | --- | --- |
-| `execute(fn)` | `Promise<T>` | Exécute `fn` (synchrone ou asynchrone) à travers le disjoncteur et se résout avec son résultat. Rejette avec `CircuitOpenError` tant qu'il est ouvert, ou avec l'erreur de `fn`. |
-| `status` | `CircuitState` | `"closed"`, `"open"` ou `"half-open"`. |
-
-### `CircuitOpenError`
-
-L'erreur avec laquelle `execute` rejette tant que le circuit est ouvert. Son
-`name` est `"CircuitOpenError"`. Testez-la avec `instanceof` pour distinguer
-« le service est en panne » d'une erreur de l'appel lui-même.
-
-### `retry(fn, options)`
-
-Appelle `fn` (synchrone ou asynchrone) jusqu'à ce qu'elle réussisse, et se
-résout avec son résultat. Rejette avec la dernière erreur. Une tentative qui
-échoue avec une erreur nommée `AbortError` n'est pas réessayée. `options` est un
-`RetryOptions` :
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `attempts` | `number` | `3` | Nombre total de tentatives, la première comprise. |
-| `delay` | `number \| string` | `200` | Attente avant la deuxième tentative : des millisecondes, ou un texte comme `"1s"`. |
-| `backoff` | `number` | `2` | Multiplie l'attente après chaque échec. `2` transforme 200 en 200, 400, 800. |
-| `maxDelay` | `number \| string` | aucun plafond | Borne supérieure de l'attente : des millisecondes, ou un texte comme `"30s"`. |
-| `jitter` | `number` | `0.2` | Rend chaque attente aléatoire : `0` pour aucune variation, jusqu'à `1` pour n'importe quelle valeur entre zéro et le double du délai. |
-| `shouldRetry` | `(error: unknown, attempt: number) => boolean` | réessayer toute erreur | Renvoyez `false` pour abandonner aussitôt. |
-| `onRetry` | `(error: unknown, attempt: number) => void` | aucun | Appelé avant chaque attente. `attempt` est celle qui a échoué, en commençant à 1. |
-| `signal` | `AbortSignal` | aucun | Une fois interrompu, aucune nouvelle tentative n'est faite et l'appel rejette avec une `AbortError`. La tentative en cours n'est pas interrompue. |
-
-Un `delay` ou un `maxDelay` qui ne peut pas être lu comme une durée rejette avec
-une `TypeError`.
-
-### `timeout(promise, ms, message)`
-
-Se résout avec la valeur de `promise` si elle se règle dans le délai `ms`, et
-rejette sinon avec une `TimeoutError`. Un `ms` qui ne peut pas être lu comme une
-durée lève une `TypeError`.
-
-| Paramètre | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `promise` | `Promise<T> \| ((signal: AbortSignal) => Promise<T>)` | requis | Le travail à borner, ou une fonction qui le démarre. La fonction reçoit un signal qui s'interrompt quand le temps est écoulé. |
-| `ms` | `number \| string` | requis | Le temps accordé : des millisecondes (`5000`) ou un texte (`"5s"`). |
-| `message` | `string` | `Operation timed out after <ms>ms` | Le message du rejet. |
+- `rateLimit()` : Une garde qui autorise `limit` utilisations par `window`, par portée (`"user"` par défaut).
+- `createRateLimiter()` : Crée un `RateLimiter`.
+- `RateLimiter` : Un limiteur de débit à fenêtre fixe, indexé par une chaîne arbitraire.
+- `RateLimitResult` : Le résultat d'un appel à `RateLimiter.consume`.
+- `createCircuitBreaker()` : Crée un `CircuitBreaker`.
+- `CircuitBreaker` : Un disjoncteur : après trop d'échecs, il s'« ouvre » et échoue immédiatement pendant une période de repos, puis réessaie (« semi-ouvert ») avant de se rétablir complètement.
+- `CircuitOpenError` : Erreur levée lorsque des appels sont rejetés parce que le circuit est ouvert.
+- `CircuitState` : L'état d'un `CircuitBreaker`.
+- `retry()` : Réessaie une fonction asynchrone avec un backoff exponentiel + jitter.
+- `RetryOptions` : Options de `retry`.
+- `timeout()` : Rejette si `promise` ne se termine pas dans le délai `ms` (millisecondes, ou texte tel que `"5s"`).
 
 ## Voir aussi
 

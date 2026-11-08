@@ -1,0 +1,25 @@
+---
+// A dev-only page that feeds the demo components the worst realistic data,
+// to see what breaks. Nothing is built in production: getStaticPaths is empty.
+// Open /djs-bot/dev/worst/ or /djs-bot/dev/demo/ on the dev server.
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import DiscordDemo from "../../components/demo/DiscordDemo.astro";
+import TerminalDemo from "../../components/demo/TerminalDemo.astro";
+import { demo, worst, one } from "../../components/demo/fixtures";
+
+export function getStaticPaths() {
+  if (!import.meta.env.DEV) return [];
+  return ["demo", "worst", "one"].map((state) => ({ params: { state } }));
+}
+
+const { state } = Astro.params;
+const data = state === "worst" ? worst : state === "one" ? one : demo;
+---
+
+<StarlightPage frontmatter={{ title: `Demos: ${state}`, pagefind: false }}>
+  <p>
+    <a href="../demo/">Demo data</a> · <a href="../worst/">Worst case</a> · <a href="../one/">One</a>
+  </p>
+  {data.discord.map((steps) => <DiscordDemo steps={steps} />)}
+  {data.terminal.map((t) => <TerminalDemo command={t.command} lines={t.lines} />)}
+</StarlightPage>

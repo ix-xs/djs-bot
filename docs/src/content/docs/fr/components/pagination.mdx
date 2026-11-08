@@ -1,0 +1,278 @@
+---
+title: "Pagination et confirmation"
+description: "paginate() envoie un message de plusieurs pages avec ses propres boutons de navigation, et confirm() pose une question oui ou non et se résout en booléen. Les deux gèrent leurs boutons eux-mêmes : rien à définir, rien à enregistrer."
+sidebar:
+  order: 5
+---
+
+import DiscordDemo from '../../../../components/demo/DiscordDemo.astro';
+
+Les deux helpers prennent le `ctx` de n'importe quel gestionnaire d'interaction
+(une commande, un menu contextuel, un bouton, un menu de sélection ou une
+modale), envoient un message, et écoutent les clics sur ce message avec un
+collecteur privé.
+
+## Un premier message paginé
+
+```ts title="features/levels/leaderboard.command.ts"
+import { defineCommand, paginate, EmbedBuilder } from "@ix-xs/djs-bot";
+
+const players = Array.from({ length: 45 }, (_, i) => `Player ${i + 1}`);
+
+export default defineCommand({
+  name: "leaderboard",
+  description: "Top players",
+  run: async (ctx) => {
+    const pages: EmbedBuilder[] = [];
+    for (let i = 0; i < players.length; i += 10) {
+      pages.push(
+        new EmbedBuilder()
+          .setTitle(`Leaderboard - page ${pages.length + 1}`)
+          .setDescription(players.slice(i, i + 10).join("\n")),
+      );
+    }
+    await paginate(ctx, { pages, timeout: "5m" });
+  },
+});
+```
+
+<DiscordDemo
+  steps={[
+    {
+      do: "command",
+      name: "leaderboard",
+      description: "Top players"
+    },
+    {
+      do: "reply",
+      embed: {
+        color: "#4e5058",
+        title: "Leaderboard - page 1",
+        description: "Player 1<br>Player 2<br>Player 3<br>Player 4<br>Player 5<br>Player 6<br>Player 7<br>Player 8<br>Player 9<br>Player 10"
+      },
+      buttons: [
+        {
+          label: "⏮️",
+          disabled: true
+        },
+        {
+          label: "◀️",
+          disabled: true
+        },
+        {
+          label: "1 / 5",
+          style: "primary",
+          disabled: true
+        },
+        {
+          label: "▶️"
+        },
+        {
+          label: "⏭️"
+        }
+      ]
+    },
+    {
+      do: "click",
+      button: "▶️"
+    },
+    {
+      do: "reply",
+      embed: {
+        color: "#4e5058",
+        title: "Leaderboard - page 2",
+        description: "Player 11<br>Player 12<br>Player 13<br>Player 14<br>Player 15<br>Player 16<br>Player 17<br>Player 18<br>Player 19<br>Player 20"
+      },
+      buttons: [
+        {
+          label: "⏮️",
+          disabled: false
+        },
+        {
+          label: "◀️",
+          disabled: false
+        },
+        {
+          label: "2 / 5",
+          style: "primary",
+          disabled: true
+        },
+        {
+          label: "▶️"
+        },
+        {
+          label: "⏭️"
+        }
+      ],
+      edit: true
+    }
+  ]}
+/>
+
+Le message affiche la première page et une rangée de cinq boutons : premier,
+précédent, un compteur `1 / 5`, suivant et dernier. Chaque clic modifie le
+message sur place. Quand le délai expire, les boutons sont désactivés et le
+message reste lisible.
+
+`paginate` se résout dès que la première page est envoyée, pas quand
+l'utilisateur a fini de naviguer. Avec une seule page, il envoie le message sans
+aucun bouton.
+
+## Pages paresseuses
+
+Construire toutes les pages à l'avance est du gaspillage quand chacune demande
+une requête. Passez plutôt une fonction et le nombre de pages :
+
+```ts
+await paginate(ctx, {
+  count: totalPages,
+  pages: async (index) => buildEmbed(await fetchPage(index)),
+  timeout: "2m",
+});
+```
+
+La fonction reçoit l'index de la page, à partir de `0`, et peut être asynchrone.
+Elle est appelée à chaque affichage d'une page, y compris quand l'utilisateur
+revient sur une page et une fois de plus quand les contrôles sont désactivés :
+mettez le résultat en cache vous-même s'il est coûteux. `count` est obligatoire
+sous cette forme.
+
+## Messages complets et V2
+
+Une page ne se limite pas à un embed. Ce peut être un message complet, et c'est
+ainsi que l'on pagine des mises en page [Components V2](/components/components-v2/).
+La rangée de navigation est ajoutée pour vous aux `components` de la page.
+
+```ts title="features/shop/catalogue.command.ts"
+import { defineCommand, paginate, ui, MessageFlags } from "@ix-xs/djs-bot";
+
+const cards = [
+  { title: "Sword", image: "https://example.com/sword.png" },
+  { title: "Shield", image: "https://example.com/shield.png" },
+];
+
+export default defineCommand({
+  name: "catalogue",
+  description: "Browse the shop",
+  run: (ctx) =>
+    paginate(ctx, {
+      pages: cards.map((card) => ({
+        flags: MessageFlags.IsComponentsV2,
+        components: [ui.container(ui.text(`# ${card.title}`), ui.gallery(card.image))],
+      })),
+      timeout: "5m",
+    }),
+});
+```
+
+Une page est soit un `EmbedBuilder`, soit un objet avec `content`, `embeds`,
+`components`, `files` et `flags`. Gardez toutes les pages d'un même message dans
+le même format : un message envoyé avec `IsComponentsV2` ne peut pas revenir à
+`content` ou `embeds`. Une page classique avec ses propres rangées peut en avoir
+quatre au plus, car la navigation prend la cinquième.
+
+## Contrôles et public
+
+Par défaut, seul l'utilisateur qui a lancé la commande peut tourner les pages, et
+le message est public. Les options changent qui le voit, qui le pilote et quels
+boutons il a :
+
+```ts
+await paginate(ctx, {
+  pages,
+  startPage: 2,                              // ouvrir sur la troisième page
+  ephemeral: true,                           // seul l'invocateur voit le message
+  allowedUsers: [ctx.user.id, moderatorId],  // qui peut cliquer
+  showFirstLast: false,                      // précédent et suivant uniquement
+  showCounter: false,                        // pas de bouton "3 / 5"
+});
+```
+
+Un clic d'une personne absente de `allowedUsers` n'est pas traité, et cette
+personne voit le message « This interaction failed » de Discord.
+
+:::note[Pourquoi les boutons n'atteignent jamais vos gestionnaires]
+Les contrôles portent un préfixe aléatoire que seul cet appel connaît, et le
+routeur du framework ignore tout customId pour lequel il n'a pas de définition.
+Un bouton de pagination ou de confirmation n'est donc jamais intercepté par vos
+propres boutons, et jamais traité deux fois.
+:::
+
+## Demander une confirmation
+
+`confirm` affiche une question avec deux boutons et se résout en `true` ou
+`false`.
+
+```ts title="features/admin/wipe.command.ts"
+import { defineCommand, confirm } from "@ix-xs/djs-bot";
+
+export default defineCommand({
+  name: "wipe",
+  description: "Delete all data",
+  run: async (ctx) => {
+    const yes = await confirm(ctx, {
+      content: "⚠️ Delete everything?",
+      confirmLabel: "Delete",
+      cancelLabel: "Keep",
+    });
+    if (!yes) {
+      await ctx.reply.info("Cancelled.", { ephemeral: true });
+      return;
+    }
+    await ctx.services.store.clear();
+    await ctx.reply.success("Done.", { ephemeral: true });
+  },
+});
+```
+
+Il renvoie `false` à l'annulation et aussi à l'expiration du délai : ne rien
+faire est donc la voie sûre. Seul l'utilisateur qui a déclenché l'interaction
+peut répondre. Une fois qu'il l'a fait, ou une fois le temps écoulé, les deux
+boutons sont désactivés.
+
+La question est éphémère sauf si vous passez `ephemeral: false`. Elle est
+envoyée avec `ctx.reply`, donc l'interaction a reçu sa réponse quand `confirm`
+revient, et le `ctx.reply` suivant est un message de suivi.
+
+Sans `confirmLabel` ni `cancelLabel`, les boutons utilisent les messages
+`confirm` et `cancel` du framework (« Confirm » et « Cancel »), que vous pouvez
+reformuler ou traduire une seule fois pour tout le bot. Voir
+[Formulations et thème](/basics/wording-and-theme/).
+
+## Référence
+
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
+
+- `paginate()` : Envoie un message paginé avec des contrôles précédent/suivant (et premier/dernier), mis à jour sur place pendant la navigation de l'utilisateur et désactivés à l'expiration du délai.
+- `PaginateOptions` : Options de `paginate`.
+- `timeout()` : Rejette si `promise` ne se termine pas dans le délai `ms` (millisecondes, ou texte tel que `"5s"`).
+- `Page` : Une page unique.
+- `PagePayload` : Une page à contenu complet (voir `Page`).
+- `confirm()` : Affiche une boîte de dialogue oui/non et se résout avec le choix de l'utilisateur (ou `false` si le délai est dépassé).
+- `ConfirmOptions` : Options de `confirm`.
+
+## Limites et erreurs
+
+- **Au moins une page.** `paginate` lève `paginate() needs at least one page.`
+  pour un tableau vide, et pour une fonction sans `count`.
+- **Ils fonctionnent après une première réponse.** Quand l'interaction a déjà
+  reçu une réponse, le message de l'un ou l'autre helper part comme message de
+  suivi et ses boutons écoutent ce message de suivi. Un `confirm` suivi d'un
+  `paginate` dans un même gestionnaire fonctionne, tout comme un différé placé
+  avant eux.
+- **Le collecteur vit en mémoire.** Après un redémarrage, ou une fois le délai
+  écoulé, les boutons d'un ancien message ne font rien. Pour des contrôles qui
+  doivent survivre à un redémarrage, écrivez les vôtres avec
+  [`defineButton`](/components/buttons/) et un numéro de page dans ses
+  paramètres.
+- **Ils ont besoin d'une interaction.** Les événements, les déclencheurs et les
+  tâches planifiées n'ont pas de `ctx` avec lequel répondre, donc aucun des deux
+  helpers n'y fonctionne.
+
+## Voir aussi
+
+- [Boutons](/components/buttons/) pour une navigation qui survit à un redémarrage
+- [Components V2](/components/components-v2/) pour les mises en page qu'une page peut contenir
+- [Embeds et pièces jointes](/messages/embeds-and-attachments/) pour construire les embeds
+- [Formulations et thème](/basics/wording-and-theme/) pour les libellés de boutons par défaut
+- [L'objet ctx](/basics/context/) pour le comportement de `ctx.reply` une fois l'interaction répondue

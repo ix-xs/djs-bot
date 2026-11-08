@@ -1,7 +1,7 @@
 // Where the pages of the previous structure went. Every old address keeps
 // working: the build writes a redirect for each entry.
 export const MOVED = {
-  "/getting-started/": "/quick-start/",
+  "/getting-started/": "/start/installation/",
 
   "/guide/basics/install-project-layout/": "/basics/project-layout/",
   "/guide/basics/the-entry-file-definebot/": "/basics/configuration/",
@@ -54,8 +54,8 @@ export const MOVED = {
   "/guide/reference/error-handling-codes/": "/api/errors/",
   "/guide/reference/testing-without-discord/": "/production/testing/",
 
-  "/api/overview/": "/api/exports/",
-  "/api/definitions/": "/api/exports/",
+  "/api/overview/": "/reference/",
+  "/api/definitions/": "/reference/",
   "/api/configuration/": "/basics/configuration/",
   "/api/context/": "/basics/context/",
   "/api/options/": "/commands/options/",
@@ -73,4 +73,18 @@ export const MOVED = {
   "/api/testing/": "/production/testing/",
   "/api/ui/": "/components/components-v2/",
   "/api/formatting/": "/messages/formatting/",
+
+  // The guide rebuilt as one path (November 2026): the landing page, the
+  // tutorial and the quick start became "Getting started" and "Your bot".
+  "/introduction/": "/",
+  "/how-it-works/": "/",
+  "/quick-start/": "/start/installation/",
+  "/tutorial/what-you-need/": "/start/installation/",
+  "/tutorial/create-your-app/": "/start/discord-app/",
+  "/tutorial/your-first-bot/": "/bot/main-file/",
+  "/tutorial/commands-and-options/": "/bot/first-command/",
+  "/tutorial/buttons-and-forms/": "/components/buttons/",
+  "/tutorial/organising-your-bot/": "/bot/finding-files/",
+  "/tutorial/going-live/": "/bot/going-live/",
+  "/api/exports/": "/reference/",
 };

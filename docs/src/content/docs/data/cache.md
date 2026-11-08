@@ -155,78 +155,12 @@ interaction (a channel option, a channel select) always carry their real data.
 
 ## Reference
 
-### `createCache(options)`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-```ts
-createCache<K, V>(options?: TTLCacheOptions): TTLCache<K, V>
-```
-
-Creates a `TTLCache`. `K` is the key type and `V` the value type, so keys need
-not be strings.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `ttl` | `number \| string` | `"5m"` | Time to live of an entry: milliseconds, or a duration such as `"30s"`, `"5m"`, `"1h"`. |
-| `max` | `number` | `1000` | Maximum number of entries. When the cache is full, adding a new key evicts one. |
-| `staleWhileRevalidate` | `boolean` | `false` | Serve an expired value immediately and refresh it in the background. |
-
-A duration string that cannot be parsed falls back to the default (`"5m"` in
-the options, the cache's TTL in `set` and `getOrFetch`).
-
-### `TTLCache<K, V>`
-
-The class behind `createCache`. `new TTLCache<K, V>(options)` is identical if
-you prefer it.
-
-```ts
-import { TTLCache } from "@ix-xs/djs-bot";
-
-const perGuild = new TTLCache<string, Settings>({ ttl: "10m" });
-```
-
-| Method | Returns | Description |
-| --- | --- | --- |
-| `get(key)` | `V \| undefined` | The value, or `undefined` when missing or expired. Marks the entry as recently used. |
-| `set(key, value, ttl?)` | `void` | Stores a value. `ttl` overrides the cache's TTL for this entry. |
-| `has(key)` | `boolean` | Whether `get(key)` would return a value. |
-| `delete(key)` | `void` | Removes an entry. |
-| `clear()` | `void` | Empties the cache. |
-| `getOrFetch(key, fetcher, ttl?)` | `Promise<V>` | The cached value, or runs `fetcher` (sync or async), caches the result and returns it. Concurrent calls for one key share one fetch. |
-
-How entries leave the cache:
-
-- An expired entry is dropped when `get` or `has` reads it (unless
-  `staleWhileRevalidate` is on). There is no background sweep: `max` is what
-  bounds memory.
-- When the cache holds `max` entries and a new key is added, the entry that was
-  inserted, or last read with `get`, the longest ago is evicted. A hit in
-  `getOrFetch` and overwriting an existing key with `set` do not count as a
-  use.
-
-### `resolve`
-
-Each helper reads the discord.js cache and fetches on a miss. `force` defaults
-to `false`. With `true`, the cache is skipped.
-
-| Helper | Returns |
-| --- | --- |
-| `resolve.member(guild, id, force?)` | `Promise<GuildMember>` |
-| `resolve.user(client, id, force?)` | `Promise<User>` |
-| `resolve.role(guild, id, force?)` | `Promise<Role \| null>` |
-| `resolve.channel(client, id, force?)` | `Promise<Channel \| null>` |
-| `resolve.message(channel, id, force?)` | `Promise<Message>` |
-
-`channel` in `resolve.message` is a text-based channel, such as `ctx.channel`.
-
-### `isHiddenChannel(channel)`
-
-```ts
-isHiddenChannel(channel): boolean
-```
-
-`true` when the channel carries Discord's "obfuscated" flag or the placeholder
-name `"___hidden___"`. Accepts any channel object, and returns `false` for
-`null` or `undefined`.
+- `createCache()`: Creates a `TTLCache`.
+- `TTLCache`: An in-memory TTL + LRU cache with single-flight fetching.
+- `resolve`: Cache-first fetch helpers.
+- `isHiddenChannel()`: Whether a channel is one the bot cannot view, sent by Discord with its name and details withheld ("obfuscated").
 
 ## See also
 

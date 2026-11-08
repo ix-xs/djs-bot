@@ -1,0 +1,535 @@
+---
+/**
+ * A Discord channel that plays a short scene: someone types a command, the
+ * bot answers, a button is pressed, a form is filled in. It shows what the
+ * code of the page does, in motion.
+ *
+ * The scene plays once when it comes into view, and again from the replay
+ * button. Without JavaScript, or when reduced motion is asked for, the channel
+ * shows how the scene ends. The colours are Discord's: this depicts Discord,
+ * it is not part of the site's palette.
+ *
+ *   <DiscordDemo steps={[
+ *     { do: "command", name: "ping", description: "Check that the bot answers" },
+ *     { do: "reply", text: "Pong!" },
+ *   ]} />
+ */
+import { plan, type Step, type Piece, type Reply } from "./plan";
+
+interface Props {
+  steps: Step[];
+  /** The channel's name, without the #. */
+  channel?: string;
+  /** A short label above the window. */
+  caption?: string;
+  bot?: string;
+}
+
+const locale = Astro.locals.starlightRoute?.locale;
+const fr = locale === "fr";
+const W = fr
+  ? {
+      channel: "général",
+      used: "a utilisé",
+      thinking: "réfléchit",
+      ephemeral: "Vous seul pouvez voir ce message",
+      dismiss: "Ignorer le message",
+      placeholder: "Envoyer un message dans #",
+      replay: "Rejouer",
+      joined: "vient d'arriver sur le serveur.",
+      cancel: "Annuler",
+      submit: "Envoyer",
+      today: "Aujourd'hui à 14:02",
+      label: "Démonstration animée dans Discord",
+      commands: "Commandes correspondant à",
+    }
+  : {
+      channel: "general",
+      used: "used",
+      thinking: "is thinking",
+      ephemeral: "Only you can see this",
+      dismiss: "Dismiss message",
+      placeholder: "Message #",
+      replay: "Replay",
+      joined: "just showed up!",
+      cancel: "Cancel",
+      submit: "Submit",
+      today: "Today at 14:02",
+      label: "Animated demo in Discord",
+      commands: "Commands matching",
+    };
+
+const { steps, channel = W.channel, caption, bot = "djs-bot" } = Astro.props;
+const scene = plan(steps, bot);
+const on = (id: string) => (scene.final.has(id) ? "" : undefined);
+const pieces = scene.pieces;
+const inLog = pieces.filter((p) => p.kind === "message" || p.kind === "user-message" || p.kind === "thinking" || p.kind === "join");
+const overInput = pieces.filter((p) => p.kind === "picker" || p.kind === "suggest");
+const lines = pieces.filter((p): p is Extract<Piece, { kind: "cmdline" }> => p.kind === "cmdline");
+const modals = pieces.filter((p): p is Extract<Piece, { kind: "modal" }> => p.kind === "modal");
+const dropdownsOf = (id: string) => pieces.filter((p): p is Extract<Piece, { kind: "dropdown" }> => p.kind === "dropdown" && p.of === id);
+const chosenOf = (id: string) => pieces.filter((p): p is Extract<Piece, { kind: "chosen" }> => p.kind === "chosen" && p.of === id);
+
+/** Message text: `@Name` becomes a mention. The text is written by the page, not by a reader. */
+const rich = (text = "") =>
+  text
+    // A mention of several words is written @[Senior Moderators].
+    .replace(/(^|\s)@\[([^\]]+)\]/gu, '$1<span class="dd-mention">@$2</span>')
+    .replace(/(^|\s)@([\p{L}\d_]+)/gu, '$1<span class="dd-mention">@$2</span>');
+const initial = (name: string) => [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(name.trim())][0]?.segment.toUpperCase() ?? "?";
+const colourOf = (name: string) => (name === bot ? "#5865f2" : ["#f0b232", "#23a55a", "#eb459e", "#f23f43"][name.length % 4]);
+const usedOf = (used?: string) => used?.split("|");
+const hasModal = modals.length > 0;
+type Message = Extract<Piece, { kind: "message" }>;
+---
+
+<figure class="dd not-content" data-dd data-plan={JSON.stringify(scene.actions)} aria-label={caption ?? W.label}>
+  {caption && <figcaption class="dd-cap">{caption}</figcaption>}
+  <div class="dd-window" data-modal={hasModal ? "" : undefined} translate="no">
+    <div class="dd-head"><span class="dd-hash" aria-hidden="true">#</span><span aria-hidden="true">{channel}</span><button class="dd-replay" type="button" data-replay hidden>
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8a5 5 0 1 0 1.6-3.7M3 2.5v2.8h2.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+    {W.replay}
+  </button></div>
+    <div class="dd-log" aria-live="off">
+      {inLog.map((piece) => {
+        if (piece.kind === "join") {
+          return (
+            <div class="dd-item dd-join" data-id={piece.id} data-on={on(piece.id)}>
+              <span class="dd-join-arrow" aria-hidden="true">→</span>
+              <span><b>{piece.user}</b> {W.joined}</span>
+              <time>{W.today}</time>
+            </div>
+          );
+        }
+        if (piece.kind === "user-message") {
+          return (
+            <div class="dd-item dd-msg" data-id={piece.id} data-on={on(piece.id)}>
+              <div class="dd-av" style={`background:${colourOf(piece.author)}`} aria-hidden="true">{initial(piece.author)}</div>
+              <div class="dd-body">
+                <div class="dd-meta"><b>{piece.author}</b><time>{W.today}</time></div>
+                <p set:html={rich(piece.text)} />
+              </div>
+            </div>
+          );
+        }
+        const used = usedOf(piece.used);
+        const head = used && (
+          <div class="dd-used"><span class="dd-used-av" style={`background:${colourOf(used[0])}`} aria-hidden="true"></span><b>{used[0]}</b> {W.used} <span class="dd-used-cmd">/{used[1]}</span></div>
+        );
+        if (piece.kind === "thinking") {
+          return (
+            <div class="dd-item dd-msg" data-id={piece.id} data-on={on(piece.id)}>
+              {head}
+              <div class="dd-row">
+                <div class="dd-av" style={`background:${colourOf(piece.author)}`} aria-hidden="true">{initial(piece.author)}</div>
+                <div class="dd-body">
+                  <div class="dd-meta"><b>{piece.author}</b><span class="dd-app">APP</span><time>{W.today}</time></div>
+                  <p class="dd-thinking">{piece.author} {W.thinking}<span class="dd-dots" aria-hidden="true"><i></i><i></i><i></i></span></p>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        const message = piece as Message;
+        const reply: Reply = message.reply;
+        return (
+          <div class="dd-item dd-msg" data-id={message.id} data-on={on(message.id)} data-ephemeral={reply.ephemeral ? "" : undefined}>
+            {head}
+            <div class="dd-row">
+              <div class="dd-av" style={`background:${colourOf(message.author)}`} aria-hidden="true">{initial(message.author)}</div>
+              <div class="dd-body">
+                <div class="dd-meta"><b>{message.author}</b><span class="dd-app">APP</span><time>{W.today}</time></div>
+                {reply.text && <p set:html={rich(reply.text)} />}
+                {reply.embed && (
+                  <div class="dd-embed" style={`--dd-embed:${reply.embed.color ?? "#5865f2"}`}>
+                    {reply.embed.title && <b class="dd-embed-title" set:html={reply.embed.title} />}
+                    {reply.embed.description && <p set:html={rich(reply.embed.description)} />}
+                    {reply.embed.fields && (
+                      <div class="dd-fields">
+                        {reply.embed.fields.map((field) => (
+                          <div class:list={["dd-field", { "dd-inline": field.inline }]}>
+                            <b set:html={field.name} />
+                            <span set:html={rich(field.value)} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {reply.embed.footer && <small set:html={reply.embed.footer} />}
+                  </div>
+                )}
+                {reply.buttons && (
+                  <div class="dd-buttons">
+                    {reply.buttons.map((button) => (
+                      <span class={`dd-btn dd-btn-${button.style ?? "secondary"}`} data-id={`${message.id}-btn-${button.label}`} data-disabled={button.disabled ? "" : undefined}>
+                        {button.emoji && <span aria-hidden="true">{button.emoji}</span>}
+                        <span class="dd-btn-label">{button.label}</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {reply.select && (
+                  <div class="dd-select-wrap">
+                    <div class="dd-select" data-id={`${message.id}-select`}>
+                      <span class="dd-ph">{reply.select.placeholder}</span>
+                      {chosenOf(message.id).map((chosen) => (
+                        <span class="dd-chosen" data-id={chosen.id} data-on={on(chosen.id)}>{chosen.emoji && <span aria-hidden="true">{chosen.emoji} </span>}{chosen.label}</span>
+                      ))}
+                      <span class="dd-chev" aria-hidden="true">⌄</span>
+                    </div>
+                    {dropdownsOf(message.id).map((drop) => (
+                      <div class="dd-drop" data-id={drop.id} data-on={on(drop.id)}>
+                        {drop.options.map((option) => (
+                          <div class="dd-drop-item" data-id={option.label === drop.picked ? drop.pickId : undefined}>
+                            {option.emoji && <span class="dd-drop-emoji" aria-hidden="true">{option.emoji}</span>}
+                            <span><b>{option.label}</b>{option.description && <small>{option.description}</small>}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {reply.ephemeral && (
+                  <small class="dd-eph"><span aria-hidden="true">👁</span> {W.ephemeral} · <u>{W.dismiss}</u></small>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+    <div class="dd-bottom">
+      {overInput.map((piece) =>
+        piece.kind === "picker" ? (
+          <div class="dd-pop" data-id={piece.id} data-on={on(piece.id)}>
+            <small class="dd-pop-title">{W.commands} /{piece.name}</small>
+            <div class="dd-pop-item">
+              <div class="dd-av dd-av-small" style={`background:${colourOf(bot)}`} aria-hidden="true">{initial(bot)}</div>
+              <span><b>/{piece.name}</b>{piece.description && <small>{piece.description}</small>}</span>
+              <em>{bot}</em>
+            </div>
+          </div>
+        ) : piece.kind === "suggest" ? (
+          <div class="dd-pop" data-id={piece.id} data-on={on(piece.id)}>
+            <small class="dd-pop-title">{piece.option}</small>
+            {piece.values.map((value) => (
+              <div class="dd-pop-item dd-pop-choice" data-id={value === piece.picked ? `${piece.id}-pick` : undefined}><b>{value}</b></div>
+            ))}
+          </div>
+        ) : null,
+      )}
+      <div class="dd-input">
+        <span class="dd-plus" aria-hidden="true">+</span>
+        <span class="dd-field">
+          {lines.map((line) => (
+            <span class="dd-cmdline" data-id={line.id} data-on={on(line.id)}>
+              <span class="dd-cmdname">/{line.name}</span>
+              {line.options.map((option) => (
+                <span class="dd-opt" data-id={option.id} data-on={on(option.id)}>
+                  <span class="dd-opt-name">{option.name}</span>
+                  <span class="dd-opt-value" data-id={`${option.id}-value`} data-typed></span>
+                </span>
+              ))}
+            </span>
+          ))}
+          <span class="dd-typed" data-id="input" data-typed></span><span class="dd-caret" aria-hidden="true"></span>
+          <span class="dd-placeholder">{W.placeholder}{channel}</span>
+        </span>
+      </div>
+    </div>
+    {modals.map((modal) => (
+      <div class="dd-scrim" data-id={modal.id} data-on={on(modal.id)}>
+        <div class="dd-modal" role="presentation">
+          <b class="dd-modal-title">{modal.title}</b>
+          {modal.fields.map((field) => (
+            <label class="dd-mfield">
+              <span>{field.label}</span>
+              <span class:list={["dd-mbox", { "dd-mbox-long": field.long }]}><span data-id={`${field.id}-value`} data-typed data-final-text={field.value}></span></span>
+            </label>
+          ))}
+          <div class="dd-modal-foot">
+            <span class="dd-link">{W.cancel}</span>
+            <span class="dd-btn dd-btn-primary" data-id={modal.submitId}>{modal.submit ?? W.submit}</span>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</figure>
+
+<script>
+  import { TYPE_GAP } from "./plan";
+
+  type Action =
+    | { a: "show"; id: string }
+    | { a: "hide"; id: string }
+    | { a: "type"; id: string; text: string }
+    | { a: "clear"; id: string }
+    | { a: "press"; id: string }
+    | { a: "wait"; ms: number };
+
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+
+  class Demo {
+    private run = 0;
+    private readonly actions: Action[];
+    private readonly log: HTMLElement;
+
+    constructor(private readonly root: HTMLElement) {
+      this.actions = JSON.parse(root.dataset.plan ?? "[]");
+      this.log = root.querySelector(".dd-log")!;
+      const replay = root.querySelector<HTMLButtonElement>("[data-replay]")!;
+      replay.hidden = false;
+      replay.addEventListener("click", () => void this.play());
+    }
+
+    private el(id: string): HTMLElement | null {
+      return this.root.querySelector(`[data-id="${CSS.escape(id)}"]`);
+    }
+
+    private sleep(ms: number, run: number): Promise<boolean> {
+      return new Promise((resolve) => setTimeout(() => resolve(run === this.run), ms));
+    }
+
+    /** Back to the start: nothing posted, nothing typed. */
+    private reset(): void {
+      // The channel keeps the height of its last state, so that the page does not move.
+      this.log.style.minHeight = `${this.log.offsetHeight}px`;
+      for (const element of this.root.querySelectorAll<HTMLElement>("[data-on]")) element.removeAttribute("data-on");
+      for (const element of this.root.querySelectorAll<HTMLElement>("[data-typed]")) element.textContent = "";
+      this.root.setAttribute("data-playing", "");
+    }
+
+    async play(): Promise<void> {
+      const run = ++this.run;
+      this.reset();
+      if (!(await this.sleep(400, run))) return;
+      for (const action of this.actions) {
+        const target = "id" in action ? this.el(action.id) : null;
+        switch (action.a) {
+          case "show":
+            target?.setAttribute("data-on", "");
+            break;
+          case "hide":
+            target?.removeAttribute("data-on");
+            break;
+          case "clear":
+            if (target) target.textContent = "";
+            break;
+          case "press":
+            if (target) {
+              target.setAttribute("data-pressed", "");
+              setTimeout(() => target.removeAttribute("data-pressed"), 220);
+            }
+            break;
+          case "type":
+            for (const char of action.text) {
+              if (target) target.textContent += char;
+              if (!(await this.sleep(reduced.matches ? 0 : TYPE_GAP, run))) return;
+            }
+            break;
+          case "wait":
+            if (!(await this.sleep(action.ms, run))) return;
+            break;
+        }
+        if (run !== this.run) return;
+      }
+      this.root.removeAttribute("data-playing");
+    }
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>("[data-dd]")) {
+    const demo = new Demo(root);
+    // Once, when the channel is well in view. With reduced motion, the end of
+    // the scene is already on screen: it plays only when asked.
+    if (reduced.matches) continue;
+    const watcher = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        watcher.disconnect();
+        void demo.play();
+      },
+      { threshold: 0.6 },
+    );
+    watcher.observe(root);
+  }
+</script>
+
+<style is:global>
+  .dd {
+    --dd-bg: #313338;
+    --dd-dark: #2b2d31;
+    --dd-darker: #1e1f22;
+    --dd-input: #383a40;
+    --dd-fg: #dbdee1;
+    --dd-name: #f2f3f5;
+    --dd-muted: #949ba4;
+    --dd-line: #3f4147;
+    margin: 1.75rem 0 0;
+    font-family: "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1.375;
+    color: var(--dd-fg);
+  }
+  .dd-cap { margin-bottom: 0.6rem; font-family: var(--sl-font-mono); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--at-faint); }
+  .dd-window { position: relative; overflow: hidden; border: 1px solid var(--at-line); border-radius: var(--at-radius); background: var(--dd-bg); }
+  .dd-head { display: flex; align-items: center; gap: 0.375rem; height: 2.75rem; padding: 0 1rem; border-bottom: 1px solid #26282c; color: var(--dd-name); font-weight: 600; }
+  .dd-hash { color: var(--dd-muted); font-size: 1.25rem; font-weight: 400; }
+  .dd-log { display: flex; flex-direction: column; justify-content: flex-end; gap: 0.25rem; min-height: 7rem; padding: 1rem 0 0.5rem; overflow: hidden; }
+  .dd-window[data-modal] .dd-log { min-height: 16rem; }
+  /* Room for what opens above the input, so that it never covers the header. */
+  .dd-window:has(.dd-pop-choice) .dd-log { min-height: 12rem; }
+
+  /* What is not on screen yet. Things enter with a short rise; they leave at once. */
+  .dd [data-id][data-final], .dd-item, .dd-pop, .dd-drop, .dd-cmdline, .dd-opt, .dd-chosen, .dd-scrim { display: none; }
+  .dd-item[data-on] { display: block; }
+  .dd-join[data-on] { display: block; }
+  .dd-item[data-on], .dd-opt[data-on], .dd-chosen[data-on] {
+    transition: opacity 220ms var(--ease-out), transform 220ms var(--ease-out);
+    @starting-style { opacity: 0; transform: translateY(6px); }
+  }
+  .dd-cmdline[data-on], .dd-opt[data-on], .dd-chosen[data-on] { display: inline-flex; }
+
+  .dd-msg { padding: 0.25rem 1rem; }
+  .dd-row { display: flex; gap: 0.875rem; }
+  .dd-msg > .dd-av { float: left; }
+  .dd-msg:has(> .dd-av) { display: none; }
+  .dd-msg:has(> .dd-av)[data-on] { display: flex; gap: 0.875rem; }
+  .dd-av { flex: none; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; color: #fff; font-weight: 700; user-select: none; }
+  .dd-av-small { width: 1.5rem; height: 1.5rem; font-size: 0.75rem; }
+  .dd-body { min-width: 0; flex: 1; }
+  .dd-body > p { margin: 0.125rem 0 0; overflow-wrap: anywhere; }
+  .dd-body code { padding: 0.1rem 0.25rem; border-radius: 4px; background: var(--dd-darker); font-size: 0.85em; }
+  .dd-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.4rem; }
+  .dd-meta b { color: var(--dd-name); font-weight: 600; }
+  .dd-meta time, .dd-join time { color: var(--dd-muted); font-size: 0.75rem; white-space: nowrap; }
+  .dd-app { align-self: center; padding: 0.05rem 0.3rem; border-radius: 4px; background: #5865f2; color: #fff; font-size: 0.625rem; font-weight: 700; }
+  /* Text that flows: on a narrow window it wraps like a sentence, the thread and the avatar stay at its start. */
+  .dd-used { position: relative; margin: 0 0 0.25rem 1.25rem; padding-left: 1.95rem; color: var(--dd-muted); font-size: 0.8125rem; overflow-wrap: anywhere; }
+  .dd-used::before { content: ""; position: absolute; left: 0; top: 0.55rem; width: 1.75rem; height: 0.6rem; border: 2px solid #4e5058; border-right: 0; border-bottom: 0; border-top-left-radius: 6px; }
+  .dd-used-av { display: inline-block; width: 1rem; height: 1rem; margin-right: 0.3rem; border-radius: 50%; vertical-align: -0.2rem; }
+  .dd-used b { color: var(--dd-name); font-weight: 500; }
+  .dd-used-cmd { color: #c9cdfb; }
+  .dd-mention { padding: 0 0.15rem; border-radius: 3px; background: rgb(88 101 242 / 0.3); color: #c9cdfb; font-weight: 500; }
+  .dd-msg[data-ephemeral] { background: rgb(88 101 242 / 0.06); box-shadow: inset 2px 0 0 #5865f2; }
+  .dd-eph { display: block; margin-top: 0.25rem; color: var(--dd-muted); font-size: 0.75rem; }
+  .dd-eph u { color: #00a8fc; text-decoration: none; }
+
+  .dd-thinking { color: var(--dd-muted); font-style: italic; }
+  .dd-dots { display: inline-flex; gap: 0.2rem; margin-left: 0.3rem; }
+  .dd-dots i { width: 0.3rem; height: 0.3rem; border-radius: 50%; background: currentColor; animation: dd-dot 1.2s ease-in-out infinite; }
+  .dd-dots i:nth-child(2) { animation-delay: 0.15s; }
+  .dd-dots i:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes dd-dot { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
+
+  .dd-join { position: relative; padding: 0.375rem 1rem 0.375rem 3.1rem; color: var(--dd-muted); }
+  .dd-join-arrow { position: absolute; left: 1.6rem; color: #23a55a; font-weight: 700; }
+  .dd-join time { margin-left: 0.5rem; }
+  .dd-join b { color: var(--dd-name); font-weight: 500; }
+
+  .dd-embed { max-width: 32rem; margin-top: 0.375rem; padding: 0.625rem 1rem 0.75rem 0.875rem; border-left: 4px solid var(--dd-embed); border-radius: 4px; background: var(--dd-dark); }
+  .dd-embed-title { display: block; color: var(--dd-name); font-weight: 600; }
+  .dd-embed p { margin: 0.25rem 0 0; font-size: 0.875rem; }
+  .dd-fields { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin-top: 0.5rem; }
+  .dd-field { flex: 1 1 100%; display: grid; align-content: start; font-size: 0.875rem; }
+  .dd-field.dd-inline { flex: 1 1 8rem; }
+  .dd-field b { color: var(--dd-name); font-weight: 600; }
+  .dd-embed small { display: block; margin-top: 0.5rem; color: var(--dd-muted); font-size: 0.75rem; }
+
+  .dd-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+  .dd-btn { display: inline-flex; align-items: center; gap: 0.375rem; height: 2rem; padding: 0 1rem; border-radius: 3px; color: #fff; font-size: 0.875rem; font-weight: 500; white-space: nowrap; user-select: none; transition: transform 100ms var(--ease-out), filter 100ms ease; }
+  .dd-btn { max-width: 100%; }
+  .dd-btn-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .dd-btn-primary { background: #5865f2; }
+  .dd-btn-secondary { background: #4e5058; }
+  .dd-btn-success { background: #248046; }
+  .dd-btn-danger { background: #da373c; }
+  .dd-btn[data-disabled] { opacity: 0.5; }
+  .dd-btn[data-pressed], .dd-select[data-pressed], .dd-pop-item[data-pressed], .dd-drop-item[data-pressed] { transform: scale(0.97); filter: brightness(1.15); }
+
+  .dd-select-wrap { position: relative; max-width: 25rem; margin-top: 0.5rem; }
+  .dd-select { display: flex; align-items: center; gap: 0.5rem; height: 2.5rem; padding: 0 0.75rem; border: 1px solid var(--dd-darker); border-radius: 4px; background: var(--dd-darker); transition: transform 100ms var(--ease-out); }
+  .dd-ph { flex: 1; color: var(--dd-muted); }
+  .dd-select:has(.dd-chosen[data-on]) .dd-ph { display: none; }
+  .dd-chosen[data-on] { flex: 1; }
+  .dd-chev { color: var(--dd-muted); }
+  .dd-drop { position: absolute; z-index: 2; inset: auto 0 calc(100% + 4px); overflow: hidden; border: 1px solid var(--dd-darker); border-radius: 4px; background: var(--dd-dark); box-shadow: 0 8px 16px rgb(0 0 0 / 0.24); transform-origin: bottom center; }
+  .dd-drop-item { display: flex; gap: 0.625rem; padding: 0.5rem 0.75rem; transition: transform 100ms var(--ease-out); }
+  .dd-drop-item b { display: block; font-weight: 500; color: var(--dd-name); }
+  .dd-drop-item small { display: block; color: var(--dd-muted); font-size: 0.8125rem; }
+  .dd-drop-item[data-pressed] { background: rgb(78 80 88 / 0.6); }
+  /* A menu opens upwards, over the empty part of the channel: keep room for it. */
+  .dd-window:has(.dd-drop) .dd-log { min-height: 16rem; }
+
+  .dd-bottom { position: relative; padding: 0 1rem 1rem; }
+  .dd-input { display: flex; align-items: center; gap: 0.75rem; min-height: 2.75rem; padding: 0 1rem; border-radius: 8px; background: var(--dd-input); }
+  .dd-plus { display: grid; place-items: center; flex: none; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: #b5bac1; color: var(--dd-input); font-weight: 700; line-height: 1; }
+  .dd-field { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; min-width: 0; flex: 1; padding: 0.5rem 0; }
+  .dd-typed { white-space: pre; }
+  .dd-caret { display: none; width: 1px; height: 1.2em; background: var(--dd-name); }
+  .dd[data-playing] .dd-caret { display: inline-block; animation: dd-blink 1s steps(1) infinite; }
+  @keyframes dd-blink { 50% { opacity: 0; } }
+  .dd-placeholder { color: var(--dd-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dd-field:has(.dd-typed:not(:empty)) .dd-placeholder,
+  .dd-field:has(.dd-cmdline[data-on]) .dd-placeholder { display: none; }
+  .dd-cmdname { padding: 0.1rem 0.375rem; border-radius: 4px; background: rgb(88 101 242 / 0.3); color: #c9cdfb; font-weight: 500; }
+  .dd-cmdline[data-on] { align-items: center; flex-wrap: wrap; gap: 0.375rem; }
+  .dd-opt { align-items: stretch; border-radius: 4px; overflow: hidden; font-size: 0.875rem; }
+  .dd-opt-name { padding: 0.1rem 0.375rem; background: #4e5058; color: var(--dd-name); }
+  .dd-opt-value { min-width: 0.5rem; padding: 0.1rem 0.375rem; background: var(--dd-darker); white-space: pre; }
+
+  .dd-pop { position: absolute; z-index: 2; inset: auto 1rem calc(100% + 0.375rem); padding: 0.5rem; border: 1px solid var(--dd-darker); border-radius: 8px; background: var(--dd-dark); box-shadow: 0 8px 24px rgb(0 0 0 / 0.3); transform-origin: bottom left; }
+  .dd-pop[data-on], .dd-drop[data-on] {
+    display: block;
+    transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out);
+    @starting-style { opacity: 0; transform: scale(0.97); }
+  }
+  .dd-pop-title { display: block; padding: 0.25rem 0.5rem 0.5rem; color: var(--dd-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; }
+  .dd-pop-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; border-radius: 4px; transition: transform 100ms var(--ease-out); }
+  .dd-pop-item:first-of-type { background: rgb(78 80 88 / 0.4); }
+  .dd-pop-item > span { min-width: 0; flex: 1; }
+  .dd-pop-item b { color: var(--dd-name); font-weight: 600; margin-right: 0.5rem; }
+  .dd-pop-item small { color: var(--dd-muted); font-size: 0.8125rem; }
+  .dd-pop-item em { color: var(--dd-muted); font-size: 0.75rem; font-style: normal; }
+  .dd-window:has(.dd-pop[data-on]) .dd-log { padding-bottom: 0; }
+
+  /* A form opens in the middle of the window, over a dimmed channel. */
+  .dd-scrim[data-on] {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    padding: 1rem;
+    background: rgb(0 0 0 / 0.6);
+    transition: opacity 200ms ease;
+    @starting-style { opacity: 0; }
+  }
+  .dd-modal { width: min(100%, 26rem); max-height: 100%; overflow: auto; overscroll-behavior: contain; padding: 1rem 1rem 0; border-radius: 8px; background: var(--dd-bg); box-shadow: 0 16px 40px rgb(0 0 0 / 0.4); }
+  .dd-scrim[data-on] .dd-modal {
+    transition: opacity 220ms var(--ease-out), transform 220ms var(--ease-out);
+    @starting-style { opacity: 0; transform: scale(0.96); }
+  }
+  .dd-modal-title { display: block; margin-bottom: 1rem; color: var(--dd-name); font-size: 1.125rem; font-weight: 600; }
+  .dd-mfield { display: grid; gap: 0.5rem; margin-bottom: 1rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #b5bac1; }
+  .dd-mbox { display: block; min-height: 2.5rem; padding: 0.625rem; border-radius: 4px; background: var(--dd-darker); color: var(--dd-fg); font-size: 0.9375rem; font-weight: 400; text-transform: none; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .dd-mbox-long { min-height: 4.5rem; }
+  .dd-modal-foot { display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin: 0 -1rem; padding: 1rem; border-radius: 0 0 8px 8px; background: var(--dd-dark); }
+  .dd-link { color: var(--dd-name); font-size: 0.875rem; }
+
+  @media (max-width: 30rem) {
+    .dd-msg { padding-inline: 0.75rem; }
+    .dd-row, .dd-msg:has(> .dd-av)[data-on] { gap: 0.625rem; }
+    .dd-av { width: 2rem; height: 2rem; }
+    .dd-bottom { padding: 0 0.625rem 0.625rem; }
+  }
+
+  /* Reduced motion: the same scene, without travel or blinking. */
+  @media (prefers-reduced-motion: reduce) {
+    .dd-item[data-on], .dd-opt[data-on], .dd-chosen[data-on], .dd-pop[data-on], .dd-drop[data-on], .dd-scrim[data-on] .dd-modal {
+      transition: opacity 200ms ease;
+      @starting-style { opacity: 0; transform: none; }
+    }
+    .dd-dots i, .dd[data-playing] .dd-caret { animation: none; }
+    .dd-btn[data-pressed], .dd-select[data-pressed], .dd-pop-item[data-pressed], .dd-drop-item[data-pressed] { transform: none; }
+  }
+</style>

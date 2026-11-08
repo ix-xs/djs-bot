@@ -129,36 +129,10 @@ resource. The packaging guidelines are the same as for a plugin: see
 
 ## Reference
 
-### `defineFeature(input)`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | - | The name of the feature, used in logs, in error messages and by `djs-bot explain`. |
-| `requires` | `string[]` | `[]` | Capabilities the host bot, or another feature, must provide. Startup fails with [`DJSBOT_E040`](/api/errors/#djsbot_e040) otherwise. |
-| `provides` | `string[]` | `[]` | Capabilities this feature offers, which others can list in `requires`. |
-| `config` | `Record<string, unknown>` | `{}` | Free-form default configuration of the feature. It is stored on the definition as `config`; the framework does not read it. |
-| `commands` | `CommandDefinition[]` | `[]` | Slash commands to register. |
-| `userCommands` | `UserCommandDefinition[]` | `[]` | User context-menu commands to register. |
-| `messageCommands` | `MessageCommandDefinition[]` | `[]` | Message context-menu commands to register. |
-| `events` | `EventDefinition[]` | `[]` | Event listeners to register. |
-| `triggers` | `TriggerDefinition[]` | `[]` | Message triggers to register. |
-| `buttons` | `ButtonDefinition[]` | `[]` | Buttons to register. |
-| `selectMenus` | `AnySelectDefinition[]` | `[]` | Select menus to register, of any kind (string, user, role, channel, mentionable). |
-| `modals` | `ModalDefinition[]` | `[]` | Modals to register. |
-| `services` | `ServiceDefinition[]` | `[]` | Services to register. |
-| `jobs` | `JobDefinition[]` | `[]` | Scheduled jobs to register. |
-| `plugins` | `PluginDefinition[]` | `[]` | Plugins to register. |
-
-Returns a `FeatureDefinition` (`kind: "feature"`) in which every list is filled,
-empty when you left it out.
-
-Each kind of definition has its own page:
-[slash commands](/commands/slash-commands/),
-[context menus](/commands/context-menus/),
-[events](/events/events-and-intents/), [triggers](/events/triggers/),
-[buttons](/components/buttons/), [select menus](/components/select-menus/),
-[modals](/components/modals/), [services](/architecture/services/),
-[jobs](/events/jobs/) and [plugins](/architecture/plugins/).
+- `defineFeature()`: Bundles a set of definitions into a reusable, publishable feature.
+- `FeatureDefinition`: A self-contained feature: commands, events, components, services, jobs.
 
 ## Limits and errors
 

@@ -12,7 +12,7 @@ updates:
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
       # TypeScript 7 ships no JavaScript compiler API, which the declaration build
-      # (tsup) and the docs generator (docs/scripts/api-index.mjs) both use. The
+      # (tsup) and the API reference of the docs (docs/scripts/api-model.mjs) both use. The
       # code itself type-checks with 7.
       - dependency-name: "typescript"
         versions: [">=7"]

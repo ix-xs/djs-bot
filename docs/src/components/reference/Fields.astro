@@ -1,0 +1,38 @@
+---
+// The properties of an object passed to a function, when that object has no
+// page of its own: its name, its type, and what it does.
+import type { Property } from "../../reference/model";
+import { translate, untranslated, words } from "../../reference/model";
+import { render } from "../../reference/markdown";
+import Tokens from "./Tokens.astro";
+
+interface Props {
+  fields: Property[];
+  owner: string;
+  locale: string | undefined;
+}
+
+const { fields, owner, locale } = Astro.props;
+const w = words(locale);
+const rows = await Promise.all(
+  fields.map(async (field) => ({
+    ...field,
+    html: await render(translate(`${field.inheritedFrom ?? owner}.${field.name}`, field.text, locale), locale, { inline: true }),
+    pending: untranslated(`${field.inheritedFrom ?? owner}.${field.name}`, field.text, locale),
+  })),
+);
+---
+
+<ul class="rf-fields">
+  {rows.map((field) => (
+    <li>
+      <span class="rf-field-head">
+        <code class="rf-name" translate="no">{field.name}</code>
+        <code class="rf-type" translate="no"><Tokens tokens={field.type} locale={locale} /></code>
+        {field.optional && <span class="rf-tag">{w.optional}</span>}
+      </span>
+      {field.html && <span class="rf-field-text" set:html={field.html} lang={field.pending && locale ? "en" : undefined} />}
+      {field.default && <span class="rf-default">{w.default} <code translate="no">{field.default}</code></span>}
+    </li>
+  ))}
+</ul>

@@ -131,36 +131,10 @@ pour un plugin : voir
 
 ## Référence
 
-### `defineFeature(input)`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | - | Le nom de la feature, utilisé dans les journaux, dans les messages d'erreur et par `djs-bot explain`. |
-| `requires` | `string[]` | `[]` | Capacités que le bot hôte, ou une autre feature, doit fournir. Sinon le démarrage échoue avec [`DJSBOT_E040`](/api/errors/#djsbot_e040). |
-| `provides` | `string[]` | `[]` | Capacités que cette feature offre, que d'autres peuvent lister dans `requires`. |
-| `config` | `Record<string, unknown>` | `{}` | Configuration par défaut de la feature, de forme libre. Elle est stockée sur la définition sous le nom `config` ; le framework ne la lit pas. |
-| `commands` | `CommandDefinition[]` | `[]` | Commandes slash à enregistrer. |
-| `userCommands` | `UserCommandDefinition[]` | `[]` | Commandes de menu contextuel d'utilisateur à enregistrer. |
-| `messageCommands` | `MessageCommandDefinition[]` | `[]` | Commandes de menu contextuel de message à enregistrer. |
-| `events` | `EventDefinition[]` | `[]` | Écouteurs d'événements à enregistrer. |
-| `triggers` | `TriggerDefinition[]` | `[]` | Déclencheurs de messages à enregistrer. |
-| `buttons` | `ButtonDefinition[]` | `[]` | Boutons à enregistrer. |
-| `selectMenus` | `AnySelectDefinition[]` | `[]` | Menus de sélection à enregistrer, de tout type (chaîne, utilisateur, rôle, salon, mentionnable). |
-| `modals` | `ModalDefinition[]` | `[]` | Modales à enregistrer. |
-| `services` | `ServiceDefinition[]` | `[]` | Services à enregistrer. |
-| `jobs` | `JobDefinition[]` | `[]` | Tâches planifiées à enregistrer. |
-| `plugins` | `PluginDefinition[]` | `[]` | Plugins à enregistrer. |
-
-Renvoie un `FeatureDefinition` (`kind: "feature"`) dans lequel chaque liste est
-remplie, vide quand vous l'avez omise.
-
-Chaque type de définition a sa propre page :
-[commandes slash](/commands/slash-commands/),
-[menus contextuels](/commands/context-menus/),
-[événements](/events/events-and-intents/), [déclencheurs](/events/triggers/),
-[boutons](/components/buttons/), [menus de sélection](/components/select-menus/),
-[modales](/components/modals/), [services](/architecture/services/),
-[tâches planifiées](/events/jobs/) et [plugins](/architecture/plugins/).
+- `defineFeature()` : Regroupe un ensemble de définitions en une fonctionnalité réutilisable et publiable.
+- `FeatureDefinition` : Une feature autonome : commandes, événements, composants, services, tâches.
 
 ## Limites et erreurs
 

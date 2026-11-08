@@ -248,125 +248,19 @@ plugin.
 
 ## Reference
 
-### `definePlugin(input)`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | - | A unique name, used in logs, in error messages and by `djs-bot explain`. |
-| `version` | `string` | none | The plugin's own version. Informational, shown by `djs-bot explain`. |
-| `requires` | `string[]` | `[]` | Capabilities that must exist, or startup fails with [`DJSBOT_E040`](/api/errors/#djsbot_e040). |
-| `provides` | `string[]` | `[]` | Capabilities this plugin offers, which others can list in `requires`. |
-| `conflicts` | `string[]` | `[]` | Capabilities that nothing else may provide while this plugin is loaded, or startup fails with [`DJSBOT_E041`](/api/errors/#djsbot_e041). |
-| `setup` | `(app: PluginApp) => unknown` | - | Called once at startup, before the bot connects and before services are built. May be async. Register hooks and services here. |
-| `teardown` | `(app: PluginApp) => unknown` | none | Called during graceful shutdown. Release what `setup` opened. A failure is logged and the shutdown goes on. |
-
-Returns a `PluginDefinition` (`kind: "plugin"`). A `setup` that throws stops the
-startup. How `requires`, `provides` and `conflicts` are checked is described
-under [Capability contracts](/architecture/services/#capability-contracts).
-
-### `PluginApp`
-
-The object handed to `setup` and `teardown`.
-
-| Member | Type | Description |
-| --- | --- | --- |
-| `app.logger` | `Logger` | A logger tagged with the plugin name. |
-| `app.hooks` | `HookRegistrar` | Registers middleware and lifecycle hooks. |
-| `app.config` | `Readonly<BotConfig>` | The configuration passed to `defineBot`, read-only. |
-| `app.services.register(token, value)` | `void` | Registers an already built value under a token. |
-| `app.services.has(token)` | `boolean` | Whether a token exists, as a service definition or as a registered value. |
-
-### `HookRegistrar`
-
-| Method | Callback | Description |
-| --- | --- | --- |
-| `beforeInteraction(fn)` | `(ctx: BaseContext, next: () => Promise<void>) => Promise<void> \| void` | Middleware around the guards and the handler. Stop the interaction by not calling `next`. The callback type is exported as `MiddlewareFn`. |
-| `afterInteraction(fn)` | `(ctx: BaseContext, info: { durationMs: number }) => unknown` | After a successful handler. `durationMs` covers the middleware, the guards and the handler. |
-| `onError(fn)` | `(error: unknown, ctx?: BaseContext) => unknown` | When an interaction handler, an event listener, a trigger or a job throws. `ctx` is set for an interaction only. |
-| `onReady(fn)` | `(client: Client<true>) => unknown` | Once the client is ready. |
-| `onShutdown(fn)` | `() => unknown` | During graceful shutdown. |
-
-### `antiSpam(options?)`
-
-Rejects the interactions of a user who exceeds a rate limit. The limit is
-counted per user across every command, component and modal submission, whatever
-the command or the server, and is kept in memory. A rejected user gets an error
-reply and neither the guards nor the handler run. Autocomplete requests are not
-counted, since an autocomplete cannot be refused with a message.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `max` | `number` | `5` | Interactions allowed per window, per user. |
-| `window` | `number \| string` | `"10s"` | Length of the window: milliseconds or a duration. |
-| `message` | `string` | the `slowDown` framework message | Shown to a rate-limited user. Reword the default in [Wording and theme](/basics/wording-and-theme/). |
-| `allow` | `string[]` | `[]` | User ids that are never limited (owners, staff). |
-
-```ts
-antiSpam({ max: 10, window: "30s", allow: env.list("OWNER_IDS") });
-```
-
-### `commandLogger(options?)`
-
-Logs one structured line per interaction, through the logger of that
-interaction, so the line carries its `correlationId`. The fields are `kind`,
-`name`, `guildId` and, with `timing`, `ms`.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `timing` | `boolean` | `true` | Also log the duration in milliseconds, guards included. |
-
-```text
-14:22:07 INFO  interaction handled correlationId=8f3a kind=command name="config set" guildId=123 ms=143
-```
-
-The line is written after the handler returned. An interaction whose handler
-threw is logged by the error boundary, not by this plugin.
-
-### `errorReporter(options)`
-
-Forwards errors to your reporter: Sentry, a webhook, anything. It is registered
-as an `onError` hook, so it receives interaction errors with their `ctx`, and
-errors from events, triggers and jobs without one. It runs alongside the error
-boundary of the framework: the user still gets the usual error reply.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `report` | `(error: unknown, ctx?: BaseContext) => void \| Promise<void>` | - | Required. Where to send the error. |
-
-```ts
-errorReporter({
-  report: (error, ctx) => {
-    const where = ctx ? describeInteraction(ctx.interaction) : undefined;
-    Sentry.captureException(error, { tags: { interaction: where?.name, guild: ctx?.guildId } });
-  },
-});
-```
-
-A reporter that throws is swallowed: reporting must never take the bot down.
-
-### `maintenance(options?)`
-
-Answers every command, component and modal submission with a notice and stops
-it, except for the users you allow. Autocomplete requests still get their
-suggestions, since an autocomplete cannot be refused with a message.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `enabled` | `boolean \| (() => boolean)` | `true` | Whether maintenance mode is on. A function is called again for each interaction, so you can toggle the mode without a restart. |
-| `message` | `string` | `"🔧 The bot is under maintenance - please try again soon."` | Shown to blocked users. |
-| `allow` | `string[]` | `[]` | User ids that can keep using the bot. |
-
-```ts
-let down = false; // flip it from an owner-only command
-
-maintenance({ enabled: () => down, allow: env.list("OWNER_IDS") });
-```
-
-:::caution[On by default]
-`maintenance()` with no `enabled` option blocks everyone straight away. Pass
-`enabled: false` or a function when the plugin stays in your `plugins` list
-permanently.
-:::
+- `definePlugin()`: Defines a cross-cutting plugin (hooks, middleware, capabilities).
+- `PluginDefinition`: A cross-cutting plugin.
+- `PluginApp`: The restricted façade handed to plugins in `setup()`.
+- `Logger`: Structured logger with level filtering and child bindings.
+- `HookRegistrar`: Lets plugins register hooks without touching the core.
+- `defineBot()`: Creates a `Bot`.
+- `MiddlewareFn`: Middleware runs around every interaction; call `next()` to continue.
+- `antiSpam()`: Rejects the interactions of a user who exceeds a per-window rate limit: commands, components and forms.
+- `commandLogger()`: Logs a structured line for every interaction (with duration), using the per-interaction correlation logger.
+- `errorReporter()`: Forwards every unhandled interaction error to your reporter (e.g. Sentry).
+- `maintenance()`: Blocks all interactions with a maintenance notice, except for allow-listed users.
 
 ## See also
 

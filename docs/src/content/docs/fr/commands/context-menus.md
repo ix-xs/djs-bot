@@ -106,49 +106,18 @@ export default defineUserCommand({
 
 ## Référence
 
-### `defineUserCommand(input)`
+Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-Prend un `UserCommandInput` et renvoie un `UserCommandDefinition`, marqué `kind: "userCommand"`.
-
-| Option | Type | Défaut | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | obligatoire | Le libellé dans le menu Applications d'un utilisateur. 1-32 caractères, espaces et majuscules autorisés. |
-| `run` | `(ctx: UserCommandContext) => unknown` | obligatoire | Le gestionnaire, synchrone ou asynchrone. |
-| `guards` | `Guard[]` | `[]` | Conditions préalables vérifiées avant `run`. |
-| `defer` | `DeferOption` | `defaults.defer` | Voir [Différé automatique](/basics/automatic-deferral/). |
-| `defaultMemberPermissions` | `PermissionResolvable` | - | Permissions dont un membre a besoin pour voir l'entrée par défaut. |
-| `integrationTypes` | `("guild" \| "user")[]` | défini par Discord | Où elle peut être installée. |
-| `contexts` | `("guild" \| "botDm" \| "privateChannel")[]` | défini par Discord | Où elle peut être utilisée. |
-| `dmPermission` | `boolean` | - | Déprécié par Discord au profit de `contexts`. |
-| `nameLocalizations` | `LocalizationMap` | - | Le libellé par langue. Voir [Noms localisés](/commands/slash-commands/#localized-names). |
-| `guilds` | `string[]` | - | Déploie uniquement sur ces identifiants de serveur. À omettre pour une commande globale. |
-
-Il n'y a ni `description`, ni `descriptionLocalizations`, ni `options`, ni `nsfw` : Discord ne les propose pas pour les menus contextuels.
-
-### `defineMessageCommand(input)`
-
-Prend un `MessageCommandInput` et renvoie un `MessageCommandDefinition`, marqué `kind: "messageCommand"`. Les options sont les mêmes que pour `defineUserCommand`, sauf que `run` reçoit un `MessageCommandContext` et que `name` est le libellé dans le menu Applications d'un message.
-
-### `UserCommandContext`
-
-Tout ce que contient [l'objet ctx](/basics/context/), plus :
-
-| Propriété | Type | Description |
-| --- | --- | --- |
-| `targetUser` | `User` | L'utilisateur sur lequel la commande a été utilisée. |
-| `targetMember` | `GuildMember \| null` | Le même utilisateur en tant que membre du serveur. `null` en message privé, dans un serveur où le bot n'est pas présent, et quand l'utilisateur n'est plus membre. |
-| `showModal` | `ShowModalFn` | Ouvre une modale comme réponse. |
-| `interaction` | `UserContextMenuCommandInteraction` | L'interaction discord.js brute. |
-
-### `MessageCommandContext`
-
-Tout ce que contient [l'objet ctx](/basics/context/), plus :
-
-| Propriété | Type | Description |
-| --- | --- | --- |
-| `targetMessage` | `Message` | Le message sur lequel la commande a été utilisée. |
-| `showModal` | `ShowModalFn` | Ouvre une modale comme réponse. |
-| `interaction` | `MessageContextMenuCommandInteraction` | L'interaction discord.js brute. |
+- `defineUserCommand()` : Définit une commande de menu contextuel d'utilisateur.
+- `UserCommandInput` : Entrée acceptée par `defineUserCommand`.
+- `UserCommandDefinition` : Une commande de menu contextuel d'utilisateur enregistrée (clic droit sur un utilisateur → Apps).
+- `DeferOption` : Quand et comment une interaction est acquittée à votre place.
+- `defineMessageCommand()` : Définit une commande de menu contextuel de message.
+- `MessageCommandInput` : Entrée acceptée par `defineMessageCommand`.
+- `MessageCommandDefinition` : Une commande de menu contextuel de message enregistrée (clic droit sur un message → Apps).
+- `MessageCommandContext` : Contexte passé aux gestionnaires de commandes de menu contextuel de message.
+- `UserCommandContext` : Contexte passé aux gestionnaires de commandes de menu contextuel utilisateur.
+- `ShowModalFn` : Ouvre une modale en réponse à une interaction.
 
 ## Limites et erreurs
 

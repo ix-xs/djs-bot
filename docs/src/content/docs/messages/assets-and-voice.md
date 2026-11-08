@@ -57,7 +57,7 @@ then builds the URL. It resolves to `null` when the user has no banner, so test
 the result before giving it to `setImage`.
 
 Every helper accepts the same image options: a `size`, an `extension` and
-`forceStatic`. They are listed under [`ImageOptions`](/messages/assets-and-voice/#imageoptions).
+`forceStatic`. They are listed under [`ImageOptions`](/reference/image-options/).
 
 ## Server and emoji images
 
@@ -173,45 +173,11 @@ cast to `VoiceBasedChannel` is safe.
 
 ## Reference
 
-### `assets`
+Every option, property and type, with what it accepts and returns, is in the API reference:
 
-| Helper | Returns | Description |
-| --- | --- | --- |
-| `assets.avatar(userOrMember, options?)` | `string` | Best avatar: the server avatar for a member, else the global one, else the default image. |
-| `assets.banner(user, options?)` | `Promise<string \| null>` | The user's profile banner. Fetches the user when the banner is not known yet. |
-| `assets.guildIcon(guild, options?)` | `string \| null` | The server icon. |
-| `assets.guildBanner(guild, options?)` | `string \| null` | The server banner. |
-| `assets.guildSplash(guild, options?)` | `string \| null` | The invite splash image. |
-| `assets.emoji(id, options?)` | `string` | The image of a custom emoji. Options: `{ animated?: boolean; size?: ImageSize }`. |
-
-`options` is an [`ImageOptions`](/messages/assets-and-voice/#imageoptions) object everywhere except
-`assets.emoji`, which only takes `animated` and `size`.
-
-### `ImageOptions`
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `size` | `ImageSize` | Discord's default | A power of two from 16 to 4096: `16`, `32`, `64`, `128`, `256`, `512`, `1024`, `2048`, `4096`. |
-| `extension` | `"webp" \| "png" \| "jpg" \| "jpeg" \| "gif"` | `"webp"` | Image format. |
-| `forceStatic` | `boolean` | `false` | Return a still image even when the asset is animated. |
-
-### `voice`
-
-| Helper | Returns | Permission | Description |
-| --- | --- | --- | --- |
-| `voice.channelOf(member)` | `VoiceBasedChannel \| null` | none | The voice channel the member is in. |
-| `voice.isConnected(member)` | `boolean` | none | Whether they are in any voice channel. |
-| `voice.membersIn(channel)` | `Collection<string, GuildMember>` | none | The members currently in a channel, by id. |
-| `voice.move(member, channel)` | `Promise<GuildMember>` | Move Members | Moves them. `null` disconnects them. |
-| `voice.disconnect(member)` | `Promise<GuildMember>` | Move Members | Removes them from voice. |
-| `voice.mute(member, muted?, reason?)` | `Promise<GuildMember>` | Mute Members | Server mute. `muted` defaults to `true`; pass `false` to unmute. |
-| `voice.deafen(member, deafened?, reason?)` | `Promise<GuildMember>` | Deafen Members | Server deafen. `deafened` defaults to `true`; pass `false` to undo. |
-
-`reason` is recorded in the server's audit log. `voice.move` and
-`voice.disconnect` take no reason.
-
-All helpers take a `GuildMember`. In a handler that is `ctx.member`, which is
-`null` outside a server.
+- `assets`: Asset URL helpers.
+- `ImageOptions`: Options for image URLs.
+- `voice`: Voice-state helpers.
 
 ## See also
 
