@@ -76,16 +76,25 @@ function parts(body) {
   return { blocks, prose };
 }
 
+// Removes every match of a pattern, again until none is left: a single pass
+// over a comment nested in another leaves one made of the outer one's ends.
+function strip(text, pattern) {
+  let previous;
+  do {
+    previous = text;
+    text = text.replace(pattern, "");
+  } while (text !== previous);
+  return text;
+}
+
 /** A code block without its comments and without its spacing. */
 function bare(code, info) {
   const hash = /^(bash|sh|shell|yaml|yml|env|ini|toml|dotenv|dockerfile|docker)\b/i.test(info);
-  return code
-    .replace(/\/\*[\s\S]*?\*\//g, "")
+  const lines = strip(code, /\/\*[\s\S]*?\*\//g)
     .split("\n")
     .map((line) => line.replace(/(^|\s)\/\/.*$/, "$1").replace(hash ? /(^|\s)#.*$/ : /$^/, "$1"))
-    .join("\n")
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/\s+/g, "");
+    .join("\n");
+  return strip(lines, /<!--[\s\S]*?-->/g).replace(/\s+/g, "");
 }
 
 const headings = (prose) => [...prose.matchAll(/^(#{1,6})\s+\S/gm)].map((m) => m[1].length);
