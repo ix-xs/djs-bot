@@ -199,7 +199,7 @@ async function benchLoader(): Promise<void> {
   try {
     // Discovery is repeatable; benchmark it.
     const bench = new Bench({ time: TIME });
-    bench.add(`discover ${featureCount} files (fs walk)`, () => comfort.fs.getFilesIn(dir, true));
+    bench.add(`discover ${featureCount} files (fs walk)`, () => comfort.fs.list(dir, { type: "files" }));
     await bench.run();
     printTable(bench);
 

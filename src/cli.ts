@@ -355,7 +355,7 @@ async function cmdGenerate(args: readonly string[]): Promise<void> {
     bad(`${path.relative(process.cwd(), target)} already exists.`);
     process.exit(1);
   }
-  if (!comfort.fs.createFile(target, true, content)) {
+  if (!comfort.fs.write(target, content)) {
     bad(`Could not write ${path.relative(process.cwd(), target)}.`);
     process.exit(1);
   }
@@ -370,7 +370,7 @@ async function cmdInit(): Promise<void> {
       warn(`${rel} exists - skipped`);
       return;
     }
-    if (comfort.fs.createFile(target, true, content)) ok(`Created ${rel}`);
+    if (comfort.fs.write(target, content)) ok(`Created ${rel}`);
     else bad(`Could not write ${rel}`);
   };
   write("src/index.ts", STARTER.entry);
@@ -558,9 +558,9 @@ export const ${pascal}Modal = defineModal({
   }),
   select: (kebab: string, pascal: string) => ({
     filename: `${kebab}.select.ts`,
-    content: `import { defineSelectMenu } from "@ix-xs/djs-bot";
+    content: `import { defineStringSelect } from "@ix-xs/djs-bot";
 
-export const ${pascal}Select = defineSelectMenu({
+export const ${pascal}Select = defineStringSelect({
   id: "${kebab}",
   run: async (ctx) => {
     await ctx.reply.success(\`You picked: \${ctx.values.join(", ")}\`);

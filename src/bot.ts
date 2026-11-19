@@ -33,7 +33,7 @@ import { createLogger, type Logger } from "./logger.js";
 import { Registry, type Registrable } from "./registry.js";
 import { Container } from "./container.js";
 import { computeIntents, privilegedIn, type ComputedIntents } from "./intents.js";
-import { isShardChild, launchShardManager, normalizeSharding } from "./sharding.js";
+import { isShardChild, shardingOptions, startShardManager } from "./sharding.js";
 import { loadFromDirectory } from "./loader.js";
 import {
   deployCommands,
@@ -171,7 +171,7 @@ const BOT_BRAND: unique symbol = Symbol.for("djsbot.bot") as never;
 const SHUTDOWN_DEADLINE = "30s";
 
 /** The authors a trigger does not answer again yet. */
-type TriggerCooldown = InstanceType<typeof comfort.Cache<string, true>>;
+type TriggerCooldown = comfort.cache.Cache<string, true>;
 
 /** What the router needs to run one handler inside the boundary. */
 interface Dispatch {
@@ -457,7 +457,7 @@ export class Bot {
     // If sharding is enabled and we're the manager process (not a spawned
     // shard), launch the ShardingManager and stop - children run the bot.
     if (this.config.sharding && !isShardChild()) {
-      await launchShardManager(process.argv[1] ?? "", token, normalizeSharding(this.config.sharding), this.logger);
+      await startShardManager(process.argv[1] ?? "", token, shardingOptions(this.config.sharding), this.logger);
       return;
     }
 
@@ -499,9 +499,9 @@ export class Bot {
    * error must never raise another one.
    */
   private notifyErrorHooks(error: unknown): void {
-    for (const hook of this.errorHooks) void comfort.func.to(() => hook(error));
+    for (const hook of this.errorHooks) void comfort.async.to(() => hook(error));
     const onError = this.config.onError;
-    if (onError) void comfort.func.to(() => onError(error));
+    if (onError) void comfort.async.to(() => onError(error));
   }
 
   private attachEvents(client: Client<true>): void {
@@ -532,7 +532,7 @@ export class Bot {
     const cooldowns = new Map<string, TriggerCooldown>();
     for (const t of triggers) {
       const ms = durationMs(t.cooldown, 0);
-      if (ms > 0) cooldowns.set(t.name, new comfort.Cache<string, true>({ ttl: ms }));
+      if (ms > 0) cooldowns.set(t.name, comfort.cache.create<string, true>({ ttl: ms }));
     }
 
     client.on(Events.MessageCreate, (message) => {
@@ -728,7 +728,7 @@ export class Bot {
    * when a second signal arrives before it is over.
    */
   private installSignals(): void {
-    this.signals = comfort.utils
+    this.signals = comfort.sys
       .dontCrash()
       .on("error", (error: unknown) => {
         this.report(error, "Uncaught error (kept alive)");

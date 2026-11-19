@@ -1,6 +1,6 @@
 {
   "name": "@ix-xs/djs-bot",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Discord bots, fully typed. A TypeScript-first framework on top of discord.js: typed commands, buttons and forms, automatic intents and deferral, i18n, jobs, a store and a CLI.",
   "keywords": [
     "discord",
@@ -109,7 +109,7 @@
     "bench:dispatch": "tsx benchmarks/dispatch.ts"
   },
   "dependencies": {
-    "@ix-xs/node-comfort": "^2.2.1"
+    "@ix-xs/node-comfort": "^3.0.0"
   },
   "peerDependencies": {
     "discord.js": "^14.27.0"

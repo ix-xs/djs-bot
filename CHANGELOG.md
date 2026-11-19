@@ -3,6 +3,51 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## 1.5.0
+
+The framework moves to `@ix-xs/node-comfort` 3.0, and gives a few names a
+clearer replacement. Nothing breaks: every old name keeps working until 2.0,
+and says once what to write instead.
+
+### Changed
+
+- **`@ix-xs/node-comfort` 3.0 is required** (was 2.2.1). The framework uses
+  only its new names, so a bot never sees one of its deprecation warnings.
+  The Node versions are unchanged: 22.23.4, 24.22.1 or 26.12.1, or a later
+  release of these lines.
+
+### Deprecated
+
+Each old name prints one `DeprecationWarning` per process, the first time it
+is used, with its code. `node --trace-deprecation` shows where it is called,
+and `--throw-deprecation` makes it fail. They are removed in 2.0.
+
+- `oneOf()` at the root: use `p.oneOf()`, the same codec next to the other
+  params. Code `DJS_BOT_DEP_ONEOF`.
+- `audit: { sink }`, in `defineBot()` and `createAuditLog()`: use
+  `sinks: [sink]`. It is still used as the first of the sinks. Code
+  `DJS_BOT_DEP_AUDIT_SINK`.
+- `emoji.custom(name, id, animated)`: use
+  `emoji.format({ name, id, animated })`. Code `DJS_BOT_DEP_EMOJI_CUSTOM`.
+- `defineSelectMenu()`: use `defineStringSelect()`, which takes the same
+  input; the type `SelectMenuDefinition` is now `StringSelectDefinition`. Code
+  `DJS_BOT_DEP_DEFINE_SELECT_MENU`.
+- `normalizeSharding()` and `launchShardManager()`: internal, with no
+  replacement. `defineBot({ sharding })` and `bot.start()` do this for you.
+  Code `DJS_BOT_DEP_SHARDING_INTERNALS`.
+
+### Added
+
+- **`defineStringSelect()`**, named like `defineUserSelect()` and the other
+  native selects, with its type `StringSelectDefinition`. `djs-bot generate
+  select` writes it.
+- **The `CronField` type** is exported: one field of the cron schedule that
+  `parseSchedule()` returns.
+
+### Documentation
+
+- The documentation was rebuilt as a plain reference.
+
 ## 1.4.1
 
 A security update of `@ix-xs/node-comfort`, and new documentation.

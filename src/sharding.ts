@@ -9,6 +9,7 @@
  * @module sharding
  */
 import { ShardingManager } from "discord.js";
+import { deprecated } from "./deprecate.js";
 import type { Logger } from "./logger.js";
 
 /** Sharding configuration. */
@@ -21,8 +22,17 @@ export interface ShardingOptions {
   respawn?: boolean;
 }
 
-/** Normalises the loose `sharding` config into full options. */
+/**
+ * Normalises the loose `sharding` config into full options.
+ * @deprecated Internal: `defineBot({ sharding })` does this for you. It has no replacement and will be removed in 2.0.
+ */
 export function normalizeSharding(input: boolean | "auto" | ShardingOptions): ShardingOptions {
+  deprecated("DJS_BOT_DEP_SHARDING_INTERNALS", "normalizeSharding()");
+  return shardingOptions(input);
+}
+
+/** Normalises the loose `sharding` config into full options. */
+export function shardingOptions(input: boolean | "auto" | ShardingOptions): ShardingOptions {
   if (typeof input !== "object") return { totalShards: "auto", mode: "process", respawn: true };
   return { totalShards: input.totalShards ?? "auto", mode: input.mode ?? "process", respawn: input.respawn ?? true };
 }
@@ -43,8 +53,23 @@ export function isShardChild(): boolean {
 /**
  * Launches a {@link ShardingManager} for the given entry file. Called from the
  * manager process only; resolves once all shards have been spawned.
+ * @deprecated Internal: `bot.start()` does this when `sharding` is set. It has no replacement and will be removed in 2.0.
  */
 export async function launchShardManager(
+  entryFile: string,
+  token: string,
+  options: ShardingOptions,
+  logger: Logger,
+): Promise<ShardingManager> {
+  deprecated("DJS_BOT_DEP_SHARDING_INTERNALS", "launchShardManager()");
+  return startShardManager(entryFile, token, options, logger);
+}
+
+/**
+ * Launches a {@link ShardingManager} for the given entry file. Called from the
+ * manager process only; resolves once all shards have been spawned.
+ */
+export async function startShardManager(
   entryFile: string,
   token: string,
   options: ShardingOptions,

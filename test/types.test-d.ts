@@ -12,6 +12,10 @@ import {
   defineButton,
   defineModal,
   defineService,
+  defineStringSelect,
+  defineSelectMenu,
+  type StringSelectDefinition,
+  type SelectMenuDefinition,
   type KVStore,
   type InferOptions,
   type InferParams,
@@ -206,3 +210,10 @@ defineCommand({
     type _a5 = Expect<Equal<typeof ctx.options.amount, number | undefined>>;
   },
 });
+
+/* ---------- the deprecated select names give the same types as the new ---- */
+
+const Picked = defineStringSelect({ id: "pick", params: { page: p.number }, run: () => undefined });
+type _s1 = Expect<Equal<typeof Picked, StringSelectDefinition<{ page: typeof p.number }>>>;
+type _s2 = Expect<Equal<SelectMenuDefinition<{ page: typeof p.number }>, StringSelectDefinition<{ page: typeof p.number }>>>;
+type _s3 = Expect<Equal<typeof defineSelectMenu, typeof defineStringSelect>>;

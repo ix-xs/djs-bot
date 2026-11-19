@@ -337,7 +337,7 @@ export function memoryStore<V = unknown>(): KVStore<V> {
 
 /* ------------------------------- SQLite ---------------------------------- */
 
-type SQLiteInstance = InstanceType<typeof comfort.SQLite>;
+type SQLiteInstance = comfort.sqlite.SQLite;
 
 /**
  * The prefix as a GLOB pattern, with `*`, `?` and `[` in brackets so a
@@ -433,7 +433,7 @@ function sqliteBackend(db: SQLiteInstance): KVBackend {
  * @example const store = sqliteStore("data/bot.sqlite");
  */
 export function sqliteStore<V = unknown>(path = "data/store.sqlite"): KVStore<V> {
-  return createStore<V>(sqliteBackend(new comfort.SQLite(path)));
+  return createStore<V>(sqliteBackend(comfort.sqlite.open(path)));
 }
 
 /**

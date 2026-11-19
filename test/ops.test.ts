@@ -11,7 +11,7 @@ import type { AddressInfo } from "node:net";
 
 describe("audit log", () => {
   it("records and queries with filters", async () => {
-    const audit = createAuditLog({ sink: memoryAuditSink() });
+    const audit = createAuditLog({ sinks: [memoryAuditSink()] });
     await audit.record("member.ban", { actorId: "mod", guildId: "g1", targetId: "u1" });
     await audit.record("member.kick", { actorId: "mod", guildId: "g1" });
     await audit.record("member.ban", { actorId: "other", guildId: "g2" });

@@ -8,6 +8,7 @@
  * @module audit
  */
 import comfort from "@ix-xs/node-comfort";
+import { deprecated } from "./deprecate.js";
 import { createLogger, type Logger } from "./logger.js";
 import { upgradeStore, type KVStore } from "./store.js";
 
@@ -118,9 +119,12 @@ export function loggerAuditSink(logger: Logger = createLogger()): AuditSink {
 
 /** Options for {@link createAuditLog}. */
 export interface AuditLogOptions {
-  /** A single sink. */
+  /**
+   * A single sink.
+   * @deprecated Use `sinks: [sink]`. It will be removed in 2.0.
+   */
   sink?: AuditSink;
-  /** Multiple sinks (all receive every entry). */
+  /** Where entries are written; each entry goes to all of them. */
   sinks?: AuditSink[];
 }
 
@@ -129,6 +133,8 @@ export interface AuditLogOptions {
  * @example const audit = createAuditLog({ sinks: [loggerAuditSink(logger), storeAuditSink(store)] });
  */
 export function createAuditLog(options: AuditLogOptions = {}): AuditLog {
+  // The deprecated `sink` is the first of the sinks, as it always was.
+  if (options.sink !== undefined) deprecated("DJS_BOT_DEP_AUDIT_SINK", "The audit option `sink`", "`sinks: [sink]`");
   const sinks = [...(options.sink ? [options.sink] : []), ...(options.sinks ?? [])];
   if (sinks.length === 0) sinks.push(memoryAuditSink());
 

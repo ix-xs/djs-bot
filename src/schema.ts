@@ -5,7 +5,7 @@
  *   map you pass to {@link defineCommand} is turned into a fully-typed
  *   `ctx.options` object, so `ctx.options.user` is a `GuildMember`, not `any`.
  * - `p` - customId parameter codecs (`p.string`, `p.number`, …) used by
- *   {@link defineButton}/{@link defineSelectMenu} to encode typed params into a
+ *   {@link defineButton}/{@link defineStringSelect} to encode typed params into a
  *   component's customId and decode them back with the right types.
  * - `field` - modal component builders (text inputs, selects, file uploads,
  *   radio groups, checkboxes).
@@ -23,6 +23,7 @@ import type {
   User,
 } from "discord.js";
 import type { AutocompleteHandler } from "./context.js";
+import { deprecated } from "./deprecate.js";
 
 /* -------------------------------------------------------------------------- */
 /*  Slash command options                                                     */
@@ -300,17 +301,28 @@ export const p = {
     encode: (v: boolean) => (v ? "1" : "0"),
     decode: (raw: string) => raw === "1",
   } as ParamCodec<boolean>,
-  /** A parameter restricted to a fixed set of strings (typed as that union). */
-  oneOf,
+  /**
+   * A parameter restricted to a fixed set of strings, so `ctx.params` is typed
+   * as that union instead of a plain `string`.
+   *
+   * @example params: { action: p.oneOf("approve", "reject") } // "approve" | "reject"
+   */
+  oneOf: oneOfCodec,
 };
 
 /**
- * Builds a codec for a parameter that must be one of a fixed set of strings, so
- * `ctx.params` is typed as that union instead of a plain `string`.
+ * Builds a codec for a parameter that must be one of a fixed set of strings.
  *
- * @example params: { action: oneOf("approve", "reject") } // "approve" | "reject"
+ * @deprecated Use `p.oneOf()`, which does the same. It will be removed in 2.0.
+ * @example params: { action: p.oneOf("approve", "reject") } // "approve" | "reject"
  */
 export function oneOf<const T extends readonly [string, ...string[]]>(...values: T): ParamCodec<T[number]> {
+  deprecated("DJS_BOT_DEP_ONEOF", "oneOf()", "p.oneOf()");
+  return oneOfCodec(...values);
+}
+
+/** The codec behind `p.oneOf()`. */
+function oneOfCodec<const T extends readonly [string, ...string[]]>(...values: T): ParamCodec<T[number]> {
   const allowed = new Set<string>(values);
   return {
     type: "string",

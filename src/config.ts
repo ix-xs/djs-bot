@@ -118,9 +118,12 @@ export interface BotConfig {
   store?: KVStore;
   /** Audit trail. Enables `ctx.audit(...)` and the `audit` service. */
   audit?: {
-    /** Where entries are written. Default: an in-memory sink. */
+    /**
+     * One destination.
+     * @deprecated Use `sinks: [sink]`. It will be removed in 2.0.
+     */
     sink?: AuditSink;
-    /** Several destinations at once; each entry goes to all of them. */
+    /** Where entries are written; each entry goes to all of them. Default: an in-memory sink. */
     sinks?: AuditSink[];
     /** Automatically record every command use as `command:<name>`. */
     autoRecordCommands?: boolean;
