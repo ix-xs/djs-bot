@@ -4,6 +4,7 @@
  * @module config
  */
 import comfort from "@ix-xs/node-comfort";
+import { deprecated } from "./deprecate.js";
 import type { ClientOptions, GatewayIntentBits, Partials, PresenceData } from "discord.js";
 import type { LogLevel } from "./logger.js";
 import type { Registrable } from "./registry.js";
@@ -141,39 +142,70 @@ export interface BotConfig {
 }
 
 /**
+ * An environment variable, or `undefined` when it is unset or empty. What the
+ * framework reads `DISCORD_TOKEN`, `DISCORD_CLIENT_ID` and `DISCORD_DEV_GUILD`
+ * with.
+ * @internal
+ */
+export function envVar(name: string): string | undefined {
+  return comfort.env.get(name) || undefined;
+}
+
+/**
  * Reads an environment variable, with an optional fallback. Throws a clear
  * error when a required variable is missing. The `.env` file of the working
  * directory is already in the environment by then: it is read when the package
- * is imported (see {@link loadEnvFile}).
+ * is imported.
  *
+ * @deprecated Use node-comfort's `env`: `nc.env.required(name)` for
+ * `env(name)`, and `nc.env.string(name, { default: fallback })` for
+ * `env(name, fallback)`. Both treat an empty value as unset, as this one does;
+ * a missing variable is a `ValidationError` instead of an `Error`. It will be
+ * removed in 2.0.
  * @example const token = env("DISCORD_TOKEN");
  * @example const level = env("LOG_LEVEL", "info");
  */
 export function env(name: string, fallback?: string): string {
-  const value = process.env[name];
-  if (value !== undefined && value !== "") return value;
+  deprecated("DJS_BOT_DEP_ENV", "env()", "nc.env.required() or nc.env.string(name, { default })");
+  return requiredEnv(name, fallback);
+}
+
+function requiredEnv(name: string, fallback?: string): string {
+  const value = envVar(name);
+  if (value !== undefined) return value;
   if (fallback !== undefined) return fallback;
   throw new Error(
     `Missing required environment variable "${name}". Add it to your environment or a .env file.`,
   );
 }
 
-/** Like {@link env} but returns `undefined` instead of throwing when unset. */
+/**
+ * Like {@link env} but returns `undefined` instead of throwing when unset.
+ *
+ * @deprecated Use `nc.env.string(name, { optional: true })`, which also gives
+ * `undefined` for an empty value. `nc.env.get(name)` is close, but returns an
+ * empty value as `""`. It will be removed in 2.0.
+ */
 env.optional = function optional(name: string): string | undefined {
-  const value = process.env[name];
-  return value === "" ? undefined : value;
+  deprecated("DJS_BOT_DEP_ENV", "env.optional()", "nc.env.string(name, { optional: true })");
+  return envVar(name);
 };
 
 /**
  * Reads a numeric variable. Throws when it is missing without a fallback, or
  * when its value is not a number - so a typo fails at startup.
+ *
+ * @deprecated Use `nc.env.number(name)`, or `nc.env.number(name, { default: fallback })`.
+ * It also refuses `Infinity`, and takes `min`, `max` and `integer`. It will be
+ * removed in 2.0.
  * @example const port = env.number("PORT", 3000);
  */
 env.number = function number(name: string, fallback?: number): number {
-  const raw = env.optional(name);
+  deprecated("DJS_BOT_DEP_ENV", "env.number()", "nc.env.number(name, { default })");
+  const raw = envVar(name);
   if (raw === undefined) {
     if (fallback !== undefined) return fallback;
-    return Number(env(name)); // throws the standard "missing variable" error
+    return Number(requiredEnv(name)); // throws the standard "missing variable" error
   }
   const value = Number(raw);
   if (Number.isNaN(value)) {
@@ -185,10 +217,15 @@ env.number = function number(name: string, fallback?: number): number {
 /**
  * Reads a boolean variable: `true`/`1`/`yes`/`on` and `false`/`0`/`no`/`off`
  * (any case). Unset resolves to `fallback` (default `false`).
+ *
+ * @deprecated Use `nc.env.boolean(name, { default: false })`, which reads the
+ * same spellings. Without `default` it is required, where this one gave
+ * `false`. It will be removed in 2.0.
  * @example const debug = env.boolean("DEBUG");
  */
 env.boolean = function boolean(name: string, fallback = false): boolean {
-  const raw = env.optional(name)?.trim().toLowerCase();
+  deprecated("DJS_BOT_DEP_ENV", "env.boolean()", "nc.env.boolean(name, { default: false })");
+  const raw = envVar(name)?.trim().toLowerCase();
   if (raw === undefined) return fallback;
   if (["true", "1", "yes", "on"].includes(raw)) return true;
   if (["false", "0", "no", "off"].includes(raw)) return false;
@@ -198,10 +235,15 @@ env.boolean = function boolean(name: string, fallback = false): boolean {
 /**
  * Reads a comma-separated variable as a list, trimming each entry and dropping
  * empty ones. Unset resolves to an empty list.
+ *
+ * @deprecated Use `nc.env.list(name, { default: [] })`, which trims and drops
+ * empty entries too. Without `default` it is required, where this one gave
+ * `[]`. It will be removed in 2.0.
  * @example owners: env.list("OWNER_IDS")
  */
 env.list = function list(name: string): string[] {
-  return (env.optional(name) ?? "")
+  deprecated("DJS_BOT_DEP_ENV", "env.list()", "nc.env.list(name, { default: [] })");
+  return (envVar(name) ?? "")
     .split(",")
     .map((entry) => entry.trim())
     .filter(Boolean);
@@ -219,8 +261,10 @@ env.list = function list(name: string): string[] {
  * can run code included (`NODE_OPTIONS`, `NODE_TLS_REJECT_UNAUTHORIZED`...):
  * call it only on a file you trust.
  *
+ * @deprecated Use `nc.env.load(path)`, which this calls. It will be removed in 2.0.
  * @example loadEnvFile(".env.local");
  */
 export function loadEnvFile(path = ".env"): void {
+  deprecated("DJS_BOT_DEP_LOAD_ENV_FILE", "loadEnvFile()", "nc.env.load(path)");
   comfort.env.load(path);
 }

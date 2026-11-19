@@ -54,7 +54,7 @@ import {
   type DeferOption,
   type Responder,
 } from "./context.js";
-import { env, type BotConfig, type FeatureSource } from "./config.js";
+import { envVar, type BotConfig, type FeatureSource } from "./config.js";
 import { createI18n, type I18n } from "./i18n.js";
 import { createAuditLog, type AuditLog } from "./audit.js";
 import { createFeatureFlags } from "./flags.js";
@@ -249,7 +249,7 @@ export class Bot {
 
   /** The configured dev guild (from `deploy.devGuildId` or `DISCORD_DEV_GUILD`), if any. */
   public get devGuildId(): string | undefined {
-    return this.config.deploy?.devGuildId ?? env.optional("DISCORD_DEV_GUILD");
+    return this.config.deploy?.devGuildId ?? envVar("DISCORD_DEV_GUILD");
   }
 
   /** Registers additional definitions explicitly (in addition to `config.features`). */
@@ -451,7 +451,7 @@ export class Bot {
       return;
     }
 
-    const token = this.config.token ?? env.optional("DISCORD_TOKEN");
+    const token = this.config.token ?? envVar("DISCORD_TOKEN");
     if (!token) throw new BotError("DJSBOT_E001");
 
     // If sharding is enabled and we're the manager process (not a spawned
@@ -705,9 +705,9 @@ export class Bot {
     // One deploy per process group is enough: let shard 0 do it.
     if (client.shard && !client.shard.ids.includes(0)) return;
 
-    const token = this.config.token ?? env.optional("DISCORD_TOKEN");
+    const token = this.config.token ?? envVar("DISCORD_TOKEN");
     if (!token) return;
-    const clientId = this.config.clientId ?? env.optional("DISCORD_CLIENT_ID") ?? client.application.id;
+    const clientId = this.config.clientId ?? envVar("DISCORD_CLIENT_ID") ?? client.application.id;
     const devGuildId = this.devGuildId;
     // In development with a dev guild, mirror everything there for instant
     // testing; otherwise reconcile the real plan (global + per-command guilds).
@@ -791,9 +791,9 @@ export class Bot {
 
   /** Resolves the token + client id needed to deploy, with clear coded errors. */
   private deployCredentials(): { token: string; clientId: string } {
-    const token = this.config.token ?? env.optional("DISCORD_TOKEN");
+    const token = this.config.token ?? envVar("DISCORD_TOKEN");
     if (!token) throw new BotError("DJSBOT_E001");
-    const clientId = this.config.clientId ?? env.optional("DISCORD_CLIENT_ID");
+    const clientId = this.config.clientId ?? envVar("DISCORD_CLIENT_ID");
     if (!clientId) throw new BotError("DJSBOT_E002");
     return { token, clientId };
   }
@@ -1401,7 +1401,7 @@ function resolveOptions(
 /**
  * Creates a {@link Bot}. This is the framework's entry point.
  * @example
- * export default defineBot({ token: env("DISCORD_TOKEN"), features: "./features" });
+ * export default defineBot({ features: "./features" }); // the token comes from DISCORD_TOKEN
  */
 export function defineBot(config: BotConfig): Bot {
   return new Bot(config);

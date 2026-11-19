@@ -10,6 +10,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { ShardingManager } from "discord.js";
+import nc from "@ix-xs/node-comfort";
 import {
   createAuditLog,
   defineBot,
@@ -21,7 +22,14 @@ import {
   normalizeSharding,
   oneOf,
   p,
+  env,
+  loadEnvFile,
+  retry,
+  timeout,
+  createCache,
+  TTLCache,
   type AuditLog,
+  type Bot,
 } from "../src/index.js";
 import { resetDeprecations } from "../src/deprecate.js";
 import { createLogger } from "../src/logger.js";
@@ -109,6 +117,131 @@ describe("deprecated names", () => {
   });
 });
 
+describe("deprecated copies of node-comfort", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("env() and its helpers still read the environment, with one warning for all", () => {
+    vi.stubEnv("DJSBOT_T_TEXT", "hello");
+    vi.stubEnv("DJSBOT_T_EMPTY", "");
+    vi.stubEnv("DJSBOT_T_NUM", "42");
+    vi.stubEnv("DJSBOT_T_BOOL", "yes");
+    vi.stubEnv("DJSBOT_T_LIST", " a, b ,,c ");
+    expect(env("DJSBOT_T_TEXT")).toBe("hello");
+    expect(env("DJSBOT_T_EMPTY", "fallback")).toBe("fallback");
+    expect(() => env("DJSBOT_T_MISSING")).toThrow(/Missing required/);
+    expect(env.optional("DJSBOT_T_EMPTY")).toBeUndefined();
+    expect(env.number("DJSBOT_T_NUM")).toBe(42);
+    expect(env.boolean("DJSBOT_T_BOOL")).toBe(true);
+    expect(env.boolean("DJSBOT_T_MISSING")).toBe(false);
+    expect(env.list("DJSBOT_T_LIST")).toEqual(["a", "b", "c"]);
+    expect(env.list("DJSBOT_T_MISSING")).toEqual([]);
+    expect(codes()).toEqual(["DJS_BOT_DEP_ENV"]);
+  });
+
+  it("each env helper names itself when it is the first used", () => {
+    vi.stubEnv("DJSBOT_T_NUM", "7");
+    expect(env.number("DJSBOT_T_NUM")).toBe(7);
+    expect(String(emitWarning.mock.calls[0]![0])).toBe(
+      "env.number() is deprecated: use nc.env.number(name, { default }). It will be removed in 2.0.",
+    );
+  });
+
+  it("node-comfort reads the same values without a warning", () => {
+    vi.stubEnv("DJSBOT_T_NUM", "42");
+    vi.stubEnv("DJSBOT_T_BOOL", "yes");
+    vi.stubEnv("DJSBOT_T_LIST", " a, b ,,c ");
+    vi.stubEnv("DJSBOT_T_EMPTY", "");
+    expect(nc.env.number("DJSBOT_T_NUM")).toBe(42);
+    expect(nc.env.boolean("DJSBOT_T_BOOL")).toBe(true);
+    expect(nc.env.boolean("DJSBOT_T_MISSING", { default: false })).toBe(false);
+    expect(nc.env.list("DJSBOT_T_LIST")).toEqual(["a", "b", "c"]);
+    expect(nc.env.list("DJSBOT_T_MISSING", { default: [] })).toEqual([]);
+    expect(nc.env.string("DJSBOT_T_EMPTY", { optional: true })).toBeUndefined();
+    expect(() => nc.env.required("DJSBOT_T_MISSING")).toThrow(/DJSBOT_T_MISSING/);
+    expect(codes()).toEqual([]);
+  });
+
+  it("loadEnvFile() still loads a file, and warns once", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "djsbot-load-env-"));
+    try {
+      writeFileSync(path.join(dir, ".env.local"), "DJSBOT_T_FROM_FILE=yes\n");
+      vi.stubEnv("DJSBOT_T_FROM_FILE", undefined);
+      loadEnvFile(path.join(dir, ".env.local"));
+      loadEnvFile(path.join(dir, ".env.missing"));
+      expect(process.env.DJSBOT_T_FROM_FILE).toBe("yes");
+      expect(codes()).toEqual(["DJS_BOT_DEP_LOAD_ENV_FILE"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("retry() and timeout() still work, with one warning for both", async () => {
+    let calls = 0;
+    const result = await retry(
+      () => {
+        calls++;
+        if (calls < 2) throw new Error("again");
+        return "done";
+      },
+      { delay: 0, jitter: 0 },
+    );
+    expect(result).toBe("done");
+    await expect(timeout(new Promise(() => undefined), 5, "too slow")).rejects.toThrow("too slow");
+    expect(codes()).toEqual(["DJS_BOT_DEP_RETRY_TIMEOUT"]);
+  });
+
+  it("nc.async.retry() and nc.async.timeout() do the same without a warning", async () => {
+    let calls = 0;
+    const result = await nc.async.retry(() => {
+      calls++;
+      if (calls < 2) throw new Error("again");
+      return "done";
+    });
+    expect(result).toBe("done");
+    await expect(nc.async.timeout(new Promise(() => undefined), 5, "too slow")).rejects.toThrow("too slow");
+    expect(codes()).toEqual([]);
+  });
+
+  it("createCache() and TTLCache still cache, with one warning for both", async () => {
+    const cache = createCache<string, number>({ ttl: "1m", max: 2 });
+    new TTLCache<string, number>();
+    let calls = 0;
+    const fetcher = async () => ++calls;
+    expect(await cache.getOrFetch("k", fetcher)).toBe(1);
+    expect(await cache.getOrFetch("k", fetcher)).toBe(1);
+    cache.set("a", 2, "1s");
+    cache.set("b", 3);
+    expect(cache.has("k")).toBe(false); // the oldest went when the cache was full
+    expect(cache.get("a")).toBe(2);
+    expect(codes()).toEqual(["DJS_BOT_DEP_CACHE"]);
+    expect(String(emitWarning.mock.calls[0]![0])).toBe(
+      'createCache() is deprecated: use nc.cache.create({ ttl: "5m", max: 1000, ...options }). It will be removed in 2.0.',
+    );
+  });
+
+  it("nc.cache.create() does the same with the mapped names, without a warning", async () => {
+    const opts: { ttl?: string; max?: number } = { ttl: "1m", max: 2 };
+    const cache = nc.cache.create<string, number>({ ttl: "5m", max: 1000, ...opts });
+    let calls = 0;
+    const fetcher = async () => ++calls;
+    expect(await cache.getOrSet("k", fetcher)).toBe(1);
+    expect(await cache.getOrSet("k", fetcher)).toBe(1);
+    cache.set("a", 2, { ttl: "1s" });
+    cache.set("b", 3);
+    expect(cache.has("k")).toBe(false);
+    expect(cache.get("a")).toBe(2);
+    expect(codes()).toEqual([]);
+  });
+
+  it("the bot reads DISCORD_DEV_GUILD itself, without a warning", async () => {
+    vi.stubEnv("DISCORD_DEV_GUILD", "123456789012345678");
+    const bot = defineBot({ logger: { level: "silent" } });
+    await bot.load();
+    expect(bot.devGuildId).toBe("123456789012345678");
+    expect(codes()).toEqual([]);
+  });
+});
+
 describe("the names that replace them", () => {
   it("never warn", async () => {
     p.oneOf("approve", "reject").decode("reject");
@@ -158,18 +291,25 @@ describe("the code the CLI writes", () => {
       const results = await Promise.all(GENERATORS.map((type) => cli(dir, "generate", type, `my-${type}`)));
       for (const { code, out } of results) expect(code, out).toBe(0);
 
-      // The starter's entry reads the token, and starts the bot unless the CLI loads it.
-      vi.stubEnv("DISCORD_TOKEN", "a.b.c");
+      // The starter no longer reads the environment itself: the bot does.
+      const entry = readFileSync(path.join(dir, "src/index.ts"), "utf8");
+      expect(entry).not.toMatch(/env/);
+      expect(entry).not.toContain("token:");
+
+      // Each file runs, with the framework imported from the source. The
+      // entry starts the bot unless the CLI loads it.
       vi.stubEnv("DJSBOT_CLI", "1");
-      // Each file runs, with the framework imported from the source.
       const index = JSON.stringify(pathToFileURL(path.resolve("src/index.ts")).href);
       const files = tsFiles(dir);
       expect(files.length).toBe(GENERATORS.length + 2);
-      for (const file of files) {
-        const runnable = file.replace(/\.ts$/, ".local.ts");
-        writeFileSync(runnable, readFileSync(file, "utf8").replaceAll('"@ix-xs/djs-bot"', index));
-        await import(/* @vite-ignore */ pathToFileURL(runnable).href);
-      }
+      for (const file of files) writeFileSync(file, readFileSync(file, "utf8").replaceAll('"@ix-xs/djs-bot"', index));
+      for (const file of files) await import(/* @vite-ignore */ pathToFileURL(file).href);
+
+      // The starter's bot loads its features, the generated ones included.
+      const entryUrl = pathToFileURL(path.join(dir, "src/index.ts")).href;
+      const { default: bot } = (await import(/* @vite-ignore */ entryUrl)) as { default: Bot };
+      await bot.load();
+      expect([...bot.registry.commands.keys()].sort()).toEqual(["my-command", "ping"]);
       expect(codes()).toEqual([]);
     } finally {
       vi.unstubAllEnvs();

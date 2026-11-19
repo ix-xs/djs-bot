@@ -2,11 +2,13 @@
  * Production resilience primitives: rate limiting, circuit breaking, retry and
  * timeout. Reach for these in services that call databases or third-party APIs.
  *
- * `retry` and `timeout` are thin, typed wrappers over `@ix-xs/node-comfort`.
+ * `retry` and `timeout` are deprecated: use `nc.async.retry` and
+ * `nc.async.timeout` from `@ix-xs/node-comfort`, which they wrap.
  *
  * @module resilience
  */
 import comfort from "@ix-xs/node-comfort";
+import { deprecated } from "./deprecate.js";
 import { guard, pass, fail, scopeKey, type Guard, type CooldownScope } from "./guards.js";
 import { messageFor } from "./messages.js";
 import { durationMs } from "./duration.js";
@@ -210,7 +212,10 @@ export function createCircuitBreaker(options?: CircuitBreakerOptions): CircuitBr
 
 /* -------------------------------- Retry / timeout ------------------------ */
 
-/** Options for {@link retry}. */
+/**
+ * Options for {@link retry}.
+ * @deprecated Use the options of `nc.async.retry()`: the same names. It will be removed in 2.0.
+ */
 export interface RetryOptions {
   /** Max attempts (including the first). Default `3`. */
   attempts?: number;
@@ -239,9 +244,15 @@ export interface RetryOptions {
 /**
  * Retries an async function with exponential backoff + jitter. An attempt that
  * fails because it was aborted (an `AbortError`) is not tried again.
+ *
+ * @deprecated Use `nc.async.retry(fn, options)`. The options have the same
+ * names, but not the same defaults: there they are `delay: 0`, `backoff: 1`
+ * and `jitter: 0`, so pass `{ delay: 200, backoff: 2, jitter: 0.2 }` to keep
+ * what this one does. It will be removed in 2.0.
  * @example await retry(() => fetchFromApi(), { attempts: 5, delay: 300 });
  */
 export function retry<T>(fn: () => T | Promise<T>, options: RetryOptions = {}): Promise<T> {
+  deprecated("DJS_BOT_DEP_RETRY_TIMEOUT", "retry()", "nc.async.retry()");
   return comfort.async.retry(fn, {
     ...options,
     // The documented defaults. Without them the retries would fire back to back.
@@ -255,6 +266,9 @@ export function retry<T>(fn: () => T | Promise<T>, options: RetryOptions = {}): 
  * Rejects if `promise` doesn't settle within `ms` (milliseconds, or text such
  * as `"5s"`). Given a function, it passes it a signal that aborts when the
  * time is up, so the work can stop too.
+ *
+ * @deprecated Use `nc.async.timeout(promise, ms, message)`, the same
+ * function. It will be removed in 2.0.
  * @example await timeout(fetchFromApi(), 5000, "API too slow");
  * @example await timeout((signal) => fetch(url, { signal }), "5s");
  */
@@ -263,5 +277,6 @@ export function timeout<T>(
   ms: number | string,
   message?: string,
 ): Promise<T> {
+  deprecated("DJS_BOT_DEP_RETRY_TIMEOUT", "timeout()", "nc.async.timeout()");
   return comfort.async.timeout(promise, ms, message) as Promise<T>;
 }

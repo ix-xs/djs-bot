@@ -3,6 +3,62 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## 1.6.0
+
+djs-bot stops offering its own copies of what `@ix-xs/node-comfort` already
+does: every bot has node-comfort, since djs-bot depends on it. Nothing breaks:
+each copy keeps working until 2.0, and says once what to write instead.
+
+### Deprecated
+
+Each one prints one `DeprecationWarning` per process, with its code. They are
+removed in 2.0. `nc` is `import nc from "@ix-xs/node-comfort"`.
+
+- `env()` and its helpers: use `nc.env`. Code `DJS_BOT_DEP_ENV`.
+  - `env(name)`: `nc.env.required(name)`.
+  - `env(name, fallback)`: `nc.env.string(name, { default: fallback })`.
+  - `env.optional(name)`: `nc.env.string(name, { optional: true })`.
+    `nc.env.get(name)` is close, but gives an empty value as `""`.
+  - `env.number(name, fallback)`: `nc.env.number(name, { default: fallback })`.
+    It also refuses `Infinity`.
+  - `env.boolean(name)`: `nc.env.boolean(name, { default: false })`. Without
+    `default` it is required, where `env.boolean` gave `false`.
+  - `env.list(name)`: `nc.env.list(name, { default: [] })`. Without `default`
+    it is required, where `env.list` gave `[]`.
+
+  A missing or invalid variable is a `ValidationError` there, instead of an
+  `Error`.
+- `loadEnvFile(path)`: use `nc.env.load(path)`, which it already called. Code
+  `DJS_BOT_DEP_LOAD_ENV_FILE`.
+- `retry()` and `timeout()`, with the `RetryOptions` type: use
+  `nc.async.retry()` and `nc.async.timeout()`. Code
+  `DJS_BOT_DEP_RETRY_TIMEOUT`. The options have the same names, but
+  `nc.async.retry()` has other defaults: `delay: 0`, `backoff: 1`,
+  `jitter: 0`. Pass `{ delay: 200, backoff: 2, jitter: 0.2 }` to keep the
+  waits of `retry()`.
+- `createCache()`, `TTLCache` and the `TTLCacheOptions` type: use
+  node-comfort's cache. Code `DJS_BOT_DEP_CACHE`. It is not a drop-in
+  replacement:
+  - `createCache(opts)` becomes
+    `nc.cache.create({ ttl: "5m", max: 1000, ...opts })`, to keep the old
+    defaults (node-comfort keeps entries forever, with no size limit).
+  - `getOrFetch` becomes `getOrSet`.
+  - `set(k, v, ttl)` becomes `set(k, v, { ttl })`.
+  - `staleWhileRevalidate` is a time window in node-comfort, used only by
+    `getOrSet`. Expired values are no longer returned by `get()` or `has()`.
+
+  `resolve` and `isHiddenChannel`, which are about Discord, stay.
+
+### Changed
+
+- **`djs-bot init` no longer writes `env()` in the starter.** The bot reads
+  `DISCORD_TOKEN`, `DISCORD_CLIENT_ID` and `DISCORD_DEV_GUILD` by itself, and
+  node-comfort loads `.env` when the package is imported, so the starter's
+  `defineBot()` has no `token`, `clientId` or `deploy.devGuildId` any more.
+  The README examples follow, and read other variables with `nc.env`.
+- The framework reads its own variables through node-comfort, and never uses
+  a deprecated name.
+
 ## 1.5.0
 
 The framework moves to `@ix-xs/node-comfort` 3.0, and gives a few names a

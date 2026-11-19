@@ -35,6 +35,7 @@ import {
 import { renderMessage } from "../src/messages.js";
 import { FILE_SUFFIXES } from "../src/constants.js";
 import { createHarness } from "../src/testing.js";
+import { quietDeprecations } from "./quiet.js";
 
 describe("VERSION", () => {
   it("matches package.json, so it cannot drift", () => {
@@ -322,7 +323,8 @@ describe("loader conventions", () => {
   });
 });
 
-describe("env helpers", () => {
+describe("env helpers (deprecated)", () => {
+  quietDeprecations();
   const set = (name: string, value?: string) => {
     if (value === undefined) delete process.env[name];
     else process.env[name] = value;
