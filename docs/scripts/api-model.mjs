@@ -214,7 +214,7 @@ export function build() {
     const examples = [];
     const see = [];
     for (const tag of tags) {
-      const value = ts.displayPartsToString(tag.text ?? []).trim();
+      const value = tagText(tag.text ?? []).trim();
       if (tag.name === "example") examples.push(stripFence(value));
       else if (tag.name === "deprecated") doc.deprecated = cleanLinks(value) || true;
       else if (tag.name === "default" || tag.name === "defaultValue") doc.default = value.replace(/^`|`$/g, "");
@@ -225,6 +225,20 @@ export function build() {
     if (see.length) doc.see = see;
     if (!doc.text) delete doc.text;
     return doc;
+  }
+
+  /**
+   * The text of a tag. TypeScript drops the line break after a `{@link}` that
+   * ends a line of the comment, which glues the next word to the link.
+   */
+  function tagText(parts) {
+    let out = "";
+    parts.forEach((part, index) => {
+      const previous = parts[index - 1];
+      if (previous?.kind === "link" && previous.text === "}" && /^\w/.test(part.text)) out += " ";
+      out += part.text;
+    });
+    return out;
   }
 
   const stripFence = (code) => code.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");

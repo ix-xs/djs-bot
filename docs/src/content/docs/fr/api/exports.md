@@ -475,19 +475,19 @@ Voir [Résilience](/production/resilience/).
 
 | Export | Genre | À quoi il sert |
 | --- | --- | --- |
-| [`createCircuitBreaker()`](/reference/create-circuit-breaker/) | Fonction | Crée un `CircuitBreaker`. |
-| [`createRateLimiter()`](/reference/create-rate-limiter/) | Fonction | Crée un `RateLimiter`. |
+| [`createCircuitBreaker()`](/reference/create-circuit-breaker/) | Fonction | **Obsolète.** Utilisez `nc.circuit.create(options)`. Crée un `CircuitBreaker`. |
+| [`createRateLimiter()`](/reference/create-rate-limiter/) | Fonction | **Obsolète.** Use `nc.quota.create({ limit, window })`. Crée un `RateLimiter`. |
 | [`rateLimit()`](/reference/rate-limit/) | Fonction | Une garde qui autorise `limit` utilisations par `window`, par portée (`"user"` par défaut). |
 | [`retry()`](/reference/retry/) | Fonction | **Obsolète.** Utilisez `nc.async.retry(fn, options)`. Réessaie une fonction asynchrone avec un backoff exponentiel + jitter. |
 | [`timeout()`](/reference/timeout/) | Fonction | **Obsolète.** Utilisez `nc.async.timeout(promise, ms, message)`, la même fonction. Rejette si `promise` ne se termine pas dans le délai `ms` (millisecondes, ou texte tel que `"5s"`). |
-| [`CircuitBreaker`](/reference/circuit-breaker/) | Classe | Un disjoncteur : après trop d'échecs, il s'« ouvre » et échoue immédiatement pendant une période de repos, puis réessaie (« semi-ouvert ») avant de se rétablir complètement. |
-| [`CircuitOpenError`](/reference/circuit-open-error/) | Classe | Erreur levée lorsque des appels sont rejetés parce que le circuit est ouvert. |
-| [`RateLimiter`](/reference/rate-limiter/) | Classe | Un limiteur de débit à fenêtre fixe, indexé par une chaîne arbitraire. |
-| [`CircuitBreakerOptions`](/reference/circuit-breaker-options/) | Interface | Options de `createCircuitBreaker`. |
-| [`RateLimiterOptions`](/reference/rate-limiter-options/) | Interface | Options de `createRateLimiter`. |
-| [`RateLimitResult`](/reference/rate-limit-result/) | Interface | Le résultat d'un appel à `RateLimiter.consume`. |
+| [`CircuitBreaker`](/reference/circuit-breaker/) | Classe | **Obsolète.** Utilisez `nc.circuit.create(options)`, ou `new nc.circuit.Circuit()`. Un disjoncteur : après trop d'échecs, il s'« ouvre » et échoue immédiatement pendant une période de repos, puis réessaie (« semi-ouvert ») avant de se rétablir complètement. |
+| [`CircuitOpenError`](/reference/circuit-open-error/) | Classe | **Obsolète.** Utilisez `nc.errors.CircuitOpenError`. Erreur levée lorsque des appels sont rejetés parce que le circuit est ouvert. |
+| [`RateLimiter`](/reference/rate-limiter/) | Classe | **Obsolète.** Utilisez `nc.quota.create({ limit, window })`, ou `new nc.quota.Quota()`. Un limiteur de débit à fenêtre fixe, indexé par une chaîne arbitraire. |
+| [`CircuitBreakerOptions`](/reference/circuit-breaker-options/) | Interface | **Obsolète.** Utilisez `CircuitOptions`, les options de `nc.circuit.create()` : les mêmes noms. Options de `createCircuitBreaker`. |
+| [`RateLimiterOptions`](/reference/rate-limiter-options/) | Interface | **Obsolète.** Utilisez `QuotaOptions`, les options de `nc.quota.create()` : les mêmes noms. Options de `createRateLimiter`. |
+| [`RateLimitResult`](/reference/rate-limit-result/) | Interface | **Obsolète.** Utilisez `QuotaResult`, ce que renvoie `nc.quota.create().consume()` : les mêmes champs. Le résultat d'un appel à `RateLimiter.consume`. |
 | [`RetryOptions`](/reference/retry-options/) | Interface | **Obsolète.** Utilisez les options de `nc.async.retry()` : les mêmes noms. Options de `retry`. |
-| [`CircuitState`](/reference/circuit-state/) | Type | L'état d'un `CircuitBreaker`. |
+| [`CircuitState`](/reference/circuit-state/) | Type | **Obsolète.** Utilisez `CircuitStatus`, les trois mêmes états, de node-comfort. L'état d'un `CircuitBreaker`. |
 
 ## Sharding
 

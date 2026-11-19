@@ -748,20 +748,20 @@
   "fr": "Construit le menu de salons discord.js. Le customId encode `params`."
  },
  "CircuitBreaker": {
-  "en": "A circuit breaker: after too many failures it \"opens\" and fails fast for a\ncool-off period, then tries again (\"half-open\") before fully recovering.\nProtects you (and the dependency) from hammering a failing service.",
-  "fr": "Un disjoncteur : après trop d'échecs, il s'« ouvre » et échoue immédiatement pendant une période de repos, puis réessaie (« semi-ouvert ») avant de se rétablir complètement. Il vous protège (vous et la dépendance) contre les appels répétés à un service défaillant."
+  "en": "A circuit breaker: after too many failures it \"opens\" and fails fast for a\ncool-off period, then tries again (\"half-open\") before fully recovering.\nProtects you (and the dependency) from hammering a failing service.\n\nIt is node-comfort's `Circuit` (`nc.circuit.Circuit`), under its old name.",
+  "fr": "Un disjoncteur : après trop d'échecs, il s'« ouvre » et échoue immédiatement pendant\nune période de repos, puis réessaie (« semi-ouvert ») avant de se rétablir complètement.\nVous protège (vous et la dépendance) contre le martèlement d'un service en panne.\n\nC'est le `Circuit` de node-comfort (`nc.circuit.Circuit`), sous son ancien nom."
  },
- "CircuitBreaker.execute": {
-  "en": "Runs `fn` through the breaker. Throws [`CircuitOpenError`](ref:CircuitOpenError) when open.",
-  "fr": "Exécute `fn` à travers le disjoncteur. Lève une [`CircuitOpenError`](ref:CircuitOpenError) quand il est ouvert."
- },
- "CircuitBreaker.status": {
-  "en": "The current state.",
-  "fr": "L'état actuel."
+ "CircuitBreaker#deprecated": {
+  "en": "Use `nc.circuit.create(options)`, or `new nc.circuit.Circuit()`.\nThe same states and options, with these differences: a threshold or a\n`resetTimeout` that is not valid throws instead of falling back on a\ndefault; `onOpen` and `onClose` run after the status has changed; a throw in\n`onClose` rejects that call but no longer counts as a failure; and the\n[`CircuitOpenError`](ref:CircuitOpenError) has a new message and a code. It will be removed in 2.0.",
+  "fr": "Utilisez `nc.circuit.create(options)`, ou `new nc.circuit.Circuit()`.\nLes mêmes états et options, avec ces différences : un seuil ou un\n`resetTimeout` invalide lève une erreur au lieu de retomber sur une valeur\npar défaut ; `onOpen` et `onClose` s'exécutent après le changement d'état ; une erreur dans\n`onClose` rejette cet appel mais ne compte plus comme un échec ; et\n[`CircuitOpenError`](ref:CircuitOpenError) a un nouveau message et un code. Sera supprimé en 2.0."
  },
  "CircuitBreakerOptions": {
   "en": "Options for [`createCircuitBreaker`](ref:createCircuitBreaker).",
   "fr": "Options de [`createCircuitBreaker`](ref:createCircuitBreaker)."
+ },
+ "CircuitBreakerOptions#deprecated": {
+  "en": "Use `CircuitOptions`, the options of `nc.circuit.create()`: the\nsame names. It will be removed in 2.0.",
+  "fr": "Utilisez `CircuitOptions`, les options de `nc.circuit.create()` : les\nmêmes noms. Sera supprimé en 2.0."
  },
  "CircuitBreakerOptions.failureThreshold": {
   "en": "Consecutive failures before the circuit opens. Default `5`.",
@@ -788,12 +788,20 @@
   "fr": "Nombre d'essais réussis nécessaires pour refermer complètement le circuit depuis l'état semi-ouvert. Par défaut `1`."
  },
  "CircuitOpenError": {
-  "en": "Error thrown when calls are rejected because the circuit is open.",
-  "fr": "Erreur levée lorsque des appels sont rejetés parce que le circuit est ouvert."
+  "en": "Error thrown when calls are rejected because the circuit is open.\n\nIt is node-comfort's `CircuitOpenError` under its old name: `instanceof`\nmatches every error a circuit rejects a call with, those of\n`nc.circuit.create()` included.",
+  "fr": "Erreur levée lorsque des appels sont rejetés parce que le circuit est ouvert.\n\nC'est la `CircuitOpenError` de node-comfort sous son ancien nom : `instanceof`\ncorrespond à toute erreur avec laquelle un disjoncteur rejette un appel, y compris\nceux de `nc.circuit.create()`."
+ },
+ "CircuitOpenError#deprecated": {
+  "en": "Use `nc.errors.CircuitOpenError`. Its message is now \"The\ncircuit is open: the call was rejected\", and it has `code:\n\"ERR_CIRCUIT_OPEN\"`. It will be removed in 2.0.",
+  "fr": "Utilisez `nc.errors.CircuitOpenError`. Son message est désormais \"The\ncircuit is open: the call was rejected\", et elle a `code:\n\"ERR_CIRCUIT_OPEN\"`. Sera supprimé en 2.0."
  },
  "CircuitState": {
   "en": "The state of a [`CircuitBreaker`](ref:CircuitBreaker).",
   "fr": "L'état d'un [`CircuitBreaker`](ref:CircuitBreaker)."
+ },
+ "CircuitState#deprecated": {
+  "en": "Use `CircuitStatus`, the same three states, from node-comfort.\nIt will be removed in 2.0.",
+  "fr": "Utilisez `CircuitStatus`, les trois mêmes états, de node-comfort.\nSera supprimé en 2.0."
  },
  "ClearOptions": {
   "en": "Options for [`clearCommands`](ref:clearCommands).",
@@ -3019,6 +3027,10 @@
   "en": "The outcome of a [`RateLimiter.consume`](ref:RateLimiter) call.",
   "fr": "Le résultat d'un appel à [`RateLimiter.consume`](ref:RateLimiter)."
  },
+ "RateLimitResult#deprecated": {
+  "en": "Use `QuotaResult`, what `nc.quota.create().consume()` returns:\nthe same fields. It will be removed in 2.0.",
+  "fr": "Utilisez `QuotaResult`, ce que renvoie `nc.quota.create().consume()` :\nles mêmes champs. Sera supprimé en 2.0."
+ },
  "RateLimitResult.allowed": {
   "en": "Whether this hit is within the limit.",
   "fr": "Indique si cet appel reste dans la limite."
@@ -3032,24 +3044,20 @@
   "fr": "Millisecondes avant la réinitialisation de la fenêtre."
  },
  "RateLimiter": {
-  "en": "A fixed-window rate limiter, keyed by an arbitrary string.",
-  "fr": "Un limiteur de débit à fenêtre fixe, indexé par une chaîne arbitraire."
+  "en": "A fixed-window rate limiter, keyed by an arbitrary string.\n\nIt is node-comfort's `Quota` (`nc.quota.Quota`), under its old name.",
+  "fr": "Un limiteur de débit à fenêtre fixe, indexé par une chaîne arbitraire.\n\nC'est le `Quota` de node-comfort (`nc.quota.Quota`), sous son ancien nom."
  },
- "RateLimiter.consume": {
-  "en": "Records a hit for `key` (cost defaults to 1) and reports whether it's allowed.",
-  "fr": "Enregistre un passage pour `key` (le coût vaut 1 par défaut) et indique s'il est autorisé."
- },
- "RateLimiter.reset": {
-  "en": "Clears the window for a key.",
-  "fr": "Efface la fenêtre d'une clé."
- },
- "RateLimiter.size": {
-  "en": "How many keys currently have an open window.",
-  "fr": "Le nombre de clés qui ont actuellement une fenêtre ouverte."
+ "RateLimiter#deprecated": {
+  "en": "Use `nc.quota.create({ limit, window })`, or `new nc.quota.Quota()`.\nThe same counting, with these differences: a `limit`, a `window` or a cost\nthat is not valid throws instead of falling back on a default (a window of\none minute), keys may be numbers too, and `reset()` says whether the key had\na window. It will be removed in 2.0.",
+  "fr": "Utilisez `nc.quota.create({ limit, window })`, ou `new nc.quota.Quota()`.\nLe même comptage, avec ces différences : une `limit`, une `window` ou un coût\ninvalide lève une erreur au lieu de retomber sur une valeur par défaut (une fenêtre\nd'une minute), les clés peuvent aussi être des nombres, et `reset()` indique si la clé\navait une fenêtre. Sera supprimé en 2.0."
  },
  "RateLimiterOptions": {
   "en": "Options for [`createRateLimiter`](ref:createRateLimiter).",
   "fr": "Options de [`createRateLimiter`](ref:createRateLimiter)."
+ },
+ "RateLimiterOptions#deprecated": {
+  "en": "Use `QuotaOptions`, the options of `nc.quota.create()`: the same\nnames. It will be removed in 2.0.",
+  "fr": "Utilisez `QuotaOptions`, les options de `nc.quota.create()` : les mêmes\nnoms. Sera supprimé en 2.0."
  },
  "RateLimiterOptions.limit": {
   "en": "Max number of allowed hits per window.",
@@ -3979,6 +3987,10 @@
   "en": "Creates a [`CircuitBreaker`](ref:CircuitBreaker).",
   "fr": "Crée un [`CircuitBreaker`](ref:CircuitBreaker)."
  },
+ "createCircuitBreaker#deprecated": {
+  "en": "Use `nc.circuit.create(options)`. See [`CircuitBreaker`](ref:CircuitBreaker) for\nthe differences. It will be removed in 2.0.",
+  "fr": "Utilisez `nc.circuit.create(options)`. Voir [`CircuitBreaker`](ref:CircuitBreaker) pour\nles différences. Sera supprimé en 2.0."
+ },
  "createFeatureFlags": {
   "en": "Creates a [`FeatureFlags`](ref:FeatureFlags) service.",
   "fr": "Crée un service [`FeatureFlags`](ref:FeatureFlags)."
@@ -3998,6 +4010,10 @@
  "createRateLimiter": {
   "en": "Creates a [`RateLimiter`](ref:RateLimiter).",
   "fr": "Crée un [`RateLimiter`](ref:RateLimiter)."
+ },
+ "createRateLimiter#deprecated": {
+  "en": "Use `nc.quota.create({ limit, window })`. See [`RateLimiter`](ref:RateLimiter) for the differences. It will be removed in 2.0.",
+  "fr": "Utilisez `nc.quota.create({ limit, window })`. Voir [`RateLimiter`](ref:RateLimiter) pour les différences. Sera supprimé en 2.0."
  },
  "createStore": {
   "en": "Builds a full [`KVStore`](ref:KVStore) from a minimal [`KVBackend`](ref:KVBackend). This is the\neasiest way to plug in your own database: implement `get`, `set`, `delete`\nand `keys`, and everything else is derived for you.",
@@ -4640,8 +4656,8 @@
   "fr": "Répartit les commandes du registre en un ensemble global et des ensembles par serveur, d'après le champ `guilds` de chaque commande. Une commande sans `guilds` est globale ; une commande qui liste des ids de serveur est déployée exactement sur ces serveurs."
  },
  "rateLimit": {
-  "en": "A guard that allows `limit` uses per `window`, per scope (default `\"user\"`).\nMore expressive than [`cooldown`](ref:cooldown) (which is 1 use per duration).",
-  "fr": "Une garde qui autorise `limit` utilisations par `window`, par portée (`\"user\"` par défaut). Plus expressive que [`cooldown`](ref:cooldown) (qui autorise 1 utilisation par durée)."
+  "en": "A guard that allows `limit` uses per `window`, per scope (default `\"user\"`).\nMore expressive than [`cooldown`](ref:cooldown) (which is 1 use per duration).\n\nA `limit` or a `window` that is not valid throws when the guard is created.",
+  "fr": "Une garde qui autorise `limit` utilisations par `window`, par portée (`\"user\"` par défaut).\nPlus expressive que [`cooldown`](ref:cooldown) (qui permet 1 utilisation par durée).\n\nUne `limit` ou une `window` invalide lève une erreur dès la création de la garde."
  },
  "resolve": {
   "en": "Cache-first fetch helpers. Each reads discord.js's own cache and only calls\nthe API on a miss. Pass `force: true` to always fetch.",

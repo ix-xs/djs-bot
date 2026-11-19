@@ -280,4 +280,4 @@ Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans l
 - [Features](/architecture/features/) : livrer des commandes et des événements avec un plugin.
 - [Gardes](/commands/guards/) : des règles pour certaines commandes plutôt que pour toutes.
 - [Erreurs](/api/errors/) : la barrière d'erreurs sur laquelle se branchent les hooks `onError`.
-- [Résilience](/production/resilience/) : le limiteur de débit sur lequel `antiSpam` est construit.
+- [Résilience](/production/resilience/) : la garde `rateLimit()` ; `antiSpam` compte de la même façon, avec les quotas de node-comfort.

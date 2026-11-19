@@ -8,7 +8,7 @@ description: "Ce qui change d'une version mineure à la suivante. Les anciens no
 | Anciens noms | Fonctionnent encore, affichent un `DeprecationWarning` chacun avec son code, supprimés en 2.0 |
 | Node.js | Inchangé depuis la 1.4 : 22.23.4, 24.22.1, 26.12.1 ou plus |
 | discord.js | 14.27 ou plus sur la 14 |
-| node-comfort | 3.0 ou plus, installé avec le paquet |
+| node-comfort | 3.1 ou plus depuis la 1.7 (3.0 avant), installé avec le paquet |
 
 ```bash
 npm install @ix-xs/djs-bot@latest
@@ -34,6 +34,32 @@ process.on("warning", (warning) => {
 ```
 
 Un avertissement n'apparaît que pour du code qui s'exécute. Pour trouver chaque utilisation, cherchez dans le code les noms ci-dessous.
+
+## Version 1.7
+
+node-comfort 3.1 reprend la limite de débit et le disjoncteur, qui y ont été portés depuis djs-bot. Les anciens noms sont désormais les objets de node-comfort et se comportent comme eux. La garde `rateLimit()` et le plugin `antiSpam()` restent.
+
+### Remplacés par node-comfort
+
+| 1.6 | 1.7 | Code de l'avertissement |
+| --- | --- | --- |
+| `createRateLimiter(options)` | `nc.quota.create(options)` | `DJS_BOT_DEP_RATE_LIMITER` |
+| `RateLimiter` | `Quota` (`nc.quota.Quota`) | `DJS_BOT_DEP_RATE_LIMITER` |
+| `RateLimiterOptions`, `RateLimitResult` | `QuotaOptions`, `QuotaResult` | `DJS_BOT_DEP_RATE_LIMITER` |
+| `createCircuitBreaker(options)` | `nc.circuit.create(options)` | `DJS_BOT_DEP_CIRCUIT_BREAKER` |
+| `CircuitBreaker` | `Circuit` (`nc.circuit.Circuit`) | `DJS_BOT_DEP_CIRCUIT_BREAKER` |
+| `CircuitOpenError` | `nc.errors.CircuitOpenError`. Seul `new CircuitOpenError()` avertit : `instanceof` correspond toujours | `DJS_BOT_DEP_CIRCUIT_BREAKER` |
+| `CircuitBreakerOptions`, `CircuitState` | `CircuitOptions`, `CircuitStatus` | `DJS_BOT_DEP_CIRCUIT_BREAKER` |
+
+| Comportement | 1.6 | 1.7 |
+| --- | --- | --- |
+| `limit`, `window`, coût, seuil ou `resetTimeout` invalide | Retombait sur une valeur par défaut | Lève une erreur à la création, `rateLimit()` et `antiSpam()` compris |
+| `reset(key)` d'un quota | | Renvoie `true` quand la clé avait une fenêtre |
+| Clés d'un quota | Chaînes | Chaînes ou nombres |
+| `onOpen`, `onClose` | | S'exécutent après le changement d'état. Une erreur dans `onClose` rejette cet appel mais ne compte pas comme un échec |
+| Appel rejeté | `CircuitOpenError` de djs-bot | Celle de node-comfort, message `The circuit is open: the call was rejected`, `code: "ERR_CIRCUIT_OPEN"` |
+
+Les pages de node-comfort : [quota](https://ix-xs.github.io/node-comfort/flow/quota/), [disjoncteur](https://ix-xs.github.io/node-comfort/flow/circuit/). Les versions de Node.js ne changent pas.
 
 ## Version 1.6
 
