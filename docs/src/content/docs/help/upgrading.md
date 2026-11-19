@@ -8,7 +8,7 @@ description: "What changes from one minor version to the next. The old names kee
 | Old names | Keep working, print one `DeprecationWarning` each with its code, removed in 2.0 |
 | Node.js | Unchanged since 1.4: 22.23.4, 24.22.1, 26.12.1 or later |
 | discord.js | 14.27 or later on 14 |
-| node-comfort | 3.0 or later, installed with the package |
+| node-comfort | 3.1 or later since 1.7 (3.0 before), installed with the package |
 
 ```bash
 npm install @ix-xs/djs-bot@latest
@@ -34,6 +34,32 @@ process.on("warning", (warning) => {
 ```
 
 A warning only appears for code that runs. To find every use, search the code for the names below.
+
+## Version 1.7
+
+node-comfort 3.1 takes over the rate limiter and the circuit breaker, which were ported to it from djs-bot. The old names are now node-comfort's objects and behave like them. The `rateLimit()` guard and the `antiSpam()` plugin stay.
+
+### Replaced by node-comfort
+
+| 1.6 | 1.7 | Warning code |
+| --- | --- | --- |
+| `createRateLimiter(options)` | `nc.quota.create(options)` | `DJS_BOT_DEP_RATE_LIMITER` |
+| `RateLimiter` | `Quota` (`nc.quota.Quota`) | `DJS_BOT_DEP_RATE_LIMITER` |
+| `RateLimiterOptions`, `RateLimitResult` | `QuotaOptions`, `QuotaResult` | `DJS_BOT_DEP_RATE_LIMITER` |
+| `createCircuitBreaker(options)` | `nc.circuit.create(options)` | `DJS_BOT_DEP_CIRCUIT_BREAKER` |
+| `CircuitBreaker` | `Circuit` (`nc.circuit.Circuit`) | `DJS_BOT_DEP_CIRCUIT_BREAKER` |
+| `CircuitOpenError` | `nc.errors.CircuitOpenError`. Only `new CircuitOpenError()` warns: `instanceof` still matches | `DJS_BOT_DEP_CIRCUIT_BREAKER` |
+| `CircuitBreakerOptions`, `CircuitState` | `CircuitOptions`, `CircuitStatus` | `DJS_BOT_DEP_CIRCUIT_BREAKER` |
+
+| Behaviour | 1.6 | 1.7 |
+| --- | --- | --- |
+| Invalid `limit`, `window`, cost, threshold or `resetTimeout` | Fell back on a default | Throws when created, `rateLimit()` and `antiSpam()` included |
+| `reset(key)` of a quota | | Returns `true` when the key had a window |
+| Keys of a quota | Strings | Strings or numbers |
+| `onOpen`, `onClose` | | Run after the status has changed. A throw in `onClose` rejects that call but is not counted as a failure |
+| Rejected call | djs-bot's `CircuitOpenError` | node-comfort's, message `The circuit is open: the call was rejected`, `code: "ERR_CIRCUIT_OPEN"` |
+
+node-comfort's pages: [quota](https://ix-xs.github.io/node-comfort/flow/quota/), [circuit](https://ix-xs.github.io/node-comfort/flow/circuit/). Node.js versions are unchanged.
 
 ## Version 1.6
 

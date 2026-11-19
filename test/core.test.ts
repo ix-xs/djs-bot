@@ -113,7 +113,8 @@ describe("guards", () => {
   });
 });
 
-describe("rate limiter", () => {
+describe("rate limiter (deprecated)", () => {
+  quietDeprecations();
   it("forgets finished windows instead of growing forever", async () => {
     const limiter = createRateLimiter({ limit: 1, window: 1 });
     for (let i = 0; i < 999; i++) limiter.consume(`user-${i}`);

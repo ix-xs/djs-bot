@@ -67,7 +67,7 @@ export default defineBot({
 | Decorator magic you can't debug | **No side-effect loading** - files export `define*()` objects; nothing registers by importing. `djs-bot explain` shows it all |
 | Bots are impossible to unit-test | **Test harness** - invoke handlers with no token, no network |
 | "Frameworks are slow" | **~4 µs** of overhead per interaction, end to end (context, guards, reply helpers included) - see [benchmarks](./benchmarks) |
-| Rebuilding the same helpers every project | **Batteries included** - subcommands, context menus, autocomplete, native selects, user-install, i18n (`ctx.t`), key-value stores, audit trail, per-guild feature flags, health checks & metrics, rate limiters & circuit breakers, message triggers, sharding, `paginate()`/`confirm()`, presence rotation, `assets`/`voice`, `ui` Components-V2 builders, and cache-first `resolve` helpers |
+| Rebuilding the same helpers every project | **Batteries included** - subcommands, context menus, autocomplete, native selects, user-install, i18n (`ctx.t`), key-value stores, audit trail, per-guild feature flags, health checks & metrics, rate-limit guards, message triggers, sharding, `paginate()`/`confirm()`, presence rotation, `assets`/`voice`, `ui` Components-V2 builders, and cache-first `resolve` helpers |
 
 ## Install
 
@@ -542,9 +542,9 @@ Prod-readiness is built in, not an afterthought:
   so a long-running bot does not grow with every user it ever saw.
 - **Cooldowns, rate limits & permissions** - first-class guards (`cooldown`,
   `rateLimit`, `hasPermission`, …).
-- **Resilience primitives** - `createCircuitBreaker` and `createRateLimiter`
-  for hardening calls to databases and third-party APIs, next to node-comfort's
-  `nc.async.retry` and `nc.async.timeout`.
+- **Resilience** - for calls to databases and third-party APIs, use
+  node-comfort, which djs-bot is built on: `nc.circuit` (circuit breaker),
+  `nc.quota` (rate limiter), `nc.async.retry` and `nc.async.timeout`.
 - **Health & metrics** - a zero-dependency `/healthz` `/readyz` `/metrics` server
   for Docker/Kubernetes, with handler latency and a Prometheus endpoint.
 - **Persistence, audit & flags** - a pluggable `KVStore`, a queryable audit trail,

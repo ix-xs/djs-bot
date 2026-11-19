@@ -8,6 +8,7 @@ import {
   createCircuitBreaker,
   CircuitOpenError,
 } from "../src/index.js";
+import { quietDeprecations } from "./quiet.js";
 
 describe("i18n", () => {
   const i18n = createI18n({
@@ -78,7 +79,8 @@ describe("sqlite store", () => {
   });
 });
 
-describe("rate limiter", () => {
+describe("rate limiter (deprecated)", () => {
+  quietDeprecations();
   it("allows up to the limit then blocks", () => {
     const rl = createRateLimiter({ limit: 2, window: 1000 });
     expect(rl.consume("k").allowed).toBe(true);
@@ -93,7 +95,8 @@ describe("rate limiter", () => {
   });
 });
 
-describe("circuit breaker", () => {
+describe("circuit breaker (deprecated)", () => {
+  quietDeprecations();
   it("opens after the failure threshold and rejects fast", async () => {
     const cb = createCircuitBreaker({ failureThreshold: 2, resetTimeout: 10_000 });
     const boom = () => Promise.reject(new Error("boom"));

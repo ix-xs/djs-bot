@@ -268,4 +268,4 @@ Every option, property and type, with what it accepts and returns, is in the API
 - [Features](/architecture/features/): ship commands and events together with a plugin.
 - [Guards](/commands/guards/): rules for some commands instead of all of them.
 - [Errors](/api/errors/): the error boundary that `onError` hooks plug into.
-- [Resilience](/production/resilience/): the rate limiter that `antiSpam` is built on.
+- [Resilience](/production/resilience/): the `rateLimit()` guard; `antiSpam` counts the same way, with node-comfort's quotas.

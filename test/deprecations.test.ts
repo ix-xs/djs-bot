@@ -28,12 +28,23 @@ import {
   timeout,
   createCache,
   TTLCache,
+  createRateLimiter,
+  RateLimiter,
+  rateLimit,
+  createCircuitBreaker,
+  CircuitBreaker,
+  CircuitOpenError,
+  defineCommand,
+  type MiddlewareFn,
+  type PluginApp,
   type AuditLog,
   type Bot,
 } from "../src/index.js";
 import { resetDeprecations } from "../src/deprecate.js";
 import { createLogger } from "../src/logger.js";
 import { shardingOptions } from "../src/sharding.js";
+import { createHarness } from "../src/testing.js";
+import { antiSpam } from "../src/plugins/index.js";
 
 let emitWarning: MockInstance<typeof process.emitWarning>;
 
@@ -238,6 +249,86 @@ describe("deprecated copies of node-comfort", () => {
     const bot = defineBot({ logger: { level: "silent" } });
     await bot.load();
     expect(bot.devGuildId).toBe("123456789012345678");
+    expect(codes()).toEqual([]);
+  });
+});
+
+describe("deprecated rate limiter and circuit breaker", () => {
+  it("createRateLimiter() and RateLimiter are node-comfort's Quota, with one warning for both", () => {
+    const limiter = createRateLimiter({ limit: 2, window: "1m" });
+    new RateLimiter({ limit: 1, window: 1000 });
+    expect(limiter).toBeInstanceOf(RateLimiter);
+    expect(limiter).toBeInstanceOf(nc.quota.Quota);
+    expect(limiter.consume("k")).toMatchObject({ allowed: true, remaining: 1 });
+    expect(limiter.consume("k")).toMatchObject({ allowed: true, remaining: 0 });
+    expect(limiter.consume("k")).toMatchObject({ allowed: false, remaining: 0 });
+    expect(limiter.reset("k")).toBe(true);
+    expect(limiter.size).toBe(0);
+    expect(codes()).toEqual(["DJS_BOT_DEP_RATE_LIMITER"]);
+    expect(String(emitWarning.mock.calls[0]![0])).toBe(
+      "createRateLimiter() is deprecated: use nc.quota.create(). It will be removed in 2.0.",
+    );
+  });
+
+  it("an invalid limit or window now throws", () => {
+    expect(() => createRateLimiter({ limit: 2, window: "soon" })).toThrow();
+    expect(() => createRateLimiter({ limit: Number.NaN, window: "1m" })).toThrow(TypeError);
+  });
+
+  it("createCircuitBreaker() and CircuitBreaker are node-comfort's Circuit, with one warning for all", async () => {
+    const opened: string[] = [];
+    const breaker = createCircuitBreaker({ failureThreshold: 1, resetTimeout: "1m", onOpen: () => opened.push(breaker.status) });
+    new CircuitBreaker();
+    expect(breaker).toBeInstanceOf(CircuitBreaker);
+    expect(breaker).toBeInstanceOf(nc.circuit.Circuit);
+    await expect(breaker.execute(() => Promise.reject(new Error("down")))).rejects.toThrow("down");
+    // onOpen runs once the status has changed.
+    expect(opened).toEqual(["open"]);
+    const rejected = await breaker.execute(() => "never").catch((error: unknown) => error);
+    expect(rejected).toBeInstanceOf(CircuitOpenError);
+    expect(rejected).toBeInstanceOf(nc.errors.CircuitOpenError);
+    expect(rejected).toMatchObject({ code: "ERR_CIRCUIT_OPEN", message: "The circuit is open: the call was rejected" });
+    expect(codes()).toEqual(["DJS_BOT_DEP_CIRCUIT_BREAKER"]);
+  });
+
+  it("CircuitOpenError still catches the errors of a circuit, and warns only when built", async () => {
+    const circuit = nc.circuit.create({ failureThreshold: 1 });
+    await circuit.execute(() => Promise.reject(new Error("down"))).catch(() => undefined);
+    const rejected = await circuit.execute(() => "never").catch((error: unknown) => error);
+    expect(rejected instanceof CircuitOpenError).toBe(true);
+    expect(new Error("other") instanceof CircuitOpenError).toBe(false);
+    expect(codes()).toEqual([]);
+    const built = new CircuitOpenError();
+    expect(built).toBeInstanceOf(nc.errors.CircuitOpenError);
+    expect(built.name).toBe("CircuitOpenError");
+    expect(codes()).toEqual(["DJS_BOT_DEP_CIRCUIT_BREAKER"]);
+  });
+
+  it("the rateLimit() guard and the antiSpam plugin never warn", async () => {
+    const harness = createHarness();
+    const cmd = defineCommand({ name: "limited", description: "d", guards: [rateLimit({ limit: 1, window: "1m" })], run: () => undefined });
+    expect((await harness.command(cmd, { userId: "a" })).passedGuards).toBe(true);
+    const second = await harness.command(cmd, { userId: "a" });
+    expect(second.rejectionReason).toBe("Rate limit reached. Try again in 60s.");
+    expect((await harness.command(cmd, { userId: "b" })).passedGuards).toBe(true);
+    expect(() => rateLimit({ limit: 1, window: "never" })).toThrow();
+
+    const plugin = antiSpam({ max: 1, window: "1m" });
+    const middlewares: MiddlewareFn[] = [];
+    await plugin.setup({ hooks: { beforeInteraction: (fn: MiddlewareFn) => middlewares.push(fn) } } as unknown as PluginApp);
+    const replies: string[] = [];
+    const ctx = { user: { id: "u1" }, interaction: { type: 2 }, reply: { error: (m: string) => replies.push(m) } } as never;
+    let ran = 0;
+    await middlewares[0]!(ctx, async () => void ran++);
+    await middlewares[0]!(ctx, async () => void ran++);
+    expect(ran).toBe(1);
+    expect(replies).toHaveLength(1);
+    expect(codes()).toEqual([]);
+  });
+
+  it("nc.quota and nc.circuit never warn", async () => {
+    nc.quota.create({ limit: 1, window: "1m" }).consume("k");
+    await nc.circuit.create().execute(() => "ok");
     expect(codes()).toEqual([]);
   });
 });

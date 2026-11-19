@@ -27741,7 +27741,7 @@
    "kind": "variable",
    "code": [
     [
-     "const VERSION: \"1.6.0\""
+     "const VERSION: \"1.7.0\""
     ]
    ],
    "slug": "version"
@@ -36285,10 +36285,11 @@
   {
    "name": "createRateLimiter",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L81",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L68",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Creates a [`RateLimiter`](ref:RateLimiter).",
+   "deprecated": "Use `nc.quota.create({ limit, window })`. See [`RateLimiter`](ref:RateLimiter) for the differences. It will be removed in 2.0.",
    "kind": "function",
    "overloads": [
     {
@@ -36316,7 +36317,8 @@
       ]
      },
      "doc": {
-      "text": "Creates a [`RateLimiter`](ref:RateLimiter)."
+      "text": "Creates a [`RateLimiter`](ref:RateLimiter).",
+      "deprecated": "Use `nc.quota.create({ limit, window })`. See [`RateLimiter`](ref:RateLimiter) for the differences. It will be removed in 2.0."
      },
      "code": [
       [
@@ -36345,10 +36347,10 @@
   {
    "name": "rateLimit",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L91",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L81",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
-   "text": "A guard that allows `limit` uses per `window`, per scope (default `\"user\"`).\nMore expressive than [`cooldown`](ref:cooldown) (which is 1 use per duration).",
+   "text": "A guard that allows `limit` uses per `window`, per scope (default `\"user\"`).\nMore expressive than [`cooldown`](ref:cooldown) (which is 1 use per duration).\n\nA `limit` or a `window` that is not valid throws when the guard is created.",
    "examples": [
     "guards: [rateLimit({ limit: 5, window: \"1m\" })]"
    ],
@@ -36391,7 +36393,7 @@
       ]
      },
      "doc": {
-      "text": "A guard that allows `limit` uses per `window`, per scope (default `\"user\"`).\nMore expressive than [`cooldown`](ref:cooldown) (which is 1 use per duration).",
+      "text": "A guard that allows `limit` uses per `window`, per scope (default `\"user\"`).\nMore expressive than [`cooldown`](ref:cooldown) (which is 1 use per duration).\n\nA `limit` or a `window` that is not valid throws when the guard is created.",
       "examples": [
        "guards: [rateLimit({ limit: 5, window: \"1m\" })]"
       ]
@@ -36432,11 +36434,22 @@
   {
    "name": "RateLimiter",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L37",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L56",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
-   "text": "A fixed-window rate limiter, keyed by an arbitrary string.",
+   "text": "A fixed-window rate limiter, keyed by an arbitrary string.\n\nIt is node-comfort's `Quota` (`nc.quota.Quota`), under its old name.",
+   "deprecated": "Use `nc.quota.create({ limit, window })`, or `new nc.quota.Quota()`.\nThe same counting, with these differences: a `limit`, a `window` or a cost\nthat is not valid throws instead of falling back on a default (a window of\none minute), keys may be numbers too, and `reset()` says whether the key had\na window. It will be removed in 2.0.",
    "kind": "class",
+   "heritage": [
+    {
+     "keyword": "extends",
+     "type": [
+      [
+       "comfort.quota.Quota"
+      ]
+     ]
+    }
+   ],
    "ctor": {
     "params": [
      {
@@ -36482,110 +36495,18 @@
      ]
     ]
    },
-   "properties": [
-    {
-     "name": "size",
-     "type": [
-      [
-       "number"
-      ]
-     ],
-     "text": "How many keys currently have an open window."
-    }
-   ],
-   "methods": [
-    {
-     "name": "consume",
-     "overloads": [
-      {
-       "params": [
-        {
-         "name": "key",
-         "type": [
-          [
-           "string"
-          ]
-         ]
-        },
-        {
-         "name": "cost",
-         "type": [
-          [
-           "number"
-          ]
-         ],
-         "optional": true,
-         "default": "1"
-        }
-       ],
-       "returns": {
-        "type": [
-         [
-          "RateLimitResult",
-          {
-           "ref": "RateLimitResult"
-          }
-         ]
-        ]
-       },
-       "doc": {
-        "text": "Records a hit for `key` (cost defaults to 1) and reports whether it's allowed."
-       },
-       "code": [
-        [
-         "consume(key: string, cost?: number): "
-        ],
-        [
-         "RateLimitResult",
-         {
-          "ref": "RateLimitResult"
-         }
-        ]
-       ]
-      }
-     ],
-     "text": "Records a hit for `key` (cost defaults to 1) and reports whether it's allowed."
-    },
-    {
-     "name": "reset",
-     "overloads": [
-      {
-       "params": [
-        {
-         "name": "key",
-         "type": [
-          [
-           "string"
-          ]
-         ]
-        }
-       ],
-       "returns": {
-        "type": [
-         [
-          "void"
-         ]
-        ]
-       },
-       "doc": {
-        "text": "Clears the window for a key."
-       },
-       "code": [
-        [
-         "reset(key: string): void"
-        ]
-       ]
-      }
-     ],
-     "text": "Clears the window for a key."
-    }
-   ],
    "code": [
     [
      "class "
     ],
     [
      "RateLimiter"
+    ],
+    [
+     " extends "
+    ],
+    [
+     "comfort.quota.Quota"
     ]
    ],
    "slug": "rate-limiter",
@@ -36596,10 +36517,11 @@
   {
    "name": "createCircuitBreaker",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L209",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L175",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Creates a [`CircuitBreaker`](ref:CircuitBreaker).",
+   "deprecated": "Use `nc.circuit.create(options)`. See [`CircuitBreaker`](ref:CircuitBreaker) for\nthe differences. It will be removed in 2.0.",
    "kind": "function",
    "overloads": [
     {
@@ -36628,7 +36550,8 @@
       ]
      },
      "doc": {
-      "text": "Creates a [`CircuitBreaker`](ref:CircuitBreaker)."
+      "text": "Creates a [`CircuitBreaker`](ref:CircuitBreaker).",
+      "deprecated": "Use `nc.circuit.create(options)`. See [`CircuitBreaker`](ref:CircuitBreaker) for\nthe differences. It will be removed in 2.0."
      },
      "code": [
       [
@@ -36657,11 +36580,22 @@
   {
    "name": "CircuitBreaker",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L141",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L163",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
-   "text": "A circuit breaker: after too many failures it \"opens\" and fails fast for a\ncool-off period, then tries again (\"half-open\") before fully recovering.\nProtects you (and the dependency) from hammering a failing service.",
+   "text": "A circuit breaker: after too many failures it \"opens\" and fails fast for a\ncool-off period, then tries again (\"half-open\") before fully recovering.\nProtects you (and the dependency) from hammering a failing service.\n\nIt is node-comfort's `Circuit` (`nc.circuit.Circuit`), under its old name.",
+   "deprecated": "Use `nc.circuit.create(options)`, or `new nc.circuit.Circuit()`.\nThe same states and options, with these differences: a threshold or a\n`resetTimeout` that is not valid throws instead of falling back on a\ndefault; `onOpen` and `onClose` run after the status has changed; a throw in\n`onClose` rejects that call but no longer counts as a failure; and the\n[`CircuitOpenError`](ref:CircuitOpenError) has a new message and a code. It will be removed in 2.0.",
    "kind": "class",
+   "heritage": [
+    {
+     "keyword": "extends",
+     "type": [
+      [
+       "comfort.circuit.Circuit"
+      ]
+     ]
+    }
+   ],
    "ctor": {
     "params": [
      {
@@ -36709,103 +36643,18 @@
      ]
     ]
    },
-   "properties": [
-    {
-     "name": "status",
-     "type": [
-      [
-       "CircuitState",
-       {
-        "ref": "CircuitState"
-       }
-      ]
-     ],
-     "text": "The current state."
-    }
-   ],
-   "methods": [
-    {
-     "name": "execute",
-     "overloads": [
-      {
-       "params": [
-        {
-         "name": "fn",
-         "type": [
-          [
-           "() => "
-          ],
-          [
-           "Promise",
-           {
-            "href": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise",
-            "external": "builtin"
-           }
-          ],
-          [
-           "<T> | T"
-          ]
-         ]
-        }
-       ],
-       "returns": {
-        "type": [
-         [
-          "Promise",
-          {
-           "href": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise",
-           "external": "builtin"
-          }
-         ],
-         [
-          "<T>"
-         ]
-        ]
-       },
-       "typeParams": [
-        {
-         "name": "T"
-        }
-       ],
-       "doc": {
-        "text": "Runs `fn` through the breaker. Throws [`CircuitOpenError`](ref:CircuitOpenError) when open."
-       },
-       "code": [
-        [
-         "execute<T>(fn: () => "
-        ],
-        [
-         "Promise",
-         {
-          "href": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise",
-          "external": "builtin"
-         }
-        ],
-        [
-         "<T> | T): "
-        ],
-        [
-         "Promise",
-         {
-          "href": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise",
-          "external": "builtin"
-         }
-        ],
-        [
-         "<T>"
-        ]
-       ]
-      }
-     ],
-     "text": "Runs `fn` through the breaker. Throws [`CircuitOpenError`](ref:CircuitOpenError) when open."
-    }
-   ],
    "code": [
     [
      "class "
     ],
     [
      "CircuitBreaker"
+    ],
+    [
+     " extends "
+    ],
+    [
+     "comfort.circuit.Circuit"
     ]
    ],
    "slug": "circuit-breaker",
@@ -36816,21 +36665,18 @@
   {
    "name": "CircuitOpenError",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L129",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L137",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
-   "text": "Error thrown when calls are rejected because the circuit is open.",
+   "text": "Error thrown when calls are rejected because the circuit is open.\n\nIt is node-comfort's `CircuitOpenError` under its old name: `instanceof`\nmatches every error a circuit rejects a call with, those of\n`nc.circuit.create()` included.",
+   "deprecated": "Use `nc.errors.CircuitOpenError`. Its message is now \"The\ncircuit is open: the call was rejected\", and it has `code:\n\"ERR_CIRCUIT_OPEN\"`. It will be removed in 2.0.",
    "kind": "class",
    "heritage": [
     {
      "keyword": "extends",
      "type": [
       [
-       "Error",
-       {
-        "href": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error",
-        "external": "builtin"
-       }
+       "comfort.errors.CircuitOpenError"
       ]
      ]
     }
@@ -36870,11 +36716,7 @@
      " extends "
     ],
     [
-     "Error",
-     {
-      "href": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error",
-      "external": "builtin"
-     }
+     "comfort.errors.CircuitOpenError"
     ]
    ],
    "slug": "circuit-open-error"
@@ -36882,7 +36724,7 @@
   {
    "name": "retry",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L254",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L221",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Retries an async function with exponential backoff + jitter. An attempt that\nfails because it was aborted (an `AbortError`) is not tried again.",
@@ -36993,7 +36835,7 @@
   {
    "name": "timeout",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L275",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L242",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Rejects if `promise` doesn't settle within `ms` (milliseconds, or text such\nas `\"5s\"`). Given a function, it passes it a signal that aborts when the\ntime is up, so the work can stop too.",
@@ -37138,10 +36980,11 @@
   {
    "name": "RateLimiterOptions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L19",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L24",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Options for [`createRateLimiter`](ref:createRateLimiter).",
+   "deprecated": "Use `QuotaOptions`, the options of `nc.quota.create()`: the same\nnames. It will be removed in 2.0.",
    "kind": "interface",
    "properties": [
     {
@@ -37178,10 +37021,11 @@
   {
    "name": "RateLimitResult",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L27",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L36",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "The outcome of a [`RateLimiter.consume`](ref:RateLimiter) call.",
+   "deprecated": "Use `QuotaResult`, what `nc.quota.create().consume()` returns:\nthe same fields. It will be removed in 2.0.",
    "kind": "interface",
    "properties": [
     {
@@ -37217,18 +37061,16 @@
      "interface RateLimitResult"
     ]
    ],
-   "slug": "rate-limit-result",
-   "usedBy": [
-    "RateLimiter"
-   ]
+   "slug": "rate-limit-result"
   },
   {
    "name": "CircuitBreakerOptions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L113",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L111",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Options for [`createCircuitBreaker`](ref:createCircuitBreaker).",
+   "deprecated": "Use `CircuitOptions`, the options of `nc.circuit.create()`: the\nsame names. It will be removed in 2.0.",
    "kind": "interface",
    "properties": [
     {
@@ -37296,10 +37138,11 @@
   {
    "name": "CircuitState",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L110",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L104",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "The state of a [`CircuitBreaker`](ref:CircuitBreaker).",
+   "deprecated": "Use `CircuitStatus`, the same three states, from node-comfort.\nIt will be removed in 2.0.",
    "kind": "type",
    "code": [
     [
@@ -37311,15 +37154,12 @@
     "open",
     "half-open"
    ],
-   "slug": "circuit-state",
-   "usedBy": [
-    "CircuitBreaker"
-   ]
+   "slug": "circuit-state"
   },
   {
    "name": "RetryOptions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L219",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L186",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Options for [`retry`](ref:retry).",
