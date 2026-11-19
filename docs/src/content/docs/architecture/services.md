@@ -12,12 +12,13 @@ depends on, and is built once when the bot starts.
 ## A first service
 
 ```ts title="src/features/db/db.service.ts"
-import { defineService, env } from "@ix-xs/djs-bot";
+import { defineService } from "@ix-xs/djs-bot";
+import nc from "@ix-xs/node-comfort";
 import { Pool } from "pg";
 
 export default defineService("db", {
   factory: async () => {
-    const pool = new Pool({ connectionString: env("DATABASE_URL") });
+    const pool = new Pool({ connectionString: nc.env.required("DATABASE_URL") });
     await pool.query("select 1"); // fail at startup if the database is unreachable
     return pool;
   },
@@ -127,8 +128,9 @@ the whole package and every other import from `"@ix-xs/djs-bot"` breaks.
 close a connection pool or to flush a buffer.
 
 ```ts
+import nc from "@ix-xs/node-comfort";
 defineService("db", {
-  factory: () => new Pool({ connectionString: env("DATABASE_URL") }),
+  factory: () => new Pool({ connectionString: nc.env.required("DATABASE_URL") }),
   dispose: (pool) => pool.end(),
 });
 ```

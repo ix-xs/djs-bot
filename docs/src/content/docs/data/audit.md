@@ -15,12 +15,11 @@ server.
 Configure `audit` with at least one sink, the place entries are written to:
 
 ```ts title="src/index.ts"
-import { defineBot, env, loggerAuditSink, sqliteStore, storeAuditSink } from "@ix-xs/djs-bot";
+import { defineBot, loggerAuditSink, sqliteStore, storeAuditSink } from "@ix-xs/djs-bot";
 
 const store = sqliteStore("data/bot.sqlite");
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   features: "./features",
   store,
   audit: {

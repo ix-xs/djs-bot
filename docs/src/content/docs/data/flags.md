@@ -16,10 +16,9 @@ Declare the defaults in `defineBot`. Overrides are saved in the bot's
 [store](/data/store/) automatically: there is no need to pass it twice.
 
 ```ts title="src/index.ts"
-import { defineBot, env, sqliteStore } from "@ix-xs/djs-bot";
+import { defineBot, sqliteStore } from "@ix-xs/djs-bot";
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   features: "./features",
   store: sqliteStore("data/bot.sqlite"),
   flags: { defaults: { economy: true, beta: false } },

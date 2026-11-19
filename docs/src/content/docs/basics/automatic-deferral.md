@@ -16,10 +16,9 @@ only when it is needed.
 One line in the entry file covers every handler of the bot:
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
   defaults: { defer: true },
 });

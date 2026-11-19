@@ -16,10 +16,9 @@ Give `defineBot` a store. `sqliteStore` writes to a file, so the data survives
 a restart.
 
 ```ts title="src/index.ts"
-import { defineBot, env, sqliteStore } from "@ix-xs/djs-bot";
+import { defineBot, sqliteStore } from "@ix-xs/djs-bot";
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   features: "./features",
   store: sqliteStore("data/bot.sqlite"),
 });
@@ -231,8 +230,8 @@ for you.
 
 :::tip[A store is not a cache]
 For hot in-process data with automatic eviction, use
-[`createCache`](/data/cache/) instead: it is synchronous, bounded and can serve
-stale values while it refreshes. That page compares the two.
+node-comfort's cache instead: it is synchronous, bounded and can serve stale
+values while it refreshes. [Cache and entity resolution](/data/cache/) compares the two.
 :::
 
 ## Writing an adapter

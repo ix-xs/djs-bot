@@ -16,10 +16,9 @@ Set `presence` in `defineBot`. It is sent while the bot connects, so the bot
 never appears without it.
 
 ```ts title="src/index.ts"
-import { defineBot, env, ActivityType } from "@ix-xs/djs-bot";
+import { defineBot, ActivityType } from "@ix-xs/djs-bot";
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   presence: {
     status: "online",
     activities: [{ name: "/help", type: ActivityType.Listening }],
@@ -35,10 +34,9 @@ activity is shown as "Playing".
 `presenceRotation` cycles through a list of presences on a fixed interval.
 
 ```ts title="src/index.ts"
-import { defineBot, env, ActivityType } from "@ix-xs/djs-bot";
+import { defineBot, ActivityType } from "@ix-xs/djs-bot";
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   presenceRotation: {
     interval: "30s",
     items: [

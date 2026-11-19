@@ -17,10 +17,9 @@ quand c'est nécessaire.
 Une ligne dans le fichier d'entrée couvre tous les gestionnaires du bot :
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
   defaults: { defer: true },
 });

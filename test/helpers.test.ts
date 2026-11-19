@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { isShardChild, assets, createCache, mention, emoji, timestamp } from "../src/index.js";
+import { quietDeprecations } from "./quiet.js";
 import { shardingOptions } from "../src/sharding.js";
 
 describe("sharding config", () => {
@@ -36,7 +37,8 @@ describe("asset & format helpers", () => {
   });
 });
 
-describe("cache", () => {
+describe("cache (deprecated)", () => {
+  quietDeprecations();
   it("dedupes concurrent fetches and caches the result", async () => {
     const cache = createCache<string, number>({ ttl: "1m" });
     let calls = 0;

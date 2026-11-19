@@ -170,7 +170,6 @@ Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans l
 
 - `paginate()` : Envoie un message paginé avec des contrôles précédent/suivant (et premier/dernier), mis à jour sur place pendant la navigation de l'utilisateur et désactivés à l'expiration du délai.
 - `PaginateOptions` : Options de `paginate`.
-- `timeout()` : Rejette si `promise` ne se termine pas dans le délai `ms` (millisecondes, ou texte tel que `"5s"`).
 - `Page` : Une page unique.
 - `PagePayload` : Une page à contenu complet (voir `Page`).
 - `confirm()` : Affiche une boîte de dialogue oui/non et se résout avec le choix de l'utilisateur (ou `false` si le délai est dépassé).

@@ -645,14 +645,13 @@ export default defineMessageCommand({
 } as const;
 
 const STARTER = {
-  entry: `import { defineBot, env } from "@ix-xs/djs-bot";
+  entry: `import { defineBot } from "@ix-xs/djs-bot";
 
+// The token, the application id and the test server id come from
+// DISCORD_TOKEN, DISCORD_CLIENT_ID and DISCORD_DEV_GUILD, in .env.
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
-  clientId: env.optional("DISCORD_CLIENT_ID"),
   features: \`\${import.meta.dirname}/features\`,
   intents: "auto",
-  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
   // Acknowledge slow handlers automatically, so they never hit the 3 s limit.
   defaults: { defer: true },
 });

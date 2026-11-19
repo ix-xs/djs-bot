@@ -14,10 +14,9 @@ enfant par shard, et chaque enfant exécute votre bot comme d'habitude.
 ## Activer le sharding
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
   sharding: "auto",
 });
@@ -74,7 +73,7 @@ démarrés.
 Chaque shard ne connaît que ses propres serveurs, et tout ce qui est gardé en
 mémoire appartient à un seul shard : les caches de discord.js, un
 `memoryStore()`, les compteurs derrière `cooldown()` et `rateLimit()`, un
-`TTLCache`, les chiffres de `bot.stats()`. Tout ce qui doit être identique
+cache de node-comfort, les chiffres de `bot.stats()`. Tout ce qui doit être identique
 partout doit aller dans une base de données partagée par les shards.
 
 Pour lire une valeur auprès de tous les shards, utilisez l'assistant de

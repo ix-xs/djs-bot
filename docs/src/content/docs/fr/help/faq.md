@@ -21,7 +21,6 @@ Oui. Enregistrez les définitions explicitement et gardez votre code client actu
 
 ```ts
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   features: [MyNewCommand, MyNewEvent],
 });
 ```

@@ -12,10 +12,9 @@ pour les métriques, en JSON ou au format texte de Prometheus.
 ## L'activer
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
   health: 3000,
 });
@@ -28,7 +27,7 @@ if (!process.env.DJSBOT_CLI) void bot.start();
 Un nombre est le port. Pour choisir aussi l'interface, passez un objet :
 
 ```ts
-health: { port: env.number("PORT", 3000), host: "127.0.0.1" },
+health: { port: nc.env.number("PORT", { default: 3000 }), host: "127.0.0.1" },
 ```
 
 Sans `host`, le serveur écoute sur toutes les interfaces réseau, ce dont ont

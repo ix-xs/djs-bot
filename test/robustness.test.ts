@@ -28,6 +28,7 @@ import {
 import { renderMessage } from "../src/messages.js";
 import { Scheduler } from "../src/scheduler.js";
 import { createHarness } from "../src/testing.js";
+import { quietDeprecations } from "./quiet.js";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -251,7 +252,8 @@ describe("logger", () => {
   });
 });
 
-describe("loadEnvFile", () => {
+describe("loadEnvFile (deprecated)", () => {
+  quietDeprecations();
   const names = ["DJSBOT_TEST_FILE", "DJSBOT_TEST_REAL", "DJSBOT_TEST_QUOTED"];
   afterEach(() => {
     for (const name of names) delete process.env[name];
@@ -275,7 +277,8 @@ describe("loadEnvFile", () => {
   });
 });
 
-describe("retry and timeout", () => {
+describe("retry and timeout (deprecated)", () => {
+  quietDeprecations();
   it("take their durations as text", async () => {
     vi.useFakeTimers();
     let attempts = 0;

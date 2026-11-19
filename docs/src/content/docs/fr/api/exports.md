@@ -14,9 +14,9 @@ Voir [Configuration](/basics/configuration/).
 | Export | Genre | À quoi il sert |
 | --- | --- | --- |
 | [`defineBot()`](/reference/define-bot/) | Fonction | Crée un `Bot`. |
-| [`env()`](/reference/env/) | Fonction | Lit une variable d'environnement, avec une valeur de repli facultative. |
+| [`env()`](/reference/env/) | Fonction | **Obsolète.** Utilisez `env` de node-comfort : `nc.env.required(name)` pour `env(name)`, et `nc.env.string(name, { default: fallback })` pour `env(name, fallback)`. Lit une variable d'environnement, avec une valeur de repli facultative. |
 | [`isBot()`](/reference/is-bot/) | Fonction | Vérification robuste, valable entre realms, qu'une valeur est un `Bot` : utilisez-la à la place de `instanceof`, qui ne fonctionne plus à travers la frontière du double paquet CJS/ESM. |
-| [`loadEnvFile()`](/reference/load-env-file/) | Fonction | Charge un fichier `.env` dans `process.env`. |
+| [`loadEnvFile()`](/reference/load-env-file/) | Fonction | **Obsolète.** Utilisez `nc.env.load(path)`, que celle-ci appelle. Charge un fichier `.env` dans `process.env`. |
 | [`Bot`](/reference/bot/) | Classe | L'application du bot. |
 | [`BotConfig`](/reference/bot-config/) | Interface | L'objet de configuration complet du bot. |
 | [`BotDescription`](/reference/bot-description/) | Interface | Une description structurée de tout ce que le bot a chargé. |
@@ -384,11 +384,11 @@ Voir [Cache et résolution d'entités](/data/cache/).
 
 | Export | Genre | À quoi il sert |
 | --- | --- | --- |
-| [`createCache()`](/reference/create-cache/) | Fonction | Crée un `TTLCache`. |
+| [`createCache()`](/reference/create-cache/) | Fonction | **Obsolète.** Utilisez `nc.cache.create()` de node-comfort. Crée un `TTLCache`. |
 | [`isHiddenChannel()`](/reference/is-hidden-channel/) | Fonction | Indique si un salon est un salon que le bot ne peut pas voir, envoyé par Discord sans son nom ni ses détails (« masqué »). |
 | [`resolve`](/reference/resolve/) | Objet | Utilitaires de récupération qui interrogent d'abord le cache. |
-| [`TTLCache`](/reference/ttl-cache/) | Classe | Un cache en mémoire TTL + LRU avec récupération en un seul appel (single-flight). |
-| [`TTLCacheOptions`](/reference/ttl-cache-options/) | Interface | Options de `TTLCache`. |
+| [`TTLCache`](/reference/ttl-cache/) | Classe | **Obsolète.** Utilisez le cache de node-comfort, `nc.cache.Cache`. Un cache en mémoire TTL + LRU avec récupération en un seul appel (single-flight). |
+| [`TTLCacheOptions`](/reference/ttl-cache-options/) | Interface | **Obsolète.** Utilisez les options de `nc.cache.create()` : `ttl`, `max` et `staleWhileRevalidate`, qui y est une fenêtre de temps. Options de `TTLCache`. |
 
 ## Internationalisation
 
@@ -478,15 +478,15 @@ Voir [Résilience](/production/resilience/).
 | [`createCircuitBreaker()`](/reference/create-circuit-breaker/) | Fonction | Crée un `CircuitBreaker`. |
 | [`createRateLimiter()`](/reference/create-rate-limiter/) | Fonction | Crée un `RateLimiter`. |
 | [`rateLimit()`](/reference/rate-limit/) | Fonction | Une garde qui autorise `limit` utilisations par `window`, par portée (`"user"` par défaut). |
-| [`retry()`](/reference/retry/) | Fonction | Réessaie une fonction asynchrone avec un backoff exponentiel + jitter. |
-| [`timeout()`](/reference/timeout/) | Fonction | Rejette si `promise` ne se termine pas dans le délai `ms` (millisecondes, ou texte tel que `"5s"`). |
+| [`retry()`](/reference/retry/) | Fonction | **Obsolète.** Utilisez `nc.async.retry(fn, options)`. Réessaie une fonction asynchrone avec un backoff exponentiel + jitter. |
+| [`timeout()`](/reference/timeout/) | Fonction | **Obsolète.** Utilisez `nc.async.timeout(promise, ms, message)`, la même fonction. Rejette si `promise` ne se termine pas dans le délai `ms` (millisecondes, ou texte tel que `"5s"`). |
 | [`CircuitBreaker`](/reference/circuit-breaker/) | Classe | Un disjoncteur : après trop d'échecs, il s'« ouvre » et échoue immédiatement pendant une période de repos, puis réessaie (« semi-ouvert ») avant de se rétablir complètement. |
 | [`CircuitOpenError`](/reference/circuit-open-error/) | Classe | Erreur levée lorsque des appels sont rejetés parce que le circuit est ouvert. |
 | [`RateLimiter`](/reference/rate-limiter/) | Classe | Un limiteur de débit à fenêtre fixe, indexé par une chaîne arbitraire. |
 | [`CircuitBreakerOptions`](/reference/circuit-breaker-options/) | Interface | Options de `createCircuitBreaker`. |
 | [`RateLimiterOptions`](/reference/rate-limiter-options/) | Interface | Options de `createRateLimiter`. |
 | [`RateLimitResult`](/reference/rate-limit-result/) | Interface | Le résultat d'un appel à `RateLimiter.consume`. |
-| [`RetryOptions`](/reference/retry-options/) | Interface | Options de `retry`. |
+| [`RetryOptions`](/reference/retry-options/) | Interface | **Obsolète.** Utilisez les options de `nc.async.retry()` : les mêmes noms. Options de `retry`. |
 | [`CircuitState`](/reference/circuit-state/) | Type | L'état d'un `CircuitBreaker`. |
 
 ## Sharding

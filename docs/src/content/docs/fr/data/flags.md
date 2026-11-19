@@ -18,10 +18,9 @@ enregistrées automatiquement dans le [store](/data/store/) du bot : inutile de
 le passer deux fois.
 
 ```ts title="src/index.ts"
-import { defineBot, env, sqliteStore } from "@ix-xs/djs-bot";
+import { defineBot, sqliteStore } from "@ix-xs/djs-bot";
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   features: "./features",
   store: sqliteStore("data/bot.sqlite"),
   flags: { defaults: { economy: true, beta: false } },

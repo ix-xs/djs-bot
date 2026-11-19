@@ -164,7 +164,7 @@ Les suggestions qu'il a fallu écarter sont signalées dans les journaux, une fo
 
 Trois choses restent de votre responsabilité :
 
-- **Soyez rapide.** Discord attend 3 secondes au plus et une réponse d'autocomplétion ne peut pas être différée. Interrogez un index ou un cache, pas une API lente. `TTLCache`, décrit dans [Cache et résolution d'entités](/data/cache/), est fait pour cela.
+- **Soyez rapide.** Discord attend 3 secondes au plus et une réponse d'autocomplétion ne peut pas être différée. Interrogez un index ou un cache, pas une API lente. Le cache de node-comfort, voir [Cache et résolution d'entités](/data/cache/), est fait pour cela.
 - **Les échecs sont silencieux pour l'utilisateur.** Si le gestionnaire lève une exception, l'erreur est consignée et une liste vide est affichée : une recherche qui échoue ne casse donc jamais la commande.
 - **Une suggestion n'est pas une validation.** L'utilisateur peut ignorer la liste et envoyer ce qu'il a tapé. Vérifiez à nouveau la valeur dans `run`.
 

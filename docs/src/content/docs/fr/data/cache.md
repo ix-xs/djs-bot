@@ -1,101 +1,35 @@
 ---
 title: "Cache et résolution d'entités"
-description: "Un cache en processus avec expiration et limite de taille pour les résultats de tâches lentes, des helpers qui lisent le cache de discord.js avant d'appeler l'API, et une vérification pour les salons que Discord cache au bot."
+description: "Des helpers qui lisent le cache de discord.js avant d'appeler l'API, une vérification pour les salons que Discord cache au bot, et où mettre les résultats de votre propre travail."
 sidebar:
   order: 2
 ---
 
-Trois outils vivent ici. `createCache` retient ce que votre propre code a
-calculé ou récupéré. `resolve` cherche des entités Discord (membres, rôles,
+Deux outils vivent ici. `resolve` cherche des entités Discord (membres, rôles,
 salons) dans le cache que discord.js tient déjà. `isHiddenChannel` distingue un
-vrai salon d'un substitut.
+vrai salon d'un substitut. Les résultats de votre propre travail vont dans le
+cache de node-comfort.
 
-## Un premier cache
+## Mettre en cache vos propres résultats
 
-Enveloppez un appel lent dans `getOrFetch`. Le premier appel exécute la
-fonction de récupération, les suivants renvoient la valeur en cache jusqu'à son
-expiration.
-
-```ts title="features/prices/prices.service.ts"
-import { createCache, defineService } from "@ix-xs/djs-bot";
-
-async function fetchPrice(symbol: string): Promise<number> {
-  const response = await fetch(`https://api.example.com/price/${symbol}`);
-  const body = (await response.json()) as { price: number };
-  return body.price;
-}
-
-export default defineService("prices", {
-  factory: () => {
-    const cache = createCache<string, number>({ ttl: "1m", max: 500 });
-    return {
-      get: (symbol: string) => cache.getOrFetch(symbol, () => fetchPrice(symbol)),
-    };
-  },
-});
-```
-
-Le cache vit dans un [service](/architecture/services/) pour qu'une seule
-instance soit partagée par tous les gestionnaires. Un cache créé dans un
-gestionnaire repartirait vide à chaque interaction.
-
-Les appels simultanés pour une même clé partagent une seule requête en cours :
-une rafale d'interactions touche votre API une fois, pas cinquante. Si la
-fonction de récupération lève une exception, chaque appelant en attente reçoit
-l'erreur, rien n'est mis en cache, et l'appel suivant réessaie.
-
-Les autres méthodes sont synchrones :
-
-```ts
-const prices = createCache<string, number>({ ttl: "1m", max: 500 });
-
-prices.set("BTC", 42);          // écriture manuelle, avec le TTL du cache
-prices.set("ETH", 7, "10s");    // ou un TTL propre à cette entrée
-prices.get("BTC");              // 42, ou undefined si absente ou expirée
-prices.has("BTC");              // true
-prices.delete("BTC");
-prices.clear();
-```
-
-## Stale while revalidate
-
-Avec `staleWhileRevalidate: true`, une valeur expirée reste utile. Le prochain
-`getOrFetch` la renvoie aussitôt et lance un seul rafraîchissement en arrière-plan,
-si bien que l'utilisateur n'attend jamais la fonction de récupération après le
-premier appel.
-
-```ts
-const stats = createCache<string, Stats>({ ttl: "1m", staleWhileRevalidate: true });
-```
-
-Cela convient aux classements, aux compteurs et aux tableaux de bord. Ne
-l'utilisez pas pour ce qui doit être exact, et gardez ces points en tête :
-
-- La valeur périmée est servie quel que soit son âge. Une clé que personne n'a
-  lue depuis une heure est renvoyée une dernière fois, vieille d'une heure,
-  pendant que le rafraîchissement s'exécute.
-- Si le rafraîchissement en arrière-plan échoue, l'erreur est avalée et la
-  valeur périmée continue d'être servie. L'appel suivant retente le
-  rafraîchissement.
-- `get` et `has` renvoient aussi les valeurs expirées dans ce mode, car les
-  entrées expirées sont conservées pour être servies.
-- Le tout premier appel pour une clé n'a rien à servir, il attend donc la
-  fonction de récupération comme un cache normal.
+Utilisez `nc.cache.create({ ttl, max })` de node-comfort ([sa page](https://ix-xs.github.io/node-comfort/flow/cache/)),
+avec `getOrSet` pour charger en cas d'absence, et créez-le dans un
+[service](/architecture/services/) pour que tous les gestionnaires le partagent.
 
 ## Cache ou store
 
-| | `createCache` | [`KVStore`](/data/store/) |
+| | `nc.cache` | [`KVStore`](/data/store/) |
 | --- | --- | --- |
 | Lectures | Synchrones | Asynchrones |
 | Survit à un redémarrage | Non | Avec `sqliteStore` |
 | Partagé entre les shards | Non | Avec un backend partagé |
-| Borné, évince des entrées | Oui (`max`) | Non |
+| Borné, évince des entrées | Avec `max` | Non |
 | Sert à | Les données chaudes, les réponses d'API | Un vrai état : profils, réglages, tickets |
 
 Ils se marient bien, le cache devant et le store derrière :
 
 ```ts
-const profile = await cache.getOrFetch(id, () => store.get(`profile:${id}`));
+const profile = await cache.getOrSet(id, () => store.get(`profile:${id}`));
 ```
 
 :::tip[Mettez en cache ce que vous calculez]
@@ -165,8 +99,6 @@ toujours leurs vraies données.
 
 Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans la référence de l'API :
 
-- `createCache()` : Crée un `TTLCache`.
-- `TTLCache` : Un cache en mémoire TTL + LRU avec récupération en un seul appel (single-flight).
 - `resolve` : Utilitaires de récupération qui interrogent d'abord le cache.
 - `isHiddenChannel()` : Indique si un salon est un salon que le bot ne peut pas voir, envoyé par Discord sans son nom ni ses détails (« masqué »).
 

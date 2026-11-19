@@ -16,14 +16,14 @@ Four plugins ship with the framework, on the `@ix-xs/djs-bot/plugins` subpath:
 function that takes options and returns a plugin, which you list in `plugins`.
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
+import nc from "@ix-xs/node-comfort";
 import { antiSpam, commandLogger, errorReporter } from "@ix-xs/djs-bot/plugins";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
   plugins: [
-    antiSpam({ max: 5, window: "10s", allow: env.list("OWNER_IDS") }),
+    antiSpam({ max: 5, window: "10s", allow: nc.env.list("OWNER_IDS", { default: [] }) }),
     commandLogger(),
     errorReporter({ report: (error, ctx) => console.error(ctx?.correlationId, error) }),
   ],
@@ -193,7 +193,7 @@ export function postgres(url: string) {
 ```
 
 ```ts
-plugins: [postgres(env("DATABASE_URL"))],
+plugins: [postgres(nc.env.required("DATABASE_URL"))],
 ```
 
 Every handler can now read `ctx.services.db`, a `defineService` can list `"db"`

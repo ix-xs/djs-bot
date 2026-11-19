@@ -21,7 +21,6 @@ alongside while you migrate:
 
 ```ts
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   features: [MyNewCommand, MyNewEvent],
 });
 ```

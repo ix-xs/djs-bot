@@ -16,10 +16,9 @@ Passez à `messages` les phrases que vous voulez changer. Les clés que vous
 omettez gardent leur formulation par défaut.
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
   messages: {
     error: "Une erreur est survenue. L'équipe a été prévenue.",
@@ -48,7 +47,7 @@ en a un, le `ctx` de l'interaction : elle peut donc utiliser votre traducteur et
 répondre à chaque utilisateur dans sa propre langue Discord :
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 
 const resources = {
   en: {
@@ -68,7 +67,6 @@ const resources = {
 };
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   i18n: { defaultLocale: "en", resources },
   messages: {
     error: (_vars, ctx) => ctx?.t("framework.error") ?? "Something went wrong.",
@@ -123,10 +121,9 @@ envoient un embed avec une couleur d'accent. `theme` change ces quatre couleurs
 pour tout le bot. Ne renseignez que celles que vous voulez remplacer :
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   theme: { success: 0x57f287, error: 0xed4245, info: 0x5865f2, warn: 0xfee75c },
 });
 ```

@@ -115,11 +115,10 @@ le framework attrape. Servez-vous-en pour signaler à votre outil de supervision
 et, si vous le voulez, pour prendre la main sur la réponse.
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 import * as Sentry from "@sentry/node";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
   onError(error, ctx) {
     // ctx est défini pour une interaction, absent pour un événement, un déclencheur ou une tâche.
@@ -358,10 +357,9 @@ Levée par `bot.start()`, `bot.deploy()` et `bot.clear()` quand il n'y a ni
 `token` dans la configuration ni variable `DISCORD_TOKEN`. Une valeur vide compte
 comme manquante : cherchez une ligne `DISCORD_TOKEN=` oubliée dans `.env`.
 
-Si votre fichier d'entrée lit le token avec `env("DISCORD_TOKEN")`, comme le fait
-le projet de départ, `env()` échoue d'abord avec son propre message
-(`Missing required environment variable "DISCORD_TOKEN"`), qui n'a pas de code.
-La solution est la même.
+Si votre fichier d'entrée lit lui-même le token avec
+`nc.env.required("DISCORD_TOKEN")`, cet appel échoue d'abord avec une
+`ValidationError`, qui n'a pas de code. La solution est la même.
 
 ### `DJSBOT_E002`
 

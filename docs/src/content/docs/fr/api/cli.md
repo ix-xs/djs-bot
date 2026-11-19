@@ -91,7 +91,7 @@ jamais écrasé.
 
 | Fichier | Contenu |
 | --- | --- |
-| `src/index.ts` | Le fichier d'entrée : `defineBot()` avec le token, l'identifiant client, le dossier des features, `intents: "auto"`, le serveur de développement et `defaults: { defer: true }`. |
+| `src/index.ts` | Le fichier d'entrée : `defineBot()` avec le dossier des features, `intents: "auto"` et `defaults: { defer: true }`. Le token, l'identifiant client et le serveur de développement viennent de `.env`. |
 | `src/features/ping/ping.command.ts` | Une première commande, `/ping`, qui répond avec la latence de la passerelle. |
 | `src/types.d.ts` | L'endroit où vous déclarez vos services pour que `ctx.services` soit typé. |
 | `tsconfig.json` | `strict`, `skipLibCheck`, `module` et `moduleResolution` à `NodeNext`, cible `ES2023`, `src` compilé vers `dist`. |

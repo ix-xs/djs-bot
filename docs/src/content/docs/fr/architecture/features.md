@@ -45,11 +45,10 @@ fichier avec le suffixe `.feature`, comme ci-dessus (voir
 définitions, ce qui est la façon de charger une feature qui vient d'un paquet :
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 import tickets from "./features/tickets/tickets.feature.js";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: [`${import.meta.dirname}/features`, tickets],
 });
 
@@ -110,11 +109,10 @@ ordinaire dont le fichier d'entrée l'exporte. Le bot qui l'installe l'ajoute à
 `features` et fournit ce dont la feature a besoin :
 
 ```ts title="src/index.ts"
-import { defineBot, env, memoryStore } from "@ix-xs/djs-bot";
+import { defineBot, memoryStore } from "@ix-xs/djs-bot";
 import tickets from "djs-bot-tickets"; // un paquet qui exporte le résultat d'un defineFeature()
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   store: memoryStore(), // satisfait requires: ["store"]
   features: [`${import.meta.dirname}/features`, tickets],
 });

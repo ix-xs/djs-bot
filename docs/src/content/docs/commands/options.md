@@ -207,8 +207,8 @@ rather than on every keystroke.
 Three things remain your responsibility:
 
 - **Keep it fast.** Discord waits 3 seconds at most and an autocomplete answer
-  cannot be deferred. Query an index or a cache, not a slow API. `TTLCache`,
-  described in [Cache and entity resolution](/data/cache/), is made for this.
+  cannot be deferred. Query an index or a cache, not a slow API. node-comfort's
+  cache, see [Cache and entity resolution](/data/cache/), is made for this.
 - **Failures are silent for the user.** If the handler throws, the error is
   logged and an empty list is shown, so a failing lookup never breaks the
   command.

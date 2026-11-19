@@ -13,10 +13,9 @@ manager that starts one child per shard, and each child runs your bot as usual.
 ## Turning sharding on
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
   sharding: "auto",
 });
@@ -68,7 +67,7 @@ keeping that process alive. The manager logs `Spawned shard` for each child,
 
 Each shard only knows its own guilds, and everything held in memory belongs to
 one shard: the discord.js caches, a `memoryStore()`, the counters behind
-`cooldown()` and `rateLimit()`, a `TTLCache`, the numbers of `bot.stats()`.
+`cooldown()` and `rateLimit()`, a node-comfort cache, the numbers of `bot.stats()`.
 Anything that must be the same everywhere belongs in a database shared by the
 shards.
 

@@ -1,15 +1,15 @@
 ---
 title: "Résilience"
-description: "Quatre petits outils pour le jour où votre bot dépend de quelque chose de lent, d'instable ou de détourné : une limite de débit, un disjoncteur, les nouvelles tentatives et le délai d'expiration."
+description: "Une limite de débit et un disjoncteur pour le jour où votre bot dépend de quelque chose de lent, d'instable ou de détourné, à combiner avec les nouvelles tentatives et les délais de node-comfort."
 sidebar:
   order: 4
 ---
 
 Un bot qui appelle une base de données ou une API tierce hérite de ses mauvais
-jours. Ces quatre outils sont de simples fonctions, sans configuration, utilisables
-dans un gestionnaire, un service ou une tâche planifiée. Chacun répond à une
-question différente : à quelle fréquence peut-on s'en servir, faut-il encore
-essayer, faut-il réessayer, et combien de temps attendre.
+jours. La limite de débit et le disjoncteur sont de simples fonctions, sans
+configuration, utilisables dans un gestionnaire, un service ou une tâche
+planifiée : à quelle fréquence peut-on s'en servir, et faut-il encore essayer.
+Les nouvelles tentatives et les délais viennent de node-comfort.
 
 ## Une première limite de débit
 
@@ -143,73 +143,12 @@ Créez un disjoncteur par dépendance et gardez-le pour toute la vie du processu
 (dans un module ou un service). Un disjoncteur créé dans un gestionnaire oublie
 tout à chaque appel.
 
-## Réessayer un appel
+## Réessayer et borner un appel
 
-`retry` exécute de nouveau une fonction quand elle lève une erreur, et abandonne
-avec la dernière erreur une fois les tentatives épuisées.
-
-```ts
-const user = await retry(() => api.getUser(id), {
-  attempts: 4,
-  delay: 250,        // attend environ 250 ms, puis 500 ms, puis 1 s
-  backoff: 2,
-  maxDelay: 2000,
-  shouldRetry: (error) => isNetworkError(error),
-  onRetry: (error, attempt) => logger.warn({ err: error, attempt }, "Retrying"),
-});
-```
-
-Sans options, `retry` fait trois tentatives, en attendant environ 200 ms puis
-environ 400 ms : `delay` vaut `200` par défaut, `backoff` vaut `2` et `jitter`
-vaut `0.2`. Le jitter décale chaque attente d'une quantité aléatoire, afin que
-de nombreux appelants confrontés au même échec ne reviennent pas tous au même
-instant. `delay` et `maxDelay` acceptent des millisecondes ou un texte comme
-`"1s"`.
-
-Deux choses mettent fin aux tentatives avant qu'elles soient épuisées :
-
-- **Un signal.** Passez un `AbortSignal` dans `signal` : une fois qu'il est
-  interrompu, aucune nouvelle tentative n'est faite et `retry` rejette avec une
-  `AbortError`. La tentative en cours n'est pas interrompue. Le `ctx.signal`
-  d'une [tâche planifiée](/events/jobs/) convient bien : une tâche que l'on
-  arrête ne continue pas à réessayer.
-- **Une tentative interrompue.** Une tentative qui échoue avec une erreur nommée
-  `AbortError`, comme un `fetch` que vous avez interrompu vous-même, n'est pas
-  réessayée. Une `TimeoutError` venue de `timeout()` est toujours réessayée.
-
-```ts
-// Dans une tâche planifiée : cesser de réessayer dès qu'on lui demande de s'arrêter.
-await retry(() => syncLeaderboard(), { attempts: 5, delay: "1s", signal: ctx.signal });
-```
-
-:::caution[Ne réessayez que ce qui peut être répété sans risque]
-Réessayer une lecture est sans danger. Réessayer « envoyer un message » peut le
-publier trois fois. Filtrez ces appels avec `shouldRetry`, ou ne les réessayez
-pas.
-:::
-
-## Borner un appel
-
-`timeout` rejette quand une promesse ne s'est pas réglée à temps, de sorte
-qu'une dépendance lente ne puisse pas bloquer un gestionnaire indéfiniment.
-
-```ts
-const data = await timeout(api.slowCall(), 5000, "The API took too long");
-const same = await timeout(() => api.slowCall(), "5s");   // une fonction marche aussi, tout comme "5s"
-const page = await timeout((signal) => fetch(url, { signal }), "5s");   // interrompu quand le temps est écoulé
-```
-
-Le rejet est une erreur nommée `TimeoutError`. Son message est le troisième
-argument, ou `Operation timed out after 5000ms` s'il n'y en a pas.
-
-Une promesse que vous passez n'est pas annulée : `timeout` cesse de l'attendre,
-rien de plus. Pour arrêter aussi le travail, passez une fonction. Elle reçoit un
-`AbortSignal` qui s'interrompt quand le temps est écoulé, et vous transmettez ce
-signal à ce qui fait le travail, comme le `fetch` ci-dessus.
-
-Cela compte surtout dans les gestionnaires d'interaction, où Discord vous laisse
-3 secondes pour répondre ou différer, puis 15 minutes ensuite. Voir
-[Différé automatique](/basics/automatic-deferral/).
+Les nouvelles tentatives et les délais viennent de node-comfort :
+`nc.async.retry()` et `nc.async.timeout()` ([leur page](https://ix-xs.github.io/node-comfort/flow/async/#retry)). Sans
+options, `nc.async.retry()` réessaie aussitôt ; passez `{ delay: 200, backoff: 2, jitter: 0.2 }`
+pour retrouver les attentes du `retry()` de djs-bot, qui est obsolète.
 
 ## Les combiner
 
@@ -217,7 +156,7 @@ L'empilement habituel pour un appel externe, de l'extérieur vers l'intérieur :
 
 ```ts
 const result = await breaker.execute(() =>
-  retry(() => timeout(api.fetch(id), 3000), {
+  nc.async.retry(() => nc.async.timeout(api.fetch(id), 3000), {
     attempts: 3,
     delay: 300,
     backoff: 2,
@@ -226,21 +165,22 @@ const result = await breaker.execute(() =>
 );
 ```
 
-- `timeout` borne une tentative. Sa `TimeoutError` est réessayée comme
-  n'importe quel autre échec.
-- `retry` absorbe un échec passager.
+- `nc.async.timeout` borne une tentative. Sa `TimeoutError` est réessayée
+  comme n'importe quel autre échec.
+- `nc.async.retry` absorbe un échec passager.
 - Le disjoncteur cesse d'essayer quand le service est vraiment en panne, et voit
   un échec par série de tentatives épuisée, pas un par tentative.
 
 Pour plafonner la durée totale plutôt que chaque tentative, intervertissez les
 deux appels intérieurs :
-`timeout(retry(() => api.fetch(id), { attempts: 3 }), 4000)`.
+`nc.async.timeout(nc.async.retry(() => api.fetch(id), { attempts: 3 }), 4000)`.
 
 Mettez cet empilement dans un [service](/architecture/services/) pour que les
 gestionnaires restent lisibles et que le disjoncteur soit partagé :
 
 ```ts title="src/features/weather/weather.service.ts"
-import { createCircuitBreaker, defineService, retry, timeout } from "@ix-xs/djs-bot";
+import { createCircuitBreaker, defineService } from "@ix-xs/djs-bot";
+import nc from "@ix-xs/node-comfort";
 import { fetchWeather } from "./weather.api.js";
 
 export default defineService("weather", {
@@ -249,7 +189,7 @@ export default defineService("weather", {
     return {
       get: (city: string) =>
         breaker.execute(() =>
-          retry(() => timeout(fetchWeather(city), 3000), { attempts: 3, delay: 300, backoff: 2 }),
+          nc.async.retry(() => nc.async.timeout(fetchWeather(city), 3000), { attempts: 3, delay: 300, backoff: 2 }),
         ),
     };
   },
@@ -268,9 +208,6 @@ Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans l
 - `CircuitBreaker` : Un disjoncteur : après trop d'échecs, il s'« ouvre » et échoue immédiatement pendant une période de repos, puis réessaie (« semi-ouvert ») avant de se rétablir complètement.
 - `CircuitOpenError` : Erreur levée lorsque des appels sont rejetés parce que le circuit est ouvert.
 - `CircuitState` : L'état d'un `CircuitBreaker`.
-- `retry()` : Réessaie une fonction asynchrone avec un backoff exponentiel + jitter.
-- `RetryOptions` : Options de `retry`.
-- `timeout()` : Rejette si `promise` ne se termine pas dans le délai `ms` (millisecondes, ou texte tel que `"5s"`).
 
 ## Voir aussi
 

@@ -3,11 +3,13 @@
  *
  * - {@link TTLCache} - an in-memory cache with per-entry TTL, a max-size LRU
  *   bound, single-flight `getOrFetch`, and optional stale-while-revalidate.
+ *   Deprecated: use `nc.cache` from `@ix-xs/node-comfort`.
  * - {@link resolve} - cache-first fetch helpers for Discord entities, so you
  *   read from discord.js's cache when possible and only hit the API on a miss.
  *
  * @module cache
  */
+import { deprecated } from "./deprecate.js";
 import { durationMs } from "./duration.js";
 import type { Channel, Client, Guild, GuildMember, Message, Role, TextBasedChannel, User } from "discord.js";
 
@@ -17,7 +19,11 @@ interface Entry<V> {
   refreshing?: boolean;
 }
 
-/** Options for {@link TTLCache}. */
+/**
+ * Options for {@link TTLCache}.
+ * @deprecated Use the options of `nc.cache.create()`: `ttl`, `max` and
+ * `staleWhileRevalidate`, which is a time window there. It will be removed in 2.0.
+ */
 export interface TTLCacheOptions {
   /** Time-to-live: ms, or a duration string like `"30s"`, `"5m"`, `"1h"`. Default `"5m"`. */
   ttl?: number | string;
@@ -33,6 +39,17 @@ export interface TTLCacheOptions {
 /**
  * An in-memory TTL + LRU cache with single-flight fetching.
  *
+ * @deprecated Use node-comfort's cache, `nc.cache.Cache`. It is not a drop-in
+ * replacement:
+ * - `createCache(options)` and `new TTLCache(options)`:
+ *   `nc.cache.create({ ttl: "5m", max: 1000, ...options })`, to keep the
+ *   old defaults (node-comfort keeps entries forever, with no size limit).
+ * - `getOrFetch` becomes `getOrSet`.
+ * - `set(k, v, ttl)` becomes `set(k, v, { ttl })`.
+ * - `staleWhileRevalidate` is a time window in node-comfort, used only by
+ *   `getOrSet`. Expired values are no longer returned by `get()` or `has()`.
+ *
+ * It will be removed in 2.0.
  * @example
  * const cache = new TTLCache<string, Guild>({ ttl: "10m" });
  * const guild = await cache.getOrFetch(id, () => client.guilds.fetch(id));
@@ -45,6 +62,7 @@ export class TTLCache<K, V> {
   private readonly swr: boolean;
 
   public constructor(options: TTLCacheOptions = {}) {
+    deprecated("DJS_BOT_DEP_CACHE", "TTLCache", 'nc.cache.create({ ttl: "5m", max: 1000, ...options })');
     this.ttl = durationMs(options.ttl, 300_000);
     this.max = options.max ?? 1000;
     this.swr = options.staleWhileRevalidate ?? false;
@@ -128,8 +146,23 @@ export class TTLCache<K, V> {
   }
 }
 
-/** Creates a {@link TTLCache}. */
+/**
+ * Creates a {@link TTLCache}.
+ *
+ * @deprecated Use node-comfort's `nc.cache.create()`. It is not a drop-in
+ * replacement:
+ * - `createCache(options)` and `new TTLCache(options)`:
+ *   `nc.cache.create({ ttl: "5m", max: 1000, ...options })`, to keep the
+ *   old defaults (node-comfort keeps entries forever, with no size limit).
+ * - `getOrFetch` becomes `getOrSet`.
+ * - `set(k, v, ttl)` becomes `set(k, v, { ttl })`.
+ * - `staleWhileRevalidate` is a time window in node-comfort, used only by
+ *   `getOrSet`. Expired values are no longer returned by `get()` or `has()`.
+ *
+ * It will be removed in 2.0.
+ */
 export function createCache<K, V>(options?: TTLCacheOptions): TTLCache<K, V> {
+  deprecated("DJS_BOT_DEP_CACHE", "createCache()", 'nc.cache.create({ ttl: "5m", max: 1000, ...options })');
   return new TTLCache<K, V>(options);
 }
 

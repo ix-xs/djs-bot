@@ -12,10 +12,9 @@ or in the Prometheus text format.
 ## Turning it on
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
   health: 3000,
 });
@@ -28,7 +27,7 @@ if (!process.env.DJSBOT_CLI) void bot.start();
 A number is the port. To choose the interface too, pass an object:
 
 ```ts
-health: { port: env.number("PORT", 3000), host: "127.0.0.1" },
+health: { port: nc.env.number("PORT", { default: 3000 }), host: "127.0.0.1" },
 ```
 
 With no `host`, the server listens on every network interface, which probes

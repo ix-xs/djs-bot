@@ -17,10 +17,9 @@ Donnez un store à `defineBot`. `sqliteStore` écrit dans un fichier, donc les
 données survivent à un redémarrage.
 
 ```ts title="src/index.ts"
-import { defineBot, env, sqliteStore } from "@ix-xs/djs-bot";
+import { defineBot, sqliteStore } from "@ix-xs/djs-bot";
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   features: "./features",
   store: sqliteStore("data/bot.sqlite"),
 });
@@ -238,8 +237,8 @@ pour vous.
 
 :::tip[Un store n'est pas un cache]
 Pour des données chaudes en processus avec éviction automatique, utilisez plutôt
-[`createCache`](/data/cache/) : il est synchrone, borné, et peut servir des
-valeurs périmées pendant qu'il se rafraîchit. Cette page compare les deux.
+le cache de node-comfort : il est synchrone, borné, et peut servir des valeurs
+périmées pendant qu'il se rafraîchit. [Cache et résolution d'entités](/data/cache/) compare les deux.
 :::
 
 ## Écrire un adaptateur

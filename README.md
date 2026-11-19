@@ -38,10 +38,10 @@ a small, explicit, fully-typed framework. It never hides discord.js, and every
 automatic behaviour is inspectable with `djs-bot explain`.
 
 ```ts
-import { defineBot, defineCommand, env } from "@ix-xs/djs-bot";
+import { defineBot, defineCommand } from "@ix-xs/djs-bot";
 
+// The token comes from DISCORD_TOKEN (the environment or .env).
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   features: "./src/features", // auto-discovered
   intents: "auto",            // derived from your events
 }).use(
@@ -67,7 +67,7 @@ export default defineBot({
 | Decorator magic you can't debug | **No side-effect loading** - files export `define*()` objects; nothing registers by importing. `djs-bot explain` shows it all |
 | Bots are impossible to unit-test | **Test harness** - invoke handlers with no token, no network |
 | "Frameworks are slow" | **~4 µs** of overhead per interaction, end to end (context, guards, reply helpers included) - see [benchmarks](./benchmarks) |
-| Rebuilding the same helpers every project | **Batteries included** - subcommands, context menus, autocomplete, native selects, user-install, i18n (`ctx.t`), key-value stores, audit trail, per-guild feature flags, health checks & metrics, rate limiters & circuit breakers, message triggers, sharding, `paginate()`/`confirm()`, presence rotation, `assets`/`voice`, `ui` Components-V2 builders, and a smart TTL cache |
+| Rebuilding the same helpers every project | **Batteries included** - subcommands, context menus, autocomplete, native selects, user-install, i18n (`ctx.t`), key-value stores, audit trail, per-guild feature flags, health checks & metrics, rate limiters & circuit breakers, message triggers, sharding, `paginate()`/`confirm()`, presence rotation, `assets`/`voice`, `ui` Components-V2 builders, and cache-first `resolve` helpers |
 
 ## Install
 
@@ -124,7 +124,6 @@ import { defineBot } from "@ix-xs/djs-bot";
 import { antiSpam, commandLogger, errorReporter, maintenance } from "@ix-xs/djs-bot/plugins";
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   plugins: [antiSpam({ max: 5, window: "10s" }), commandLogger(), errorReporter({ report: sendToSentry })],
 });
 ```
@@ -168,13 +167,13 @@ src/
 `src/index.ts`:
 
 ```ts
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 
+// The token, the application id and the test server id come from
+// DISCORD_TOKEN, DISCORD_CLIENT_ID and DISCORD_DEV_GUILD, in .env.
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
   intents: "auto",
-  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
 });
 
 export default bot;
@@ -457,12 +456,12 @@ export default defineFeature({
 Everything is configured in the object you pass to `defineBot` - fully typed:
 
 ```ts
-import { defineBot, env, sqliteStore } from "@ix-xs/djs-bot";
+import nc from "@ix-xs/node-comfort";
+import { defineBot, sqliteStore } from "@ix-xs/djs-bot";
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
-  clientId: env.optional("DISCORD_CLIENT_ID"),
-  owners: env.list("OWNER_IDS"),
+  // token and clientId default to DISCORD_TOKEN and DISCORD_CLIENT_ID
+  owners: nc.env.list("OWNER_IDS", { default: [] }),
   features: "./src/features",
   intents: "auto",                              // or { add: [...], remove: [...] }
   defaults: { defer: true },                    // acknowledge slow handlers
@@ -471,17 +470,19 @@ export default defineBot({
   client: { allowedMentions: { parse: ["users"] } },   // any discord.js Client option
   store: sqliteStore("data/bot.sqlite"),
   plugins: [],
-  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD"), autoDeploy: true },
+  deploy: { autoDeploy: true },                 // devGuildId defaults to DISCORD_DEV_GUILD
   logger: { level: "info", pretty: process.env.NODE_ENV !== "production" },
-  health: env.number("PORT", 3000),             // /healthz /readyz /metrics (+ Prometheus)
+  health: nc.env.number("PORT", { default: 3000 }), // /healthz /readyz /metrics (+ Prometheus)
   presence: { activities: [{ name: "/help" }] },
   onError: (err, ctx) => ctx?.reply.error("Something broke - we're on it."),
 });
 ```
 
-`env(name, fallback?)` reads from the environment **and** a `.env` file, throwing
-a clear error when a required variable is missing. `env.optional`, `env.number`,
-`env.boolean` and `env.list` cover the rest.
+The `.env` file of the working directory is loaded when the package is
+imported, by `@ix-xs/node-comfort`, which djs-bot is built on. Read your own
+variables with its `nc.env.required`, `nc.env.number`, `nc.env.boolean` and
+`nc.env.list`, which throw a clear error when a required one is missing
+(`npm i @ix-xs/node-comfort` to import it in your code).
 
 ## The CLI
 
@@ -541,8 +542,9 @@ Prod-readiness is built in, not an afterthought:
   so a long-running bot does not grow with every user it ever saw.
 - **Cooldowns, rate limits & permissions** - first-class guards (`cooldown`,
   `rateLimit`, `hasPermission`, …).
-- **Resilience primitives** - `retry`, `timeout`, `createCircuitBreaker` and
-  `createRateLimiter` for hardening calls to databases and third-party APIs.
+- **Resilience primitives** - `createCircuitBreaker` and `createRateLimiter`
+  for hardening calls to databases and third-party APIs, next to node-comfort's
+  `nc.async.retry` and `nc.async.timeout`.
 - **Health & metrics** - a zero-dependency `/healthz` `/readyz` `/metrics` server
   for Docker/Kubernetes, with handler latency and a Prometheus endpoint.
 - **Persistence, audit & flags** - a pluggable `KVStore`, a queryable audit trail,

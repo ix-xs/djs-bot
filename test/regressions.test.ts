@@ -31,6 +31,7 @@ import { encodeCustomId } from "../src/customId.js";
 import { Registry } from "../src/registry.js";
 import { createHarness } from "../src/testing.js";
 import { fakeInteraction, methods, type FakeOptions } from "./fakes.js";
+import { quietDeprecations } from "./quiet.js";
 
 async function boot(config: BotConfig): Promise<Bot> {
   const bot = defineBot({ logger: { level: "silent" }, ...config });
@@ -111,7 +112,8 @@ describe("CLI arguments", () => {
   });
 });
 
-describe("retry", () => {
+describe("retry (deprecated)", () => {
+  quietDeprecations();
   it("waits between attempts by default, and longer each time", async () => {
     vi.useFakeTimers();
     // The middle of the jitter range: the waits are exactly 200 ms, then 400 ms.

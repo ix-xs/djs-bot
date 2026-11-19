@@ -798,7 +798,7 @@
    "guide": "/basics/configuration/",
    "text": "Creates a [`Bot`](ref:Bot). This is the framework's entry point.",
    "examples": [
-    "export default defineBot({ token: env(\"DISCORD_TOKEN\"), features: \"./features\" });"
+    "export default defineBot({ features: \"./features\" }); // the token comes from DISCORD_TOKEN"
    ],
    "kind": "function",
    "overloads": [
@@ -829,7 +829,7 @@
      "doc": {
       "text": "Creates a [`Bot`](ref:Bot). This is the framework's entry point.",
       "examples": [
-       "export default defineBot({ token: env(\"DISCORD_TOKEN\"), features: \"./features\" });"
+       "export default defineBot({ features: \"./features\" }); // the token comes from DISCORD_TOKEN"
       ]
      },
      "code": [
@@ -1243,10 +1243,11 @@
   {
    "name": "env",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L152",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L168",
    "file": "src/config.ts",
    "guide": "/basics/configuration/",
-   "text": "Reads an environment variable, with an optional fallback. Throws a clear\nerror when a required variable is missing. The `.env` file of the working\ndirectory is already in the environment by then: it is read when the package\nis imported (see [`loadEnvFile`](ref:loadEnvFile)).",
+   "text": "Reads an environment variable, with an optional fallback. Throws a clear\nerror when a required variable is missing. The `.env` file of the working\ndirectory is already in the environment by then: it is read when the package\nis imported.",
+   "deprecated": "Use node-comfort's `env`: `nc.env.required(name)` for\n`env(name)`, and `nc.env.string(name, { default: fallback })` for\n`env(name, fallback)`. Both treat an empty value as unset, as this one does;\na missing variable is a `ValidationError` instead of an `Error`. It will be\nremoved in 2.0.",
    "examples": [
     "const token = env(\"DISCORD_TOKEN\");",
     "const level = env(\"LOG_LEVEL\", \"info\");"
@@ -1281,7 +1282,8 @@
       ]
      },
      "doc": {
-      "text": "Reads an environment variable, with an optional fallback. Throws a clear\nerror when a required variable is missing. The `.env` file of the working\ndirectory is already in the environment by then: it is read when the package\nis imported (see [`loadEnvFile`](ref:loadEnvFile)).",
+      "text": "Reads an environment variable, with an optional fallback. Throws a clear\nerror when a required variable is missing. The `.env` file of the working\ndirectory is already in the environment by then: it is read when the package\nis imported.",
+      "deprecated": "Use node-comfort's `env`: `nc.env.required(name)` for\n`env(name)`, and `nc.env.string(name, { default: fallback })` for\n`env(name, fallback)`. Both treat an empty value as unset, as this one does;\na missing variable is a `ValidationError` instead of an `Error`. It will be\nremoved in 2.0.",
       "examples": [
        "const token = env(\"DISCORD_TOKEN\");",
        "const level = env(\"LOG_LEVEL\", \"info\");"
@@ -1317,7 +1319,8 @@
         ]
        },
        "doc": {
-        "text": "Like [`env`](ref:env) but returns `undefined` instead of throwing when unset."
+        "text": "Like [`env`](ref:env) but returns `undefined` instead of throwing when unset.",
+        "deprecated": "Use `nc.env.string(name, { optional: true })`, which also gives\n`undefined` for an empty value. `nc.env.get(name)` is close, but returns an\nempty value as `\"\"`. It will be removed in 2.0."
        },
        "code": [
         [
@@ -1326,7 +1329,8 @@
        ]
       }
      ],
-     "text": "Like [`env`](ref:env) but returns `undefined` instead of throwing when unset."
+     "text": "Like [`env`](ref:env) but returns `undefined` instead of throwing when unset.",
+     "deprecated": "Use `nc.env.string(name, { optional: true })`, which also gives\n`undefined` for an empty value. `nc.env.get(name)` is close, but returns an\nempty value as `\"\"`. It will be removed in 2.0."
     },
     {
      "name": "number",
@@ -1360,6 +1364,7 @@
        },
        "doc": {
         "text": "Reads a numeric variable. Throws when it is missing without a fallback, or\nwhen its value is not a number - so a typo fails at startup.",
+        "deprecated": "Use `nc.env.number(name)`, or `nc.env.number(name, { default: fallback })`.\nIt also refuses `Infinity`, and takes `min`, `max` and `integer`. It will be\nremoved in 2.0.",
         "examples": [
          "const port = env.number(\"PORT\", 3000);"
         ]
@@ -1372,6 +1377,7 @@
       }
      ],
      "text": "Reads a numeric variable. Throws when it is missing without a fallback, or\nwhen its value is not a number - so a typo fails at startup.",
+     "deprecated": "Use `nc.env.number(name)`, or `nc.env.number(name, { default: fallback })`.\nIt also refuses `Infinity`, and takes `min`, `max` and `integer`. It will be\nremoved in 2.0.",
      "examples": [
       "const port = env.number(\"PORT\", 3000);"
      ]
@@ -1409,6 +1415,7 @@
        },
        "doc": {
         "text": "Reads a boolean variable: `true`/`1`/`yes`/`on` and `false`/`0`/`no`/`off`\n(any case). Unset resolves to `fallback` (default `false`).",
+        "deprecated": "Use `nc.env.boolean(name, { default: false })`, which reads the\nsame spellings. Without `default` it is required, where this one gave\n`false`. It will be removed in 2.0.",
         "examples": [
          "const debug = env.boolean(\"DEBUG\");"
         ]
@@ -1421,6 +1428,7 @@
       }
      ],
      "text": "Reads a boolean variable: `true`/`1`/`yes`/`on` and `false`/`0`/`no`/`off`\n(any case). Unset resolves to `fallback` (default `false`).",
+     "deprecated": "Use `nc.env.boolean(name, { default: false })`, which reads the\nsame spellings. Without `default` it is required, where this one gave\n`false`. It will be removed in 2.0.",
      "examples": [
       "const debug = env.boolean(\"DEBUG\");"
      ]
@@ -1448,6 +1456,7 @@
        },
        "doc": {
         "text": "Reads a comma-separated variable as a list, trimming each entry and dropping\nempty ones. Unset resolves to an empty list.",
+        "deprecated": "Use `nc.env.list(name, { default: [] })`, which trims and drops\nempty entries too. Without `default` it is required, where this one gave\n`[]`. It will be removed in 2.0.",
         "examples": [
          "owners: env.list(\"OWNER_IDS\")"
         ]
@@ -1460,6 +1469,7 @@
       }
      ],
      "text": "Reads a comma-separated variable as a list, trimming each entry and dropping\nempty ones. Unset resolves to an empty list.",
+     "deprecated": "Use `nc.env.list(name, { default: [] })`, which trims and drops\nempty entries too. Without `default` it is required, where this one gave\n`[]`. It will be removed in 2.0.",
      "examples": [
       "owners: env.list(\"OWNER_IDS\")"
      ]
@@ -1470,10 +1480,11 @@
   {
    "name": "loadEnvFile",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L224",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L267",
    "file": "src/config.ts",
    "guide": "/basics/configuration/",
    "text": "Loads a `.env` file into `process.env`. Safe to call when the file is absent.\n\nYou rarely need it: the `.env` of the working directory is read as soon as\nthe package is imported. Call it for another file (`.env.local`, a path of\nyour own). What the real environment already defines is never replaced; a\nfile loaded here wins over the `.env` read at import.\n\nUnlike the read at import, it loads every variable of the file, those that\ncan run code included (`NODE_OPTIONS`, `NODE_TLS_REJECT_UNAUTHORIZED`...):\ncall it only on a file you trust.",
+   "deprecated": "Use `nc.env.load(path)`, which this calls. It will be removed in 2.0.",
    "examples": [
     "loadEnvFile(\".env.local\");"
    ],
@@ -1501,6 +1512,7 @@
      },
      "doc": {
       "text": "Loads a `.env` file into `process.env`. Safe to call when the file is absent.\n\nYou rarely need it: the `.env` of the working directory is read as soon as\nthe package is imported. Call it for another file (`.env.local`, a path of\nyour own). What the real environment already defines is never replaced; a\nfile loaded here wins over the `.env` read at import.\n\nUnlike the read at import, it loads every variable of the file, those that\ncan run code included (`NODE_OPTIONS`, `NODE_TLS_REJECT_UNAUTHORIZED`...):\ncall it only on a file you trust.",
+      "deprecated": "Use `nc.env.load(path)`, which this calls. It will be removed in 2.0.",
       "examples": [
        "loadEnvFile(\".env.local\");"
       ]
@@ -1517,7 +1529,7 @@
   {
    "name": "BotConfig",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L39",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L40",
    "file": "src/config.ts",
    "guide": "/basics/configuration/",
    "text": "The full bot configuration object.",
@@ -1921,7 +1933,7 @@
   {
    "name": "DeployConfig",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L25",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L26",
    "file": "src/config.ts",
    "guide": "/basics/configuration/",
    "text": "Deployment configuration.",
@@ -1961,7 +1973,7 @@
   {
    "name": "FeatureSource",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L22",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L23",
    "file": "src/config.ts",
    "guide": "/architecture/features/",
    "text": "Where features come from: a directory to auto-discover, or explicit definitions.",
@@ -27729,7 +27741,7 @@
    "kind": "variable",
    "code": [
     [
-     "const VERSION: \"1.5.0\""
+     "const VERSION: \"1.6.0\""
     ]
    ],
    "slug": "version"
@@ -29517,10 +29529,11 @@
   {
    "name": "TTLCache",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/cache.ts#L40",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/cache.ts#L57",
    "file": "src/cache.ts",
    "guide": "/data/cache/",
    "text": "An in-memory TTL + LRU cache with single-flight fetching.",
+   "deprecated": "Use node-comfort's cache, `nc.cache.Cache`. It is not a drop-in\nreplacement:\n- `createCache(options)` and `new TTLCache(options)`:\n`nc.cache.create({ ttl: \"5m\", max: 1000, ...options })`, to keep the\nold defaults (node-comfort keeps entries forever, with no size limit).\n- `getOrFetch` becomes `getOrSet`.\n- `set(k, v, ttl)` becomes `set(k, v, { ttl })`.\n- `staleWhileRevalidate` is a time window in node-comfort, used only by\n`getOrSet`. Expired values are no longer returned by `get()` or `has()`.\n\nIt will be removed in 2.0.",
    "examples": [
     "const cache = new TTLCache<string, Guild>({ ttl: \"10m\" });\nconst guild = await cache.getOrFetch(id, () => client.guilds.fetch(id));"
    ],
@@ -29867,10 +29880,11 @@
   {
    "name": "createCache",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/cache.ts#L132",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/cache.ts#L164",
    "file": "src/cache.ts",
    "guide": "/data/cache/",
    "text": "Creates a [`TTLCache`](ref:TTLCache).",
+   "deprecated": "Use node-comfort's `nc.cache.create()`. It is not a drop-in\nreplacement:\n- `createCache(options)` and `new TTLCache(options)`:\n`nc.cache.create({ ttl: \"5m\", max: 1000, ...options })`, to keep the\nold defaults (node-comfort keeps entries forever, with no size limit).\n- `getOrFetch` becomes `getOrSet`.\n- `set(k, v, ttl)` becomes `set(k, v, { ttl })`.\n- `staleWhileRevalidate` is a time window in node-comfort, used only by\n`getOrSet`. Expired values are no longer returned by `get()` or `has()`.\n\nIt will be removed in 2.0.",
    "kind": "function",
    "overloads": [
     {
@@ -29910,7 +29924,8 @@
       }
      ],
      "doc": {
-      "text": "Creates a [`TTLCache`](ref:TTLCache)."
+      "text": "Creates a [`TTLCache`](ref:TTLCache).",
+      "deprecated": "Use node-comfort's `nc.cache.create()`. It is not a drop-in\nreplacement:\n- `createCache(options)` and `new TTLCache(options)`:\n`nc.cache.create({ ttl: \"5m\", max: 1000, ...options })`, to keep the\nold defaults (node-comfort keeps entries forever, with no size limit).\n- `getOrFetch` becomes `getOrSet`.\n- `set(k, v, ttl)` becomes `set(k, v, { ttl })`.\n- `staleWhileRevalidate` is a time window in node-comfort, used only by\n`getOrSet`. Expired values are no longer returned by `get()` or `has()`.\n\nIt will be removed in 2.0."
      },
      "code": [
       [
@@ -29942,7 +29957,7 @@
   {
    "name": "resolve",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/cache.ts#L168",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/cache.ts#L201",
    "file": "src/cache.ts",
    "guide": "/data/cache/",
    "text": "Cache-first fetch helpers. Each reads discord.js's own cache and only calls\nthe API on a miss. Pass `force: true` to always fetch.",
@@ -30569,7 +30584,7 @@
   {
    "name": "isHiddenChannel",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/cache.ts#L157",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/cache.ts#L190",
    "file": "src/cache.ts",
    "guide": "/data/cache/",
    "text": "Whether a channel is one the bot cannot view, sent by Discord with its name\nand details withheld (\"obfuscated\").\n\nFrom November 16, 2026, Discord no longer sends bots the real data of\nchannels they lack `VIEW_CHANNEL` on: the Gateway delivers them with the name\n`\"___hidden___\"` and this flag, and the REST channel list omits them. Use\nthis before showing a channel's name or counting channels.",
@@ -30634,10 +30649,11 @@
   {
    "name": "TTLCacheOptions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/cache.ts#L21",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/cache.ts#L27",
    "file": "src/cache.ts",
    "guide": "/data/cache/",
    "text": "Options for [`TTLCache`](ref:TTLCache).",
+   "deprecated": "Use the options of `nc.cache.create()`: `ttl`, `max` and\n`staleWhileRevalidate`, which is a time window there. It will be removed in 2.0.",
    "kind": "interface",
    "properties": [
     {
@@ -36269,7 +36285,7 @@
   {
    "name": "createRateLimiter",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L79",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L81",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Creates a [`RateLimiter`](ref:RateLimiter).",
@@ -36329,7 +36345,7 @@
   {
    "name": "rateLimit",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L89",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L91",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "A guard that allows `limit` uses per `window`, per scope (default `\"user\"`).\nMore expressive than [`cooldown`](ref:cooldown) (which is 1 use per duration).",
@@ -36416,7 +36432,7 @@
   {
    "name": "RateLimiter",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L35",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L37",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "A fixed-window rate limiter, keyed by an arbitrary string.",
@@ -36580,7 +36596,7 @@
   {
    "name": "createCircuitBreaker",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L207",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L209",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Creates a [`CircuitBreaker`](ref:CircuitBreaker).",
@@ -36641,7 +36657,7 @@
   {
    "name": "CircuitBreaker",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L139",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L141",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "A circuit breaker: after too many failures it \"opens\" and fails fast for a\ncool-off period, then tries again (\"half-open\") before fully recovering.\nProtects you (and the dependency) from hammering a failing service.",
@@ -36800,7 +36816,7 @@
   {
    "name": "CircuitOpenError",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L127",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L129",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Error thrown when calls are rejected because the circuit is open.",
@@ -36866,10 +36882,11 @@
   {
    "name": "retry",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L244",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L254",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Retries an async function with exponential backoff + jitter. An attempt that\nfails because it was aborted (an `AbortError`) is not tried again.",
+   "deprecated": "Use `nc.async.retry(fn, options)`. The options have the same\nnames, but not the same defaults: there they are `delay: 0`, `backoff: 1`\nand `jitter: 0`, so pass `{ delay: 200, backoff: 2, jitter: 0.2 }` to keep\nwhat this one does. It will be removed in 2.0.",
    "examples": [
     "await retry(() => fetchFromApi(), { attempts: 5, delay: 300 });"
    ],
@@ -36930,6 +36947,7 @@
      ],
      "doc": {
       "text": "Retries an async function with exponential backoff + jitter. An attempt that\nfails because it was aborted (an `AbortError`) is not tried again.",
+      "deprecated": "Use `nc.async.retry(fn, options)`. The options have the same\nnames, but not the same defaults: there they are `delay: 0`, `backoff: 1`\nand `jitter: 0`, so pass `{ delay: 200, backoff: 2, jitter: 0.2 }` to keep\nwhat this one does. It will be removed in 2.0.",
       "examples": [
        "await retry(() => fetchFromApi(), { attempts: 5, delay: 300 });"
       ]
@@ -36975,10 +36993,11 @@
   {
    "name": "timeout",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L261",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L275",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Rejects if `promise` doesn't settle within `ms` (milliseconds, or text such\nas `\"5s\"`). Given a function, it passes it a signal that aborts when the\ntime is up, so the work can stop too.",
+   "deprecated": "Use `nc.async.timeout(promise, ms, message)`, the same\nfunction. It will be removed in 2.0.",
    "examples": [
     "await timeout(fetchFromApi(), 5000, \"API too slow\");",
     "await timeout((signal) => fetch(url, { signal }), \"5s\");"
@@ -37061,6 +37080,7 @@
      ],
      "doc": {
       "text": "Rejects if `promise` doesn't settle within `ms` (milliseconds, or text such\nas `\"5s\"`). Given a function, it passes it a signal that aborts when the\ntime is up, so the work can stop too.",
+      "deprecated": "Use `nc.async.timeout(promise, ms, message)`, the same\nfunction. It will be removed in 2.0.",
       "examples": [
        "await timeout(fetchFromApi(), 5000, \"API too slow\");",
        "await timeout((signal) => fetch(url, { signal }), \"5s\");"
@@ -37118,7 +37138,7 @@
   {
    "name": "RateLimiterOptions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L17",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L19",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Options for [`createRateLimiter`](ref:createRateLimiter).",
@@ -37158,7 +37178,7 @@
   {
    "name": "RateLimitResult",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L25",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L27",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "The outcome of a [`RateLimiter.consume`](ref:RateLimiter) call.",
@@ -37205,7 +37225,7 @@
   {
    "name": "CircuitBreakerOptions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L111",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L113",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Options for [`createCircuitBreaker`](ref:createCircuitBreaker).",
@@ -37276,7 +37296,7 @@
   {
    "name": "CircuitState",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L108",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L110",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "The state of a [`CircuitBreaker`](ref:CircuitBreaker).",
@@ -37299,10 +37319,11 @@
   {
    "name": "RetryOptions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L214",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/resilience.ts#L219",
    "file": "src/resilience.ts",
    "guide": "/production/resilience/",
    "text": "Options for [`retry`](ref:retry).",
+   "deprecated": "Use the options of `nc.async.retry()`: the same names. It will be removed in 2.0.",
    "kind": "interface",
    "properties": [
     {

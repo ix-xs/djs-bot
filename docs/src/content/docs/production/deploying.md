@@ -17,13 +17,10 @@ Give the bot a test server, and it deploys there by itself each time it starts
 in development.
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
-  clientId: env.optional("DISCORD_CLIENT_ID"),
   features: `${import.meta.dirname}/features`,
-  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
 });
 
 export default bot;
