@@ -67,7 +67,8 @@ function firstSentence(text = "") {
 /**
  * A sentence ready for a table cell: links become their text (the same
  * sentence can link differently once translated, and the name of the row
- * already links), pipes are escaped, and `<` outside code stays text.
+ * already links), backslashes and pipes are escaped (a backslash left alone
+ * would cancel the escape of a pipe after it), and `<` outside code stays text.
  */
 function cell(text) {
   return text
@@ -75,7 +76,7 @@ function cell(text) {
     .split("`")
     .map((piece, index) => (index % 2 === 1 ? piece : piece.replace(/</g, "&lt;")))
     .join("`")
-    .replace(/\|/g, "\\|");
+    .replace(/[\\|]/g, "\\$&");
 }
 
 /** The title of a page of the documentation, in a language (English when it is not translated). */
