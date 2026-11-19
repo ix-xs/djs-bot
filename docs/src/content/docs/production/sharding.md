@@ -60,7 +60,7 @@ Three consequences are worth knowing:
   `explain`) never spawn shards.
 
 Run a sharded bot the way you run any other: `node dist/index.js` on your built
-entry, or `npx djs-bot start`. The [Hosting](/recipes/hosting/) recipe covers
+entry, or `npx djs-bot start`. The [Hosting](/production/hosting/) page covers
 keeping that process alive. The manager logs `Spawned shard` for each child,
 `Shard died` when one exits, and `All shards spawned` once they are all up.
 
@@ -180,9 +180,7 @@ Every option, property and type, with what it accepts and returns, is in the API
 
 - `defineBot()`: Creates a `Bot`.
 - `ShardingOptions`: Sharding configuration.
-- `normalizeSharding()`: Normalises the loose `sharding` config into full options.
 - `isShardChild()`: True when the current process is a shard child spawned by a manager (so it should run the bot), rather than the manager itself.
-- `launchShardManager()`: Launches a `ShardingManager` for the given entry file.
 - `Logger`: Structured logger with level filtering and child bindings.
 
 ## See also
@@ -191,4 +189,4 @@ Every option, property and type, with what it accepts and returns, is in the API
 - [Health and metrics](/production/health/): the endpoints each shard exposes.
 - [Deploying commands](/production/deploying/): how and when commands are registered.
 - [Store](/data/store/): keeping state outside the memory of one shard.
-- [Hosting](/recipes/hosting/): running the manager under systemd, Docker or pm2.
+- [Hosting](/production/hosting/): running the manager under systemd, Docker or pm2.

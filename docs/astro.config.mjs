@@ -6,6 +6,7 @@ import { remarkApiLinks } from "./plugins/api-links.mjs";
 import { rehypeSharedHeadingIds } from "./plugins/heading-ids.mjs";
 import { rehypeWrapTables } from "./plugins/wrap-tables.mjs";
 import { MOVED } from "./redirects.mjs";
+import { starlightSidebar } from "./sidebar.mjs";
 import { atelierDark, atelierLight } from "./src/styles/code-themes.mjs";
 
 // Where the site is served from. Both are overridable from the environment, so
@@ -21,14 +22,6 @@ import { atelierDark, atelierLight } from "./src/styles/code-themes.mjs";
 // repository variables through unconditionally. Use DOCS_BASE=/ for the root.
 const site = process.env.DOCS_SITE || "https://ix-xs.github.io";
 const base = normalizeBase(process.env.DOCS_BASE || "/djs-bot");
-
-/** One group of the sidebar, its pages in reading order. */
-const group = (label, fr, items, collapsed = true) => ({
-  label,
-  translations: { fr },
-  collapsed,
-  items: items.map((item) => (typeof item === "string" ? { slug: item } : item)),
-});
 
 // https://starlight.astro.build/reference/configuration/
 export default defineConfig({
@@ -119,78 +112,10 @@ export default defineConfig({
       },
       tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
       lastUpdated: false,
-      // The guide, in reading order: first the setup, then one bot built page
-      // by page, then the topics to read when they are needed.
-      sidebar: [
-        group("Getting started", "Pour commencer", [
-          { slug: "index", label: "Introduction" },
-          "start/discord-app",
-          "start/installation",
-        ], false),
-        group("Your bot", "Votre bot", [
-          "bot/configuration",
-          "bot/main-file",
-          "bot/first-command",
-          "bot/finding-files",
-          "bot/registering-commands",
-          "bot/events",
-          "bot/going-live",
-        ], false),
-        group("Commands", "Commandes", [
-          "commands/slash-commands",
-          "commands/options",
-          "commands/subcommands",
-          "commands/context-menus",
-          "commands/guards",
-          "commands/install-contexts",
-        ]),
-        group("Replying", "Répondre", [
-          "basics/context",
-          "basics/automatic-deferral",
-          "messages/embeds-and-attachments",
-          "messages/formatting",
-          "messages/assets-and-voice",
-          "basics/wording-and-theme",
-        ]),
-        group("Components", "Composants", [
-          "components/buttons",
-          "components/select-menus",
-          "components/modals",
-          "components/components-v2",
-          "components/pagination",
-        ]),
-        group("Events and automation", "Événements et automatisations", [
-          "events/events-and-intents",
-          "events/triggers",
-          "events/jobs",
-        ]),
-        group("Organising your code", "Organiser son code", [
-          "basics/project-layout",
-          "architecture/services",
-          "architecture/plugins",
-          "architecture/features",
-        ]),
-        group("Data", "Données", ["data/store", "data/cache", "data/i18n", "data/flags", "data/audit"]),
-        group("Production", "Production", [
-          { slug: "basics/configuration", label: "All the configuration", translations: { fr: "Toute la configuration" } },
-          "basics/lifecycle",
-          "production/deploying",
-          "production/logging",
-          "production/health",
-          "production/presence",
-          "production/resilience",
-          "production/sharding",
-          "production/testing",
-          "recipes/hosting",
-        ]),
-        group("Complete examples", "Exemples complets", [
-          "recipes/moderation",
-          "recipes/ticket-system",
-          "recipes/role-menu",
-          "recipes/levelling",
-        ]),
-        group("Help", "Aide", ["help/troubleshooting", "help/faq", "help/glossary", "api/errors", "api/cli"]),
-      ],
+      // Installation first, then the configuration and the basics, then the API
+      // one page per area, then help (sidebar.mjs). The reference is a section of
+      // its own, from the header.
+      sidebar: starlightSidebar(),
     }),
   ],
 });

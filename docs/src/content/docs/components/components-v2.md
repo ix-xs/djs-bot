@@ -123,7 +123,7 @@ not with `defineButton`:
 
 Buttons that run your code come from
 [`defineButton`](/components/buttons/), and select menus from
-[`defineSelectMenu`](/components/select-menus/) and its native variants.
+[`defineStringSelect`](/components/select-menus/) and its native variants.
 
 ## Polls
 

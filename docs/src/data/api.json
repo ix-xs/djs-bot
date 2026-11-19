@@ -1243,7 +1243,7 @@
   {
    "name": "env",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L149",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L152",
    "file": "src/config.ts",
    "guide": "/basics/configuration/",
    "text": "Reads an environment variable, with an optional fallback. Throws a clear\nerror when a required variable is missing. The `.env` file of the working\ndirectory is already in the environment by then: it is read when the package\nis imported (see [`loadEnvFile`](ref:loadEnvFile)).",
@@ -1470,7 +1470,7 @@
   {
    "name": "loadEnvFile",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L221",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/config.ts#L224",
    "file": "src/config.ts",
    "guide": "/basics/configuration/",
    "text": "Loads a `.env` file into `process.env`. Safe to call when the file is absent.\n\nYou rarely need it: the `.env` of the working directory is read as soon as\nthe package is imported. Call it for another file (`.env.local`, a path of\nyour own). What the real environment already defines is never replaced; a\nfile loaded here wins over the `.env` read at import.\n\nUnlike the read at import, it loads every variable of the file, those that\ncan run code included (`NODE_OPTIONS`, `NODE_TLS_REJECT_UNAUTHORIZED`...):\ncall it only on a file you trust.",
@@ -1844,7 +1844,7 @@
      "name": "audit",
      "type": [
       [
-       "{\n    /** Where entries are written. Default: an in-memory sink. */\n    sink?: "
+       "{\n    /**\n     * One destination.\n     * @deprecated Use `sinks: [sink]`. It will be removed in 2.0.\n     */\n    sink?: "
       ],
       [
        "AuditSink",
@@ -1853,7 +1853,7 @@
        }
       ],
       [
-       ";\n    /** Several destinations at once; each entry goes to all of them. */\n    sinks?: "
+       ";\n    /** Where entries are written; each entry goes to all of them. Default: an in-memory sink. */\n    sinks?: "
       ],
       [
        "AuditSink",
@@ -1997,7 +1997,7 @@
   {
    "name": "defineCommand",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L313",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L314",
    "file": "src/definitions.ts",
    "guide": "/commands/slash-commands/",
    "text": "Defines a slash command with typed options, or with subcommands/groups.",
@@ -2116,7 +2116,7 @@
   {
    "name": "subcommand",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L194",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L195",
    "file": "src/definitions.ts",
    "guide": "/commands/subcommands/",
    "text": "Defines one subcommand with its own typed options. Options are inferred per\nsubcommand, so each handler's `ctx.options` is precise.",
@@ -2235,7 +2235,7 @@
   {
    "name": "defineUserCommand",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L469",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L470",
    "file": "src/definitions.ts",
    "guide": "/commands/context-menus/",
    "text": "Defines a user context-menu command.",
@@ -2301,7 +2301,7 @@
   {
    "name": "defineMessageCommand",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L494",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L495",
    "file": "src/definitions.ts",
    "guide": "/commands/context-menus/",
    "text": "Defines a message context-menu command.",
@@ -2367,7 +2367,7 @@
   {
    "name": "defineEvent",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L534",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L535",
    "file": "src/definitions.ts",
    "guide": "/events/events-and-intents/",
    "text": "Defines a gateway event listener. The needed gateway intent is derived\nautomatically when `intents: \"auto\"` (see intent autopilot).",
@@ -2542,7 +2542,7 @@
   {
    "name": "defineTrigger",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L639",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L640",
    "file": "src/definitions.ts",
    "guide": "/events/triggers/",
    "text": "Defines a message trigger - an auto-responder that fires on `messageCreate`.\nRegistering any trigger auto-enables the `GuildMessages` + `MessageContent`\nintents (MessageContent is privileged - enable it in the Developer Portal).",
@@ -2610,7 +2610,7 @@
   {
    "name": "defineButton",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L720",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L721",
    "file": "src/definitions.ts",
    "guide": "/components/buttons/",
    "text": "Defines a button. `Button.build(params)` is fully typed and encodes the\nparams into the customId; `ctx.params` decodes them back.",
@@ -2727,14 +2727,14 @@
    "slug": "define-button"
   },
   {
-   "name": "defineSelectMenu",
+   "name": "defineStringSelect",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L868",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L874",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "Defines a string select menu (a custom list of options).",
    "examples": [
-    "export const Roles = defineSelectMenu({ id: \"roles:pick\", run: (ctx) => ctx.reply(ctx.values.join(\",\")) });"
+    "export const Roles = defineStringSelect({ id: \"roles:pick\", run: (ctx) => ctx.reply(ctx.values.join(\",\")) });"
    ],
    "kind": "function",
    "overloads": [
@@ -2758,9 +2758,9 @@
      "returns": {
       "type": [
        [
-        "SelectMenuDefinition",
+        "StringSelectDefinition",
         {
-         "ref": "SelectMenuDefinition"
+         "ref": "StringSelectDefinition"
         }
        ],
        [
@@ -2796,8 +2796,123 @@
      "doc": {
       "text": "Defines a string select menu (a custom list of options).",
       "examples": [
-       "export const Roles = defineSelectMenu({ id: \"roles:pick\", run: (ctx) => ctx.reply(ctx.values.join(\",\")) });"
+       "export const Roles = defineStringSelect({ id: \"roles:pick\", run: (ctx) => ctx.reply(ctx.values.join(\",\")) });"
       ]
+     },
+     "code": [
+      [
+       "defineStringSelect<P extends "
+      ],
+      [
+       "ParamMap",
+       {
+        "ref": "ParamMap"
+       }
+      ],
+      [
+       " = "
+      ],
+      [
+       "Record",
+       {
+        "href": "https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type",
+        "external": "builtin"
+       }
+      ],
+      [
+       "<string, never>>(input: "
+      ],
+      [
+       "SelectMenuInput",
+       {
+        "ref": "SelectMenuInput"
+       }
+      ],
+      [
+       "<P>): "
+      ],
+      [
+       "StringSelectDefinition",
+       {
+        "ref": "StringSelectDefinition"
+       }
+      ],
+      [
+       "<P>"
+      ]
+     ]
+    }
+   ],
+   "slug": "define-string-select"
+  },
+  {
+   "name": "defineSelectMenu",
+   "module": "@ix-xs/djs-bot",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L904",
+   "file": "src/definitions.ts",
+   "guide": "/components/select-menus/",
+   "text": "Defines a string select menu.",
+   "deprecated": "Use [`defineStringSelect`](ref:defineStringSelect), which takes the same input. It will be removed in 2.0.",
+   "kind": "function",
+   "overloads": [
+    {
+     "params": [
+      {
+       "name": "input",
+       "type": [
+        [
+         "SelectMenuInput",
+         {
+          "ref": "SelectMenuInput"
+         }
+        ],
+        [
+         "<P>"
+        ]
+       ]
+      }
+     ],
+     "returns": {
+      "type": [
+       [
+        "StringSelectDefinition",
+        {
+         "ref": "StringSelectDefinition"
+        }
+       ],
+       [
+        "<P>"
+       ]
+      ]
+     },
+     "typeParams": [
+      {
+       "name": "P",
+       "constraint": [
+        [
+         "ParamMap",
+         {
+          "ref": "ParamMap"
+         }
+        ]
+       ],
+       "default": [
+        [
+         "Record",
+         {
+          "href": "https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type",
+          "external": "builtin"
+         }
+        ],
+        [
+         "<string, never>"
+        ]
+       ]
+      }
+     ],
+     "doc": {
+      "text": "Defines a string select menu.",
+      "deprecated": "Use [`defineStringSelect`](ref:defineStringSelect), which takes the same input. It will be removed in 2.0."
      },
      "code": [
       [
@@ -2832,9 +2947,9 @@
        "<P>): "
       ],
       [
-       "SelectMenuDefinition",
+       "StringSelectDefinition",
        {
-        "ref": "SelectMenuDefinition"
+        "ref": "StringSelectDefinition"
        }
       ],
       [
@@ -2848,7 +2963,7 @@
   {
    "name": "defineUserSelect",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L895",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L912",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "Defines a native user select menu. `ctx.users` / `ctx.members` hold the picks.",
@@ -2961,7 +3076,7 @@
   {
    "name": "defineRoleSelect",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L920",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L937",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "Defines a native role select menu. `ctx.roles` holds the picks.",
@@ -3074,7 +3189,7 @@
   {
    "name": "defineChannelSelect",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L945",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L962",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "Defines a native channel select menu. `ctx.channels` holds the picks.",
@@ -3187,7 +3302,7 @@
   {
    "name": "defineMentionableSelect",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L971",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L988",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "Defines a native mentionable (users + roles) select menu.",
@@ -3300,7 +3415,7 @@
   {
    "name": "defineModal",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1052",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1069",
    "file": "src/definitions.ts",
    "guide": "/components/modals/",
    "text": "Defines a modal. `Modal.build()` renders the declared fields; `ctx.fields`\ngives you the typed submitted values.",
@@ -3439,7 +3554,7 @@
   {
    "name": "defineService",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1092",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1109",
    "file": "src/definitions.ts",
    "guide": "/architecture/services/",
    "text": "Defines an injectable service with explicit dependencies.",
@@ -3583,7 +3698,7 @@
   {
    "name": "defineJob",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1173",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1190",
    "file": "src/definitions.ts",
    "guide": "/events/jobs/",
    "text": "Defines a scheduled job.",
@@ -3649,7 +3764,7 @@
   {
    "name": "definePlugin",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1238",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1255",
    "file": "src/definitions.ts",
    "guide": "/architecture/plugins/",
    "text": "Defines a cross-cutting plugin (hooks, middleware, capabilities).",
@@ -3709,7 +3824,7 @@
   {
    "name": "defineFeature",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1340",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1357",
    "file": "src/definitions.ts",
    "guide": "/architecture/features/",
    "text": "Bundles a set of definitions into a reusable, publishable feature.",
@@ -3775,7 +3890,7 @@
   {
    "name": "CommandDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L210",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L211",
    "file": "src/definitions.ts",
    "guide": "/commands/slash-commands/",
    "text": "A registered slash command (flat, with subcommands, or with groups).",
@@ -4076,7 +4191,7 @@
   {
    "name": "CommandInput",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L251",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L252",
    "file": "src/definitions.ts",
    "guide": "/commands/slash-commands/",
    "text": "Input accepted by [`defineCommand`](ref:defineCommand).",
@@ -4331,7 +4446,7 @@
   {
    "name": "SubcommandDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L137",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L138",
    "file": "src/definitions.ts",
    "guide": "/commands/subcommands/",
    "text": "A single subcommand (the leaf that actually runs). Create with [`subcommand`](ref:subcommand).",
@@ -4556,7 +4671,7 @@
   {
    "name": "SubcommandGroupDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L159",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L160",
    "file": "src/definitions.ts",
    "guide": "/commands/subcommands/",
    "text": "A subcommand group (a folder of subcommands).",
@@ -4613,7 +4728,7 @@
   {
    "name": "SubcommandInput",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L167",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L168",
    "file": "src/definitions.ts",
    "guide": "/commands/subcommands/",
    "text": "Input accepted by [`subcommand`](ref:subcommand).",
@@ -4807,7 +4922,7 @@
   {
    "name": "UserCommandDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L365",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L366",
    "file": "src/definitions.ts",
    "guide": "/commands/context-menus/",
    "text": "A registered user context-menu command (right-click a user → Apps).",
@@ -5045,7 +5160,7 @@
   {
    "name": "UserCommandInput",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L449",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L450",
    "file": "src/definitions.ts",
    "guide": "/commands/context-menus/",
    "text": "Input accepted by [`defineUserCommand`](ref:defineUserCommand).",
@@ -5258,7 +5373,7 @@
   {
    "name": "MessageCommandDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L394",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L395",
    "file": "src/definitions.ts",
    "guide": "/commands/context-menus/",
    "text": "A registered message context-menu command (right-click a message → Apps).",
@@ -5496,7 +5611,7 @@
   {
    "name": "MessageCommandInput",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L455",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L456",
    "file": "src/definitions.ts",
    "guide": "/commands/context-menus/",
    "text": "Input accepted by [`defineMessageCommand`](ref:defineMessageCommand).",
@@ -5709,7 +5824,7 @@
   {
    "name": "InstallContext",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L132",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L133",
    "file": "src/definitions.ts",
    "guide": "/commands/context-menus/",
    "text": "Where an app command can be installed: on servers, and/or on a user account.",
@@ -5736,7 +5851,7 @@
   {
    "name": "InteractionContext",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L134",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L135",
    "file": "src/definitions.ts",
    "guide": "/commands/context-menus/",
    "text": "Where an app command can be used: in servers, the bot's DMs, or group DMs / other DMs.",
@@ -5764,7 +5879,7 @@
   {
    "name": "TriggerDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L584",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L585",
    "file": "src/definitions.ts",
    "guide": "/events/triggers/",
    "text": "A registered message trigger (auto-responder).",
@@ -5932,7 +6047,7 @@
   {
    "name": "TriggerInput",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L604",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L605",
    "file": "src/definitions.ts",
    "guide": "/events/triggers/",
    "text": "Input accepted by [`defineTrigger`](ref:defineTrigger).",
@@ -6083,7 +6198,7 @@
   {
    "name": "TriggerContext",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L550",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L551",
    "file": "src/definitions.ts",
    "guide": "/events/triggers/",
    "text": "Context passed to a message trigger handler.",
@@ -6422,7 +6537,7 @@
   {
    "name": "TriggerMode",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L578",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L579",
    "file": "src/definitions.ts",
    "guide": "/events/triggers/",
    "text": "How a string pattern is compared against message content.",
@@ -6447,7 +6562,7 @@
   {
    "name": "TriggerPattern",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L581",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L582",
    "file": "src/definitions.ts",
    "guide": "/events/triggers/",
    "text": "A pattern: a substring/keyword, a RegExp, or a custom predicate.",
@@ -6486,7 +6601,7 @@
   {
    "name": "EventDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L516",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L517",
    "file": "src/definitions.ts",
    "guide": "/events/events-and-intents/",
    "text": "A registered gateway event listener.",
@@ -6664,7 +6779,7 @@
   {
    "name": "ButtonDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L669",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L670",
    "file": "src/definitions.ts",
    "guide": "/components/buttons/",
    "text": "A registered button with typed customId params.",
@@ -6942,7 +7057,7 @@
   {
    "name": "ButtonInput",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L687",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L688",
    "file": "src/definitions.ts",
    "guide": "/components/buttons/",
    "text": "Input accepted by [`defineButton`](ref:defineButton).",
@@ -7142,7 +7257,7 @@
   {
    "name": "ButtonVisualOptions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L657",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L658",
    "file": "src/definitions.ts",
    "guide": "/components/buttons/",
    "text": "Visual configuration for a built button.",
@@ -7204,9 +7319,9 @@
    ]
   },
   {
-   "name": "SelectMenuDefinition",
+   "name": "StringSelectDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L820",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L821",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "A registered string select menu.",
@@ -7499,7 +7614,7 @@
    ],
    "code": [
     [
-     "interface SelectMenuDefinition<P> extends "
+     "interface StringSelectDefinition<P> extends "
     ],
     [
      "SelectRoutable",
@@ -7511,16 +7626,82 @@
      "<P>"
     ]
    ],
-   "slug": "select-menu-definition",
+   "slug": "string-select-definition",
    "usedBy": [
     "AnySelectDefinition",
-    "defineSelectMenu"
+    "defineSelectMenu",
+    "defineStringSelect",
+    "SelectMenuDefinition"
    ]
+  },
+  {
+   "name": "SelectMenuDefinition",
+   "module": "@ix-xs/djs-bot",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L829",
+   "file": "src/definitions.ts",
+   "guide": "/components/select-menus/",
+   "text": "A registered string select menu.",
+   "deprecated": "Use [`StringSelectDefinition`](ref:StringSelectDefinition), the same type. It will be removed in 2.0.",
+   "kind": "type",
+   "typeParams": [
+    {
+     "name": "P",
+     "constraint": [
+      [
+       "ParamMap",
+       {
+        "ref": "ParamMap"
+       }
+      ]
+     ],
+     "default": [
+      [
+       "ParamMap",
+       {
+        "ref": "ParamMap"
+       }
+      ]
+     ]
+    }
+   ],
+   "code": [
+    [
+     "type SelectMenuDefinition<P extends "
+    ],
+    [
+     "ParamMap",
+     {
+      "ref": "ParamMap"
+     }
+    ],
+    [
+     " = "
+    ],
+    [
+     "ParamMap",
+     {
+      "ref": "ParamMap"
+     }
+    ],
+    [
+     "> = "
+    ],
+    [
+     "StringSelectDefinition",
+     {
+      "ref": "StringSelectDefinition"
+     }
+    ],
+    [
+     "<P>"
+    ]
+   ],
+   "slug": "select-menu-definition"
   },
   {
    "name": "SelectMenuInput",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L773",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L774",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "Input accepted by every `define*Select` factory.",
@@ -7684,13 +7865,14 @@
     "defineMentionableSelect",
     "defineRoleSelect",
     "defineSelectMenu",
+    "defineStringSelect",
     "defineUserSelect"
    ]
   },
   {
    "name": "SelectVisualOptions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L787",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L788",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "Visual configuration for a built string select menu.",
@@ -7773,13 +7955,13 @@
    ],
    "slug": "select-visual-options",
    "usedBy": [
-    "SelectMenuDefinition"
+    "StringSelectDefinition"
    ]
   },
   {
    "name": "NativeSelectVisualOptions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L804",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L805",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "Visual configuration for a native (user/role/channel/mentionable) select.",
@@ -7869,7 +8051,7 @@
   {
    "name": "SelectType",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L752",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L753",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "The five kinds of select menu Discord supports.",
@@ -7891,15 +8073,15 @@
     "ChannelSelectDefinition",
     "MentionableSelectDefinition",
     "RoleSelectDefinition",
-    "SelectMenuDefinition",
     "SelectRoutable",
+    "StringSelectDefinition",
     "UserSelectDefinition"
    ]
   },
   {
    "name": "SelectRoutable",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L755",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L756",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "The routable shape shared by every select menu (used by the registry/router).",
@@ -8103,14 +8285,14 @@
     "MentionableSelectDefinition",
     "Registry",
     "RoleSelectDefinition",
-    "SelectMenuDefinition",
+    "StringSelectDefinition",
     "UserSelectDefinition"
    ]
   },
   {
    "name": "AnySelectDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L846",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L852",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "Any select-menu definition.",
@@ -8120,9 +8302,9 @@
      "type AnySelectDefinition = | "
     ],
     [
-     "SelectMenuDefinition",
+     "StringSelectDefinition",
      {
-      "ref": "SelectMenuDefinition"
+      "ref": "StringSelectDefinition"
      }
     ],
     [
@@ -8172,7 +8354,7 @@
   {
    "name": "UserSelectDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L825",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L831",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "A registered user select menu.",
@@ -8488,7 +8670,7 @@
   {
    "name": "RoleSelectDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L830",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L836",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "A registered role select menu.",
@@ -8804,7 +8986,7 @@
   {
    "name": "ChannelSelectDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L835",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L841",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "A registered channel select menu.",
@@ -9120,7 +9302,7 @@
   {
    "name": "MentionableSelectDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L840",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L846",
    "file": "src/definitions.ts",
    "guide": "/components/select-menus/",
    "text": "A registered mentionable (users + roles) select menu.",
@@ -9436,7 +9618,7 @@
   {
    "name": "ModalDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L999",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1016",
    "file": "src/definitions.ts",
    "guide": "/components/modals/",
    "text": "A registered modal with typed fields and optional customId params.",
@@ -9774,7 +9956,7 @@
   {
    "name": "ModalInput",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1024",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1041",
    "file": "src/definitions.ts",
    "guide": "/components/modals/",
    "text": "Input accepted by [`defineModal`](ref:defineModal).",
@@ -9987,7 +10169,7 @@
   {
    "name": "JobDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1123",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1140",
    "file": "src/definitions.ts",
    "guide": "/events/jobs/",
    "text": "A scheduled job.",
@@ -10147,7 +10329,7 @@
   {
    "name": "JobInput",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1143",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1160",
    "file": "src/definitions.ts",
    "guide": "/events/jobs/",
    "text": "Input accepted by [`defineJob`](ref:defineJob).",
@@ -10289,7 +10471,7 @@
   {
    "name": "JobContext",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L77",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L78",
    "file": "src/definitions.ts",
    "guide": "/events/jobs/",
    "text": "Context passed to scheduled jobs.",
@@ -10377,7 +10559,7 @@
   {
    "name": "EventContext",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L67",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L68",
    "file": "src/definitions.ts",
    "guide": "/events/events-and-intents/",
    "text": "Context passed to gateway event handlers (after the event's own args).",
@@ -10441,7 +10623,7 @@
   {
    "name": "PluginDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1200",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1217",
    "file": "src/definitions.ts",
    "guide": "/architecture/plugins/",
    "text": "A cross-cutting plugin.",
@@ -10601,7 +10783,7 @@
   {
    "name": "PluginInput",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1220",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1237",
    "file": "src/definitions.ts",
    "guide": "/architecture/plugins/",
    "text": "Input accepted by [`definePlugin`](ref:definePlugin).",
@@ -10740,7 +10922,7 @@
   {
    "name": "PluginApp",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L111",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L112",
    "file": "src/definitions.ts",
    "guide": "/architecture/plugins/",
    "text": "The restricted façade handed to plugins in `setup()`.",
@@ -10823,7 +11005,7 @@
   {
    "name": "HookRegistrar",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L94",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L95",
    "file": "src/definitions.ts",
    "guide": "/architecture/plugins/",
    "text": "Lets plugins register hooks without touching the core.",
@@ -11076,7 +11258,7 @@
   {
    "name": "MiddlewareFn",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L91",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L92",
    "file": "src/definitions.ts",
    "guide": "/architecture/plugins/",
    "text": "Middleware runs around every interaction; call `next()` to continue.",
@@ -11123,7 +11305,7 @@
   {
    "name": "FeatureDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1266",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1283",
    "file": "src/definitions.ts",
    "guide": "/architecture/features/",
    "text": "A self-contained feature: commands, events, components, services, jobs.",
@@ -11421,7 +11603,7 @@
   {
    "name": "FeatureInput",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1302",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1319",
    "file": "src/definitions.ts",
    "guide": "/architecture/features/",
    "text": "Input accepted by [`defineFeature`](ref:defineFeature).",
@@ -11663,7 +11845,7 @@
   {
    "name": "AnyDefinition",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1252",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/definitions.ts#L1269",
    "file": "src/definitions.ts",
    "guide": "/commands/slash-commands/",
    "text": "Any definition that a feature can bundle.",
@@ -11777,7 +11959,7 @@
   {
    "name": "s",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L228",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L229",
    "file": "src/schema.ts",
    "guide": "/commands/options/",
    "text": "Slash-command option builders. Pass the result to [`defineCommand`](ref:defineCommand)'s\n`options` map; the handler's `ctx.options` is typed from it - `required: true`\nmakes the value non-optional.",
@@ -14085,7 +14267,7 @@
   {
    "name": "p",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L280",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L281",
    "file": "src/schema.ts",
    "guide": "/components/buttons/",
    "text": "customId parameter codecs. Attach a `params` map to a component so that\n`Component.build({ ... })` is fully typed and `ctx.params` is decoded for you.",
@@ -14180,10 +14362,7 @@
         }
        ],
        "doc": {
-        "text": "Builds a codec for a parameter that must be one of a fixed set of strings, so\n`ctx.params` is typed as that union instead of a plain `string`.",
-        "examples": [
-         "params: { action: oneOf(\"approve\", \"reject\") } // \"approve\" | \"reject\""
-        ]
+        "text": "The codec behind `p.oneOf()`."
        },
        "code": [
         [
@@ -14201,7 +14380,11 @@
        ]
       }
      ],
-     "text": "A parameter restricted to a fixed set of strings (typed as that union)."
+     "text": "A parameter restricted to a fixed set of strings, so `ctx.params` is typed\nas that union instead of a plain `string`.",
+     "examples": [
+      "params: { action: p.oneOf(\"approve\", \"reject\") } // \"approve\" | \"reject\""
+     ],
+     "details": "The codec behind `p.oneOf()`."
     }
    ],
    "code": [
@@ -14250,7 +14433,7 @@
   {
    "name": "field",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L484",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L496",
    "file": "src/schema.ts",
    "guide": "/components/modals/",
    "text": "Modal component builders. Every field is rendered inside a labelled block, so\neach accepts a `label` and an optional `description`.",
@@ -15826,12 +16009,13 @@
   {
    "name": "oneOf",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L313",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L319",
    "file": "src/schema.ts",
    "guide": "/components/buttons/",
-   "text": "Builds a codec for a parameter that must be one of a fixed set of strings, so\n`ctx.params` is typed as that union instead of a plain `string`.",
+   "text": "Builds a codec for a parameter that must be one of a fixed set of strings.",
+   "deprecated": "Use `p.oneOf()`, which does the same. It will be removed in 2.0.",
    "examples": [
-    "params: { action: oneOf(\"approve\", \"reject\") } // \"approve\" | \"reject\""
+    "params: { action: p.oneOf(\"approve\", \"reject\") } // \"approve\" | \"reject\""
    ],
    "kind": "function",
    "overloads": [
@@ -15871,9 +16055,10 @@
       }
      ],
      "doc": {
-      "text": "Builds a codec for a parameter that must be one of a fixed set of strings, so\n`ctx.params` is typed as that union instead of a plain `string`.",
+      "text": "Builds a codec for a parameter that must be one of a fixed set of strings.",
+      "deprecated": "Use `p.oneOf()`, which does the same. It will be removed in 2.0.",
       "examples": [
-       "params: { action: oneOf(\"approve\", \"reject\") } // \"approve\" | \"reject\""
+       "params: { action: p.oneOf(\"approve\", \"reject\") } // \"approve\" | \"reject\""
       ]
      },
      "code": [
@@ -15897,7 +16082,7 @@
   {
    "name": "FieldKind",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L327",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L339",
    "file": "src/schema.ts",
    "guide": "/components/modals/",
    "text": "Every kind of component a modal can hold.",
@@ -15929,7 +16114,7 @@
   {
    "name": "FileType",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L139",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L140",
    "file": "src/schema.ts",
    "guide": "/commands/options/",
    "text": "What a file may be: one of Discord's categories, or a dot-prefixed extension.\nMatching is done on the file's extension only.",
@@ -15948,7 +16133,7 @@
   {
    "name": "FieldChoice",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L410",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L422",
    "file": "src/schema.ts",
    "guide": "/components/modals/",
    "text": "One entry of a `select`, `radio` or `checkboxes` field.",
@@ -16016,7 +16201,7 @@
   {
    "name": "FieldOutput",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L342",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L354",
    "file": "src/schema.ts",
    "guide": "/components/modals/",
    "text": "What `ctx.fields.<name>` holds for each kind of field.",
@@ -16278,7 +16463,7 @@
   {
    "name": "OptionKind",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L32",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L33",
    "file": "src/schema.ts",
    "guide": "/commands/options/",
    "text": "Every supported slash-command option kind.",
@@ -16308,7 +16493,7 @@
   {
    "name": "OptionDef",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L59",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L60",
    "file": "src/schema.ts",
    "guide": "/commands/options/",
    "text": "Internal descriptor for a single option.",
@@ -16419,7 +16604,7 @@
   {
    "name": "OptionMap",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L76",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L77",
    "file": "src/schema.ts",
    "guide": "/commands/options/",
    "text": "A map of option name → descriptor, as passed to [`defineCommand`](ref:defineCommand).",
@@ -16454,7 +16639,7 @@
   {
    "name": "InferOptions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L85",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L86",
    "file": "src/schema.ts",
    "guide": "/commands/options/",
    "text": "Infers the typed `ctx.options` object from an [`OptionMap`](ref:OptionMap).",
@@ -16495,7 +16680,7 @@
   {
    "name": "ParamCodec",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L256",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L257",
    "file": "src/schema.ts",
    "guide": "/components/buttons/",
    "text": "Encodes/decodes a single customId parameter with a known runtime type.",
@@ -16601,7 +16786,7 @@
   {
    "name": "ParamMap",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L266",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L267",
    "file": "src/schema.ts",
    "guide": "/components/buttons/",
    "text": "A map of param name → codec, as passed to [`defineButton`](ref:defineButton).",
@@ -16642,6 +16827,7 @@
     "defineModal",
     "defineRoleSelect",
     "defineSelectMenu",
+    "defineStringSelect",
     "defineUserSelect",
     "encodeCustomId",
     "InferParams",
@@ -16653,13 +16839,14 @@
     "SelectMenuDefinition",
     "SelectMenuInput",
     "SelectRoutable",
+    "StringSelectDefinition",
     "UserSelectDefinition"
    ]
   },
   {
    "name": "InferParams",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L269",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L270",
    "file": "src/schema.ts",
    "guide": "/components/buttons/",
    "text": "Infers the typed `ctx.params` object from a [`ParamMap`](ref:ParamMap).",
@@ -16709,16 +16896,16 @@
     "ModalDefinition",
     "ModalInput",
     "RoleSelectDefinition",
-    "SelectMenuDefinition",
     "SelectMenuInput",
     "SelectRoutable",
+    "StringSelectDefinition",
     "UserSelectDefinition"
    ]
   },
   {
    "name": "FieldDef",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L375",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L387",
    "file": "src/schema.ts",
    "guide": "/components/modals/",
    "text": "Internal descriptor for one modal component.",
@@ -16842,7 +17029,7 @@
   {
    "name": "FieldMap",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L443",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L455",
    "file": "src/schema.ts",
    "guide": "/components/modals/",
    "text": "A map of field name → descriptor, as passed to [`defineModal`](ref:defineModal).",
@@ -16884,7 +17071,7 @@
   {
    "name": "InferFields",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L450",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/schema.ts#L462",
    "file": "src/schema.ts",
    "guide": "/components/modals/",
    "text": "Infers the typed `ctx.fields` object from a [`FieldMap`](ref:FieldMap). Text inputs are\nstrings, selects are arrays or collections, a checkbox is a boolean, and\n`field.text` blocks (display only) are left out.",
@@ -18018,9 +18205,9 @@
     "ownerOnly",
     "rateLimit",
     "RoleSelectDefinition",
-    "SelectMenuDefinition",
     "SelectMenuInput",
     "SelectRoutable",
+    "StringSelectDefinition",
     "SubcommandDefinition",
     "SubcommandInput",
     "UserCommandDefinition",
@@ -18308,9 +18495,9 @@
     "ModalDefinition",
     "ModalInput",
     "RoleSelectDefinition",
-    "SelectMenuDefinition",
     "SelectMenuInput",
     "SelectRoutable",
+    "StringSelectDefinition",
     "SubcommandDefinition",
     "SubcommandInput",
     "UserCommandDefinition",
@@ -21729,9 +21916,9 @@
     "ChannelSelectDefinition",
     "MentionableSelectDefinition",
     "RoleSelectDefinition",
-    "SelectMenuDefinition",
     "SelectMenuInput",
     "SelectRoutable",
+    "StringSelectDefinition",
     "UserSelectDefinition"
    ]
   },
@@ -27542,7 +27729,7 @@
    "kind": "variable",
    "code": [
     [
-     "const VERSION: \"1.4.1\""
+     "const VERSION: \"1.5.0\""
     ]
    ],
    "slug": "version"
@@ -27595,7 +27782,7 @@
   {
    "name": "mention",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/format.ts#L21",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/format.ts#L22",
    "file": "src/format.ts",
    "guide": "/messages/formatting/",
    "text": "Mention builders - return the exact markup Discord renders as a mention.",
@@ -27781,7 +27968,7 @@
   {
    "name": "emoji",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/format.ts#L57",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/format.ts#L58",
    "file": "src/format.ts",
    "guide": "/messages/formatting/",
    "text": "Custom emoji helpers: build the markup, and read it back.",
@@ -27827,7 +28014,8 @@
         ]
        },
        "doc": {
-        "text": "Builds custom-emoji markup: `<:name:id>` or `<a:name:id>` when animated."
+        "text": "Builds custom-emoji markup: `<:name:id>` or `<a:name:id>` when animated.",
+        "deprecated": "Use `emoji.format({ name, id, animated })`. It will be removed in 2.0."
        },
        "code": [
         [
@@ -27836,7 +28024,8 @@
        ]
       }
      ],
-     "text": "Builds custom-emoji markup: `<:name:id>` or `<a:name:id>` when animated."
+     "text": "Builds custom-emoji markup: `<:name:id>` or `<a:name:id>` when animated.",
+     "deprecated": "Use `emoji.format({ name, id, animated })`. It will be removed in 2.0."
     },
     {
      "name": "format",
@@ -27887,7 +28076,10 @@
         ]
        },
        "doc": {
-        "text": "Builds markup from a partial emoji object."
+        "text": "Builds custom-emoji markup from a partial emoji object: `<:name:id>`, or\n`<a:name:id>` when animated.",
+        "examples": [
+         "emoji.format({ name: \"wave\", id: \"123456789012345678\" }) // \"<:wave:123456789012345678>\""
+        ]
        },
        "code": [
         [
@@ -27896,7 +28088,10 @@
        ]
       }
      ],
-     "text": "Builds markup from a partial emoji object."
+     "text": "Builds custom-emoji markup from a partial emoji object: `<:name:id>`, or\n`<a:name:id>` when animated.",
+     "examples": [
+      "emoji.format({ name: \"wave\", id: \"123456789012345678\" }) // \"<:wave:123456789012345678>\""
+     ]
     },
     {
      "name": "parse",
@@ -28025,7 +28220,7 @@
   {
    "name": "timestamp",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/format.ts#L49",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/format.ts#L50",
    "file": "src/format.ts",
    "guide": "/messages/formatting/",
    "text": "Renders a Discord timestamp (auto-localised in each user's client).",
@@ -28112,7 +28307,7 @@
   {
    "name": "allowedMentions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/format.ts#L77",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/format.ts#L88",
    "file": "src/format.ts",
    "guide": "/messages/formatting/",
    "text": "Builders for `allowed_mentions`, controlling who a message may ping.",
@@ -32248,7 +32443,7 @@
   {
    "name": "isShardChild",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/sharding.ts#L37",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/sharding.ts#L47",
    "file": "src/sharding.ts",
    "guide": "/production/sharding/",
    "text": "True when the current process is a shard child spawned by a manager (so it\nshould run the bot), rather than the manager itself.",
@@ -32278,10 +32473,11 @@
   {
    "name": "normalizeSharding",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/sharding.ts#L25",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/sharding.ts#L29",
    "file": "src/sharding.ts",
    "guide": "/production/sharding/",
    "text": "Normalises the loose `sharding` config into full options.",
+   "deprecated": "Internal: `defineBot({ sharding })` does this for you. It has no replacement and will be removed in 2.0.",
    "kind": "function",
    "overloads": [
     {
@@ -32312,7 +32508,8 @@
       ]
      },
      "doc": {
-      "text": "Normalises the loose `sharding` config into full options."
+      "text": "Normalises the loose `sharding` config into full options.",
+      "deprecated": "Internal: `defineBot({ sharding })` does this for you. It has no replacement and will be removed in 2.0."
      },
      "code": [
       [
@@ -32341,10 +32538,11 @@
   {
    "name": "launchShardManager",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/sharding.ts#L47",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/sharding.ts#L58",
    "file": "src/sharding.ts",
    "guide": "/production/sharding/",
    "text": "Launches a `ShardingManager` for the given entry file. Called from the\nmanager process only; resolves once all shards have been spawned.",
+   "deprecated": "Internal: `bot.start()` does this when `sharding` is set. It has no replacement and will be removed in 2.0.",
    "kind": "function",
    "overloads": [
     {
@@ -32413,7 +32611,8 @@
       ]
      },
      "doc": {
-      "text": "Launches a `ShardingManager` for the given entry file. Called from the\nmanager process only; resolves once all shards have been spawned."
+      "text": "Launches a `ShardingManager` for the given entry file. Called from the\nmanager process only; resolves once all shards have been spawned.",
+      "deprecated": "Internal: `bot.start()` does this when `sharding` is set. It has no replacement and will be removed in 2.0."
      },
      "code": [
       [
@@ -32465,7 +32664,7 @@
   {
    "name": "ShardingOptions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/sharding.ts#L15",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/sharding.ts#L16",
    "file": "src/sharding.ts",
    "guide": "/production/sharding/",
    "text": "Sharding configuration.",
@@ -34277,7 +34476,7 @@
   {
    "name": "parseSchedule",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/scheduler.ts#L102",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/scheduler.ts#L107",
    "file": "src/scheduler.ts",
    "guide": "/events/jobs/",
    "text": "Parses a duration, a cron expression or a macro into a schedule descriptor.",
@@ -34332,7 +34531,16 @@
    "kind": "type",
    "code": [
     [
-     "type ParsedSchedule = | { type: \"interval\"; ms: number }\n  | { type: \"cron\"; fields: CronField[] }"
+     "type ParsedSchedule = | { type: \"interval\"; ms: number }\n  | { type: \"cron\"; fields: "
+    ],
+    [
+     "CronField",
+     {
+      "ref": "CronField"
+     }
+    ],
+    [
+     "[] }"
     ]
    ],
    "slug": "parsed-schedule",
@@ -34341,9 +34549,37 @@
    ]
   },
   {
+   "name": "CronField",
+   "module": "@ix-xs/djs-bot",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/scheduler.ts#L30",
+   "file": "src/scheduler.ts",
+   "guide": "/events/jobs/",
+   "text": "One of the five fields of a parsed cron expression (minute, hour, day of the\nmonth, month, day of the week): any value (`*`), or the set of values it\nmatches.",
+   "kind": "type",
+   "code": [
+    [
+     "type CronField = { any: true } | { any: false; values: "
+    ],
+    [
+     "Set",
+     {
+      "href": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Set",
+      "external": "builtin"
+     }
+    ],
+    [
+     "<number> }"
+    ]
+   ],
+   "slug": "cron-field",
+   "usedBy": [
+    "ParsedSchedule"
+   ]
+  },
+  {
    "name": "createAuditLog",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L131",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L135",
    "file": "src/audit.ts",
    "guide": "/data/audit/",
    "text": "Creates an [`AuditLog`](ref:AuditLog). Defaults to an in-memory sink if none is given.",
@@ -34411,7 +34647,7 @@
   {
    "name": "memoryAuditSink",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L75",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L76",
    "file": "src/audit.ts",
    "guide": "/data/audit/",
    "text": "An in-memory sink (bounded ring buffer).",
@@ -34461,7 +34697,7 @@
   {
    "name": "storeAuditSink",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L87",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L88",
    "file": "src/audit.ts",
    "guide": "/data/audit/",
    "text": "A sink that persists entries in a [`KVStore`](ref:KVStore) (one key per entry).",
@@ -34553,7 +34789,7 @@
   {
    "name": "loggerAuditSink",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L111",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L112",
    "file": "src/audit.ts",
    "guide": "/data/audit/",
    "text": "A sink that writes each entry to the structured logger. Pass your own logger,\nor omit it to use a default one - so `loggerAuditSink()` just works in config.",
@@ -34615,7 +34851,7 @@
   {
    "name": "AuditLog",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L55",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L56",
    "file": "src/audit.ts",
    "guide": "/data/audit/",
    "text": "A configured audit log.",
@@ -34849,7 +35085,7 @@
   {
    "name": "AuditEntry",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L15",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L16",
    "file": "src/audit.ts",
    "guide": "/data/audit/",
    "text": "A single audit record.",
@@ -34944,7 +35180,7 @@
   {
    "name": "AuditSink",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L33",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L34",
    "file": "src/audit.ts",
    "guide": "/data/audit/",
    "text": "A destination audit entries are written to.",
@@ -35039,7 +35275,7 @@
   {
    "name": "AuditFilter",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L41",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L42",
    "file": "src/audit.ts",
    "guide": "/data/audit/",
    "text": "Filter for [`AuditLog.query`](ref:AuditLog).",
@@ -35109,7 +35345,7 @@
   {
    "name": "AuditLogOptions",
    "module": "@ix-xs/djs-bot",
-   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L120",
+   "source": "https://github.com/ix-xs/djs-bot/blob/main/src/audit.ts#L121",
    "file": "src/audit.ts",
    "guide": "/data/audit/",
    "text": "Options for [`createAuditLog`](ref:createAuditLog).",
@@ -35126,7 +35362,8 @@
       ]
      ],
      "optional": true,
-     "text": "A single sink."
+     "text": "A single sink.",
+     "deprecated": "Use `sinks: [sink]`. It will be removed in 2.0."
     },
     {
      "name": "sinks",
@@ -35142,7 +35379,7 @@
       ]
      ],
      "optional": true,
-     "text": "Multiple sinks (all receive every entry)."
+     "text": "Where entries are written; each entry goes to all of them."
     }
    ],
    "code": [

@@ -5,42 +5,52 @@
 //
 // Starlight owns the dialog and has no slot in it, so this renders a template
 // that the script below moves into place.
-import { getEntry } from "astro:content";
+import { getCollection } from "astro:content";
 import { href, useT, type UiKey } from "../i18n";
+import { words as referenceWords } from "../reference/model";
 
 const { locale } = Astro.locals.starlightRoute;
 const t = useT(locale);
 
 /** Pages offered first, in this order. Titles come from the pages themselves. */
 const STARTING_POINTS = [
-  "start/installation",
-  "bot/first-command",
+  "index", // the installation, the home page
+  "basics/configuration",
+  "basics/context",
   "commands/options",
   "components/buttons",
-  "components/modals",
-  "help/troubleshooting",
-  "api/cli",
+  "api/exports",
+  "reference", // not a content page: its title comes from the reference itself
 ];
 /** Searches that show what the index knows: an API name, a concept, a command. */
 const QUERIES = ["defineCommand", "customId", "autocomplete", "cooldown", "deploy"];
 
+/** Where a page sits in the sidebar, when its folder does not say it. */
+const AREAS: Record<string, UiKey> = {
+  index: "area.start",
+  "basics/configuration": "area.start",
+  "api/errors": "area.basics",
+  "api/exports": "area.api",
+  "api/cli": "area.tooling",
+  "production/testing": "area.tooling",
+};
+
 /** The part of the documentation a page belongs to, as the sidebar names it. */
 function area(slug: string): string {
-  const folder = slug.includes("/") ? slug.slice(0, slug.indexOf("/")) : "";
-  if (folder === "") return t("area.start");
-  if (folder === "api" || folder === "help") return t("area.help");
+  if (AREAS[slug]) return t(AREAS[slug]);
+  const folder = slug.includes("/") ? slug.slice(0, slug.indexOf("/")) : slug;
   return t(`area.${folder}` as UiKey);
 }
 
-const pages = (
-  await Promise.all(
-    STARTING_POINTS.map(async (slug) => {
-      // The page in this language when it is translated, the English one otherwise.
-      const entry = (locale && (await getEntry("docs", `${locale}/${slug}`))) || (await getEntry("docs", slug));
-      return entry ? { title: entry.data.title, area: area(slug), href: href(`/${slug}/`, locale) } : undefined;
-    }),
-  )
-).filter((page) => page !== undefined);
+// Read once: asking for a page that is not translated would warn at every build.
+const titles = new Map((await getCollection("docs")).map((entry) => [entry.id, entry.data.title]));
+const pages = STARTING_POINTS.map((slug) => {
+  // The page in this language when it is translated, the English one otherwise.
+  // The home page of a translation has the language as its id ("fr").
+  const translated = slug === "index" ? locale : `${locale}/${slug}`;
+  const title = (locale && titles.get(translated!)) || titles.get(slug) || (slug === "reference" ? referenceWords(locale).title : undefined);
+  return title ? { title, area: area(slug), href: href(slug === "index" ? "/" : `/${slug}/`, locale) } : undefined;
+}).filter((page) => page !== undefined);
 ---
 
 <template id="at-search-extras">

@@ -104,8 +104,8 @@
   "fr": "Une seule destination."
  },
  "AuditLogOptions.sinks": {
-  "en": "Multiple sinks (all receive every entry).",
-  "fr": "Plusieurs destinations (toutes reçoivent chaque entrée)."
+  "en": "Where entries are written; each entry goes to all of them.",
+  "fr": "Où les entrées sont écrites ; chaque entrée va dans toutes ces destinations."
  },
  "AuditSink": {
   "en": "A destination audit entries are written to.",
@@ -1078,6 +1078,10 @@
  "CooldownScope": {
   "en": "Cooldown scope.",
   "fr": "Portée du cooldown."
+ },
+ "CronField": {
+  "en": "One of the five fields of a parsed cron expression (minute, hour, day of the\nmonth, month, day of the week): any value (`*`), or the set of values it\nmatches.",
+  "fr": "L'un des cinq champs d'une expression cron analysée (minute, heure, jour du\nmois, mois, jour de la semaine) : n'importe quelle valeur (`*`), ou l'ensemble des valeurs\nqu'il accepte."
  },
  "DEFAULT_MESSAGES": {
   "en": "The built-in English wording.",
@@ -3259,9 +3263,9 @@
   "en": "A registered string select menu.",
   "fr": "Un menu de sélection de chaînes enregistré."
  },
- "SelectMenuDefinition.build": {
-  "en": "Builds the discord.js menu. The customId encodes `params`; `visual.options` are the choices.",
-  "fr": "Construit le menu discord.js. Le customId encode `params` ; `visual.options` sont les choix."
+ "SelectMenuDefinition#deprecated": {
+  "en": "Use [`StringSelectDefinition`](ref:StringSelectDefinition), the same type. It will be removed in 2.0.",
+  "fr": "Utilisez [`StringSelectDefinition`](ref:StringSelectDefinition), le même type. Sera supprimé en 2.0."
  },
  "SelectMenuInput": {
   "en": "Input accepted by every `define*Select` factory.",
@@ -3418,6 +3422,14 @@
  "ShowModalFn": {
   "en": "Opens a modal as the response to an interaction. Accepts a\n[`defineModal`](ref:defineModal) definition (with its typed params) or any object exposing\na compatible `build()`.\n\nA modal has to be the **first** response, so call this before any reply or\ndefer - which is also why it is unavailable on modal contexts.",
   "fr": "Ouvre une modale en réponse à une interaction. Accepte une définition\n[`defineModal`](ref:defineModal) (avec ses paramètres typés) ou tout objet qui expose\nun `build()` compatible.\n\nUne modale doit être la **première** réponse : appelez donc ceci avant toute réponse ou\ntout différé. C'est aussi pourquoi cette fonction n'est pas disponible dans les contextes de modale."
+ },
+ "StringSelectDefinition": {
+  "en": "A registered string select menu.",
+  "fr": "Un menu de sélection de chaînes enregistré."
+ },
+ "StringSelectDefinition.build": {
+  "en": "Builds the discord.js menu. The customId encodes `params`; `visual.options` are the choices.",
+  "fr": "Construit le menu discord.js. Le customId encode `params` ; `visual.options` sont les choix proposés."
  },
  "SubcommandDefinition": {
   "en": "A single subcommand (the leaf that actually runs). Create with [`subcommand`](ref:subcommand).",
@@ -4044,8 +4056,12 @@
   "fr": "Définit un menu de sélection de rôles natif. `ctx.roles` contient les choix."
  },
  "defineSelectMenu": {
-  "en": "Defines a string select menu (a custom list of options).",
-  "fr": "Définit un menu de sélection de chaînes (une liste personnalisée d'options)."
+  "en": "Defines a string select menu.",
+  "fr": "Définit un menu de sélection de chaînes."
+ },
+ "defineSelectMenu#deprecated": {
+  "en": "Use [`defineStringSelect`](ref:defineStringSelect), which takes the same input. It will be removed in 2.0.",
+  "fr": "Utilisez [`defineStringSelect`](ref:defineStringSelect), qui prend les mêmes options. Sera supprimé en 2.0."
  },
  "defineService": {
   "en": "Defines an injectable service with explicit dependencies.",
@@ -4054,6 +4070,10 @@
  "defineStore": {
   "en": "Wraps a [`KVStore`](ref:KVStore) as a service definition so it's injectable as\n`ctx.services.<token>` and discovered from a `*.service.ts` file.",
   "fr": "Enveloppe un [`KVStore`](ref:KVStore) dans une définition de service pour qu'il soit injectable sous\n`ctx.services.<token>` et découvert depuis un fichier `*.service.ts`."
+ },
+ "defineStringSelect": {
+  "en": "Defines a string select menu (a custom list of options).",
+  "fr": "Définit un menu de sélection de chaînes (une liste d'options à vous)."
  },
  "defineTrigger": {
   "en": "Defines a message trigger - an auto-responder that fires on `messageCreate`.\nRegistering any trigger auto-enables the `GuildMessages` + `MessageContent`\nintents (MessageContent is privileged - enable it in the Developer Portal).",
@@ -4092,8 +4112,8 @@
   "fr": "Trouve un émoji personnalisé du serveur par son nom (depuis le cache)."
  },
  "emoji.format": {
-  "en": "Builds markup from a partial emoji object.",
-  "fr": "Construit le balisage à partir d'un objet émoji partiel."
+  "en": "Builds custom-emoji markup from a partial emoji object: `<:name:id>`, or\n`<a:name:id>` when animated.",
+  "fr": "Construit le balisage d'un émoji personnalisé à partir d'un objet émoji partiel : `<:name:id>`, ou\n`<a:name:id>` s'il est animé."
  },
  "emoji.parse": {
   "en": "Parses custom-emoji markup back into its parts.",
@@ -4479,6 +4499,10 @@
   "en": "Launches a `ShardingManager` for the given entry file. Called from the\nmanager process only; resolves once all shards have been spawned.",
   "fr": "Lance un `ShardingManager` pour le fichier d'entrée donné. À appeler uniquement depuis le processus du manager ; se résout une fois que tous les shards ont été lancés."
  },
+ "launchShardManager#deprecated": {
+  "en": "Internal: `bot.start()` does this when `sharding` is set. It has no replacement and will be removed in 2.0.",
+  "fr": "Interne : `bot.start()` le fait quand `sharding` est défini. Sans remplaçant, sera supprimé en 2.0."
+ },
  "loadEnvFile": {
   "en": "Loads a `.env` file into `process.env`. Safe to call when the file is absent.\n\nYou rarely need it: the `.env` of the working directory is read as soon as\nthe package is imported. Call it for another file (`.env.local`, a path of\nyour own). What the real environment already defines is never replaced; a\nfile loaded here wins over the `.env` read at import.\n\nUnlike the read at import, it loads every variable of the file, those that\ncan run code included (`NODE_OPTIONS`, `NODE_TLS_REJECT_UNAUTHORIZED`...):\ncall it only on a file you trust.",
   "fr": "Charge un fichier `.env` dans `process.env`. Vous pouvez l'appeler sans risque si le fichier est absent.\n\nVous en avez rarement besoin : le `.env` du répertoire de travail est lu dès que le paquet est importé. Appelez-la pour un autre fichier (`.env.local`, un chemin à vous). Ce que l'environnement réel définit déjà n'est jamais remplacé ; un fichier chargé ici l'emporte sur le `.env` lu à l'import.\n\nContrairement à la lecture à l'import, elle charge toutes les variables du fichier, y compris celles qui peuvent exécuter du code (`NODE_OPTIONS`, `NODE_TLS_REJECT_UNAUTHORIZED`...) : appelez-la uniquement sur un fichier de confiance."
@@ -4531,13 +4555,21 @@
   "en": "Normalises the loose `sharding` config into full options.",
   "fr": "Normalise la configuration `sharding` souple en options complètes."
  },
+ "normalizeSharding#deprecated": {
+  "en": "Internal: `defineBot({ sharding })` does this for you. It has no replacement and will be removed in 2.0.",
+  "fr": "Interne : `defineBot({ sharding })` le fait pour vous. Sans remplaçant, sera supprimé en 2.0."
+ },
  "not": {
   "en": "Inverts a guard: passes when it fails. `reason` is what the user sees when\nthe inner guard passes (and this one therefore fails).",
   "fr": "Inverse une garde : réussit lorsqu'elle échoue. `reason` est ce que l'utilisateur voit lorsque la garde interne réussit (et que celle-ci échoue donc)."
  },
  "oneOf": {
-  "en": "Builds a codec for a parameter that must be one of a fixed set of strings, so\n`ctx.params` is typed as that union instead of a plain `string`.",
-  "fr": "Construit un codec pour un paramètre qui doit être l'une des chaînes d'un ensemble fixe, de sorte que `ctx.params` soit typé comme cette union plutôt que comme une simple `string`."
+  "en": "Builds a codec for a parameter that must be one of a fixed set of strings.",
+  "fr": "Construit un codec pour un paramètre qui doit être l'une des chaînes d'un ensemble fixe."
+ },
+ "oneOf#deprecated": {
+  "en": "Use `p.oneOf()`, which does the same. It will be removed in 2.0.",
+  "fr": "Utilisez `p.oneOf()`, qui fait la même chose. Sera supprimé en 2.0."
  },
  "ownerOnly": {
   "en": "Restricts usage to specific user ids. Pass ids explicitly, or call `ownerOnly()`\nwith no arguments to use the owners from `defineBot({ owners })`.",
@@ -4556,8 +4588,12 @@
   "fr": "Un paramètre de type nombre. Une valeur qui n'est pas un nombre fini n'est pas décodée (`DJSBOT_E021`)."
  },
  "p.oneOf": {
-  "en": "A parameter restricted to a fixed set of strings (typed as that union).",
-  "fr": "Un paramètre limité à un ensemble fixe de chaînes (typé comme cette union)."
+  "en": "A parameter restricted to a fixed set of strings, so `ctx.params` is typed\nas that union instead of a plain `string`.",
+  "fr": "Un paramètre limité à un ensemble fixe de chaînes, de sorte que `ctx.params` soit typé\ncomme cette union plutôt que comme une simple `string`."
+ },
+ "p.oneOf#details": {
+  "en": "The codec behind `p.oneOf()`.",
+  "fr": "Le codec derrière `p.oneOf()`."
  },
  "p.string": {
   "en": "A string parameter.",

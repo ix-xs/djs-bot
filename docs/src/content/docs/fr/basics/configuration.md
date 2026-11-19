@@ -45,6 +45,12 @@ retombent sur les variables d'environnement `DISCORD_TOKEN`, `DISCORD_CLIENT_ID`
 et `DISCORD_DEV_GUILD`, de sorte que `defineBot({ features })` est déjà une
 configuration qui fonctionne.
 
+| Variable | Champ | Valeur, depuis le Developer Portal |
+| --- | --- | --- |
+| `DISCORD_TOKEN` | `token` | Bot > Reset Token. Secret |
+| `DISCORD_CLIENT_ID` | `clientId` | General Information > Application ID. Nécessaire pour déployer |
+| `DISCORD_DEV_GUILD` | `deploy.devGuildId` | L'ID de votre serveur de test (mode développeur de Discord, clic droit sur le serveur). Les commandes y apparaissent aussitôt sous `dev` |
+
 ## Variables d'environnement
 
 Les secrets n'ont pas leur place dans le code source. Les helpers `env` les lisent
@@ -283,7 +289,7 @@ Tous les champs sont facultatifs.
 | `health` | `number \| HealthOptions` | désactivé | Un serveur HTTP de contrôle de santé et de métriques : un port, ou des options complètes. Voir [Santé et métriques](/production/health/). |
 | `i18n` | `I18nOptions` | désactivé | Traductions des messages que le bot envoie, lues avec `ctx.t`. Voir [Internationalisation](/data/i18n/). |
 | `store` | `KVStore` | aucun | Un store clé-valeur, enregistré comme service `store`. Voir [Store](/data/store/). |
-| `audit` | `{ sink?, sinks?, autoRecordCommands? }` | désactivé | Active `ctx.audit(...)` et le service `audit`. Voir [Journal d'audit](/data/audit/). |
+| `audit` | `{ sinks?, autoRecordCommands? }` | désactivé | Active `ctx.audit(...)` et le service `audit`. Voir [Journal d'audit](/data/audit/). |
 | `flags` | `FeatureFlagsOptions` | désactivé | Active la garde `featureEnabled()` et le service `flags`. Voir [Feature flags](/data/flags/). |
 | `onError` | `(error, ctx?) => unknown` | aucun | Gestionnaire d'erreurs global. Voir [Erreurs](/api/errors/). |
 

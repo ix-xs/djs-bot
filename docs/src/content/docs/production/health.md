@@ -158,7 +158,7 @@ readinessProbe:
 ```
 
 For Docker, the `HEALTHCHECK` line and the rest of the container setup are in
-the [Hosting](/recipes/hosting/) recipe.
+the [Hosting](/production/hosting/) page.
 
 For an uptime monitor (UptimeRobot, Better Stack, a cron job with `curl`), point
 it at `/readyz`: it turns red when the bot is not answering Discord, which is
@@ -232,7 +232,7 @@ Every option, property and type, with what it accepts and returns, is in the API
 
 ## See also
 
-- [Hosting](/recipes/hosting/): Docker, systemd and pm2 setups that use these endpoints.
+- [Hosting](/production/hosting/): Docker, systemd and pm2 setups that use these endpoints.
 - [Sharding](/production/sharding/): one health server per shard, and how to give each a port.
 - [Logging](/production/logging/): the other half of knowing what the bot is doing.
 - [Errors](/api/errors/): what feeds the `errors` counter.

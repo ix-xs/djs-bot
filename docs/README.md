@@ -2,29 +2,27 @@
 
 An [Astro Starlight](https://starlight.astro.build) site for `@ix-xs/djs-bot`.
 
+A plain documentation for developers who know discord.js: installation,
+configuration, the basics, then the API one page per area, then help. Tables
+over prose, no guided project, no complete examples, no animations.
+
 | Section | Source | Tracked |
 | --- | --- | --- |
-| The guide's path | `src/content/docs/index.mdx`, `start/`, `bot/`: one bot built page by page, written by hand | yes |
-| Topic pages | `src/content/docs/{basics,commands,components,events,architecture,data,messages,production}/`, one page per topic, written by hand | yes |
-| Errors, CLI | `src/content/docs/api/errors.md`, `api/cli.md`, written by hand | yes |
+| Installation, configuration | `src/content/docs/index.md` (the home page), `basics/configuration.md` | yes |
+| Basics | `src/content/docs/basics/`, and `api/errors.md` | yes |
+| API, one page per area | `src/content/docs/{commands,components,messages,events,architecture,data,production}/`, `api/cli.md`, written by hand | yes |
+| All exports | `src/content/docs/api/exports.md`, **generated** by `npm run docs:api` (`scripts/api-exports.mjs`) | yes, never edited by hand |
 | API reference | `src/pages/reference/`, one page per export, built from `src/data/api.json` | yes (the JSON) |
-| Complete examples, Help | `src/content/docs/recipes/`, `src/content/docs/help/` | yes |
+| Help | `src/content/docs/help/`: upgrading, troubleshooting, FAQ, glossary | yes |
 
-The sidebar of the guide is written out in `astro.config.mjs`, in reading
-order. The guide's path comes first and is read in order; the topic pages are
-read when needed. Each fact has one home: a page links to the page that owns
-something instead of explaining it again.
+The sidebar is written out in [`sidebar.mjs`](./sidebar.mjs), in reading
+order; `astro.config.mjs` and the "All exports" page both follow it. Each fact
+has one home: a page links to the page that owns something instead of
+explaining it again.
 
-A page of the path opens with its own first paragraph (the `description` is
-then used only for search engines and link previews). A topic page shows its
-`description` as the lead, then a first example, one section per need, a short
-`Reference` section that lists its exports with a link to each in the API
-reference, limits and errors, then `See also`.
-
-The animated Discord and terminal scenes are `src/components/demo/`: a page
-describes what happens in a few steps (`DiscordDemo`, `TerminalDemo`). What
-they print must be what the program prints. `/dev/worst/` on the dev server
-shows them with the worst realistic data (`fixtures.ts`); it is never built.
+Every page shows its `description` as the lead, then a first example, one
+section per need, a short `Reference` section that lists its exports with a
+link to each in the API reference, limits and errors, then `See also`.
 
 When a page moves, add its old address to [`redirects.mjs`](./redirects.mjs).
 `/api/errors/` must never move: published versions of the package print links
@@ -36,13 +34,13 @@ to its anchors.
 signature, its doc comment, its parameters, properties and methods, and the
 types they mention, each linked to its page (or to discord.js.org). It is
 written from the TypeScript declarations by `scripts/api-model.mjs`; which
-page of the guide explains each export is set in `scripts/api-pages.mjs`.
+page of the documentation explains each export is set in `scripts/api-pages.mjs`.
 
 After adding or documenting an export, run `npm run docs:api` from the
 repository root and commit the result; `npm test` fails when the JSON is out of
-date, or when an export has no doc comment or no page of the guide.
+date, or when an export has no doc comment or no page of the documentation.
 
-In the guide, a name of the API written in code (`defineCommand()`,
+In the documentation, a name of the API written in code (`defineCommand()`,
 `ctx.reply`) links to its reference page by itself (`plugins/api-links.mjs`).
 
 ## Languages
@@ -59,14 +57,13 @@ A translation changes the prose and nothing else:
 - **Headings** stay in the same number and order. The build gives each one the
   id of its English counterpart, so anchors are the same in every language.
 - **Code blocks** are copied as they are; only comments are translated.
-- In an `.mdx` page, a relative import gains one `../`.
 
 `npm run check-translation` compares every translated page with its original
 (frontmatter keys, headings, code, link targets) and the deploy workflow runs
 it. After changing an English page, change its translations in the same commit.
 
-The words of the interface (header, search suggestions, demos) are in
-`src/i18n.ts` and the demo components; Starlight translates its own. The
+The words of the interface (header, search suggestions) are in
+`src/i18n.ts`; Starlight translates its own. The
 texts of the search results are in `src/content/i18n/<language>.json`: the
 search library leaves them in English otherwise.
 

@@ -162,7 +162,7 @@ npx djs-bot deploy
 It needs `DISCORD_TOKEN` and `DISCORD_CLIENT_ID` (or `token` and `clientId` in
 `defineBot`), and it never connects to the gateway, so it is safe to run from a
 CI job. Running `npx djs-bot deploy --dry-run` on each pull request shows what
-a merge would change. The [Hosting](/recipes/hosting/) recipe has a complete
+a merge would change. The [Hosting](/production/hosting/) page has a complete
 pipeline.
 
 The same thing from your own script:
@@ -274,5 +274,5 @@ guild. To stay under the limit, group related commands as
 - [CLI](/api/cli/): every flag of `deploy`, `clear` and `explain`.
 - [Slash commands](/commands/slash-commands/): the definitions being deployed.
 - [Install contexts](/commands/install-contexts/): where a global command can be used.
-- [Hosting](/recipes/hosting/): deploying from a release pipeline.
+- [Hosting](/production/hosting/): deploying from a release pipeline.
 - [Sharding](/production/sharding/): which process deploys on a sharded bot.

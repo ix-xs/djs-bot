@@ -127,7 +127,7 @@ ici et non avec `defineButton` :
 
 Les boutons qui exécutent votre code viennent de
 [`defineButton`](/components/buttons/), et les menus de sélection de
-[`defineSelectMenu`](/components/select-menus/) et de ses variantes natives.
+[`defineStringSelect`](/components/select-menus/) et de ses variantes natives.
 
 ## Sondages
 

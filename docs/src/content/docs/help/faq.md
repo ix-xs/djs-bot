@@ -145,8 +145,7 @@ Anywhere outside your source tree, for example `data/bot.sqlite`, and add
 ### How do I host it?
 
 Anything that runs one of the Node versions given above: a VPS with systemd or
-pm2, Docker, Fly, Railway, Render. See [Putting the bot online](/bot/going-live/) for a complete walk
-through.
+pm2, Docker, Fly, Railway, Render. See [Hosting in production](/production/hosting/).
 
 ### When do I need sharding?
 

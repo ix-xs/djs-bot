@@ -149,9 +149,8 @@ balisage qui contient leur nom et leur identifiant.
 ```ts
 import { emoji } from "@ix-xs/djs-bot";
 
-emoji.custom("check", "1234567890123456789");   // <:check:1234567890123456789>
-emoji.custom("blob", "1234567890", true);       // <a:blob:1234567890> (animé)
-emoji.format({ name: "blob", id: "123" });      // <:blob:123>
+emoji.format({ name: "check", id: "1234567890123456789" });      // <:check:1234567890123456789>
+emoji.format({ name: "blob", id: "1234567890", animated: true }); // <a:blob:1234567890> (animé)
 emoji.parse("<a:blob:123>");                    // { animated: true, name: "blob", id: "123" }
 emoji.find(ctx.guild, "blob");                  // GuildEmoji | undefined
 ```
@@ -165,7 +164,7 @@ const check = ctx.guild ? emoji.find(ctx.guild, "check") : undefined;
 await ctx.reply(`${check ?? "✅"} Done`);
 ```
 
-`emoji.parse` est l'inverse de `emoji.custom`. La chaîne entière doit être un
+`emoji.parse` est l'inverse de `emoji.format`. La chaîne entière doit être un
 seul émoji personnalisé (les espaces autour sont ignorés) ; il renvoie `null`
 pour tout le reste, y compris un émoji Unicode ou un émoji au milieu d'une
 phrase.

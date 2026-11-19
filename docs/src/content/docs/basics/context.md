@@ -232,7 +232,7 @@ export default definePlugin({
 | `defineUserCommand` | `UserCommandContext` | `targetUser`, `targetMember`, `showModal` |
 | `defineMessageCommand` | `MessageCommandContext` | `targetMessage`, `showModal` |
 | `defineButton` | `ButtonContext<Params>` | `params`, `update`, `showModal` |
-| `defineSelectMenu` and the native selects | `SelectMenuContext<Params>` | `params`, `values`, `users`, `members`, `roles`, `channels`, `update`, `showModal` |
+| `defineStringSelect` and the native selects | `SelectMenuContext<Params>` | `params`, `values`, `users`, `members`, `roles`, `channels`, `update`, `showModal` |
 | `defineModal` | `ModalContext<Fields>` | `fields`, `params` |
 
 The type parameters are inferred from the definition: you never write them.
