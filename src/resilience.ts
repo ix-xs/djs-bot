@@ -2,8 +2,10 @@
  * Production resilience primitives: rate limiting, circuit breaking, retry and
  * timeout. Reach for these in services that call databases or third-party APIs.
  *
- * `retry` and `timeout` are deprecated: use `nc.async.retry` and
- * `nc.async.timeout` from `@ix-xs/node-comfort`, which they wrap.
+ * Only the `rateLimit()` guard is the framework's own. The rest is deprecated
+ * in favour of `@ix-xs/node-comfort`, which it now wraps: `nc.quota` for the rate
+ * limiter, `nc.circuit` for the circuit breaker, `nc.async.retry` and
+ * `nc.async.timeout`.
  *
  * @module resilience
  */
@@ -11,11 +13,14 @@ import comfort from "@ix-xs/node-comfort";
 import { deprecated } from "./deprecate.js";
 import { guard, pass, fail, scopeKey, type Guard, type CooldownScope } from "./guards.js";
 import { messageFor } from "./messages.js";
-import { durationMs } from "./duration.js";
 
 /* ------------------------------ Rate limiter ----------------------------- */
 
-/** Options for {@link createRateLimiter}. */
+/**
+ * Options for {@link createRateLimiter}.
+ * @deprecated Use `QuotaOptions`, the options of `nc.quota.create()`: the same
+ * names. It will be removed in 2.0.
+ */
 export interface RateLimiterOptions {
   /** Max number of allowed hits per window. */
   limit: number;
@@ -23,7 +28,11 @@ export interface RateLimiterOptions {
   window: number | string;
 }
 
-/** The outcome of a {@link RateLimiter.consume} call. */
+/**
+ * The outcome of a {@link RateLimiter.consume} call.
+ * @deprecated Use `QuotaResult`, what `nc.quota.create().consume()` returns:
+ * the same fields. It will be removed in 2.0.
+ */
 export interface RateLimitResult {
   /** Whether this hit is within the limit. */
   allowed: boolean;
@@ -33,58 +42,39 @@ export interface RateLimitResult {
   resetMs: number;
 }
 
-/** A fixed-window rate limiter, keyed by an arbitrary string. */
-export class RateLimiter {
-  private readonly windows = new Map<string, { count: number; resetAt: number }>();
-  private readonly limit: number;
-  private readonly windowMs: number;
-  private hits = 0;
-
+/**
+ * A fixed-window rate limiter, keyed by an arbitrary string.
+ *
+ * It is node-comfort's `Quota` (`nc.quota.Quota`), under its old name.
+ *
+ * @deprecated Use `nc.quota.create({ limit, window })`, or `new nc.quota.Quota()`.
+ * The same counting, with these differences: a `limit`, a `window` or a cost
+ * that is not valid throws instead of falling back on a default (a window of
+ * one minute), keys may be numbers too, and `reset()` says whether the key had
+ * a window. It will be removed in 2.0.
+ */
+export class RateLimiter extends comfort.quota.Quota {
   public constructor(options: RateLimiterOptions) {
-    this.limit = options.limit;
-    this.windowMs = durationMs(options.window, 60_000);
-  }
-
-  /** Records a hit for `key` (cost defaults to 1) and reports whether it's allowed. */
-  public consume(key: string, cost = 1): RateLimitResult {
-    const now = Date.now();
-    // Drop finished windows now and then, so keys that never come back (one-off
-    // users, deleted guilds) do not accumulate for the lifetime of the process.
-    if (++this.hits % 1000 === 0) {
-      for (const [k, window] of this.windows) if (now >= window.resetAt) this.windows.delete(k);
-    }
-    let entry = this.windows.get(key);
-    if (!entry || now >= entry.resetAt) {
-      entry = { count: 0, resetAt: now + this.windowMs };
-      this.windows.set(key, entry);
-    }
-    const resetMs = entry.resetAt - now;
-    if (entry.count + cost > this.limit) {
-      return { allowed: false, remaining: Math.max(0, this.limit - entry.count), resetMs };
-    }
-    entry.count += cost;
-    return { allowed: true, remaining: this.limit - entry.count, resetMs };
-  }
-
-  /** Clears the window for a key. */
-  public reset(key: string): void {
-    this.windows.delete(key);
-  }
-
-  /** How many keys currently have an open window. */
-  public get size(): number {
-    return this.windows.size;
+    deprecated("DJS_BOT_DEP_RATE_LIMITER", "RateLimiter", "nc.quota.create()");
+    super(options);
   }
 }
 
-/** Creates a {@link RateLimiter}. */
+/**
+ * Creates a {@link RateLimiter}.
+ * @deprecated Use `nc.quota.create({ limit, window })`. See {@link RateLimiter}
+ * for the differences. It will be removed in 2.0.
+ */
 export function createRateLimiter(options: RateLimiterOptions): RateLimiter {
+  deprecated("DJS_BOT_DEP_RATE_LIMITER", "createRateLimiter()", "nc.quota.create()");
   return new RateLimiter(options);
 }
 
 /**
  * A guard that allows `limit` uses per `window`, per scope (default `"user"`).
  * More expressive than {@link cooldown} (which is 1 use per duration).
+ *
+ * A `limit` or a `window` that is not valid throws when the guard is created.
  *
  * @example guards: [rateLimit({ limit: 5, window: "1m" })]
  */
@@ -94,10 +84,10 @@ export function rateLimit(
     scope?: CooldownScope;
   },
 ): Guard {
-  const limiter = new RateLimiter(options);
+  const quota = comfort.quota.create({ limit: options.limit, window: options.window });
   const scope = options.scope ?? "user";
   return guard("rateLimit", (ctx) => {
-    const result = limiter.consume(scopeKey(ctx, scope));
+    const result = quota.consume(scopeKey(ctx, scope));
     return result.allowed
       ? pass()
       : fail(messageFor(ctx, "rateLimited", { seconds: Math.ceil(result.resetMs / 1000) }));
@@ -106,10 +96,18 @@ export function rateLimit(
 
 /* ----------------------------- Circuit breaker --------------------------- */
 
-/** The state of a {@link CircuitBreaker}. */
+/**
+ * The state of a {@link CircuitBreaker}.
+ * @deprecated Use `CircuitStatus`, the same three states, from node-comfort.
+ * It will be removed in 2.0.
+ */
 export type CircuitState = "closed" | "open" | "half-open";
 
-/** Options for {@link createCircuitBreaker}. */
+/**
+ * Options for {@link createCircuitBreaker}.
+ * @deprecated Use `CircuitOptions`, the options of `nc.circuit.create()`: the
+ * same names. It will be removed in 2.0.
+ */
 export interface CircuitBreakerOptions {
   /** Consecutive failures before the circuit opens. Default `5`. */
   failureThreshold?: number;
@@ -125,11 +123,26 @@ export interface CircuitBreakerOptions {
   onClose?: () => void;
 }
 
-/** Error thrown when calls are rejected because the circuit is open. */
-export class CircuitOpenError extends Error {
+/**
+ * Error thrown when calls are rejected because the circuit is open.
+ *
+ * It is node-comfort's `CircuitOpenError` under its old name: `instanceof`
+ * matches every error a circuit rejects a call with, those of
+ * `nc.circuit.create()` included.
+ *
+ * @deprecated Use `nc.errors.CircuitOpenError`. Its message is now "The
+ * circuit is open: the call was rejected", and it has `code:
+ * "ERR_CIRCUIT_OPEN"`. It will be removed in 2.0.
+ */
+export class CircuitOpenError extends comfort.errors.CircuitOpenError {
   public constructor() {
-    super("Circuit is open - call rejected.");
-    this.name = "CircuitOpenError";
+    deprecated("DJS_BOT_DEP_CIRCUIT_BREAKER", "CircuitOpenError", "nc.errors.CircuitOpenError");
+    super();
+  }
+
+  /** Any `CircuitOpenError` of node-comfort is one. */
+  public static override [Symbol.hasInstance](value: unknown): boolean {
+    return value instanceof comfort.errors.CircuitOpenError;
   }
 }
 
@@ -137,76 +150,30 @@ export class CircuitOpenError extends Error {
  * A circuit breaker: after too many failures it "opens" and fails fast for a
  * cool-off period, then tries again ("half-open") before fully recovering.
  * Protects you (and the dependency) from hammering a failing service.
+ *
+ * It is node-comfort's `Circuit` (`nc.circuit.Circuit`), under its old name.
+ *
+ * @deprecated Use `nc.circuit.create(options)`, or `new nc.circuit.Circuit()`.
+ * The same states and options, with these differences: a threshold or a
+ * `resetTimeout` that is not valid throws instead of falling back on a
+ * default; `onOpen` and `onClose` run after the status has changed; a throw in
+ * `onClose` rejects that call but no longer counts as a failure; and the
+ * {@link CircuitOpenError} has a new message and a code. It will be removed in 2.0.
  */
-export class CircuitBreaker {
-  private state: CircuitState = "closed";
-  private failures = 0;
-  private successes = 0;
-  private openedAt = 0;
-  private readonly failureThreshold: number;
-  private readonly resetTimeoutMs: number;
-  private readonly successThreshold: number;
-  private readonly isFailure: (error: unknown) => boolean;
-
-  public constructor(private readonly options: CircuitBreakerOptions = {}) {
-    this.failureThreshold = options.failureThreshold ?? 5;
-    this.resetTimeoutMs = durationMs(options.resetTimeout ?? "30s", 30_000);
-    this.successThreshold = options.successThreshold ?? 1;
-    this.isFailure = options.isFailure ?? (() => true);
-  }
-
-  /** The current state. */
-  public get status(): CircuitState {
-    return this.state;
-  }
-
-  /** Runs `fn` through the breaker. Throws {@link CircuitOpenError} when open. */
-  public async execute<T>(fn: () => Promise<T> | T): Promise<T> {
-    if (this.state === "open") {
-      if (Date.now() - this.openedAt < this.resetTimeoutMs) throw new CircuitOpenError();
-      this.state = "half-open";
-      this.successes = 0;
-    }
-    try {
-      const result = await fn();
-      this.onSuccess();
-      return result;
-    } catch (error) {
-      if (this.isFailure(error)) this.onFailure();
-      throw error;
-    }
-  }
-
-  private onSuccess(): void {
-    if (this.state === "half-open") {
-      this.successes++;
-      if (this.successes >= this.successThreshold) this.close();
-    } else {
-      this.failures = 0;
-    }
-  }
-
-  private onFailure(): void {
-    this.failures++;
-    if (this.state === "half-open" || this.failures >= this.failureThreshold) this.open();
-  }
-
-  private open(): void {
-    if (this.state !== "open") this.options.onOpen?.();
-    this.state = "open";
-    this.openedAt = Date.now();
-  }
-
-  private close(): void {
-    if (this.state !== "closed") this.options.onClose?.();
-    this.state = "closed";
-    this.failures = 0;
-    this.successes = 0;
+export class CircuitBreaker extends comfort.circuit.Circuit {
+  public constructor(options: CircuitBreakerOptions = {}) {
+    deprecated("DJS_BOT_DEP_CIRCUIT_BREAKER", "CircuitBreaker", "nc.circuit.create()");
+    super(options);
   }
 }
 
-/** Creates a {@link CircuitBreaker}. */
+/**
+ * Creates a {@link CircuitBreaker}.
+ * @deprecated Use `nc.circuit.create(options)`. See {@link CircuitBreaker} for
+ * the differences. It will be removed in 2.0.
+ */
 export function createCircuitBreaker(options?: CircuitBreakerOptions): CircuitBreaker {
+  deprecated("DJS_BOT_DEP_CIRCUIT_BREAKER", "createCircuitBreaker()", "nc.circuit.create()");
   return new CircuitBreaker(options);
 }
 

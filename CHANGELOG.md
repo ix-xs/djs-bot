@@ -3,6 +3,54 @@
 All notable changes to `@ix-xs/djs-bot` are documented here. This project
 adheres to [Semantic Versioning](https://semver.org).
 
+## 1.7.0
+
+node-comfort 3.1 takes over the rate limiter and the circuit breaker, which
+were ported to it from djs-bot. The `rateLimit()` guard and the `antiSpam()`
+plugin stay, and now count with node-comfort. Nothing breaks: the old names
+keep working until 2.0, and say once what to write instead.
+
+### Changed
+
+- **`@ix-xs/node-comfort` 3.1 is required** (was 3.0). The Node versions are
+  unchanged.
+- **`rateLimit()` and `antiSpam()` count with `nc.quota`.** Valid options
+  behave as before. A `limit` or a `window` that is not valid (`window:
+  "soon"`, `limit: NaN`) now throws when the guard or the plugin is created,
+  where it used to fall back on a window of one minute.
+
+### Deprecated
+
+Each one prints one `DeprecationWarning` per process, with its code. They are
+removed in 2.0. `nc` is `import nc from "@ix-xs/node-comfort"`.
+
+- The rate limiter, code `DJS_BOT_DEP_RATE_LIMITER`:
+  `createRateLimiter(options)` becomes `nc.quota.create(options)`,
+  `RateLimiter` becomes `Quota` (`nc.quota.Quota`), and the types
+  `RateLimiterOptions` and `RateLimitResult` become `QuotaOptions` and
+  `QuotaResult`. The old names are now node-comfort's objects, so they behave
+  like them:
+  - a `limit`, a `window` or a cost that is not valid throws instead of
+    falling back on a default;
+  - `reset(key)` returns `true` when the key had a window;
+  - keys may be numbers too.
+- The circuit breaker, code `DJS_BOT_DEP_CIRCUIT_BREAKER`:
+  `createCircuitBreaker(options)` becomes `nc.circuit.create(options)`,
+  `CircuitBreaker` becomes `Circuit` (`nc.circuit.Circuit`),
+  `CircuitOpenError` becomes `nc.errors.CircuitOpenError`, and the types
+  `CircuitBreakerOptions` and `CircuitState` become `CircuitOptions` and
+  `CircuitStatus`. The old names are now node-comfort's objects:
+  - a threshold or a `resetTimeout` that is not valid throws instead of
+    falling back on a default;
+  - `onOpen` and `onClose` run after the status has changed;
+  - a throw in `onClose` rejects that call, but no longer counts as a
+    failure;
+  - a rejected call throws node-comfort's `CircuitOpenError`, with the message
+    "The circuit is open: the call was rejected" and `code:
+    "ERR_CIRCUIT_OPEN"`. `instanceof CircuitOpenError` on djs-bot's export
+    still matches it, and every error a node-comfort circuit rejects a call
+    with. Only building one with `new CircuitOpenError()` warns.
+
 ## 1.6.0
 
 djs-bot stops offering its own copies of what `@ix-xs/node-comfort` already

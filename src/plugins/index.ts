@@ -16,9 +16,9 @@
  *
  * @module plugins
  */
+import comfort from "@ix-xs/node-comfort";
 import { definePlugin, type PluginDefinition } from "../definitions.js";
 import { describeInteraction, type BaseContext } from "../context.js";
-import { createRateLimiter } from "../resilience.js";
 import { messageFor } from "../messages.js";
 
 /** Options for {@link antiSpam}. */
@@ -38,7 +38,7 @@ export interface AntiSpamOptions {
  * Autocomplete requests are not counted: they cannot be refused with a message.
  */
 export function antiSpam(options: AntiSpamOptions = {}): PluginDefinition {
-  const limiter = createRateLimiter({ limit: options.max ?? 5, window: options.window ?? "10s" });
+  const limiter = comfort.quota.create({ limit: options.max ?? 5, window: options.window ?? "10s" });
   const allow = new Set(options.allow ?? []);
   return definePlugin({
     name: "anti-spam",
