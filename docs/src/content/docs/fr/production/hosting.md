@@ -33,7 +33,7 @@ Une liste de contrôle pour la production :
 | Déploie les commandes au démarrage | Oui, seulement ce qui a changé, sur `DISCORD_DEV_GUILD` | Non : lancez `djs-bot deploy` à chaque version |
 | Journaux | Lignes en couleur | Un objet JSON par ligne |
 
-Sur le serveur, les secrets viennent de l'hébergeur (`EnvironmentFile` de systemd, `docker run -e`, les variables d'une plateforme), jamais d'un fichier de l'image ou du dépôt. `env("DISCORD_TOKEN")` les lit de la même façon.
+Sur le serveur, les secrets viennent de l'hébergeur (`EnvironmentFile` de systemd, `docker run -e`, les variables d'une plateforme), jamais d'un fichier de l'image ou du dépôt. Le bot y lit `DISCORD_TOKEN` de la même façon.
 
 ## Scripts du projet
 

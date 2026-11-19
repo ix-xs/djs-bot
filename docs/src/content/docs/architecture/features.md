@@ -44,11 +44,10 @@ There are three ways to hand a feature to the bot.
 which is how a feature that comes from a package is loaded:
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 import tickets from "./features/tickets/tickets.feature.js";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: [`${import.meta.dirname}/features`, tickets],
 });
 
@@ -109,11 +108,10 @@ whose entry file exports it. The bot that installs it adds it to `features` and
 provides what the feature requires:
 
 ```ts title="src/index.ts"
-import { defineBot, env, memoryStore } from "@ix-xs/djs-bot";
+import { defineBot, memoryStore } from "@ix-xs/djs-bot";
 import tickets from "djs-bot-tickets"; // a package that exports a defineFeature() result
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   store: memoryStore(), // satisfies requires: ["store"]
   features: [`${import.meta.dirname}/features`, tickets],
 });

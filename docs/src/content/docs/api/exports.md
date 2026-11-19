@@ -14,9 +14,9 @@ See [Configuration](/basics/configuration/).
 | Export | Kind | What it is for |
 | --- | --- | --- |
 | [`defineBot()`](/reference/define-bot/) | Function | Creates a `Bot`. |
-| [`env()`](/reference/env/) | Function | Reads an environment variable, with an optional fallback. |
+| [`env()`](/reference/env/) | Function | **Deprecated.** Use node-comfort's `env`: `nc.env.required(name)` for `env(name)`, and `nc.env.string(name, { default: fallback })` for `env(name, fallback)`. Reads an environment variable, with an optional fallback. |
 | [`isBot()`](/reference/is-bot/) | Function | Robust, cross-realm check that a value is a `Bot` - use this instead of `instanceof`, which breaks across the CJS/ESM dual-package boundary. |
-| [`loadEnvFile()`](/reference/load-env-file/) | Function | Loads a `.env` file into `process.env`. |
+| [`loadEnvFile()`](/reference/load-env-file/) | Function | **Deprecated.** Use `nc.env.load(path)`, which this calls. Loads a `.env` file into `process.env`. |
 | [`Bot`](/reference/bot/) | Class | The bot application. |
 | [`BotConfig`](/reference/bot-config/) | Interface | The full bot configuration object. |
 | [`BotDescription`](/reference/bot-description/) | Interface | A structured description of everything the bot has loaded. |
@@ -384,11 +384,11 @@ See [Cache and entity resolution](/data/cache/).
 
 | Export | Kind | What it is for |
 | --- | --- | --- |
-| [`createCache()`](/reference/create-cache/) | Function | Creates a `TTLCache`. |
+| [`createCache()`](/reference/create-cache/) | Function | **Deprecated.** Use node-comfort's `nc.cache.create()`. Creates a `TTLCache`. |
 | [`isHiddenChannel()`](/reference/is-hidden-channel/) | Function | Whether a channel is one the bot cannot view, sent by Discord with its name and details withheld ("obfuscated"). |
 | [`resolve`](/reference/resolve/) | Object | Cache-first fetch helpers. |
-| [`TTLCache`](/reference/ttl-cache/) | Class | An in-memory TTL + LRU cache with single-flight fetching. |
-| [`TTLCacheOptions`](/reference/ttl-cache-options/) | Interface | Options for `TTLCache`. |
+| [`TTLCache`](/reference/ttl-cache/) | Class | **Deprecated.** Use node-comfort's cache, `nc.cache.Cache`. An in-memory TTL + LRU cache with single-flight fetching. |
+| [`TTLCacheOptions`](/reference/ttl-cache-options/) | Interface | **Deprecated.** Use the options of `nc.cache.create()`: `ttl`, `max` and `staleWhileRevalidate`, which is a time window there. Options for `TTLCache`. |
 
 ## Internationalisation
 
@@ -478,15 +478,15 @@ See [Resilience](/production/resilience/).
 | [`createCircuitBreaker()`](/reference/create-circuit-breaker/) | Function | Creates a `CircuitBreaker`. |
 | [`createRateLimiter()`](/reference/create-rate-limiter/) | Function | Creates a `RateLimiter`. |
 | [`rateLimit()`](/reference/rate-limit/) | Function | A guard that allows `limit` uses per `window`, per scope (default `"user"`). |
-| [`retry()`](/reference/retry/) | Function | Retries an async function with exponential backoff + jitter. |
-| [`timeout()`](/reference/timeout/) | Function | Rejects if `promise` doesn't settle within `ms` (milliseconds, or text such as `"5s"`). |
+| [`retry()`](/reference/retry/) | Function | **Deprecated.** Use `nc.async.retry(fn, options)`. Retries an async function with exponential backoff + jitter. |
+| [`timeout()`](/reference/timeout/) | Function | **Deprecated.** Use `nc.async.timeout(promise, ms, message)`, the same function. Rejects if `promise` doesn't settle within `ms` (milliseconds, or text such as `"5s"`). |
 | [`CircuitBreaker`](/reference/circuit-breaker/) | Class | A circuit breaker: after too many failures it "opens" and fails fast for a cool-off period, then tries again ("half-open") before fully recovering. |
 | [`CircuitOpenError`](/reference/circuit-open-error/) | Class | Error thrown when calls are rejected because the circuit is open. |
 | [`RateLimiter`](/reference/rate-limiter/) | Class | A fixed-window rate limiter, keyed by an arbitrary string. |
 | [`CircuitBreakerOptions`](/reference/circuit-breaker-options/) | Interface | Options for `createCircuitBreaker`. |
 | [`RateLimiterOptions`](/reference/rate-limiter-options/) | Interface | Options for `createRateLimiter`. |
 | [`RateLimitResult`](/reference/rate-limit-result/) | Interface | The outcome of a `RateLimiter.consume` call. |
-| [`RetryOptions`](/reference/retry-options/) | Interface | Options for `retry`. |
+| [`RetryOptions`](/reference/retry-options/) | Interface | **Deprecated.** Use the options of `nc.async.retry()`: the same names. Options for `retry`. |
 | [`CircuitState`](/reference/circuit-state/) | Type | The state of a `CircuitBreaker`. |
 
 ## Sharding

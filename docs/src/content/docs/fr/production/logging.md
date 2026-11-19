@@ -60,11 +60,11 @@ Définissez le niveau minimal dans `defineBot`. Les lignes en dessous sont
 écartées avant tout travail de formatage.
 
 ```ts title="src/index.ts"
-import { defineBot, env, type LogLevel } from "@ix-xs/djs-bot";
+import { defineBot, type LogLevel } from "@ix-xs/djs-bot";
+import nc from "@ix-xs/node-comfort";
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
-  logger: { level: (env.optional("LOG_LEVEL") ?? "info") as LogLevel },
+  logger: { level: (nc.env.string("LOG_LEVEL", { optional: true }) ?? "info") as LogLevel },
 });
 ```
 

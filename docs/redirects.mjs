@@ -107,6 +107,9 @@ const PAGES = {
   "/recipes/ticket-system/": "/components/buttons/",
   "/recipes/role-menu/": "/components/select-menus/",
   "/recipes/levelling/": "/data/store/",
+
+  // 1.6: one "Upgrading" page, a section per version.
+  "/help/upgrade-1-5/": "/help/upgrading/",
 };
 
 /** An address that moved twice goes straight to the last one. */

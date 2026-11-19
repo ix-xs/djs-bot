@@ -12,14 +12,15 @@ framework handles the timers, the overlap protection and the shutdown.
 ## A first job
 
 ```ts title="src/features/digest/digest.job.ts"
-import { defineJob, env } from "@ix-xs/djs-bot";
+import { defineJob } from "@ix-xs/djs-bot";
+import nc from "@ix-xs/node-comfort";
 
 export default defineJob({
   name: "daily-digest",
   schedule: "0 9 * * MON-FRI", // 09:00, Monday to Friday
   timezone: "Europe/Paris",
   run: async (ctx) => {
-    const channel = await ctx.client.channels.fetch(env("DIGEST_CHANNEL_ID"));
+    const channel = await ctx.client.channels.fetch(nc.env.required("DIGEST_CHANNEL_ID"));
     if (channel?.isSendable()) await channel.send("Good morning. Here is today's digest.");
     ctx.logger.info({}, "digest sent");
   },

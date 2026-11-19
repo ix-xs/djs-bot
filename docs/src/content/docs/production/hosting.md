@@ -32,7 +32,7 @@ A production checklist:
 | Deploys commands at startup | Yes, only what changed, to `DISCORD_DEV_GUILD` | No: run `djs-bot deploy` on release |
 | Logs | Coloured lines | One JSON object per line |
 
-On the server, secrets come from the host (systemd `EnvironmentFile`, `docker run -e`, the variables of a platform), never from a file in the image or the repository. `env("DISCORD_TOKEN")` reads them the same way.
+On the server, secrets come from the host (systemd `EnvironmentFile`, `docker run -e`, the variables of a platform), never from a file in the image or the repository. The bot reads `DISCORD_TOKEN` from there the same way.
 
 ## Project scripts
 

@@ -89,7 +89,7 @@ overwritten.
 
 | File | Contents |
 | --- | --- |
-| `src/index.ts` | The entry: `defineBot()` with the token, the client id, the features folder, `intents: "auto"`, the dev guild and `defaults: { defer: true }`. |
+| `src/index.ts` | The entry: `defineBot()` with the features folder, `intents: "auto"` and `defaults: { defer: true }`. The token, the client id and the dev guild come from `.env`. |
 | `src/features/ping/ping.command.ts` | A first command, `/ping`, that answers with the gateway latency. |
 | `src/types.d.ts` | Where you declare your services so that `ctx.services` is typed. |
 | `tsconfig.json` | `strict`, `skipLibCheck`, `module` and `moduleResolution` `NodeNext`, target `ES2023`, `src` compiled to `dist`. |

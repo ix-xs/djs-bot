@@ -41,10 +41,9 @@ src/
 Le fichier d'entrée donne le dossier à `features` :
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
 });
 
@@ -163,12 +162,11 @@ Le dossier est un confort, pas une obligation. `features` accepte aussi les
 définitions elles-mêmes, et vous pouvez mélanger les deux formes :
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 import ping from "./commands/ping.js";
 import { CloseTicket } from "./tickets/close.js";
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   features: [`${import.meta.dirname}/features`, ping, CloseTicket],
 });
 ```

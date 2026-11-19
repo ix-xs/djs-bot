@@ -1,6 +1,6 @@
 ---
 title: "Configuration"
-description: "The entry file of a bot: defineBot and every option it accepts, the env helpers that read your secrets, and the Bot object you get back."
+description: "The entry file of a bot: defineBot and every option it accepts, the environment variables it reads, and the Bot object you get back."
 sidebar:
   order: 2
 ---
@@ -12,11 +12,9 @@ own page, linked from the [reference table](#botconfig).
 ## A first entry file
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),                   // throws a clear error if missing
-  clientId: env.optional("DISCORD_CLIENT_ID"),   // needed to deploy commands
   features: `${import.meta.dirname}/features`,   // folder of definitions, discovered for you
   defaults: { defer: true },                     // acknowledge slow handlers automatically
 });
@@ -39,9 +37,10 @@ Three things matter in this file:
   file to inspect it. They set `DJSBOT_CLI=introspect`, and in that mode
   `start()` would only load the definitions and return without connecting.
 
-Every field is optional. `token`, `clientId` and `deploy.devGuildId` fall back
-to the `DISCORD_TOKEN`, `DISCORD_CLIENT_ID` and `DISCORD_DEV_GUILD` environment
-variables, so `defineBot({ features })` is already a working configuration.
+Every field is optional. The bot reads `DISCORD_TOKEN`, `DISCORD_CLIENT_ID` and
+`DISCORD_DEV_GUILD` from the environment by itself, so `defineBot({ features })`
+is already a working configuration. `token`, `clientId` and `deploy.devGuildId`
+are there to override them.
 
 | Variable | Field | Value, from the Developer Portal |
 | --- | --- | --- |
@@ -51,54 +50,50 @@ variables, so `defineBot({ features })` is already a working configuration.
 
 ## Environment variables
 
-Secrets do not belong in the source code. The `env` helpers read them from the
-environment and fail at startup, with a readable message, instead of handing you
-an `undefined` that breaks three layers deeper:
+The `.env` file of the working directory is read into `process.env` as soon as
+`@ix-xs/djs-bot` is imported: its dependency `@ix-xs/node-comfort` does it, with
+or without the CLI. Set `NODE_COMFORT_DOTENV=false` to turn that off.
 
-```
-Missing required environment variable "DISCORD_TOKEN". Add it to your environment or a .env file.
-```
+Read your other variables with node-comfort's `nc.env`
+([its page](https://ix-xs.github.io/node-comfort/essentials/env/)). It fails at startup with a readable message instead of
+handing you an `undefined` that breaks three layers deeper:
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
+import nc from "@ix-xs/node-comfort";
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),                           // required
-  clientId: env.optional("DISCORD_CLIENT_ID"),           // string | undefined
-  owners: env.list("OWNER_IDS"),                         // "1, 2,3" -> ["1", "2", "3"]
-  health: env.number("PORT", 3000),                      // throws if PORT is not a number
-  logger: { level: env.boolean("DEBUG") ? "debug" : "info" },
+  owners: nc.env.list("OWNER_IDS", { default: [] }),            // "1, 2,3" -> ["1", "2", "3"]
+  health: nc.env.number("PORT", { default: 3000 }),              // throws if PORT is not a number
+  logger: { level: nc.env.boolean("DEBUG", { default: false }) ? "debug" : "info" },
 });
 ```
 
-| Helper | Returns | Variable missing | Value malformed |
-| --- | --- | --- | --- |
-| `env(name, fallback?)` | `string` | throws, or the fallback | - |
-| `env.optional(name)` | `string \| undefined` | `undefined` | - |
-| `env.number(name, fallback?)` | `number` | throws, or the fallback | throws |
-| `env.boolean(name, fallback?)` | `boolean` | the fallback (default `false`) | throws |
-| `env.list(name)` | `string[]` | `[]` | - |
+| To read | Call |
+| --- | --- |
+| A required string | `nc.env.required(name)` |
+| A string with a default | `nc.env.string(name, { default })` |
+| An optional string | `nc.env.string(name, { optional: true })`: `undefined` when missing or empty |
+| A number | `nc.env.number(name, { default })`, also `min`, `max`, `integer` |
+| A boolean | `nc.env.boolean(name, { default: false })` |
+| A comma-separated list | `nc.env.list(name, { default: [] })` |
 
-An empty value counts as missing everywhere, so a stray `DISCORD_TOKEN=` fails
-loudly instead of quietly authenticating as nobody.
-
-The helpers read `process.env`. The `.env` file of the working directory is
-read into it as soon as `@ix-xs/djs-bot` is imported: its dependency
-`@ix-xs/node-comfort` does it, with or without the CLI. Set the environment
-variable `NODE_COMFORT_DOTENV=false` to turn that off.
+An empty value counts as missing, and a missing or malformed value throws a
+`ValidationError` while the entry file is evaluated, before anything connects.
+djs-bot's own `env()` and `loadEnvFile()` still work until 2.0, with a warning:
+see [Upgrading](/help/upgrading/#version-16).
 
 When a variable is defined in several places, the strongest one wins:
 
 1. The real environment (your shell, your host). A variable that is already
    set there is never replaced, which is what you want in production.
-2. A file loaded with `loadEnvFile(path)`.
+2. A file loaded with `nc.env.load(path)`.
 3. The `.env` read at import.
 
 :::note[Loading another file]
 You do not need to call anything for `.env`, even when you run the entry file
-yourself (`node dist/index.js`). `loadEnvFile(path)` is for another file, such
-as `.env.local`: call it at the top of the entry file, before the first
-`env()`.
+yourself (`node dist/index.js`). `nc.env.load(path)` is for another file, such
+as `.env.local`: call it at the top of the entry file, before the first read.
 :::
 
 :::caution[Variables that can run code]
@@ -112,15 +107,15 @@ weaken TLS, and names them in one warning on stderr. Among them:
 
 A `.env` from a repository someone sent you therefore cannot run code in your
 bot. When you mean such a variable, set it in the real environment.
-`loadEnvFile(path)` loads every variable of the file, those included: call it
+`nc.env.load(path)` loads every variable of the file, those included: call it
 only on a file you trust.
 :::
 
 :::caution[Quote the secrets that contain special characters]
 In a `.env` file, `$NAME` is replaced by the value of that variable and ` #`
 starts a comment. A secret that contains `$` or ` #` must be written in single
-quotes, `TOKEN='pa$word'`, otherwise it is altered. The full rules are listed
-under [`loadEnvFile`](#loadenvfilepath).
+quotes, `TOKEN='pa$word'`, otherwise it is altered. The full rules are on
+[node-comfort's page](https://ix-xs.github.io/node-comfort/essentials/env/#parsing).
 :::
 
 :::danger[Never commit your token]
@@ -136,11 +131,11 @@ straight to it, so anything discord.js accepts is available: `allowedMentions`,
 computed from your events and set through the option of the same name.
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
+import nc from "@ix-xs/node-comfort";
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
-  owners: env.list("OWNER_IDS"),
+  owners: nc.env.list("OWNER_IDS", { default: [] }),
   client: {
     // Never let the bot ping @everyone by echoing user input.
     allowedMentions: { parse: ["users", "roles"], repliedUser: true },
@@ -164,15 +159,14 @@ A bot that uses most of what the framework offers. Each block is one line of
 configuration here and a full page elsewhere.
 
 ```ts title="src/index.ts"
-import { ActivityType, defineBot, env, loggerAuditSink, sqliteStore } from "@ix-xs/djs-bot";
+import { ActivityType, defineBot, loggerAuditSink, sqliteStore } from "@ix-xs/djs-bot";
+import nc from "@ix-xs/node-comfort";
 import { antiSpam, commandLogger } from "@ix-xs/djs-bot/plugins";
 
 const store = sqliteStore("data/bot.sqlite");
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
-  clientId: env("DISCORD_CLIENT_ID"),
-  owners: env.list("OWNER_IDS"),
+  owners: nc.env.list("OWNER_IDS", { default: [] }),
   features: `${import.meta.dirname}/features`,
   intents: "auto",
   defaults: { defer: true },
@@ -191,9 +185,8 @@ const bot = defineBot({
   theme: { success: 0x57f287 },
 
   logger: { level: "info", pretty: process.env.NODE_ENV !== "production" },
-  health: env.number("PORT", 3000),
+  health: nc.env.number("PORT", { default: 3000 }),
   presence: { activities: [{ name: "/help", type: ActivityType.Listening }] },
-  deploy: { devGuildId: env.optional("DISCORD_DEV_GUILD") },
 
   onError(error, ctx) {
     ctx?.logger.error({ err: error }, "unhandled interaction error");
@@ -362,64 +355,13 @@ function isBot(value: unknown): value is Bot
 Returns `true` for a `Bot`, including one created by another copy of the
 package. Use it instead of `instanceof Bot`.
 
-### `env(name, fallback?)`
-
-```ts
-function env(name: string, fallback?: string): string
-```
-
-Reads `process.env[name]`. The variants are properties of the same function:
-
-| Call | Returns | Notes |
-| --- | --- | --- |
-| `env(name, fallback?)` | `string` | Throws when the variable is missing and there is no fallback. |
-| `env.optional(name)` | `string \| undefined` | Never throws. For optional settings such as `DISCORD_DEV_GUILD`. |
-| `env.number(name, fallback?)` | `number` | Throws when missing without a fallback, and when the value is not a number. |
-| `env.boolean(name, fallback?)` | `boolean` | Accepts `true`, `1`, `yes`, `on` and `false`, `0`, `no`, `off`, in any case. Anything else throws. Missing gives `fallback`, `false` by default. |
-| `env.list(name)` | `string[]` | Splits on commas, trims each entry and drops the empty ones. Missing gives `[]`. |
-
-### `loadEnvFile(path?)`
-
-```ts
-function loadEnvFile(path?: string): void
-```
-
-Parses a `.env` file into `process.env`. You rarely need it: the `.env` of the
-working directory is already read when the package is imported. Call it for
-another file, such as `.env.local`.
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `path` | `string` | `".env"` | The file to read. The default is `.env` in the working directory. |
-
-- A variable that the real environment already defines is left untouched. A
-  value that came from the `.env` read at import is replaced.
-- Blank lines and lines starting with `#` are ignored.
-- A ` # comment` after an unquoted value is removed.
-- A value wrapped in single or double quotes loses its quotes.
-- `$NAME` and `${NAME}` are replaced by the value of that variable, except
-  inside single quotes.
-- `export NAME=value` is accepted.
-- A missing file is not an error: the call does nothing.
-- Every variable of the file is loaded, including those that can run code
-  (`NODE_OPTIONS`...). Call it only on a file you trust.
-
-The `.env` read at import follows the same rules, except that it leaves out
-the variables that can run code.
-
 ## Limits and errors
 
 | Situation | Result |
 | --- | --- |
 | No `token` and no `DISCORD_TOKEN` when the bot starts, deploys or clears | [`DJSBOT_E001`](/api/errors/#djsbot_e001) |
 | No `clientId` and no `DISCORD_CLIENT_ID` on `bot.deploy()` or `bot.clear()` | [`DJSBOT_E002`](/api/errors/#djsbot_e002) |
-| `env("NAME")` with no value and no fallback | `Missing required environment variable "NAME". Add it to your environment or a .env file.` |
-| `env.number("PORT")` with `PORT=abc` | `Environment variable "PORT" must be a number, got "abc".` |
-| `env.boolean("DEBUG")` with `DEBUG=maybe` | `Environment variable "DEBUG" must be a boolean, got "maybe".` |
 | `bot.client` read before `start()` | `Bot has not started yet - call bot.start() first.` |
-
-The `env` errors are thrown while the entry file is evaluated, so a typo in
-`.env` stops the process before anything connects.
 
 ## See also
 

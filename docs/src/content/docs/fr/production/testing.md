@@ -300,8 +300,7 @@ it("answers with the real services", async () => {
 
 :::caution[Importer le fichier d'entrée l'exécute]
 Le fichier d'entrée est évalué comme en production : les variables qu'il lit avec
-`env()` doivent exister (n'importe quelle valeur convient pour le token, rien ne
-se connecte), et `bot.load()` exécute vos vraies fabriques de services, donc un
+`nc.env` doivent exister, et `bot.load()` exécute vos vraies fabriques de services, donc un
 service qui ouvre une base de données l'ouvre aussi dans le test.
 :::
 

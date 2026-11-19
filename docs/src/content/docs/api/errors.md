@@ -109,11 +109,10 @@ framework catches. Use it to report to your monitoring, and optionally to take
 over the answer.
 
 ```ts title="src/index.ts"
-import { defineBot, env } from "@ix-xs/djs-bot";
+import { defineBot } from "@ix-xs/djs-bot";
 import * as Sentry from "@sentry/node";
 
 const bot = defineBot({
-  token: env("DISCORD_TOKEN"),
   features: `${import.meta.dirname}/features`,
   onError(error, ctx) {
     // ctx is set for an interaction, absent for an event, a trigger or a job.
@@ -345,10 +344,9 @@ Raised by `bot.start()`, `bot.deploy()` and `bot.clear()` when there is
 neither a `token` in the configuration nor a `DISCORD_TOKEN` variable. An empty
 value counts as missing: look for a stray `DISCORD_TOKEN=` line in `.env`.
 
-If your entry file reads the token with `env("DISCORD_TOKEN")`, as the starter
-does, `env()` fails first with its own message
-(`Missing required environment variable "DISCORD_TOKEN"`), which has no code.
-The fix is the same.
+If your entry file reads the token itself with `nc.env.required("DISCORD_TOKEN")`,
+that call fails first with a `ValidationError`, which has no code. The fix is
+the same.
 
 ### `DJSBOT_E002`
 

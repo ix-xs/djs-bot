@@ -3183,6 +3183,10 @@
   "en": "Options for [`retry`](ref:retry).",
   "fr": "Options de [`retry`](ref:retry)."
  },
+ "RetryOptions#deprecated": {
+  "en": "Use the options of `nc.async.retry()`: the same names. It will be removed in 2.0.",
+  "fr": "Utilisez les options de `nc.async.retry()` : les mêmes noms. Sera supprimé en 2.0."
+ },
  "RetryOptions.attempts": {
   "en": "Max attempts (including the first). Default `3`.",
   "fr": "Nombre maximal de tentatives (la première comprise). Par défaut `3`."
@@ -3515,6 +3519,10 @@
   "en": "An in-memory TTL + LRU cache with single-flight fetching.",
   "fr": "Un cache en mémoire TTL + LRU avec récupération en un seul appel (single-flight)."
  },
+ "TTLCache#deprecated": {
+  "en": "Use node-comfort's cache, `nc.cache.Cache`. It is not a drop-in\nreplacement:\n- `createCache(options)` and `new TTLCache(options)`:\n`nc.cache.create({ ttl: \"5m\", max: 1000, ...options })`, to keep the\nold defaults (node-comfort keeps entries forever, with no size limit).\n- `getOrFetch` becomes `getOrSet`.\n- `set(k, v, ttl)` becomes `set(k, v, { ttl })`.\n- `staleWhileRevalidate` is a time window in node-comfort, used only by\n`getOrSet`. Expired values are no longer returned by `get()` or `has()`.\n\nIt will be removed in 2.0.",
+  "fr": "Utilisez le cache de node-comfort, `nc.cache.Cache`. Ce n'est pas un remplacement\nà l'identique :\n- `createCache(options)` et `new TTLCache(options)` :\n`nc.cache.create({ ttl: \"5m\", max: 1000, ...options })`, pour garder les\nanciennes valeurs par défaut (node-comfort garde les entrées pour toujours, sans limite de taille).\n- `getOrFetch` devient `getOrSet`.\n- `set(k, v, ttl)` devient `set(k, v, { ttl })`.\n- `staleWhileRevalidate` est une fenêtre de temps dans node-comfort, utilisée seulement par\n`getOrSet`. Les valeurs expirées ne sont plus rendues par `get()` ni `has()`.\n\nSera supprimé en 2.0."
+ },
  "TTLCache.clear": {
   "en": "Empties the cache.",
   "fr": "Vide le cache."
@@ -3542,6 +3550,10 @@
  "TTLCacheOptions": {
   "en": "Options for [`TTLCache`](ref:TTLCache).",
   "fr": "Options de [`TTLCache`](ref:TTLCache)."
+ },
+ "TTLCacheOptions#deprecated": {
+  "en": "Use the options of `nc.cache.create()`: `ttl`, `max` and\n`staleWhileRevalidate`, which is a time window there. It will be removed in 2.0.",
+  "fr": "Utilisez les options de `nc.cache.create()` : `ttl`, `max` et\n`staleWhileRevalidate`, qui y est une fenêtre de temps. Sera supprimé en 2.0."
  },
  "TTLCacheOptions.max": {
   "en": "Max entries before least-recently-used ones are evicted. Default `1000`.",
@@ -3959,6 +3971,10 @@
   "en": "Creates a [`TTLCache`](ref:TTLCache).",
   "fr": "Crée un [`TTLCache`](ref:TTLCache)."
  },
+ "createCache#deprecated": {
+  "en": "Use node-comfort's `nc.cache.create()`. It is not a drop-in\nreplacement:\n- `createCache(options)` and `new TTLCache(options)`:\n`nc.cache.create({ ttl: \"5m\", max: 1000, ...options })`, to keep the\nold defaults (node-comfort keeps entries forever, with no size limit).\n- `getOrFetch` becomes `getOrSet`.\n- `set(k, v, ttl)` becomes `set(k, v, { ttl })`.\n- `staleWhileRevalidate` is a time window in node-comfort, used only by\n`getOrSet`. Expired values are no longer returned by `get()` or `has()`.\n\nIt will be removed in 2.0.",
+  "fr": "Utilisez `nc.cache.create()` de node-comfort. Ce n'est pas un remplacement\nà l'identique :\n- `createCache(options)` et `new TTLCache(options)` :\n`nc.cache.create({ ttl: \"5m\", max: 1000, ...options })`, pour garder les\nanciennes valeurs par défaut (node-comfort garde les entrées pour toujours, sans limite de taille).\n- `getOrFetch` devient `getOrSet`.\n- `set(k, v, ttl)` devient `set(k, v, { ttl })`.\n- `staleWhileRevalidate` est une fenêtre de temps dans node-comfort, utilisée seulement par\n`getOrSet`. Les valeurs expirées ne sont plus rendues par `get()` ni `has()`.\n\nSera supprimé en 2.0."
+ },
  "createCircuitBreaker": {
   "en": "Creates a [`CircuitBreaker`](ref:CircuitBreaker).",
   "fr": "Crée un [`CircuitBreaker`](ref:CircuitBreaker)."
@@ -4140,8 +4156,12 @@
   "fr": "Les valeurs à encoder, avec les mêmes clés que `schema`."
  },
  "env": {
-  "en": "Reads an environment variable, with an optional fallback. Throws a clear\nerror when a required variable is missing. The `.env` file of the working\ndirectory is already in the environment by then: it is read when the package\nis imported (see [`loadEnvFile`](ref:loadEnvFile)).",
-  "fr": "Lit une variable d'environnement, avec une valeur de repli facultative. Lève une erreur\nclaire quand une variable obligatoire manque. Le fichier `.env` du dossier de travail\nest déjà dans l'environnement à ce moment-là : il est lu à l'import du paquet\n(voir [`loadEnvFile`](ref:loadEnvFile))."
+  "en": "Reads an environment variable, with an optional fallback. Throws a clear\nerror when a required variable is missing. The `.env` file of the working\ndirectory is already in the environment by then: it is read when the package\nis imported.",
+  "fr": "Lit une variable d'environnement, avec une valeur de repli facultative. Lève une erreur claire\nquand une variable obligatoire est absente. Le fichier `.env` du répertoire de\ntravail est déjà dans l'environnement à ce moment : il est lu à l'import\ndu paquet."
+ },
+ "env#deprecated": {
+  "en": "Use node-comfort's `env`: `nc.env.required(name)` for\n`env(name)`, and `nc.env.string(name, { default: fallback })` for\n`env(name, fallback)`. Both treat an empty value as unset, as this one does;\na missing variable is a `ValidationError` instead of an `Error`. It will be\nremoved in 2.0.",
+  "fr": "Utilisez `env` de node-comfort : `nc.env.required(name)` pour\n`env(name)`, et `nc.env.string(name, { default: fallback })` pour\n`env(name, fallback)`. Les deux traitent une valeur vide comme absente, comme celle-ci ;\nune variable absente est une `ValidationError` au lieu d'une `Error`. Sera\nsupprimé en 2.0."
  },
  "env.boolean": {
   "en": "Reads a boolean variable: `true`/`1`/`yes`/`on` and `false`/`0`/`no`/`off`\n(any case). Unset resolves to `fallback` (default `false`).",
@@ -4507,6 +4527,10 @@
   "en": "Loads a `.env` file into `process.env`. Safe to call when the file is absent.\n\nYou rarely need it: the `.env` of the working directory is read as soon as\nthe package is imported. Call it for another file (`.env.local`, a path of\nyour own). What the real environment already defines is never replaced; a\nfile loaded here wins over the `.env` read at import.\n\nUnlike the read at import, it loads every variable of the file, those that\ncan run code included (`NODE_OPTIONS`, `NODE_TLS_REJECT_UNAUTHORIZED`...):\ncall it only on a file you trust.",
   "fr": "Charge un fichier `.env` dans `process.env`. Vous pouvez l'appeler sans risque si le fichier est absent.\n\nVous en avez rarement besoin : le `.env` du répertoire de travail est lu dès que le paquet est importé. Appelez-la pour un autre fichier (`.env.local`, un chemin à vous). Ce que l'environnement réel définit déjà n'est jamais remplacé ; un fichier chargé ici l'emporte sur le `.env` lu à l'import.\n\nContrairement à la lecture à l'import, elle charge toutes les variables du fichier, y compris celles qui peuvent exécuter du code (`NODE_OPTIONS`, `NODE_TLS_REJECT_UNAUTHORIZED`...) : appelez-la uniquement sur un fichier de confiance."
  },
+ "loadEnvFile#deprecated": {
+  "en": "Use `nc.env.load(path)`, which this calls. It will be removed in 2.0.",
+  "fr": "Utilisez `nc.env.load(path)`, que celle-ci appelle. Sera supprimé en 2.0."
+ },
  "loggerAuditSink": {
   "en": "A sink that writes each entry to the structured logger. Pass your own logger,\nor omit it to use a default one - so `loggerAuditSink()` just works in config.",
   "fr": "Un sink qui écrit chaque entrée dans le logger structuré. Passez votre propre logger, ou omettez-le pour utiliser un logger par défaut : ainsi, `loggerAuditSink()` fonctionne tel quel dans la configuration."
@@ -4646,6 +4670,10 @@
  "retry": {
   "en": "Retries an async function with exponential backoff + jitter. An attempt that\nfails because it was aborted (an `AbortError`) is not tried again.",
   "fr": "Réessaie une fonction asynchrone avec un backoff exponentiel + jitter. Une tentative qui échoue parce qu'elle a été interrompue (une `AbortError`) n'est pas retentée."
+ },
+ "retry#deprecated": {
+  "en": "Use `nc.async.retry(fn, options)`. The options have the same\nnames, but not the same defaults: there they are `delay: 0`, `backoff: 1`\nand `jitter: 0`, so pass `{ delay: 200, backoff: 2, jitter: 0.2 }` to keep\nwhat this one does. It will be removed in 2.0.",
+  "fr": "Utilisez `nc.async.retry(fn, options)`. Les options ont les mêmes\nnoms, mais pas les mêmes valeurs par défaut : là-bas, `delay: 0`, `backoff: 1`\net `jitter: 0` ; passez donc `{ delay: 200, backoff: 2, jitter: 0.2 }` pour garder\nce que fait celle-ci. Sera supprimé en 2.0."
  },
  "s": {
   "en": "Slash-command option builders. Pass the result to [`defineCommand`](ref:defineCommand)'s\n`options` map; the handler's `ctx.options` is typed from it - `required: true`\nmakes the value non-optional.",
@@ -4938,6 +4966,10 @@
  "timeout": {
   "en": "Rejects if `promise` doesn't settle within `ms` (milliseconds, or text such\nas `\"5s\"`). Given a function, it passes it a signal that aborts when the\ntime is up, so the work can stop too.",
   "fr": "Rejette si `promise` ne se termine pas dans le délai `ms` (millisecondes, ou texte tel que `\"5s\"`). Si vous lui passez une fonction, il lui transmet un signal qui s'interrompt quand le temps est écoulé, pour que le travail puisse s'arrêter lui aussi."
+ },
+ "timeout#deprecated": {
+  "en": "Use `nc.async.timeout(promise, ms, message)`, the same\nfunction. It will be removed in 2.0.",
+  "fr": "Utilisez `nc.async.timeout(promise, ms, message)`, la même\nfonction. Sera supprimé en 2.0."
  },
  "timestamp": {
   "en": "Renders a Discord timestamp (auto-localised in each user's client).",

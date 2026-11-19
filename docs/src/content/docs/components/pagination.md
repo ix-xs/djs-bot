@@ -164,7 +164,6 @@ Every option, property and type, with what it accepts and returns, is in the API
 
 - `paginate()`: Sends a paginated message with prev/next (and first/last) controls, updating in place as the user navigates and disabling the controls on timeout.
 - `PaginateOptions`: Options for `paginate`.
-- `timeout()`: Rejects if `promise` doesn't settle within `ms` (milliseconds, or text such as `"5s"`).
 - `Page`: A single page.
 - `PagePayload`: A full-payload page (see `Page`).
 - `confirm()`: Shows a yes/no dialog and resolves to the user's choice (or `false` on timeout).

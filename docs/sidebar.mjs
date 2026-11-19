@@ -57,7 +57,7 @@ export const SIDEBAR = [
     ]),
     group("Tooling", "Outils", ["api/cli", "production/testing"]),
   ]),
-  group("Help", "Aide", ["help/upgrade-1-5", "help/troubleshooting", "help/faq", "help/glossary"], true),
+  group("Help", "Aide", ["help/upgrading", "help/troubleshooting", "help/faq", "help/glossary"], true),
 ];
 
 /** Every page of the sidebar, in order: `["index", "basics/configuration", ...]`. */

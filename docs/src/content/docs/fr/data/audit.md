@@ -16,12 +16,11 @@ Configurez `audit` avec au moins une destination (*sink*), l'endroit où les
 entrées sont écrites :
 
 ```ts title="src/index.ts"
-import { defineBot, env, loggerAuditSink, sqliteStore, storeAuditSink } from "@ix-xs/djs-bot";
+import { defineBot, loggerAuditSink, sqliteStore, storeAuditSink } from "@ix-xs/djs-bot";
 
 const store = sqliteStore("data/bot.sqlite");
 
 export default defineBot({
-  token: env("DISCORD_TOKEN"),
   features: "./features",
   store,
   audit: {
