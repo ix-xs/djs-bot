@@ -236,7 +236,7 @@ export default definePlugin({
 | `defineUserCommand` | `UserCommandContext` | `targetUser`, `targetMember`, `showModal` |
 | `defineMessageCommand` | `MessageCommandContext` | `targetMessage`, `showModal` |
 | `defineButton` | `ButtonContext<Params>` | `params`, `update`, `showModal` |
-| `defineSelectMenu` et les menus natifs | `SelectMenuContext<Params>` | `params`, `values`, `users`, `members`, `roles`, `channels`, `update`, `showModal` |
+| `defineStringSelect` et les menus natifs | `SelectMenuContext<Params>` | `params`, `values`, `users`, `members`, `roles`, `channels`, `update`, `showModal` |
 | `defineModal` | `ModalContext<Fields>` | `fields`, `params` |
 
 Les paramètres de type sont déduits de la définition : vous ne les écrivez jamais.

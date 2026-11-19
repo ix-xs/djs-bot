@@ -89,7 +89,7 @@ function isLoadable(file: string): boolean {
  */
 export async function loadFromDirectory(dir: string): Promise<LoadedItem[]> {
   const absolute = path.resolve(dir);
-  const files = (comfort.fs.getFilesIn(absolute, true) ?? []).filter(isLoadable).sort();
+  const files = (comfort.fs.list(absolute, { type: "files" }) ?? []).filter(isLoadable).sort();
 
   // Import every file concurrently (startup time on a large bot is dominated
   // by module loading), then walk the results in sorted order so registration

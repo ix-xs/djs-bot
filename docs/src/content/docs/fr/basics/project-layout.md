@@ -9,7 +9,7 @@ Un bot, c'est un fichier d'entrée qui appelle `defineBot`, plus un dossier de
 petits fichiers qui exportent chacun une définition (une commande, un bouton, un
 événement...). Vous indiquez le dossier au bot et le chargeur retrouve les
 fichiers grâce à leur nom. Pour créer cette structure en une seule commande,
-voyez [Installer le projet](/start/installation/).
+lancez [`djs-bot init`](/api/cli/#init).
 
 ## Un projet typique
 
@@ -82,7 +82,7 @@ l'un de ces douze suffixes :
 | `.event` | Un écouteur d'événement de la passerelle (*gateway*) | `defineEvent` | [Événements et intents](/events/events-and-intents/) |
 | `.trigger` | Un répondeur automatique aux messages | `defineTrigger` | [Déclencheurs de messages](/events/triggers/) |
 | `.button` | Un bouton | `defineButton` | [Boutons](/components/buttons/) |
-| `.select` | Un menu de sélection | `defineSelectMenu` et les variantes natives | [Menus de sélection](/components/select-menus/) |
+| `.select` | Un menu de sélection | `defineStringSelect` et les variantes natives | [Menus de sélection](/components/select-menus/) |
 | `.modal` | Une modale (formulaire) | `defineModal` | [Modales](/components/modals/) |
 | `.service` | Un service injectable | `defineService` | [Services](/architecture/services/) |
 | `.job` | Une tâche planifiée | `defineJob` | [Tâches planifiées](/events/jobs/) |
@@ -198,7 +198,7 @@ Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans l
 - `defineEvent()` : Définit un écouteur d'événement de la passerelle.
 - `defineTrigger()` : Définit un déclencheur de message : un répondeur automatique qui se déclenche sur `messageCreate`.
 - `defineButton()` : Définit un bouton.
-- `defineSelectMenu()` : Définit un menu de sélection de chaînes (une liste personnalisée d'options).
+- `defineStringSelect()` : Définit un menu de sélection de chaînes (une liste personnalisée d'options).
 - `defineUserSelect()` : Définit un menu de sélection d'utilisateurs natif.
 - `defineRoleSelect()` : Définit un menu de sélection de rôles natif.
 - `defineChannelSelect()` : Définit un menu de sélection de salons natif.
@@ -219,7 +219,7 @@ voir [Cycle de vie](/basics/lifecycle/).
 
 ## Voir aussi
 
-- [Installer le projet](/start/installation/) : installer le paquet et générer cette structure.
+- [Installation](/) : installer le paquet et générer cette structure.
 - [Configuration](/basics/configuration/) : toutes les options de `defineBot`.
 - [Features](/architecture/features/) : regrouper des définitions liées en un pack réutilisable.
 - [Services](/architecture/services/) : partager un état entre les fichiers d'une fonctionnalité.

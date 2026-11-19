@@ -43,6 +43,12 @@ Every field is optional. `token`, `clientId` and `deploy.devGuildId` fall back
 to the `DISCORD_TOKEN`, `DISCORD_CLIENT_ID` and `DISCORD_DEV_GUILD` environment
 variables, so `defineBot({ features })` is already a working configuration.
 
+| Variable | Field | Value, from the Developer Portal |
+| --- | --- | --- |
+| `DISCORD_TOKEN` | `token` | Bot > Reset Token. Secret |
+| `DISCORD_CLIENT_ID` | `clientId` | General Information > Application ID. Needed to deploy |
+| `DISCORD_DEV_GUILD` | `deploy.devGuildId` | The ID of your test server (Discord Developer Mode, right-click the server). Commands appear there instantly under `dev` |
+
 ## Environment variables
 
 Secrets do not belong in the source code. The `env` helpers read them from the
@@ -276,7 +282,7 @@ Every field is optional.
 | `health` | `number \| HealthOptions` | off | An HTTP health and metrics server: a port, or full options. See [Health and metrics](/production/health/). |
 | `i18n` | `I18nOptions` | off | Translations for the messages the bot sends, read with `ctx.t`. See [Internationalisation](/data/i18n/). |
 | `store` | `KVStore` | none | A key-value store, registered as the `store` service. See [Store](/data/store/). |
-| `audit` | `{ sink?, sinks?, autoRecordCommands? }` | off | Enables `ctx.audit(...)` and the `audit` service. See [Audit trail](/data/audit/). |
+| `audit` | `{ sinks?, autoRecordCommands? }` | off | Enables `ctx.audit(...)` and the `audit` service. See [Audit trail](/data/audit/). |
 | `flags` | `FeatureFlagsOptions` | off | Enables the `featureEnabled()` guard and the `flags` service. See [Feature flags](/data/flags/). |
 | `onError` | `(error, ctx?) => unknown` | none | Global error handler. See [Errors](/api/errors/). |
 

@@ -118,7 +118,7 @@ export class Logger {
         line = JSON.stringify(record);
       } catch {
         // A bigint (a permission bitfield) or a circular value: write it anyway.
-        line = comfort.utils.JSONString(record, 0);
+        line = comfort.json.stringify(record, 0);
       }
       process.stdout.write(line + "\n");
       return;
@@ -151,7 +151,7 @@ function serializeError(err: Error, depth = 0): Record<string, unknown> {
 /** `key=value` pairs for the pretty output. A value that JSON cannot write is still written. */
 function inline(fields: Record<string, unknown>): string {
   return Object.entries(fields)
-    .map(([k, v]) => `${k}=${typeof v === "object" ? comfort.utils.JSONString(v, 0) : printable(String(v))}`)
+    .map(([k, v]) => `${k}=${typeof v === "object" ? comfort.json.stringify(v, 0) : printable(String(v))}`)
     .join(" ");
 }
 

@@ -1,4 +1,4 @@
-// The words of the site's own interface (header, search, landing page), in
+// The words of the site's own interface (header, search), in
 // each language. Starlight translates its own; page content is translated in
 // `src/content/docs/<language>/`.
 import { withBase, withLocale } from "../plugins/base-links.mjs";
@@ -6,8 +6,7 @@ import { withBase, withLocale } from "../plugins/base-links.mjs";
 const en = {
   // Header
   "nav.sections": "Sections",
-  "nav.docs": "Guide",
-  "nav.recipes": "Recipes",
+  "nav.docs": "Documentation",
   "nav.reference": "Reference",
   "nav.github": "GitHub repository",
   "nav.theme": "Switch between dark and light",
@@ -15,19 +14,18 @@ const en = {
 
   // Names of the parts of the documentation, as the sidebar writes them
   "area.start": "Getting started",
-  "area.reference": "Reference",
   "area.basics": "Basics",
+  "area.api": "API",
   "area.commands": "Commands",
   "area.components": "Components",
-  "area.events": "Events",
+  "area.messages": "Messages",
+  "area.events": "Events and jobs",
   "area.architecture": "Architecture",
   "area.data": "Data",
-  "area.messages": "Messages",
   "area.production": "Production",
-  "area.recipes": "Recipes",
-  "area.tutorial": "Tutorial",
-  "area.bot": "Your bot",
+  "area.tooling": "Tooling",
   "area.help": "Help",
+  "area.reference": "Reference",
 
   // Search
   "search.recent": "Recently opened",
@@ -37,35 +35,31 @@ const en = {
   "search.move": "move",
   "search.open": "open",
   "search.close": "close",
-
-
 } as const;
 
 export type UiKey = keyof typeof en;
 
 const fr: Record<UiKey, string> = {
   "nav.sections": "Rubriques",
-  "nav.docs": "Guide",
-  "nav.recipes": "Recettes",
+  "nav.docs": "Documentation",
   "nav.reference": "Référence",
   "nav.github": "Dépôt GitHub",
   "nav.theme": "Basculer entre sombre et clair",
   "nav.language": "Langue",
 
-  "area.start": "Pour commencer",
-  "area.reference": "Référence",
-  "area.basics": "Bases",
+  "area.start": "Démarrer",
+  "area.basics": "Les bases",
+  "area.api": "API",
   "area.commands": "Commandes",
   "area.components": "Composants",
-  "area.events": "Événements",
+  "area.messages": "Messages",
+  "area.events": "Événements et tâches",
   "area.architecture": "Architecture",
   "area.data": "Données",
-  "area.messages": "Messages",
   "area.production": "Production",
-  "area.recipes": "Recettes",
-  "area.tutorial": "Tutoriel",
-  "area.bot": "Votre bot",
+  "area.tooling": "Outils",
   "area.help": "Aide",
+  "area.reference": "Référence",
 
   "search.recent": "Ouvertes récemment",
   "search.clear": "Effacer",
@@ -74,8 +68,6 @@ const fr: Record<UiKey, string> = {
   "search.move": "naviguer",
   "search.open": "ouvrir",
   "search.close": "fermer",
-
-
 };
 
 const DICTIONARIES: Record<string, Record<UiKey, string>> = { en, fr };
@@ -96,7 +88,7 @@ export function useT(locale: string | undefined) {
     (dictionary[key] ?? en[key]).replace(/\{(\w+)\}/g, (whole, name: string) => values[name] ?? whole);
 }
 
-/** A link written as in English ("/quick-start/"), for a page in `locale` and the site's base path. */
+/** A link written as in English ("/data/store/"), for a page in `locale` and the site's base path. */
 export function href(path: string, locale: string | undefined): string {
   return withBase(withLocale(path, locale), import.meta.env.BASE_URL);
 }

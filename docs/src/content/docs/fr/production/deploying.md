@@ -167,7 +167,7 @@ Il faut `DISCORD_TOKEN` et `DISCORD_CLIENT_ID` (ou `token` et `clientId` dans
 `defineBot`), et la commande ne se connecte jamais à la passerelle (gateway),
 donc elle peut sans risque tourner dans une tâche de CI. Lancer
 `npx djs-bot deploy --dry-run` sur chaque pull request montre ce qu'une fusion
-changerait. La recette [Hébergement](/recipes/hosting/) contient un pipeline
+changerait. La page [Hébergement](/production/hosting/) contient un pipeline
 complet.
 
 La même chose depuis votre propre script :
@@ -285,5 +285,5 @@ commande.
 - [CLI](/api/cli/) : tous les paramètres de `deploy`, `clear` et `explain`.
 - [Commandes slash](/commands/slash-commands/) : les définitions qui sont déployées.
 - [Contextes d'installation](/commands/install-contexts/) : où une commande globale peut être utilisée.
-- [Hébergement](/recipes/hosting/) : déployer depuis un pipeline de release.
+- [Hébergement](/production/hosting/) : déployer depuis un pipeline de release.
 - [Sharding](/production/sharding/) : quel processus déploie sur un bot shardé.

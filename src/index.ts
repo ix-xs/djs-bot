@@ -20,6 +20,7 @@ export {
   defineEvent,
   defineTrigger,
   defineButton,
+  defineStringSelect,
   defineSelectMenu,
   defineUserSelect,
   defineRoleSelect,
@@ -50,6 +51,7 @@ export {
   type ButtonDefinition,
   type ButtonInput,
   type ButtonVisualOptions,
+  type StringSelectDefinition,
   type SelectMenuDefinition,
   type SelectMenuInput,
   type SelectVisualOptions,
@@ -232,7 +234,7 @@ export {
 } from "./store.js";
 
 // Scheduling
-export { parseSchedule, type ParsedSchedule } from "./scheduler.js";
+export { parseSchedule, type ParsedSchedule, type CronField } from "./scheduler.js";
 
 // Audit trail
 export {

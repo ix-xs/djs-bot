@@ -1,6 +1,8 @@
-// Where the pages of the previous structure went. Every old address keeps
-// working: the build writes a redirect for each entry.
-export const MOVED = {
+// Where the pages of the previous structures went. Every old address keeps
+// working: the build writes a redirect for each entry, in every language.
+// An entry may point at an address that moved again since: `final()` sends it
+// straight to where the page is now, so no redirect leads to another.
+const PAGES = {
   "/getting-started/": "/start/installation/",
 
   "/guide/basics/install-project-layout/": "/basics/project-layout/",
@@ -86,5 +88,35 @@ export const MOVED = {
   "/tutorial/buttons-and-forms/": "/components/buttons/",
   "/tutorial/organising-your-bot/": "/bot/finding-files/",
   "/tutorial/going-live/": "/bot/going-live/",
-  "/api/exports/": "/reference/",
+
+  // 1.5: a plain documentation. The introduction, the guided project ("Your
+  // bot") and the complete examples are gone: each address goes to the page
+  // that now holds its facts. Installation is the home page, the exports page
+  // is back as a generated page of the documentation.
+  "/start/installation/": "/",
+  "/start/discord-app/": "/",
+  "/bot/configuration/": "/basics/configuration/",
+  "/bot/main-file/": "/basics/lifecycle/",
+  "/bot/first-command/": "/commands/slash-commands/",
+  "/bot/finding-files/": "/basics/project-layout/",
+  "/bot/registering-commands/": "/production/deploying/",
+  "/bot/events/": "/events/events-and-intents/",
+  "/bot/going-live/": "/production/hosting/",
+  "/recipes/hosting/": "/production/hosting/",
+  "/recipes/moderation/": "/commands/guards/",
+  "/recipes/ticket-system/": "/components/buttons/",
+  "/recipes/role-menu/": "/components/select-menus/",
+  "/recipes/levelling/": "/data/store/",
 };
+
+/** An address that moved twice goes straight to the last one. */
+const final = (to, all) => {
+  const seen = new Set();
+  while (all[to] && !seen.has(to)) {
+    seen.add(to);
+    to = all[to];
+  }
+  return to;
+};
+
+export const MOVED = Object.fromEntries(Object.entries(PAGES).map(([from, to]) => [from, final(to, PAGES)]));

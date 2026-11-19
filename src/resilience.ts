@@ -242,7 +242,7 @@ export interface RetryOptions {
  * @example await retry(() => fetchFromApi(), { attempts: 5, delay: 300 });
  */
 export function retry<T>(fn: () => T | Promise<T>, options: RetryOptions = {}): Promise<T> {
-  return comfort.func.retry(fn, {
+  return comfort.async.retry(fn, {
     ...options,
     // The documented defaults. Without them the retries would fire back to back.
     delay: options.delay ?? 200,
@@ -263,5 +263,5 @@ export function timeout<T>(
   ms: number | string,
   message?: string,
 ): Promise<T> {
-  return comfort.func.timeout(promise, ms, message) as Promise<T>;
+  return comfort.async.timeout(promise, ms, message) as Promise<T>;
 }

@@ -22,13 +22,18 @@ const { entry, sidebar } = Astro.locals.starlightRoute;
 const groups = trail(sidebar) ?? [];
 // A page of the API reference sets its own lead, with its code and its links.
 const symbolPage = /\/reference\/[^/]+\/$/.test(Astro.url.pathname);
-// The pages of the guide's path open with their own first paragraph: the
-// description would repeat it. It stays for search engines and link previews.
-const path = Astro.url.pathname.slice(import.meta.env.BASE_URL.replace(/\/$/, "").length).replace(/^\/fr(?=\/)/, "");
-const guidePath = path === "/" || path === "" || path.startsWith("/start/") || path.startsWith("/bot/");
-const lead = symbolPage || guidePath ? undefined : entry.data.description;
+// Every other page opens on its description: one sentence that says what the
+// page is for, so the text under it goes straight to the point.
+const lead = symbolPage ? undefined : entry.data.description;
+const escape = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+/** Backticks become code, everything else is plain text. */
+const withCode = (text: string) =>
+  text
+    .split("`")
+    .map((piece, index) => (index % 2 === 1 ? `<code>${escape(piece)}</code>` : escape(piece)))
+    .join("");
 ---
 
 {groups.length > 0 && <p class="at-eyebrow">{groups.join(" / ")}</p>}
 <h1 id="_top" class="at-title">{entry.data.title}</h1>
-{lead && <p class="at-lead">{lead}</p>}
+{lead && <p class="at-lead" set:html={withCode(lead)} />}

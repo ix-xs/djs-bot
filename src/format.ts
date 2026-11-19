@@ -16,6 +16,7 @@ import {
   type GuildEmoji,
   type TimestampStylesString,
 } from "discord.js";
+import { deprecated } from "./deprecate.js";
 
 /** Mention builders - return the exact markup Discord renders as a mention. */
 export const mention = {
@@ -55,9 +56,19 @@ const EMOJI_RE = /^<(a)?:(\w{2,32}):(\d{2,20})>$/;
 
 /** Custom emoji helpers: build the markup, and read it back. */
 export const emoji = {
-  /** Builds custom-emoji markup: `<:name:id>` or `<a:name:id>` when animated. */
-  custom: (name: string, id: string, animated = false): string => `<${animated ? "a" : ""}:${name}:${id}>`,
-  /** Builds markup from a partial emoji object. */
+  /**
+   * Builds custom-emoji markup: `<:name:id>` or `<a:name:id>` when animated.
+   * @deprecated Use `emoji.format({ name, id, animated })`. It will be removed in 2.0.
+   */
+  custom: (name: string, id: string, animated = false): string => {
+    deprecated("DJS_BOT_DEP_EMOJI_CUSTOM", "emoji.custom()", "emoji.format({ name, id, animated })");
+    return emoji.format({ name, id, animated });
+  },
+  /**
+   * Builds custom-emoji markup from a partial emoji object: `<:name:id>`, or
+   * `<a:name:id>` when animated.
+   * @example emoji.format({ name: "wave", id: "123456789012345678" }) // "<:wave:123456789012345678>"
+   */
   format: (e: { name: string; id: string; animated?: boolean }): string =>
     `<${e.animated ? "a" : ""}:${e.name}:${e.id}>`,
   /**

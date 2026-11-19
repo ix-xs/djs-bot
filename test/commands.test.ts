@@ -5,7 +5,7 @@ import {
   defineUserCommand,
   defineMessageCommand,
   defineTrigger,
-  defineSelectMenu,
+  defineStringSelect,
   defineUserSelect,
   defineRoleSelect,
   defineChannelSelect,
@@ -173,7 +173,7 @@ describe("native selects", () => {
     registry.add(defineRoleSelect({ id: "r", run: () => {} }));
     registry.add(defineChannelSelect({ id: "c", run: () => {} }));
     registry.add(defineMentionableSelect({ id: "m", run: () => {} }));
-    registry.add(defineSelectMenu({ id: "s", run: () => {} }));
+    registry.add(defineStringSelect({ id: "s", run: () => {} }));
     expect(registry.selectMenus.size).toBe(5);
     expect(registry.selectMenus.get("u")!.selectType).toBe("user");
     expect(registry.selectMenus.get("c")!.selectType).toBe("channel");

@@ -160,7 +160,7 @@ readinessProbe:
 ```
 
 Pour Docker, la ligne `HEALTHCHECK` et le reste de la configuration du
-conteneur se trouvent dans la recette [Hébergement](/recipes/hosting/).
+conteneur se trouvent dans la page [Hébergement](/production/hosting/).
 
 Pour un moniteur de disponibilité (UptimeRobot, Better Stack, une tâche cron
 avec `curl`), pointez-le vers `/readyz` : il passe au rouge quand le bot ne
@@ -235,7 +235,7 @@ Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans l
 
 ## Voir aussi
 
-- [Hébergement](/recipes/hosting/) : des configurations Docker, systemd et pm2 qui utilisent ces points d'accès.
+- [Hébergement](/production/hosting/) : des configurations Docker, systemd et pm2 qui utilisent ces points d'accès.
 - [Sharding](/production/sharding/) : un serveur de santé par shard, et comment donner un port à chacun.
 - [Journalisation](/production/logging/) : l'autre moitié pour savoir ce que fait le bot.
 - [Erreurs](/api/errors/) : ce qui alimente le compteur `errors`.

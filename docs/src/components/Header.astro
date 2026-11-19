@@ -1,6 +1,6 @@
 ---
-// The site header: brand, the three top-level areas, search, language,
-// repository, theme.
+// The site header: brand, the two areas (the documentation, the reference),
+// search, language, repository, theme.
 // On small screens only the brand and the search remain; the rest lives in the
 // navigation sheet, which Starlight opens from its own menu button.
 import Search from "virtual:starlight/components/Search";
@@ -16,7 +16,7 @@ const t = useT(locale);
 const base = normalizeBase(import.meta.env.BASE_URL);
 // Where this page is, whatever its language.
 const path = switchLocale(Astro.url.pathname.slice(base.length) || "/", undefined);
-const inReference = path.startsWith("/reference/") || path.startsWith("/api/");
+const inReference = path.startsWith("/reference/");
 
 const areas = [
   { label: t("nav.docs"), href: "/", current: !inReference },

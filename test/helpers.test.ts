@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { normalizeSharding, isShardChild, assets, createCache, mention, emoji, timestamp } from "../src/index.js";
+import { isShardChild, assets, createCache, mention, emoji, timestamp } from "../src/index.js";
+import { shardingOptions } from "../src/sharding.js";
 
 describe("sharding config", () => {
   it("normalises loose input", () => {
-    expect(normalizeSharding(true)).toEqual({ totalShards: "auto", mode: "process", respawn: true });
-    expect(normalizeSharding("auto")).toEqual({ totalShards: "auto", mode: "process", respawn: true });
-    expect(normalizeSharding({ totalShards: 4, mode: "worker" })).toEqual({
+    expect(shardingOptions(true)).toEqual({ totalShards: "auto", mode: "process", respawn: true });
+    expect(shardingOptions("auto")).toEqual({ totalShards: "auto", mode: "process", respawn: true });
+    expect(shardingOptions({ totalShards: 4, mode: "worker" })).toEqual({
       totalShards: 4,
       mode: "worker",
       respawn: true,

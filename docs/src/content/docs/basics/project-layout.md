@@ -8,7 +8,7 @@ sidebar:
 A bot is one entry file that calls `defineBot`, plus a folder of small files that
 each export a definition (a command, a button, an event...). You point the bot at
 the folder and the loader finds the files by their name. To create this structure
-in one command, see [Install the project](/start/installation/).
+in one command, run [`djs-bot init`](/api/cli/#init).
 
 ## A typical project
 
@@ -81,7 +81,7 @@ one of these twelve suffixes:
 | `.event` | A gateway event listener | `defineEvent` | [Events and intents](/events/events-and-intents/) |
 | `.trigger` | A message auto-responder | `defineTrigger` | [Message triggers](/events/triggers/) |
 | `.button` | A button | `defineButton` | [Buttons](/components/buttons/) |
-| `.select` | A select menu | `defineSelectMenu` and the native variants | [Select menus](/components/select-menus/) |
+| `.select` | A select menu | `defineStringSelect` and the native variants | [Select menus](/components/select-menus/) |
 | `.modal` | A modal (form) | `defineModal` | [Modals](/components/modals/) |
 | `.service` | An injectable service | `defineService` | [Services](/architecture/services/) |
 | `.job` | A scheduled job | `defineJob` | [Scheduled jobs](/events/jobs/) |
@@ -193,7 +193,7 @@ Every option, property and type, with what it accepts and returns, is in the API
 - `defineEvent()`: Defines a gateway event listener.
 - `defineTrigger()`: Defines a message trigger - an auto-responder that fires on `messageCreate`.
 - `defineButton()`: Defines a button.
-- `defineSelectMenu()`: Defines a string select menu (a custom list of options).
+- `defineStringSelect()`: Defines a string select menu (a custom list of options).
 - `defineUserSelect()`: Defines a native user select menu.
 - `defineRoleSelect()`: Defines a native role select menu.
 - `defineChannelSelect()`: Defines a native channel select menu.
@@ -214,7 +214,7 @@ All of these happen while the bot loads, before it connects to Discord: see
 
 ## See also
 
-- [Install the project](/start/installation/): install the package and scaffold this layout.
+- [Installation](/): install the package and scaffold this layout.
 - [Configuration](/basics/configuration/): every option of `defineBot`.
 - [Features](/architecture/features/): bundle related definitions into a reusable pack.
 - [Services](/architecture/services/): share state between the files of a feature.

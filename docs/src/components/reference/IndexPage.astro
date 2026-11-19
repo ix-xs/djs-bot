@@ -24,11 +24,19 @@ function firstSentence(text = ""): string {
   return paragraph;
 }
 
+/** The line of a symbol: its first sentence, after the replacement when it is deprecated. */
+function summaryOf(symbol: ApiSymbol): string {
+  const summary = firstSentence(translate(symbol.name, symbol.text, locale));
+  if (!symbol.deprecated) return summary;
+  const instead = typeof symbol.deprecated === "string" ? firstSentence(translate(`${symbol.name}#deprecated`, symbol.deprecated, locale)) : "";
+  return [`**${w.deprecated}.**`, instead, summary].filter(Boolean).join(" ");
+}
+
 async function row(symbol: ApiSymbol) {
   return {
     symbol,
     kind: kindOf(symbol),
-    html: await render(firstSentence(translate(symbol.name, symbol.text, locale)), locale, { inline: true }),
+    html: await render(summaryOf(symbol), locale, { inline: true }),
   };
 }
 

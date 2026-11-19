@@ -24,7 +24,6 @@ import {
   inGuild,
   isBotError,
   not,
-  oneOf,
   p,
   Registry,
   s,
@@ -158,8 +157,8 @@ describe("harness", () => {
 });
 
 describe("customId params", () => {
-  it("types oneOf as a union and falls back to the first value on garbage", () => {
-    const codec = oneOf("approve", "reject");
+  it("types p.oneOf as a union and falls back to the first value on garbage", () => {
+    const codec = p.oneOf("approve", "reject");
     expect(codec.decode("reject")).toBe("reject");
     expect(codec.decode("tampered")).toBe("approve");
     const Decide = defineButton({ id: "decide", params: { action: p.oneOf("approve", "reject") }, run: () => undefined });

@@ -204,7 +204,7 @@ side effect.
 | `defineCommand` | a slash command | `*.command.ts` |
 | `defineEvent` | a gateway listener | `*.event.ts` |
 | `defineButton` | a button + typed customId | `*.button.ts` |
-| `defineSelectMenu` | a string select menu | `*.select.ts` |
+| `defineStringSelect` | a string select menu | `*.select.ts` |
 | `defineModal` | a modal | `*.modal.ts` |
 | `defineService` | an injectable service | `*.service.ts` |
 | `defineJob` | a scheduled job | `*.job.ts` |
@@ -292,16 +292,16 @@ const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
 await ctx.reply({ content: "🎫 Ticket opened", components: [row] });
 ```
 
-Param codecs: `p.string`, `p.number`, `p.boolean`. If the encoded id would
-exceed Discord's 100-char limit you get a coded error (`DJSBOT_E020`) instead of
-a silent runtime failure.
+Param codecs: `p.string`, `p.number`, `p.boolean`, `p.oneOf("a", "b")`. If
+the encoded id would exceed Discord's 100-char limit you get a coded error
+(`DJSBOT_E020`) instead of a silent runtime failure.
 
 ## Select menus & modals
 
 ```ts
-import { defineSelectMenu, defineModal, field, p } from "@ix-xs/djs-bot";
+import { defineStringSelect, defineModal, field, p } from "@ix-xs/djs-bot";
 
-export const Roles = defineSelectMenu({
+export const Roles = defineStringSelect({
   id: "roles:pick",
   params: { messageId: p.string },
   run: (ctx) => ctx.reply.success(`You picked: ${ctx.values.join(", ")}`),

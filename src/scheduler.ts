@@ -22,7 +22,12 @@ export type ParsedSchedule =
   | { type: "interval"; ms: number }
   | { type: "cron"; fields: CronField[] };
 
-type CronField = { any: true } | { any: false; values: Set<number> };
+/**
+ * One of the five fields of a parsed cron expression (minute, hour, day of the
+ * month, month, day of the week): any value (`*`), or the set of values it
+ * matches.
+ */
+export type CronField = { any: true } | { any: false; values: Set<number> };
 
 const MACROS: Record<string, string> = {
   "@yearly": "0 0 1 1 *",

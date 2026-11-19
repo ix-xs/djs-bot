@@ -142,9 +142,8 @@ id.
 ```ts
 import { emoji } from "@ix-xs/djs-bot";
 
-emoji.custom("check", "1234567890123456789");   // <:check:1234567890123456789>
-emoji.custom("blob", "1234567890", true);       // <a:blob:1234567890> (animated)
-emoji.format({ name: "blob", id: "123" });      // <:blob:123>
+emoji.format({ name: "check", id: "1234567890123456789" });      // <:check:1234567890123456789>
+emoji.format({ name: "blob", id: "1234567890", animated: true }); // <a:blob:1234567890> (animated)
 emoji.parse("<a:blob:123>");                    // { animated: true, name: "blob", id: "123" }
 emoji.find(ctx.guild, "blob");                  // GuildEmoji | undefined
 ```
@@ -158,7 +157,7 @@ const check = ctx.guild ? emoji.find(ctx.guild, "check") : undefined;
 await ctx.reply(`${check ?? "✅"} Done`);
 ```
 
-`emoji.parse` is the reverse of `emoji.custom`. The whole string has to be one
+`emoji.parse` is the reverse of `emoji.format`. The whole string has to be one
 custom emoji (surrounding spaces are ignored); it returns `null` for anything
 else, including a Unicode emoji or an emoji in the middle of a sentence.
 

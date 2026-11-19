@@ -5,7 +5,8 @@
  * to its own page (or to the discord.js documentation for a discord.js type).
  *
  * The reference pages of the site (`src/pages/reference/`) are built from that
- * file. Run from the repository root with `npm run docs:api`; the result is
+ * file, and the "All exports" page of the documentation is written with it
+ * (`api-exports.mjs`). Run from the repository root with `npm run docs:api`; the result is
  * committed, and `test/exports.test.ts` fails when it is out of date.
  */
 import { createRequire } from "node:module";
@@ -13,6 +14,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ENTRIES, pageFor } from "./api-pages.mjs";
+import { exportsPages } from "./api-exports.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const require = createRequire(path.join(root, "package.json"));
@@ -648,8 +650,14 @@ export function translationProblems(model, language) {
   };
 }
 
-// npm run docs:api            writes src/data/api.json
-// npm run docs:api -- --check fails when it is out of date, or a translation is incomplete
+/** The "All exports" pages for a model, by file. */
+function pagesOf(model) {
+  const tables = Object.fromEntries(Object.entries(TRANSLATIONS).map(([language, file]) => [language, JSON.parse(readFileSync(file, "utf8"))]));
+  return exportsPages(model, tables);
+}
+
+// npm run docs:api            writes src/data/api.json and the "All exports" pages
+// npm run docs:api -- --check fails when one is out of date, or a translation is incomplete
 // npm run docs:api -- --pending prints, for each translation, the sentences to translate
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const json = serialise(build());
@@ -668,6 +676,14 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       console.error(`${shown} is out of date. Run: npm run docs:api`);
       failed = true;
     } else console.log(`${shown} up to date (${model.symbols.length} exports)`);
+    for (const [file, page] of Object.entries(pagesOf(model))) {
+      const name = path.relative(root, file).split(path.sep).join("/");
+      const written = existsSync(file) ? readFileSync(file, "utf8").replace(/\r\n/g, "\n") : "";
+      if (written !== page) {
+        console.error(`${name} is out of date. Run: npm run docs:api`);
+        failed = true;
+      } else console.log(`${name} up to date`);
+    }
     for (const language of Object.keys(TRANSLATIONS)) {
       const { pending: missing, unused } = translationProblems(model, language);
       const count = Object.keys(missing).length;
@@ -681,5 +697,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     mkdirSync(path.dirname(MODEL), { recursive: true });
     writeFileSync(MODEL, json);
     console.log(`${shown} written (${model.symbols.length} exports)`);
+    for (const [file, page] of Object.entries(pagesOf(model))) {
+      mkdirSync(path.dirname(file), { recursive: true });
+      writeFileSync(file, page);
+      console.log(`${path.relative(root, file).split(path.sep).join("/")} written`);
+    }
   }
 }

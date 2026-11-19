@@ -54,6 +54,7 @@ import {
   type ParamMap,
 } from "./schema.js";
 import { encodeCustomId } from "./customId.js";
+import { deprecated } from "./deprecate.js";
 import { assertModalFields, buildModal, withModalText, type ModalTextOptions } from "./modal.js";
 import { parseSchedule } from "./scheduler.js";
 import { BotError } from "./errors.js";
@@ -817,10 +818,15 @@ export interface NativeSelectVisualOptions {
 }
 
 /** A registered string select menu. */
-export interface SelectMenuDefinition<P extends ParamMap = ParamMap> extends SelectRoutable<P> {
+export interface StringSelectDefinition<P extends ParamMap = ParamMap> extends SelectRoutable<P> {
   /** Builds the discord.js menu. The customId encodes `params`; `visual.options` are the choices. */
   build(params: InferParams<P> | undefined, visual: SelectVisualOptions): StringSelectMenuBuilder;
 }
+/**
+ * A registered string select menu.
+ * @deprecated Use {@link StringSelectDefinition}, the same type. It will be removed in 2.0.
+ */
+export type SelectMenuDefinition<P extends ParamMap = ParamMap> = StringSelectDefinition<P>;
 /** A registered user select menu. */
 export interface UserSelectDefinition<P extends ParamMap = ParamMap> extends SelectRoutable<P> {
   /** Builds the discord.js user menu. The customId encodes `params`. */
@@ -844,7 +850,7 @@ export interface MentionableSelectDefinition<P extends ParamMap = ParamMap> exte
 
 /** Any select-menu definition. */
 export type AnySelectDefinition =
-  | SelectMenuDefinition
+  | StringSelectDefinition
   | UserSelectDefinition
   | RoleSelectDefinition
   | ChannelSelectDefinition
@@ -863,11 +869,11 @@ function applyNativeVisual(
 /**
  * Defines a string select menu (a custom list of options).
  * @example
- * export const Roles = defineSelectMenu({ id: "roles:pick", run: (ctx) => ctx.reply(ctx.values.join(",")) });
+ * export const Roles = defineStringSelect({ id: "roles:pick", run: (ctx) => ctx.reply(ctx.values.join(",")) });
  */
-export function defineSelectMenu<P extends ParamMap = Record<string, never>>(
+export function defineStringSelect<P extends ParamMap = Record<string, never>>(
   input: SelectMenuInput<P>,
-): SelectMenuDefinition<P> {
+): StringSelectDefinition<P> {
   assertComponentId("select menu", input.id);
   const params = (input.params ?? {}) as P;
   return {
@@ -889,6 +895,17 @@ export function defineSelectMenu<P extends ParamMap = Record<string, never>>(
       return menu;
     },
   };
+}
+
+/**
+ * Defines a string select menu.
+ * @deprecated Use {@link defineStringSelect}, which takes the same input. It will be removed in 2.0.
+ */
+export function defineSelectMenu<P extends ParamMap = Record<string, never>>(
+  input: SelectMenuInput<P>,
+): StringSelectDefinition<P> {
+  deprecated("DJS_BOT_DEP_DEFINE_SELECT_MENU", "defineSelectMenu()", "defineStringSelect()");
+  return defineStringSelect(input);
 }
 
 /** Defines a native user select menu. `ctx.users` / `ctx.members` hold the picks. */
@@ -1177,7 +1194,7 @@ export function defineJob(input: JobInput): JobDefinition {
   } catch (cause) {
     throw new BotError("DJSBOT_E080", { detail: `job "${input.name}": "${input.schedule}"`, cause });
   }
-  if (input.timezone !== undefined && !comfort.checker.isTimeZone(input.timezone)) {
+  if (input.timezone !== undefined && !comfort.is.timeZone(input.timezone)) {
     throw new BotError("DJSBOT_E080", { detail: `job "${input.name}": unknown timezone "${input.timezone}"` });
   }
   return {

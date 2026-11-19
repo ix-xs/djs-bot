@@ -42,7 +42,7 @@ npx djs-bot doctor    # le vérifie, une fois .env rempli
 npx djs-bot dev       # le lance
 ```
 
-La page [Installer le projet](/start/installation/) détaille ces étapes.
+La page [Installation](/) donne les prérequis et les réglages de l'application Discord.
 
 ## Le fichier d'entrée
 
@@ -443,7 +443,7 @@ possède actuellement.
 
 ## Voir aussi
 
-- [Installer le projet](/start/installation/) pour le premier lancement, pas à pas.
+- [Installation](/) pour les prérequis et l'application Discord.
 - [Structure du projet](/basics/project-layout/) pour les suffixes de fichiers sur lesquels `generate` s'appuie.
 - [Déployer les commandes](/production/deploying/) pour les portées, le miroir de développement et le déploiement depuis le code.
 - [Erreurs](/api/errors/) pour chaque code que la CLI peut afficher.

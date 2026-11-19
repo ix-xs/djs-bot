@@ -63,8 +63,8 @@ Trois conséquences méritent d'être connues :
   `doctor`, `explain`) ne démarrent jamais de shards.
 
 Lancez un bot shardé comme n'importe quel autre : `node dist/index.js` sur votre
-fichier d'entrée compilé, ou `npx djs-bot start`. La recette
-[Hébergement](/recipes/hosting/) explique comment garder ce processus en vie. Le
+fichier d'entrée compilé, ou `npx djs-bot start`. La page
+[Hébergement](/production/hosting/) explique comment garder ce processus en vie. Le
 gestionnaire journalise `Spawned shard` pour chaque enfant, `Shard died`
 quand l'un d'eux s'arrête, et `All shards spawned` une fois qu'ils sont tous
 démarrés.
@@ -190,9 +190,7 @@ Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans l
 
 - `defineBot()` : Crée un `Bot`.
 - `ShardingOptions` : Configuration du sharding.
-- `normalizeSharding()` : Normalise la configuration `sharding` souple en options complètes.
 - `isShardChild()` : Vrai lorsque le processus courant est un shard enfant lancé par un gestionnaire (il doit donc exécuter le bot), et non le gestionnaire lui-même.
-- `launchShardManager()` : Lance un `ShardingManager` pour le fichier d'entrée donné. À appeler uniquement depuis le processus du manager ; se résout une fois que tous les shards ont été lancés.
 - `Logger` : Logger structuré avec filtrage par niveau et liaisons enfants.
 
 ## Voir aussi
@@ -201,4 +199,4 @@ Chaque option, propriété et type, avec ce qu'il accepte et renvoie, est dans l
 - [Santé et métriques](/production/health/) : les points d'accès que chaque shard expose.
 - [Déployer les commandes](/production/deploying/) : comment et quand les commandes sont enregistrées.
 - [Store](/data/store/) : garder un état en dehors de la mémoire d'un seul shard.
-- [Hébergement](/recipes/hosting/) : exécuter le gestionnaire sous systemd, Docker ou pm2.
+- [Hébergement](/production/hosting/) : exécuter le gestionnaire sous systemd, Docker ou pm2.
